@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useContasPessoais } from '@/hooks/useContasPessoais';
 import { useCredoresPessoais } from '@/hooks/useCredoresPessoais';
 import { useCategoriasDespesasPessoais } from '@/hooks/useCategoriasDespesasPessoais';
-import { formatCurrency } from '@/utils/formatters';
+import { formatarMoeda } from '@/utils/formatters';
 import { Home, CreditCard, Users, PieChart, Plus } from 'lucide-react';
 
 export default function FinancasPessoais() {
@@ -22,8 +22,13 @@ export default function FinancasPessoais() {
     <Layout>
       <div className="flex-1 space-y-4 p-4 pt-6">
         <PageHeader
+          breadcrumb={[
+            { label: 'Dashboard', href: '/' },
+            { label: 'Finanças Pessoais' }
+          ]}
           title="Finanças Pessoais"
-          description="Gerencie suas despesas pessoais, credores e categorias"
+          subtitle="Gerencie suas despesas pessoais, credores e categorias"
+          icon={<CreditCard className="h-8 w-8 text-primary" />}
         />
 
         {/* Cards de Estatísticas */}
@@ -34,7 +39,7 @@ export default function FinancasPessoais() {
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(estatisticas.total_valor)}</div>
+              <div className="text-2xl font-bold">{formatarMoeda(estatisticas.total_valor)}</div>
               <p className="text-xs text-muted-foreground">{estatisticas.total_contas} contas</p>
             </CardContent>
           </Card>
@@ -45,7 +50,7 @@ export default function FinancasPessoais() {
               <Home className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(estatisticas.valor_pendente)}</div>
+              <div className="text-2xl font-bold">{formatarMoeda(estatisticas.valor_pendente)}</div>
               <p className="text-xs text-muted-foreground">{estatisticas.pendentes} contas</p>
             </CardContent>
           </Card>
@@ -56,7 +61,7 @@ export default function FinancasPessoais() {
               <PieChart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(estatisticas.valor_vencimento_proximo)}</div>
+              <div className="text-2xl font-bold">{formatarMoeda(estatisticas.valor_vencimento_proximo)}</div>
               <p className="text-xs text-muted-foreground">{estatisticas.vencimento_proximo} contas</p>
             </CardContent>
           </Card>
@@ -101,7 +106,7 @@ export default function FinancasPessoais() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">{formatCurrency(conta.valor)}</p>
+                        <p className="font-bold">{formatarMoeda(conta.valor)}</p>
                         <Badge variant={
                           conta.status === 'paga' ? 'default' : 
                           conta.status === 'vencida' ? 'destructive' : 'secondary'

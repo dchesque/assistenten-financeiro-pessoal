@@ -22,7 +22,8 @@ import {
   BarChart,
   ChevronDown,
   Settings,
-  Upload
+  Upload,
+  Wallet
 } from 'lucide-react';
 
 // Estrutura do menu para Finanças Pessoais
@@ -34,6 +35,15 @@ const menuStructure = [
     path: '/dashboard', 
     icon: LayoutDashboard,
     color: 'text-blue-500'
+  },
+  
+  // Finanças Pessoais (sem grupo)
+  { 
+    type: 'item', 
+    name: 'Finanças Pessoais', 
+    path: '/financas-pessoais', 
+    icon: Wallet,
+    color: 'text-green-500'
   },
   
   // Grupo: Contas a Pagar
