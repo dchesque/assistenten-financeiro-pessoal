@@ -15,8 +15,8 @@ import ContasPagar from "./pages/ContasPagar";
 import BaixarContas from "./pages/BaixarContas";
 import ContaIndividual from "./pages/ContaIndividual";
 import LancamentoLote from "./pages/LancamentoLote";
-import Fornecedores from "./pages/Fornecedores";
-import PlanoContas from "./pages/PlanoContas";
+import Credores from "./pages/Credores";
+import Categorias from "./pages/Categorias";
 import Bancos from "./pages/Bancos";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -45,8 +45,8 @@ const App = () => (
           <Route path="/baixar-contas" element={<ProtectedRoute><Layout><BaixarContas /></Layout></ProtectedRoute>} />
           <Route path="/conta-individual" element={<ProtectedRoute><Layout><ContaIndividual /></Layout></ProtectedRoute>} />
           <Route path="/lancamento-lote" element={<ProtectedRoute><Layout><LancamentoLote /></Layout></ProtectedRoute>} />
-          <Route path="/credores" element={<ProtectedRoute><Layout><Fornecedores /></Layout></ProtectedRoute>} />
-          <Route path="/categorias" element={<ProtectedRoute><Layout><PlanoContas /></Layout></ProtectedRoute>} />
+          <Route path="/credores" element={<ProtectedRoute><Layout><Credores /></Layout></ProtectedRoute>} />
+          <Route path="/categorias" element={<ProtectedRoute><Layout><Categorias /></Layout></ProtectedRoute>} />
           <Route path="/bancos" element={<ProtectedRoute><Layout><Bancos /></Layout></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
           

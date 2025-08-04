@@ -26,22 +26,30 @@ export function PageHeader({
       <div className="mb-4">
         <Breadcrumb>
           <BreadcrumbList>
-            {breadcrumb.map((item, index) => <React.Fragment key={index}>
+            {breadcrumb.map((item, index) => (
+              <React.Fragment key={index}>
                 <BreadcrumbItem>
-                  {item.href ? <BreadcrumbLink asChild>
+                  {item.href ? (
+                    <BreadcrumbLink asChild>
                       <Link to={item.href} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
                         {item.icon}
                         {item.label}
                       </Link>
-                    </BreadcrumbLink> : <BreadcrumbPage className="flex items-center gap-2 font-medium text-gray-900">
+                    </BreadcrumbLink>
+                  ) : (
+                    <BreadcrumbPage className="flex items-center gap-2 font-medium text-gray-900">
                       {item.icon}
                       {item.label}
-                    </BreadcrumbPage>}
+                    </BreadcrumbPage>
+                  )}
                 </BreadcrumbItem>
-                {index < breadcrumb.length - 1 && <BreadcrumbSeparator>
+                {index < breadcrumb.length - 1 && (
+                  <BreadcrumbSeparator>
                     <ChevronRight className="w-4 h-4" />
-                  </BreadcrumbSeparator>}
-              </React.Fragment>)}
+                  </BreadcrumbSeparator>
+                )}
+              </React.Fragment>
+            ))}
           </BreadcrumbList>
         </Breadcrumb>
       </div>

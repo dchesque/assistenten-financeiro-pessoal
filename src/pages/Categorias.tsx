@@ -16,7 +16,7 @@ import * as LucideIcons from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 
-export default function PlanoContas() {
+export default function Categorias() {
   const { isDesktop } = useSidebar();
   
   // Hook integrado com Supabase
@@ -226,9 +226,9 @@ export default function PlanoContas() {
 
       {/* Page Header */}
       <PageHeader
-        breadcrumb={createBreadcrumb('/plano-contas')}
-        title="Plano de Contas"
-        subtitle="Gerencie o plano de contas estruturado para DRE • Controle de categorias"
+        breadcrumb={createBreadcrumb('/categorias')}
+        title="Categorias de Despesas"
+        subtitle="Organize suas despesas por categorias • Controle financeiro pessoal"
         actions={
           <Button 
             onClick={abrirModalNova}

@@ -11,7 +11,7 @@ import { FornecedorCardSkeletonGrid, FornecedorTableSkeleton, EmptyState, Loadin
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-export default function Fornecedores() {
+export default function Credores() {
   const {
     toast
   } = useToast();
@@ -166,13 +166,13 @@ export default function Fornecedores() {
       <div>
         {/* Page Header */}
         <PageHeader
-          breadcrumb={createBreadcrumb('/fornecedores')}
-          title="Fornecedores"
-          subtitle="Gestão de parceiros comerciais • Histórico de compras"
+          breadcrumb={createBreadcrumb('/credores')}
+          title="Credores"
+          subtitle="Gestão de credores pessoais • Controle de despesas"
           actions={
             <Button onClick={abrirModalNovo} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700">
               <Plus className="w-4 h-4 mr-2" />
-              Novo Fornecedor
+              Novo Credor
             </Button>
           }
         />
