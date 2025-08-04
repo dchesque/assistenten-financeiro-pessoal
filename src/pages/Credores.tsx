@@ -3,7 +3,7 @@ import { Search, Plus, Building, Grid3x3, List, Eye, Edit, UserX, UserCheck, Tra
 import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { Fornecedor, FiltrosFornecedor } from '@/types/fornecedor';
-import { FornecedorCard } from '@/components/fornecedores/FornecedorCard';
+import { CredorCard } from '@/components/credores/CredorCard';
 import { FornecedorModal } from '@/components/fornecedores/FornecedorModal';
 import { formatarMoeda } from '@/utils/formatters';
 import { useFornecedores } from '@/hooks/useFornecedores';
@@ -86,20 +86,20 @@ export default function Credores() {
         await criarFornecedor(fornecedor);
         toast({
           title: "Sucesso!",
-          description: "Fornecedor criado com sucesso!"
+          description: "Credor criado com sucesso!"
         });
       } else {
         await atualizarFornecedor(fornecedor.id, fornecedor);
         toast({
           title: "Sucesso!",
-          description: "Fornecedor atualizado com sucesso!"
+          description: "Credor atualizado com sucesso!"
         });
       }
       fecharModal();
     } catch (error) {
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao salvar fornecedor",
+        description: error instanceof Error ? error.message : "Erro ao salvar credor",
         variant: "destructive"
       });
     } finally {
@@ -117,12 +117,12 @@ export default function Credores() {
       });
       toast({
         title: "Status atualizado!",
-        description: `Fornecedor ${fornecedor.ativo ? 'inativado' : 'ativado'} com sucesso.`
+        description: `Credor ${fornecedor.ativo ? 'inativado' : 'ativado'} com sucesso.`
       });
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Erro ao atualizar status do fornecedor",
+        description: "Erro ao atualizar status do credor",
         variant: "destructive"
       });
     }
@@ -130,7 +130,7 @@ export default function Credores() {
 
   // Excluir fornecedor com confirmação
   const confirmarExclusao = (fornecedor: Fornecedor) => {
-    const confirmar = window.confirm(`Tem certeza que deseja excluir o fornecedor "${fornecedor.nome}"?\n\nEsta ação não pode ser desfeita.`);
+    const confirmar = window.confirm(`Tem certeza que deseja excluir o credor "${fornecedor.nome}"?\n\nEsta ação não pode ser desfeita.`);
     if (confirmar) {
       handleExcluirFornecedor(fornecedor.id);
     }
@@ -140,13 +140,13 @@ export default function Credores() {
       setExcluindoFornecedor(id);
       await excluirFornecedor(id);
       toast({
-        title: "Fornecedor excluído",
-        description: "Fornecedor excluído com sucesso!"
+        title: "Credor excluído",
+        description: "Credor excluído com sucesso!"
       });
     } catch (error) {
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao excluir fornecedor",
+        description: error instanceof Error ? error.message : "Erro ao excluir credor",
         variant: "destructive"
       });
     } finally {
@@ -230,13 +230,13 @@ export default function Credores() {
         // Estados de loading
         visualizacao === 'cards' ? <FornecedorCardSkeletonGrid count={6} /> : <FornecedorTableSkeleton /> : error ?
         // Estado de erro
-        <EmptyState title="Erro ao carregar fornecedores" description={error} action={<Button onClick={() => window.location.reload()} className="bg-gradient-to-r from-blue-600 to-purple-600">
+        <EmptyState title="Erro ao carregar credores" description={error} action={<Button onClick={() => window.location.reload()} className="bg-gradient-to-r from-blue-600 to-purple-600">
                   Tentar Novamente
                 </Button>} /> : fornecedoresFiltrados.length > 0 ?
         // Conteúdo com dados
         <LoadingOverlay loading={!!excluindoFornecedor}>
               {visualizacao === 'cards' ? <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {fornecedoresFiltrados.map(fornecedor => <FornecedorCard key={fornecedor.id} fornecedor={fornecedor} onView={abrirModalVisualizar} onEdit={abrirModalEditar} onToggleStatus={toggleStatus} />)}
+                  {fornecedoresFiltrados.map(fornecedor => <CredorCard key={fornecedor.id} credor={fornecedor} onView={abrirModalVisualizar} onEdit={abrirModalEditar} onToggleStatus={toggleStatus} />)}
                 </div> : (/* Vista em Linhas/Tabela */
           <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg overflow-hidden">
                   <div className="overflow-x-auto">
@@ -244,7 +244,7 @@ export default function Credores() {
                       <thead className="bg-gray-50/80 backdrop-blur-sm">
                         <tr>
                           <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Fornecedor
+                            Credor
                           </th>
                           <th className="hidden lg:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Documento
@@ -253,7 +253,7 @@ export default function Credores() {
                             Contato
                           </th>
                           <th className="hidden xl:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Compras
+                            Transações
                           </th>
                           <th className="hidden lg:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Valor Total

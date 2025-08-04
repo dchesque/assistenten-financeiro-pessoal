@@ -1,9 +1,10 @@
-export interface Fornecedor {
+export interface Credor {
   id: string;
   nome: string;
-  cnpj?: string;
+  documento?: string; // CPF ou CNPJ
   contato?: string;
   email?: string;
+  tipo?: 'pessoa_fisica' | 'pessoa_juridica';
 }
 
 export interface Categoria {
@@ -21,8 +22,8 @@ export interface Banco {
 
 export interface ContaPagar {
   id: string;
-  fornecedorId: string;
-  fornecedor: Fornecedor;
+  credorId: string;
+  credor: Credor;
   categoriaId: string;
   categoria: Categoria;
   descricao: string;
@@ -49,7 +50,7 @@ export interface DashboardMetrics {
 export interface MovimentacaoRecente {
   id: string;
   data: Date;
-  fornecedor: string;
+  credor: string;
   descricao: string;
   valor: number;
   status: 'pendente' | 'paga' | 'vencida';
