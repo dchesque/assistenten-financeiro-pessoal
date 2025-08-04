@@ -25,7 +25,7 @@ import { ProgressoLoteAprimorado } from '@/components/lancamentoLote/ProgressoLo
 import { useValidacoesCheques } from '@/hooks/useValidacoesCheques';
 import { useLancamentoLoteSimplificado, ResultadoLancamento } from '@/hooks/useLancamentoLoteSimplificado';
 import { useBancosSupabase } from '@/hooks/useBancosSupabase';
-import { useFornecedores } from '@/hooks/useFornecedores';
+import { useCredores } from '@/hooks/useCredores';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
 import { useCheques } from '@/hooks/useCheques';
 import { FormaPagamento } from '@/types/formaPagamento';
@@ -45,7 +45,7 @@ export default function LancamentoLote() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { validarSequenciaCheques } = useValidacoesCheques();
   const { validarLancamento, executarLancamento, loading: loadingLancamento, progresso } = useLancamentoLoteSimplificado();
-  const { fornecedores } = useFornecedores();
+  const { credores } = useCredores();
   const { planoContas } = usePlanoContas();
   const { bancos } = useBancosSupabase();
   const { cheques } = useCheques();
@@ -69,7 +69,7 @@ export default function LancamentoLote() {
     };
   });
 
-  const [fornecedorSelecionado, setFornecedorSelecionado] = useState<Fornecedor | null>(null);
+  const [credorSelecionado, setCredorSelecionado] = useState<Fornecedor | null>(null);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<PlanoContas | null>(null);
   const [categoriaAutoPreenchida, setCategoriaAutoPreenchida] = useState(false);
   const [valorParcelaFormatado, setValorParcelaFormatado] = useState('');
@@ -143,20 +143,20 @@ export default function LancamentoLote() {
     return null;
   }
 
-  const handleFornecedorSelect = async (fornecedor: Fornecedor) => {
-    setFornecedorSelecionado(fornecedor);
+  const handleCredorSelect = async (credor: Fornecedor) => {
+    setCredorSelecionado(credor);
     setFormData(prev => ({
       ...prev,
-      fornecedor_id: fornecedor.id
+      fornecedor_id: credor.id
     }));
 
-    // Auto-preencher categoria padrão do fornecedor se existir
-    if (fornecedor.categoria_padrao_id) {
+    // Auto-preencher categoria padrão do credor se existir
+    if (credor.categoria_padrao_id) {
       try {
         const { data, error } = await supabase
           .from('plano_contas')
           .select('*')
-          .eq('id', fornecedor.categoria_padrao_id)
+          .eq('id', credor.categoria_padrao_id)
           .eq('aceita_lancamento', true)
           .single();
 
@@ -195,7 +195,7 @@ export default function LancamentoLote() {
         console.error('Erro ao buscar categoria padrão:', error);
       }
     } else {
-      // Fornecedor sem categoria padrão
+      // Credor sem categoria padrão
       setCategoriaSelecionada(null);
       setCategoriaAutoPreenchida(false);
       setFormData(prev => ({
@@ -272,10 +272,10 @@ export default function LancamentoLote() {
       return false;
     }
 
-    if (!fornecedorSelecionado) {
+    if (!credorSelecionado) {
       toast({
         title: "Erro de validação",
-        description: "Selecione um fornecedor",
+        description: "Selecione um credor",
         variant: "destructive"
       });
       return false;
@@ -424,7 +424,7 @@ export default function LancamentoLote() {
       data_emissao: new Date().toISOString().split('T')[0],
       dda: false
     });
-    setFornecedorSelecionado(null);
+    setCredorSelecionado(null);
     setCategoriaSelecionada(null);
     setCategoriaAutoPreenchida(false);
     setValorParcelaFormatado('');
@@ -522,9 +522,9 @@ export default function LancamentoLote() {
                         Fornecedor <span className="text-red-500">*</span>
                       </Label>
                       <FornecedorSelector 
-                        value={fornecedorSelecionado} 
-                        onSelect={handleFornecedorSelect} 
-                        placeholder="Selecionar fornecedor..." 
+                        value={credorSelecionado} 
+                        onSelect={handleCredorSelect} 
+                        placeholder="Selecionar credor..." 
                         className="w-full" 
                       />
                     </div>
@@ -810,7 +810,7 @@ export default function LancamentoLote() {
           {/* Preview lateral */}
           <LotePreview 
             formData={formData} 
-            fornecedor={fornecedorSelecionado} 
+            fornecedor={credorSelecionado} 
             categoria={categoriaSelecionada} 
             parcelas={parcelas} 
           />
@@ -850,8 +850,8 @@ export default function LancamentoLote() {
           formData={formData} 
           parcelas={parcelas} 
           formaPagamento={formaPagamento} 
-          fornecedor={fornecedorSelecionado} 
-          categoria={categoriaSelecionada} 
+          fornecedor={credorSelecionado} 
+          categoria={categoriaSelecionada}
           banco={bancos.find(b => b.id === formaPagamento.banco_id) || null} 
         />
 

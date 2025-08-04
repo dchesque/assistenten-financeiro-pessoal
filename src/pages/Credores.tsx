@@ -6,7 +6,8 @@ import { Fornecedor, FiltrosFornecedor } from '@/types/fornecedor';
 import { CredorCard } from '@/components/credores/CredorCard';
 import { FornecedorModal } from '@/components/fornecedores/FornecedorModal';
 import { formatarMoeda } from '@/utils/formatters';
-import { useFornecedores } from '@/hooks/useFornecedores';
+import { useCredores } from '@/hooks/useCredores';
+import { useDadosExemplo } from '@/hooks/useDadosExemplo';
 import { FornecedorCardSkeletonGrid, FornecedorTableSkeleton, EmptyState, LoadingOverlay } from '@/components/ui/LoadingStates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,13 +19,16 @@ export default function Credores() {
 
   // Custom hook para operações CRUD
   const {
-    fornecedores,
+    credores,
     loading,
     error,
-    criarFornecedor,
-    atualizarFornecedor,
-    excluirFornecedor
-  } = useFornecedores();
+    criarCredor,
+    atualizarCredor,
+    excluirCredor
+  } = useCredores();
+
+  // Hook para integrar dados de exemplo
+  const { dadosExemploCarregados } = useDadosExemplo();
 
   // Estados locais
   const [filtros, setFiltros] = useState<FiltrosFornecedor>({
@@ -39,57 +43,57 @@ export default function Credores() {
 
   // Modal
   const [modalAberto, setModalAberto] = useState(false);
-  const [fornecedorSelecionado, setFornecedorSelecionado] = useState<Fornecedor | null>(null);
+  const [credorSelecionado, setCredorSelecionado] = useState<Fornecedor | null>(null);
   const [modoModal, setModoModal] = useState<'criar' | 'editar' | 'visualizar'>('criar');
 
   // Estados de loading específicos
-  const [salvandoFornecedor, setSalvandoFornecedor] = useState(false);
-  const [excluindoFornecedor, setExcluindoFornecedor] = useState<number | null>(null);
+  const [salvandoCredor, setSalvandoCredor] = useState(false);
+  const [excluindoCredor, setExcluindoCredor] = useState<number | null>(null);
 
-  // Filtrar fornecedores
-  const fornecedoresFiltrados = useMemo(() => {
-    return fornecedores.filter(fornecedor => {
-      const matchBusca = !filtros.busca || fornecedor.nome.toLowerCase().includes(filtros.busca.toLowerCase()) || fornecedor.documento.includes(filtros.busca) || fornecedor.telefone?.includes(filtros.busca) || fornecedor.email?.toLowerCase().includes(filtros.busca.toLowerCase());
-      const matchStatus = filtros.status === 'todos' || filtros.status === 'ativo' && fornecedor.ativo || filtros.status === 'inativo' && !fornecedor.ativo;
-      const matchTipo = filtros.tipo === 'todos' || fornecedor.tipo === filtros.tipo;
-      const matchTipoFornecedor = filtros.tipo_fornecedor === 'todos' || fornecedor.tipo_fornecedor === filtros.tipo_fornecedor;
+  // Filtrar credores
+  const credoresFiltrados = useMemo(() => {
+    return credores.filter(credor => {
+      const matchBusca = !filtros.busca || credor.nome.toLowerCase().includes(filtros.busca.toLowerCase()) || credor.documento.includes(filtros.busca) || credor.telefone?.includes(filtros.busca) || credor.email?.toLowerCase().includes(filtros.busca.toLowerCase());
+      const matchStatus = filtros.status === 'todos' || filtros.status === 'ativo' && credor.ativo || filtros.status === 'inativo' && !credor.ativo;
+      const matchTipo = filtros.tipo === 'todos' || credor.tipo === filtros.tipo;
+      const matchTipoFornecedor = filtros.tipo_fornecedor === 'todos' || credor.tipo_fornecedor === filtros.tipo_fornecedor;
       return matchBusca && matchStatus && matchTipo && matchTipoFornecedor;
     });
-  }, [fornecedores, filtros]);
+  }, [credores, filtros]);
 
   // Funções do modal
   const abrirModalNovo = () => {
-    setFornecedorSelecionado(null);
+    setCredorSelecionado(null);
     setModoModal('criar');
     setModalAberto(true);
   };
-  const abrirModalEditar = (fornecedor: Fornecedor) => {
-    setFornecedorSelecionado(fornecedor);
+  const abrirModalEditar = (credor: Fornecedor) => {
+    setCredorSelecionado(credor);
     setModoModal('editar');
     setModalAberto(true);
   };
-  const abrirModalVisualizar = (fornecedor: Fornecedor) => {
-    setFornecedorSelecionado(fornecedor);
+  const abrirModalVisualizar = (credor: Fornecedor) => {
+    setCredorSelecionado(credor);
     setModoModal('visualizar');
     setModalAberto(true);
   };
   const fecharModal = () => {
     setModalAberto(false);
-    setFornecedorSelecionado(null);
+    setCredorSelecionado(null);
   };
 
-  // Salvar fornecedor
-  const salvarFornecedor = async (fornecedor: Fornecedor) => {
+  // Salvar credor
+  const salvarCredor = async (credor: Fornecedor) => {
     try {
-      setSalvandoFornecedor(true);
+      setSalvandoCredor(true);
       if (modoModal === 'criar') {
-        await criarFornecedor(fornecedor);
+        await criarCredor(credor);
         toast({
           title: "Sucesso!",
           description: "Credor criado com sucesso!"
         });
       } else {
-        await atualizarFornecedor(fornecedor.id, fornecedor);
+        await atualizarCredor(credor.id, credor);
         toast({
           title: "Sucesso!",
           description: "Credor atualizado com sucesso!"
@@ -103,21 +107,21 @@ export default function Credores() {
         variant: "destructive"
       });
     } finally {
-      setSalvandoFornecedor(false);
+      setSalvandoCredor(false);
     }
   };
 
   // Toggle status
   const toggleStatus = async (id: number) => {
     try {
-      const fornecedor = fornecedores.find(f => f.id === id);
-      if (!fornecedor) return;
-      await atualizarFornecedor(id, {
-        ativo: !fornecedor.ativo
+      const credor = credores.find(f => f.id === id);
+      if (!credor) return;
+      await atualizarCredor(id, {
+        ativo: !credor.ativo
       });
       toast({
         title: "Status atualizado!",
-        description: `Credor ${fornecedor.ativo ? 'inativado' : 'ativado'} com sucesso.`
+        description: `Credor ${credor.ativo ? 'inativado' : 'ativado'} com sucesso.`
       });
     } catch (error) {
       toast({
@@ -128,17 +132,17 @@ export default function Credores() {
     }
   };
 
-  // Excluir fornecedor com confirmação
-  const confirmarExclusao = (fornecedor: Fornecedor) => {
-    const confirmar = window.confirm(`Tem certeza que deseja excluir o credor "${fornecedor.nome}"?\n\nEsta ação não pode ser desfeita.`);
+  // Excluir credor com confirmação
+  const confirmarExclusao = (credor: Fornecedor) => {
+    const confirmar = window.confirm(`Tem certeza que deseja excluir o credor "${credor.nome}"?\n\nEsta ação não pode ser desfeita.`);
     if (confirmar) {
-      handleExcluirFornecedor(fornecedor.id);
+      handleExcluirCredor(credor.id);
     }
   };
-  const handleExcluirFornecedor = async (id: number) => {
+  const handleExcluirCredor = async (id: number) => {
     try {
-      setExcluindoFornecedor(id);
-      await excluirFornecedor(id);
+      setExcluindoCredor(id);
+      await excluirCredor(id);
       toast({
         title: "Credor excluído",
         description: "Credor excluído com sucesso!"
@@ -150,7 +154,7 @@ export default function Credores() {
         variant: "destructive"
       });
     } finally {
-      setExcluindoFornecedor(null);
+      setExcluindoCredor(null);
     }
   };
   return <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
@@ -232,11 +236,11 @@ export default function Credores() {
         // Estado de erro
         <EmptyState title="Erro ao carregar credores" description={error} action={<Button onClick={() => window.location.reload()} className="bg-gradient-to-r from-blue-600 to-purple-600">
                   Tentar Novamente
-                </Button>} /> : fornecedoresFiltrados.length > 0 ?
+                </Button>} /> : credoresFiltrados.length > 0 ?
         // Conteúdo com dados
-        <LoadingOverlay loading={!!excluindoFornecedor}>
+        <LoadingOverlay loading={!!excluindoCredor}>
               {visualizacao === 'cards' ? <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {fornecedoresFiltrados.map(fornecedor => <CredorCard key={fornecedor.id} credor={fornecedor} onView={abrirModalVisualizar} onEdit={abrirModalEditar} onToggleStatus={toggleStatus} />)}
+                  {credoresFiltrados.map(credor => <CredorCard key={credor.id} credor={credor} onView={abrirModalVisualizar} onEdit={abrirModalEditar} onToggleStatus={toggleStatus} />)}
                 </div> : (/* Vista em Linhas/Tabela */
           <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg overflow-hidden">
                   <div className="overflow-x-auto">
@@ -267,54 +271,54 @@ export default function Credores() {
                         </tr>
                       </thead>
                       <tbody className="bg-white/60 divide-y divide-gray-200/50">
-                        {fornecedoresFiltrados.map(fornecedor => <tr key={fornecedor.id} className="hover:bg-white/80 transition-colors duration-150">
+                        {credoresFiltrados.map(credor => <tr key={credor.id} className="hover:bg-white/80 transition-colors duration-150">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
                                   <Building className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                  <div className="text-sm font-medium text-gray-900">{fornecedor.nome}</div>
-                                  <div className="text-sm text-gray-500">{fornecedor.cidade}, {fornecedor.estado}</div>
+                                  <div className="text-sm font-medium text-gray-900">{credor.nome}</div>
+                                  <div className="text-sm text-gray-500">{credor.cidade}, {credor.estado}</div>
                                 </div>
                               </div>
                             </td>
                             <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               <div className="flex items-center space-x-2">
-                                <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${fornecedor.tipo === 'pessoa_juridica' ? 'bg-blue-100/80 text-blue-700' : 'bg-green-100/80 text-green-700'}`}>
-                                  {fornecedor.tipo === 'pessoa_juridica' ? 'CNPJ' : 'CPF'}
+                                <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${credor.tipo === 'pessoa_juridica' ? 'bg-blue-100/80 text-blue-700' : 'bg-green-100/80 text-green-700'}`}>
+                                  {credor.tipo === 'pessoa_juridica' ? 'CNPJ' : 'CPF'}
                                 </span>
-                                <span>{fornecedor.documento}</span>
+                                <span>{credor.documento}</span>
                               </div>
                             </td>
                             <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div>{fornecedor.telefone}</div>
-                              <div>{fornecedor.email}</div>
+                              <div>{credor.telefone}</div>
+                              <div>{credor.email}</div>
                             </td>
                             <td className="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {fornecedor.totalCompras}
+                              {credor.totalCompras}
                             </td>
                             <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {formatarMoeda(fornecedor.valorTotal)}
+                              {formatarMoeda(credor.valorTotal)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${fornecedor.ativo ? 'bg-green-100/80 text-green-700' : 'bg-red-100/80 text-red-700'}`}>
-                                <div className={`w-2 h-2 rounded-full mr-2 ${fornecedor.ativo ? 'bg-green-600' : 'bg-red-600'}`}></div>
-                                {fornecedor.ativo ? 'Ativo' : 'Inativo'}
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${credor.ativo ? 'bg-green-100/80 text-green-700' : 'bg-red-100/80 text-red-700'}`}>
+                                <div className={`w-2 h-2 rounded-full mr-2 ${credor.ativo ? 'bg-green-600' : 'bg-red-600'}`}></div>
+                                {credor.ativo ? 'Ativo' : 'Inativo'}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <div className="flex space-x-2">
-                                <button onClick={() => abrirModalVisualizar(fornecedor)} className="text-blue-600 hover:text-blue-900 transition-colors" title="Visualizar" disabled={loading}>
+                                <button onClick={() => abrirModalVisualizar(credor)} className="text-blue-600 hover:text-blue-900 transition-colors" title="Visualizar" disabled={loading}>
                                   <Eye className="w-4 h-4" />
                                 </button>
-                                <button onClick={() => abrirModalEditar(fornecedor)} className="text-gray-600 hover:text-gray-900 transition-colors" title="Editar" disabled={loading}>
+                                <button onClick={() => abrirModalEditar(credor)} className="text-gray-600 hover:text-gray-900 transition-colors" title="Editar" disabled={loading}>
                                   <Edit className="w-4 h-4" />
                                 </button>
-                                <button onClick={() => toggleStatus(fornecedor.id)} className={`transition-colors ${fornecedor.ativo ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`} title={fornecedor.ativo ? 'Inativar' : 'Ativar'} disabled={loading}>
-                                  {fornecedor.ativo ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                                <button onClick={() => toggleStatus(credor.id)} className={`transition-colors ${credor.ativo ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`} title={credor.ativo ? 'Inativar' : 'Ativar'} disabled={loading}>
+                                  {credor.ativo ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                                 </button>
-                                <button onClick={() => confirmarExclusao(fornecedor)} className="text-red-600 hover:text-red-900 transition-colors" title="Excluir" disabled={loading || excluindoFornecedor === fornecedor.id}>
+                                <button onClick={() => confirmarExclusao(credor)} className="text-red-600 hover:text-red-900 transition-colors" title="Excluir" disabled={loading || excluindoCredor === credor.id}>
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
@@ -334,6 +338,6 @@ export default function Credores() {
       </div>
 
       {/* Modal */}
-      <FornecedorModal isOpen={modalAberto} onClose={fecharModal} fornecedor={fornecedorSelecionado} modo={modoModal} onSave={salvarFornecedor} loading={salvandoFornecedor} />
+      <FornecedorModal isOpen={modalAberto} onClose={fecharModal} fornecedor={credorSelecionado} modo={modoModal} onSave={salvarCredor} loading={salvandoCredor} />
     </div>;
 }

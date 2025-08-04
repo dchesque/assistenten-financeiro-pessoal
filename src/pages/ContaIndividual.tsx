@@ -10,6 +10,7 @@ import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
 import { useBancosSupabase } from '@/hooks/useBancosSupabase';
 import { useContasPagar } from '@/hooks/useContasPagar';
+import { useCredores } from '@/hooks/useCredores';
 import { FornecedorSelector } from '@/components/contasPagar/FornecedorSelector';
 import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
@@ -34,6 +35,7 @@ export default function ContaIndividual() {
   const { toast } = useToast();
   const { criarConta, estados } = useContasPagar();
   const { bancos } = useBancosSupabase();
+  const { credores } = useCredores();
 
   // Estados do formulário
   const [conta, setConta] = useState<Partial<ContaPagar>>({
@@ -59,7 +61,7 @@ export default function ContaIndividual() {
   const [percentualDescontoMask, setPercentualDescontoMask] = useState('');
   const [valorDescontoMask, setValorDescontoMask] = useState('');
   const [valorPagoMask, setValorPagoMask] = useState('');
-  const [fornecedorSelecionado, setFornecedorSelecionado] = useState<Fornecedor | null>(null);
+  const [credorSelecionado, setCredorSelecionado] = useState<Fornecedor | null>(null);
   const [contaSelecionada, setContaSelecionada] = useState<PlanoContas | null>(null);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
     tipo: 'dinheiro_pix'
@@ -81,7 +83,7 @@ export default function ContaIndividual() {
     const erro = ValidationService.validarContaPagar({ 
       [campo]: valor,
       // Passar contexto completo para validações mais precisas
-      fornecedor_id: fornecedorSelecionado?.id,
+      fornecedor_id: credorSelecionado?.id,
       plano_conta_id: contaSelecionada?.id,
       data_emissao: conta.data_emissao  // 🔥 CORREÇÃO: Passar data de emissão para validação correta
     });
@@ -96,10 +98,10 @@ export default function ContaIndividual() {
   useEffect(() => {
     const timer = setTimeout(() => {
       // Só salva se há dados preenchidos
-      if (conta.descricao || conta.valor_original > 0 || fornecedorSelecionado || contaSelecionada) {
+      if (conta.descricao || conta.valor_original > 0 || credorSelecionado || contaSelecionada) {
         const rascunho = {
           conta,
-          fornecedor: fornecedorSelecionado,
+          credor: credorSelecionado,
           categoria: contaSelecionada,
           formaPagamento,
           timestamp: Date.now(),
@@ -115,7 +117,7 @@ export default function ContaIndividual() {
     }, 3000); // Salva após 3 segundos de inatividade
     
     return () => clearTimeout(timer);
-  }, [conta, fornecedorSelecionado, contaSelecionada, formaPagamento]);
+  }, [conta, credorSelecionado, contaSelecionada, formaPagamento]);
 
   // Recuperar rascunho ao carregar página
   useEffect(() => {
@@ -154,22 +156,22 @@ export default function ContaIndividual() {
     }));
   }, [conta.valor_original, conta.valor_juros, conta.valor_desconto]);
 
-  // Função para selecionar fornecedor e auto-preencher categoria
-  const handleFornecedorSelect = (fornecedor: Fornecedor) => {
-    setFornecedorSelecionado(fornecedor);
+  // Função para selecionar credor e auto-preencher categoria
+  const handleCredorSelect = (credor: Fornecedor) => {
+    setCredorSelecionado(credor);
     setConta(prev => ({
       ...prev,
-      fornecedor_id: fornecedor.id
+      fornecedor_id: credor.id
     }));
 
-    // Auto-preencher categoria padrão do fornecedor se existir
-    if (fornecedor.categoria_padrao_id) {
+    // Auto-preencher categoria padrão do credor se existir
+    if (credor.categoria_padrao_id) {
       // Buscar a categoria padrão do Supabase
       import('@/integrations/supabase/client').then(({ supabase }) => {
         supabase
           .from('plano_contas')
           .select('*')
-          .eq('id', fornecedor.categoria_padrao_id)
+          .eq('id', credor.categoria_padrao_id)
           .eq('aceita_lancamento', true)
           .single()
           .then(({ data, error }) => {
@@ -206,7 +208,7 @@ export default function ContaIndividual() {
           });
       });
     } else {
-      // Fornecedor sem categoria padrão - não alterar seleção atual
+      // Credor sem categoria padrão - não alterar seleção atual
       if (!contaSelecionada) {
         setConta(prev => ({
           ...prev,
@@ -300,7 +302,7 @@ export default function ContaIndividual() {
     
     // Usar validação robusta do serviço
     const erros = ValidationService.validarContaPagar({
-      fornecedor_id: fornecedorSelecionado?.id,
+      fornecedor_id: credorSelecionado?.id,
       plano_conta_id: contaSelecionada?.id,
       descricao: conta.descricao,
       data_vencimento: conta.data_vencimento,
@@ -337,7 +339,7 @@ export default function ContaIndividual() {
     if (rascunhoSalvo) {
       const dados = JSON.parse(rascunhoSalvo);
       setConta(dados.conta);
-      setFornecedorSelecionado(dados.fornecedor);
+      setCredorSelecionado(dados.credor || dados.fornecedor); // Retrocompatibilidade
       setContaSelecionada(dados.categoria);
       setFormaPagamento(dados.formaPagamento);
       setTemRascunho(false);
@@ -369,7 +371,7 @@ export default function ContaIndividual() {
       if (!user) throw new Error('Usuário não autenticado');
 
       const contaParaSalvar: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'> = {
-        fornecedor_id: fornecedorSelecionado!.id!,
+        fornecedor_id: credorSelecionado!.id!,
         plano_conta_id: contaSelecionada!.id!,
         banco_id: marcarComoPago && formaPagamento.banco_id ? formaPagamento.banco_id : conta.banco_id,
         documento_referencia: conta.documento_referencia,
@@ -490,7 +492,12 @@ export default function ContaIndividual() {
                       <Label className="text-sm font-medium text-gray-700">
                         Fornecedor <span className="text-red-500">*</span>
                       </Label>
-                      <FornecedorSelector value={fornecedorSelecionado} onSelect={handleFornecedorSelect} placeholder="Selecionar fornecedor..." className="w-full" />
+                      <FornecedorSelector 
+                        value={credorSelecionado} 
+                        onSelect={handleCredorSelect} 
+                        placeholder="Selecionar credor..." 
+                        className="w-full" 
+                      />
                     </div>
 
                     <div className="space-y-2">
