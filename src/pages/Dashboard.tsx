@@ -2,23 +2,25 @@ import { DollarSign, AlertTriangle, Calendar, CheckCircle } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { KPICard } from '@/components/dashboard/KPICard';
-import { AlertaCard } from '@/components/dashboard/AlertaCard';
-import { GraficoEvolucao } from '@/components/dashboard/GraficoEvolucao';
-import { GraficoDistribuicao } from '@/components/dashboard/GraficoDistribuicao';
-import { ResumoMaquininhas } from '@/components/dashboard/ResumoMaquininhas';
-import { ResumoCheques } from '@/components/dashboard/ResumoCheques';
-import { VendedoresWidget } from '@/components/dashboard/VendedoresWidget';
-import { AlertasInteligentesWidget } from '@/components/vendedores/AlertasInteligentesWidget';
-import { DashboardExecutivoVendedores } from '@/components/vendedores/DashboardExecutivoVendedores';
 import { AcoesRapidas } from '@/components/dashboard/AcoesRapidas';
-import { useDashboardExecutivo } from '@/hooks/useDashboardExecutivo';
+import { useContasPagarOtimizado } from '@/hooks/useContasPagarOtimizado';
 
 export default function Dashboard() {
-  const { kpis, alertas, evolucaoMensal, despesasPorCategoria, resumoMaquininha, resumoCheques, loading } = useDashboardExecutivo();
+  const { resumos, estados } = useContasPagarOtimizado();
 
-  if (loading) {
+  if (estados.carregandoContas) {
     return <div className="p-8">Carregando...</div>;
   }
+
+  // Dados simulados para KPIs pessoais
+  const kpisPersonal = {
+    saldoTotal: 127450.00,
+    gastosMes: resumos.pendentes.valor + resumos.vencidas.valor,
+    metaMensal: 8000.00,
+    fluxoLiquido: 4250.00
+  };
+
+  const percentualMeta = (kpisPersonal.gastosMes / kpisPersonal.metaMensal) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
@@ -31,94 +33,83 @@ export default function Dashboard() {
 
       <PageHeader
         breadcrumb={createBreadcrumb('/dashboard')}
-        title="Dashboard Executivo"
-        subtitle="Visão geral completa do negócio • Indicadores em tempo real"
+        title="Assistente Financeiro Pessoal"
+        subtitle="Controle suas despesas pessoais • Indicadores em tempo real"
       />
       
       <div className="relative p-4 lg:p-8">
         
-        {/* SEÇÃO 1: KPIs Principais */}
+        {/* KPIs Principais */}
         <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <KPICard
             titulo="Saldo Total"
-            valor={`R$ ${kpis.saldoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            variacao={{ valor: "+8,2% vs mês anterior", tipo: "positiva" }}
-            detalhes={["Itaú: R$ 85.200,00", "Bradesco: R$ 42.250,00"]}
+            valor={`R$ ${kpisPersonal.saldoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            variacao={{ valor: "+3,2% vs mês anterior", tipo: "positiva" }}
+            detalhes={["Contas correntes e poupança"]}
             status="saudavel"
             icone={<DollarSign className="w-6 h-6" />}
             gradiente="from-green-500 to-green-600"
           />
           
           <KPICard
-            titulo="Contas Pendentes"
-            valor={`R$ ${kpis.contasPendentes.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            subtitulo={`${kpis.contasPendentes.quantidade} contas · ${kpis.contasPendentes.vencidas} vencidas`}
-            detalhes={["Próximo vencimento: Amanhã - R$ 2.500"]}
-            status={kpis.contasPendentes.vencidas > 0 ? "critico" : "atencao"}
+            titulo="Contas a Pagar"
+            valor={`R$ ${resumos.pendentes.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            subtitulo={`${resumos.pendentes.total} contas • ${resumos.vencidas.total} vencidas`}
+            detalhes={[`Vence em 7 dias: ${resumos.vence7Dias.total} contas`]}
+            status={resumos.vencidas.total > 0 ? "critico" : "atencao"}
             icone={<AlertTriangle className="w-6 h-6" />}
             gradiente="from-red-500 to-red-600"
           />
           
           <KPICard
-            titulo="Receitas Recebidas"
-            valor={`R$ ${kpis.receitas.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            subtitulo={`Meta: R$ ${kpis.receitas.meta.toLocaleString('pt-BR')} (${kpis.receitas.percentualMeta.toFixed(0)}%)`}
-            detalhes={[`Projeção fim mês: R$ ${kpis.receitas.projecao.toLocaleString('pt-BR')}`]}
-            variacao={{ valor: "+12,5% vs mês anterior", tipo: "positiva" }}
+            titulo="Gastos do Mês"
+            valor={`R$ ${kpisPersonal.gastosMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            subtitulo={`Meta: R$ ${kpisPersonal.metaMensal.toLocaleString('pt-BR')} (${percentualMeta.toFixed(0)}%)`}
+            detalhes={[`${percentualMeta > 100 ? 'Acima' : 'Dentro'} da meta mensal`]}
+            variacao={{ valor: percentualMeta > 100 ? "Meta ultrapassada" : "Dentro da meta", tipo: percentualMeta > 100 ? "negativa" : "positiva" }}
             icone={<Calendar className="w-6 h-6" />}
             gradiente="from-blue-500 to-blue-600"
           />
           
           <KPICard
-            titulo="Fluxo Líquido"
-            valor={`R$ ${kpis.fluxoLiquido >= 0 ? '+' : ''}${kpis.fluxoLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            subtitulo="Entradas - Saídas"
-            detalhes={["Projeção 30 dias: R$ +67.200,00"]}
-            status={kpis.fluxoLiquido > 0 ? "saudavel" : "critico"}
+            titulo="Saldo Líquido"
+            valor={`R$ ${kpisPersonal.fluxoLiquido >= 0 ? '+' : ''}${kpisPersonal.fluxoLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            subtitulo="Rendimentos - Gastos"
+            detalhes={["Controle mensal"]}
+            status={kpisPersonal.fluxoLiquido > 0 ? "saudavel" : "critico"}
             icone={<CheckCircle className="w-6 h-6" />}
             gradiente="from-purple-500 to-purple-600"
           />
         </div>
 
-        {/* SEÇÃO 2: Gráficos */}
-        <div className="relative grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
-          <GraficoEvolucao dados={evolucaoMensal} />
-          <GraficoDistribuicao dados={despesasPorCategoria} />
-        </div>
-
-        {/* SEÇÃO 3: Alertas Inteligentes */}
-        <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {alertas.map((alerta) => (
-            <AlertaCard key={alerta.id} alerta={alerta} />
-          ))}
-        </div>
-
-        {/* SEÇÃO 4: Conciliação e Maquininhas */}
-        <div className="relative mb-6">
-          <ResumoMaquininhas resumo={resumoMaquininha} />
-        </div>
-
-        {/* SEÇÃO 5: Controle de Cheques */}
-        <div className="relative mb-6">
-          <ResumoCheques resumo={resumoCheques} />
-        </div>
-
-        {/* SEÇÃO 6: Dashboard Executivo de Vendedores */}
-        <div className="relative mb-6">
-          <DashboardExecutivoVendedores />
-        </div>
-
-        {/* SEÇÃO 7: Alertas Inteligentes de Vendedores e Widget */}
-        <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-          <div className="lg:col-span-2">
-            <AlertasInteligentesWidget />
+        {/* Resumo de Contas por Status */}
+        <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-xl p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Contas Pendentes</h3>
+            <p className="text-2xl font-bold text-blue-600">{resumos.pendentes.total}</p>
+            <p className="text-sm text-gray-600">R$ {resumos.pendentes.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
           </div>
-          <div>
-            <VendedoresWidget />
+          
+          <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-xl p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Vencidas</h3>
+            <p className="text-2xl font-bold text-red-600">{resumos.vencidas.total}</p>
+            <p className="text-sm text-gray-600">R$ {resumos.vencidas.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-xl p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Vence em 7 dias</h3>
+            <p className="text-2xl font-bold text-yellow-600">{resumos.vence7Dias.total}</p>
+            <p className="text-sm text-gray-600">R$ {resumos.vence7Dias.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-xl p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Pagas no Mês</h3>
+            <p className="text-2xl font-bold text-green-600">{resumos.pagasMes.total}</p>
+            <p className="text-sm text-gray-600">R$ {resumos.pagasMes.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
           </div>
         </div>
 
-        {/* SEÇÃO 8: Ações Rápidas */}
+        {/* Ações Rápidas */}
         <div className="relative">
           <AcoesRapidas />
         </div>

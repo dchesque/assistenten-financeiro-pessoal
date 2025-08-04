@@ -45,13 +45,17 @@ export interface FiltrosPlanoContas {
 }
 
 export const TIPOS_DRE = [
-  { valor: 'receita', nome: 'Receita', cor: '#10B981' },
-  { valor: 'deducao_receita', nome: 'Dedução da Receita', cor: '#EF4444' },
-  { valor: 'custo', nome: 'Custo dos Produtos Vendidos', cor: '#3B82F6' },
-  { valor: 'despesa_administrativa', nome: 'Despesa Administrativa', cor: '#8B5CF6' },
-  { valor: 'despesa_comercial', nome: 'Despesa Comercial', cor: '#EC4899' },
-  { valor: 'despesa_financeira', nome: 'Despesa Financeira', cor: '#F59E0B' }
+  { valor: 'moradia', nome: 'Moradia', cor: '#10B981' },
+  { valor: 'transporte', nome: 'Transporte', cor: '#3B82F6' },
+  { valor: 'alimentacao', nome: 'Alimentação', cor: '#EF4444' },
+  { valor: 'saude', nome: 'Saúde', cor: '#8B5CF6' },
+  { valor: 'educacao', nome: 'Educação', cor: '#EC4899' },
+  { valor: 'lazer', nome: 'Lazer', cor: '#F59E0B' },
+  { valor: 'roupas_cuidados', nome: 'Roupas e Cuidados', cor: '#06B6D4' },
+  { valor: 'outros', nome: 'Outros', cor: '#6366F1' }
 ];
+
+export const CATEGORIAS_PESSOAIS = TIPOS_DRE;
 
 export const CORES_PLANO_CONTAS = [
   { nome: 'Azul', valor: '#3B82F6', bg: 'bg-blue-500' },

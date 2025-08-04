@@ -25,13 +25,13 @@ import {
   Upload
 } from 'lucide-react';
 
-// Estrutura do menu com grupos e cores - VERSÃO DROPDOWN
+// Estrutura do menu para Finanças Pessoais
 const menuStructure = [
   // Dashboard (sem grupo)
   { 
     type: 'item', 
     name: 'Dashboard', 
-    path: '/', 
+    path: '/dashboard', 
     icon: LayoutDashboard,
     color: 'text-blue-500'
   },
@@ -50,20 +50,6 @@ const menuStructure = [
     ]
   },
   
-  // Grupo: Vendas e Receitas
-  { 
-    type: 'group', 
-    name: 'VENDAS E RECEITAS', 
-    icon: DollarSign,
-    color: 'text-green-500',
-    key: 'vendas-receitas',
-    items: [
-      { name: 'Consultar Vendas', path: '/consultar-vendas', icon: Eye, color: 'text-blue-500' },
-      { name: 'Nova Venda', path: '/nova-venda', icon: Plus, color: 'text-green-500' },
-      { name: 'Importar Vendas', path: '/importar-vendas', icon: Download, color: 'text-indigo-500' }
-    ]
-  },
-  
   // Grupo: Cadastros
   { 
     type: 'group', 
@@ -72,40 +58,9 @@ const menuStructure = [
     color: 'text-blue-500',
     key: 'cadastros',
     items: [
-      { name: 'Fornecedores', path: '/fornecedores', icon: Building2, color: 'text-orange-500' },
-      { name: 'Clientes', path: '/clientes', icon: Users, color: 'text-teal-500' },
-      { name: 'Vendedores', path: '/vendedores', icon: Users, color: 'text-green-500' },
-      { name: 'Plano de Contas', path: '/categorias', icon: Tags, color: 'text-yellow-500' },
-      { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' },
-      { name: 'Cheques', path: '/cheques', icon: FileText, color: 'text-purple-500' }
-    ]
-  },
-
-  // Grupo: Conciliação
-  { 
-    type: 'group', 
-    name: 'CONCILIAÇÃO', 
-    icon: CreditCard,
-    color: 'text-purple-500',
-    key: 'conciliacao',
-    items: [
-      { name: 'Dashboard', path: '/dashboard-conciliacao', icon: BarChart3, color: 'text-purple-600' },
-      { name: 'Maquininhas', path: '/maquininhas', icon: CreditCard, color: 'text-blue-600' },
-      { name: 'Upload Extratos', path: '/upload-extratos', icon: Upload, color: 'text-green-600' }
-    ]
-  },
-  
-  // Grupo: Relatórios  
-  { 
-    type: 'group', 
-    name: 'RELATÓRIOS', 
-    icon: BarChart,
-    color: 'text-gray-500',
-    key: 'relatorios',
-    items: [
-      { name: 'DRE', path: '/dre', icon: TrendingUp, color: 'text-green-600' },
-      { name: 'Fluxo de Caixa', path: '/fluxo-caixa', icon: BarChart3, color: 'text-blue-600' },
-      { name: 'Relatórios Gerais', path: '/relatorios-gerais', icon: FileBarChart, color: 'text-gray-600' }
+      { name: 'Credores', path: '/credores', icon: Building2, color: 'text-orange-500' },
+      { name: 'Categorias de Despesas', path: '/categorias', icon: Tags, color: 'text-yellow-500' },
+      { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' }
     ]
   }
 ];
@@ -122,10 +77,7 @@ export function SidebarNavigation({ expanded, mobile = false, onItemClick }: Sid
   // Estado dos grupos expandidos - Contas a Pagar expandido por padrão
   const [expandedGroups, setExpandedGroups] = useState({
     'contas-a-pagar': true,
-    'vendas-receitas': false,
-    'cadastros': false,
-    'conciliacao': false,
-    'relatorios': false
+    'cadastros': false
   });
 
   const isActive = (path: string) => {

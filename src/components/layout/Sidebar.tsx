@@ -18,8 +18,8 @@ export function Sidebar({ expanded, toggleSidebar, mobileOpen, setMobileOpen }: 
   const [companySettings] = useState({
     showLogo: false,        // false = mostrar nome, true = mostrar logo
     logoUrl: null,          // URL do logo personalizado
-    companyName: 'JC Financeiro',
-    companySubtitle: 'Plus Size'
+    companyName: 'Assistente Financeiro',
+    companySubtitle: 'Finanças Pessoais'
   });
 
   // Desktop: Sidebar sempre aberta fixa
