@@ -2,11 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { 
   DollarSign, 
-  FileBarChart, 
-  CreditCard, 
-  Building2, 
-  Upload, 
-  TrendingUp 
+  Users,
+  BarChart3,
+  Calendar,
+  PieChart,
+  Settings
 } from 'lucide-react';
 
 export function AcoesRapidas() {
@@ -15,51 +15,51 @@ export function AcoesRapidas() {
   const acoes = [
     {
       icone: DollarSign,
-      titulo: 'Nova Conta',
-      descricao: 'Lançar despesa',
+      titulo: 'Nova Despesa',
+      descricao: 'Lançar gasto',
       cor: 'from-red-500 to-red-600',
       corHover: 'hover:from-red-600 hover:to-red-700',
-      link: '/conta-individual'
+      link: '/contas-pagar'
     },
     {
-      icone: FileBarChart,
-      titulo: 'Gerar DRE',
-      descricao: 'Relatório período',
-      cor: 'from-blue-500 to-blue-600',
-      corHover: 'hover:from-blue-600 hover:to-blue-700',
-      link: '/dre'
-    },
-    {
-      icone: CreditCard,
-      titulo: 'Novo Cheque',
-      descricao: 'Emitir cheque',
-      cor: 'from-purple-500 to-purple-600',
-      corHover: 'hover:from-purple-600 hover:to-purple-700',
-      link: '/cheques'
-    },
-    {
-      icone: Building2,
-      titulo: 'Fornecedores',
+      icone: Users,
+      titulo: 'Credores',
       descricao: 'Cadastrar/consultar',
       cor: 'from-green-500 to-green-600',
       corHover: 'hover:from-green-600 hover:to-green-700',
-      link: '/fornecedores'
+      link: '/credores'
     },
     {
-      icone: Upload,
-      titulo: 'Conciliação',
-      descricao: 'Upload extratos',
+      icone: BarChart3,
+      titulo: 'Relatório Mensal',
+      descricao: 'Gastos do mês',
+      cor: 'from-blue-500 to-blue-600',
+      corHover: 'hover:from-blue-600 hover:to-blue-700',
+      link: '/relatorios'
+    },
+    {
+      icone: Calendar,
+      titulo: 'Agenda Financeira',
+      descricao: 'Próximos vencimentos',
+      cor: 'from-purple-500 to-purple-600',
+      corHover: 'hover:from-purple-600 hover:to-purple-700',
+      link: '/contas-pagar'
+    },
+    {
+      icone: PieChart,
+      titulo: 'Análise de Gastos',
+      descricao: 'Por categoria',
       cor: 'from-cyan-500 to-cyan-600',
       corHover: 'hover:from-cyan-600 hover:to-cyan-700',
-      link: '/conciliacao/upload'
+      link: '/relatorios'
     },
     {
-      icone: TrendingUp,
-      titulo: 'Fluxo de Caixa',
-      descricao: 'Projeções',
+      icone: Settings,
+      titulo: 'Configurações',
+      descricao: 'Ajustes pessoais',
       cor: 'from-orange-500 to-orange-600',
       corHover: 'hover:from-orange-600 hover:to-orange-700',
-      link: '/fluxo-caixa'
+      link: '/settings'
     }
   ];
 
