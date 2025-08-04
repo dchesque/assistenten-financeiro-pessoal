@@ -271,7 +271,7 @@ export function PlanoContasSelectorFornecedor({
         open={cadastroModalOpen}
         onOpenChange={setCadastroModalOpen}
         onCategoriaCriada={handleCategoriaCriada}
-        tipoDrePadrao={tipoFornecedor === 'receita' ? 'receita' : 'despesa_administrativa'}
+        tipoDrePadrao={'despesa_pessoal'}
       />
     </Dialog>
   );

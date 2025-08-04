@@ -59,7 +59,7 @@ export default function PlanoContasModal({
         cor: '#3B82F6',
         icone: 'Package',
         plano_pai_id: '',
-        tipo_dre: 'despesa_administrativa',
+        tipo_dre: 'despesa_pessoal',
         aceita_lancamento: false,
         ativo: true
       });

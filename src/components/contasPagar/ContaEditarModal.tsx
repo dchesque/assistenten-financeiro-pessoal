@@ -176,7 +176,7 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
                                       id: data.id,
                                       codigo: data.codigo,
                                       nome: data.nome,
-                                      tipo_dre: data.tipo_dre as 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira',
+                                      tipo_dre: 'despesa_pessoal',
                                       cor: data.cor || '#6B7280',
                                       icone: data.icone || 'Package',
                                       nivel: data.nivel,

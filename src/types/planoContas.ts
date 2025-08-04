@@ -8,7 +8,7 @@ export interface PlanoContas {
   plano_pai_id?: number; // Hierarquia
   plano_pai?: PlanoContas; // Relação com conta pai
   nivel: number; // 1=principal, 2=sub, 3=sub-sub
-  tipo_dre: 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira';
+  tipo_dre: 'despesa_pessoal';
   aceita_lancamento: boolean; // Se pode receber lançamentos diretos
   ativo: boolean;
   total_contas: number; // Calculado
@@ -27,7 +27,7 @@ export interface PlanoContasSupabase {
   icone: string;
   plano_pai_id?: number;
   nivel: number;
-  tipo_dre: 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira';
+  tipo_dre: 'despesa_pessoal';
   aceita_lancamento: boolean;
   total_contas: number;
   valor_total: number;
@@ -39,23 +39,27 @@ export interface PlanoContasSupabase {
 export interface FiltrosPlanoContas {
   busca: string;
   status: 'todos' | 'ativo' | 'inativo';
-  tipo_dre: 'todos' | 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira';
+  tipo_dre: 'todos' | 'despesa_pessoal';
   aceita_lancamento: 'todos' | 'sim' | 'nao';
   nivel: 'todos' | '1' | '2' | '3';
 }
 
 export const TIPOS_DRE = [
-  { valor: 'moradia', nome: 'Moradia', cor: '#10B981' },
-  { valor: 'transporte', nome: 'Transporte', cor: '#3B82F6' },
-  { valor: 'alimentacao', nome: 'Alimentação', cor: '#EF4444' },
-  { valor: 'saude', nome: 'Saúde', cor: '#8B5CF6' },
-  { valor: 'educacao', nome: 'Educação', cor: '#EC4899' },
-  { valor: 'lazer', nome: 'Lazer', cor: '#F59E0B' },
-  { valor: 'roupas_cuidados', nome: 'Roupas e Cuidados', cor: '#06B6D4' },
-  { valor: 'outros', nome: 'Outros', cor: '#6366F1' }
+  { valor: 'despesa_pessoal', nome: 'Despesa Pessoal', cor: '#8B5CF6' }
 ];
 
-export const CATEGORIAS_PESSOAIS = TIPOS_DRE;
+export const GRUPOS_DESPESAS_PESSOAIS = [
+  { valor: 'moradia', nome: 'Moradia', cor: '#8B5CF6', icone: 'Home' },
+  { valor: 'transporte', nome: 'Transporte', cor: '#3B82F6', icone: 'Car' },
+  { valor: 'alimentacao', nome: 'Alimentação', cor: '#10B981', icone: 'UtensilsCrossed' },
+  { valor: 'saude', nome: 'Saúde e Bem-estar', cor: '#EF4444', icone: 'Heart' },
+  { valor: 'educacao', nome: 'Educação e Cultura', cor: '#F59E0B', icone: 'GraduationCap' },
+  { valor: 'lazer', nome: 'Lazer e Entretenimento', cor: '#EC4899', icone: 'Gamepad2' },
+  { valor: 'cuidados', nome: 'Cuidados Pessoais', cor: '#06B6D4', icone: 'Sparkles' },
+  { valor: 'outros', nome: 'Outros Gastos', cor: '#6B7280', icone: 'Package' }
+];
+
+export const CATEGORIAS_PESSOAIS = GRUPOS_DESPESAS_PESSOAIS;
 
 export const CORES_PLANO_CONTAS = [
   { nome: 'Azul', valor: '#3B82F6', bg: 'bg-blue-500' },
@@ -69,25 +73,70 @@ export const CORES_PLANO_CONTAS = [
 ];
 
 export const ICONES_PLANO_CONTAS = [
-  { nome: 'Material', icone: 'Package' },
-  { nome: 'Serviços', icone: 'Wrench' },
-  { nome: 'Aluguel', icone: 'Home' },
+  // Moradia
+  { nome: 'Casa', icone: 'Home' },
+  { nome: 'Prédio', icone: 'Building2' },
   { nome: 'Energia', icone: 'Zap' },
-  { nome: 'Telefone', icone: 'Phone' },
+  { nome: 'Água', icone: 'Droplets' },
+  { nome: 'Gás', icone: 'Flame' },
   { nome: 'Internet', icone: 'Wifi' },
-  { nome: 'Transporte', icone: 'Truck' },
-  { nome: 'Marketing', icone: 'Megaphone' },
-  { nome: 'Escritório', icone: 'Building' },
-  { nome: 'Equipamentos', icone: 'Monitor' },
-  { nome: 'Alimentação', icone: 'Coffee' },
-  { nome: 'Limpeza', icone: 'Sparkles' },
+  { nome: 'Telefone', icone: 'Phone' },
+  { nome: 'Documento', icone: 'FileText' },
+  { nome: 'Ferramentas', icone: 'Wrench' },
+  { nome: 'Móveis', icone: 'Sofa' },
+  
+  // Transporte
+  { nome: 'Carro', icone: 'Car' },
+  { nome: 'Combustível', icone: 'Fuel' },
   { nome: 'Segurança', icone: 'Shield' },
-  { nome: 'Jurídico', icone: 'Scale' },
-  { nome: 'Contabilidade', icone: 'Calculator' },
-  { nome: 'Produção', icone: 'Factory' },
-  { nome: 'Pessoas', icone: 'Users' },
-  { nome: 'Financeiro', icone: 'CreditCard' },
-  { nome: 'Outros', icone: 'MoreHorizontal' }
+  { nome: 'Ônibus', icone: 'Bus' },
+  { nome: 'Estacionamento', icone: 'ParkingCircle' },
+  { nome: 'Aviso', icone: 'AlertTriangle' },
+  
+  // Alimentação
+  { nome: 'Carrinho', icone: 'ShoppingCart' },
+  { nome: 'Restaurante', icone: 'UtensilsCrossed' },
+  { nome: 'Delivery', icone: 'Bike' },
+  { nome: 'Padaria', icone: 'Cookie' },
+  { nome: 'Café', icone: 'Coffee' },
+  { nome: 'Bebida', icone: 'Wine' },
+  
+  // Saúde
+  { nome: 'Coração', icone: 'Heart' },
+  { nome: 'Médico', icone: 'Stethoscope' },
+  { nome: 'Exame', icone: 'TestTube' },
+  { nome: 'Remédio', icone: 'Pill' },
+  { nome: 'Dente', icone: 'SmilePlus' },
+  { nome: 'Exercício', icone: 'Dumbbell' },
+  { nome: 'Cérebro', icone: 'Brain' },
+  
+  // Educação
+  { nome: 'Formatura', icone: 'GraduationCap' },
+  { nome: 'Livro', icone: 'Book' },
+  { nome: 'Caneta', icone: 'PenTool' },
+  { nome: 'Escola', icone: 'School' },
+  { nome: 'Música', icone: 'Music' },
+  
+  // Lazer
+  { nome: 'Filme', icone: 'Film' },
+  { nome: 'Avião', icone: 'Plane' },
+  { nome: 'TV', icone: 'Tv' },
+  { nome: 'Game', icone: 'Gamepad2' },
+  { nome: 'Arte', icone: 'Palette' },
+  { nome: 'Festa', icone: 'PartyPopper' },
+  
+  // Cuidados Pessoais
+  { nome: 'Camisa', icone: 'Shirt' },
+  { nome: 'Pegadas', icone: 'FootPrints' },
+  { nome: 'Tesoura', icone: 'Scissors' },
+  { nome: 'Estrela', icone: 'Sparkles' },
+  { nome: 'Flor', icone: 'Flower' },
+  { nome: 'Relógio', icone: 'Watch' },
+  
+  // Outros
+  { nome: 'Presente', icone: 'Gift' },
+  { nome: 'Recibo', icone: 'Receipt' },
+  { nome: 'Pacote', icone: 'Package' }
 ];
 
 // Funções de conversão entre formatos

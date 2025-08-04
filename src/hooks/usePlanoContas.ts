@@ -40,7 +40,7 @@ export const usePlanoContas = () => {
       
       const contasConvertidas = (data || []).map(item => supabaseToPlanoContas({
         ...item,
-        tipo_dre: item.tipo_dre as 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira',
+        tipo_dre: 'despesa_pessoal',
         total_contas: item.total_contas || 0,
         valor_total: item.valor_total || 0,
         descricao: item.descricao || undefined
@@ -90,7 +90,7 @@ export const usePlanoContas = () => {
       
       const contaCriada = supabaseToPlanoContas({
         ...data,
-        tipo_dre: data.tipo_dre as 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira',
+        tipo_dre: 'despesa_pessoal',
         total_contas: data.total_contas || 0,
         valor_total: data.valor_total || 0,
         descricao: data.descricao || undefined
@@ -149,7 +149,7 @@ export const usePlanoContas = () => {
         id: data.id,
         codigo: data.codigo,
         nome: data.nome,
-        tipo_dre: data.tipo_dre as 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira',
+        tipo_dre: 'despesa_pessoal',
         cor: data.cor || '#6B7280',
         icone: data.icone || 'Package',
         nivel: data.nivel,
@@ -229,7 +229,7 @@ export const usePlanoContas = () => {
         id: data.id,
         codigo: data.codigo,
         nome: data.nome,
-        tipo_dre: data.tipo_dre as 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira',
+        tipo_dre: 'despesa_pessoal',
         cor: data.cor || '#6B7280',
         icone: data.icone || 'Package',
         nivel: data.nivel,
@@ -313,10 +313,10 @@ export const usePlanoContas = () => {
       if (tipoDreEspecifico) {
         query = query.eq('tipo_dre', tipoDreEspecifico);
       } else if (tipoFornecedor === 'receita') {
-        // Filtrar por tipo se especificado
-        query = query.eq('tipo_dre', 'receita');
+        // Para receita, usar despesa_pessoal também (sistema só tem despesas agora)
+        query = query.eq('tipo_dre', 'despesa_pessoal');
       } else if (tipoFornecedor === 'despesa') {
-        query = query.in('tipo_dre', ['custo', 'despesa_administrativa', 'despesa_comercial', 'despesa_financeira']);
+        query = query.eq('tipo_dre', 'despesa_pessoal');
       }
 
       // Filtrar por termo de busca se especificado
@@ -332,7 +332,7 @@ export const usePlanoContas = () => {
         id: item.id,
         codigo: item.codigo,
         nome: item.nome,
-        tipo_dre: item.tipo_dre as 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira',
+        tipo_dre: 'despesa_pessoal',
         cor: item.cor || '#6B7280',
         icone: item.icone || 'Package',
         nivel: item.nivel,

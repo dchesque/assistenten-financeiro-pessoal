@@ -15,7 +15,7 @@ interface CadastroRapidoCategoriaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCategoriaCriada: (categoria: PlanoContas) => void;
-  tipoDrePadrao?: 'receita' | 'deducao_receita' | 'custo' | 'despesa_administrativa' | 'despesa_comercial' | 'despesa_financeira';
+  tipoDrePadrao?: 'despesa_pessoal';
 }
 
 export function CadastroRapidoCategoriaModal({
@@ -28,7 +28,7 @@ export function CadastroRapidoCategoriaModal({
   const [formData, setFormData] = useState({
     nome: '',
     codigo: '',
-    tipo_dre: tipoDrePadrao || 'despesa_administrativa' as const,
+    tipo_dre: 'despesa_pessoal' as const,
     descricao: '',
     cor: '#3B82F6',
     icone: 'Package'
@@ -41,7 +41,7 @@ export function CadastroRapidoCategoriaModal({
     setFormData({
       nome: '',
       codigo: '',
-      tipo_dre: tipoDrePadrao || 'despesa_administrativa',
+      tipo_dre: 'despesa_pessoal',
       descricao: '',
       cor: '#3B82F6',
       icone: 'Package'
@@ -66,34 +66,35 @@ export function CadastroRapidoCategoriaModal({
       .map(p => p.codigo)
       .sort();
 
-    // Gerar próximo código baseado no padrão
+    // Gerar próximo código baseado no padrão para despesas pessoais
     let proximoCodigo = '';
     
-    switch (formData.tipo_dre) {
-      case 'receita':
-        proximoCodigo = gerarProximoCodigo(codigosExistentes, '3.1.');
-        break;
-      case 'deducao_receita':
-        proximoCodigo = gerarProximoCodigo(codigosExistentes, '3.2.');
-        break;
-      case 'custo':
-        proximoCodigo = gerarProximoCodigo(codigosExistentes, '4.1.');
-        break;
-      case 'despesa_administrativa':
-        proximoCodigo = gerarProximoCodigo(codigosExistentes, '5.1.');
-        break;
-      case 'despesa_comercial':
-        proximoCodigo = gerarProximoCodigo(codigosExistentes, '5.2.');
-        break;
-      case 'despesa_financeira':
-        proximoCodigo = gerarProximoCodigo(codigosExistentes, '5.3.');
-        break;
+    // Para despesas pessoais, usar numeração sequencial simples
+    if (formData.tipo_dre === 'despesa_pessoal') {
+      proximoCodigo = gerarProximoCodigo(codigosExistentes, '');
     }
 
     setFormData(prev => ({ ...prev, codigo: proximoCodigo }));
   };
 
   const gerarProximoCodigo = (codigosExistentes: string[], prefixo: string) => {
+    if (prefixo === '') {
+      // Para sistema pessoal, buscar o maior número existente
+      const numeros = codigosExistentes
+        .map(c => {
+          const match = c.match(/(\d+)\.(\d+)$/);
+          return match ? parseFloat(`${match[1]}.${match[2]}`) : 0;
+        })
+        .sort((a, b) => b - a);
+
+      const proximoNumero = numeros.length > 0 ? numeros[0] + 0.1 : 1.1;
+      const inteira = Math.floor(proximoNumero);
+      const decimal = Math.round((proximoNumero - inteira) * 10);
+      
+      return `${inteira}.${decimal}`;
+    }
+
+    // Código original para prefixos específicos
     const codigosComPrefixo = codigosExistentes
       .filter(c => c.startsWith(prefixo))
       .map(c => {

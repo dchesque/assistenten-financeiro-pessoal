@@ -200,7 +200,7 @@ export function PlanoContasSelector({
         open={cadastroModalOpen}
         onOpenChange={setCadastroModalOpen}
         onCategoriaCriada={handleCategoriaCriada}
-        tipoDrePadrao="despesa_administrativa"
+        tipoDrePadrao="despesa_pessoal"
       />
     </Dialog>
   );
