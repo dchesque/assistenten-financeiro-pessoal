@@ -91,8 +91,8 @@ export function SidebarNavigation({ expanded, mobile = false, onItemClick }: Sid
 
   // Estado dos grupos expandidos
   const [expandedGroups, setExpandedGroups] = useState({
-    'contas-pagar': false,
-    'recebimentos': false,
+    'contas-pagar': true,
+    'recebimentos': true,
     'cadastros': false
   });
 
