@@ -23,6 +23,7 @@ import Pagadores from "./pages/Pagadores";
 import CategoriasUnificadas from "./pages/CategoriasUnificadas";
 import Contatos from "./pages/Contatos";
 import LancamentoRecorrente from "./pages/LancamentoRecorrente";
+import DesignSystemPreview from "./pages/DesignSystemPreview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -57,7 +58,7 @@ const App = () => (
           <Route path="/pagadores" element={<ProtectedRoute><Layout><Pagadores /></Layout></ProtectedRoute>} />
           <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
           <Route path="/lancamento-recorrente" element={<ProtectedRoute><Layout><LancamentoRecorrente /></Layout></ProtectedRoute>} />
-          
+          <Route path="/design-system" element={<DesignSystemPreview />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
