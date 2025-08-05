@@ -1,20 +1,62 @@
 import * as React from "react"
-
+import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
+import { DESIGN_SYSTEM } from "@/constants/designSystem"
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
-      className
-    )}
-    {...props}
-  />
-))
+const cardVariants = cva(
+  "text-card-foreground",
+  {
+    variants: {
+      variant: {
+        default: DESIGN_SYSTEM.glassmorphism.card,
+        metric: `${DESIGN_SYSTEM.glassmorphism.card} p-6`,
+        dashboard: `${DESIGN_SYSTEM.glassmorphism.card} overflow-hidden`,
+        outline: "border border-white/20 rounded-2xl bg-transparent backdrop-blur-sm hover:bg-white/5 transition-all duration-300",
+        solid: "bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300",
+      },
+      hover: {
+        true: "hover:scale-[1.02] cursor-pointer",
+        false: "",
+      },
+      gradient: {
+        true: "",
+        false: "",
+      }
+    },
+    defaultVariants: {
+      variant: "default",
+      hover: true,
+      gradient: false,
+    },
+  }
+)
+
+export interface CardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {
+  gradientFrom?: string
+  gradientTo?: string
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant, hover, gradient, gradientFrom, gradientTo, style, ...props }, ref) => {
+    const gradientStyle = gradient && gradientFrom && gradientTo 
+      ? { 
+          ...style,
+          background: `linear-gradient(135deg, ${gradientFrom}, ${gradientTo})` 
+        }
+      : style
+
+    return (
+      <div
+        ref={ref}
+        className={cn(cardVariants({ variant, hover, gradient, className }))}
+        style={gradientStyle}
+        {...props}
+      />
+    )
+  }
+)
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<

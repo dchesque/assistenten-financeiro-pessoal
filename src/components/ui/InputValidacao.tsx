@@ -4,7 +4,7 @@ import { Label } from './label';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface InputValidacaoProps extends React.ComponentProps<typeof Input> {
+interface InputValidacaoProps extends Omit<React.ComponentProps<typeof Input>, 'erro' | 'validacao'> {
   label: string;
   erro?: string[];
   sucesso?: boolean;
