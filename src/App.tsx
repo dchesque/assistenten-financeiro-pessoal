@@ -16,12 +16,11 @@ import NovaEntrada from "./pages/NovaEntrada";
 import ContaIndividual from "./pages/ContaIndividual";
 import LancamentoLote from "./pages/LancamentoLote";
 import Credores from "./pages/Credores";
-import Categorias from "./pages/Categorias";
 import Bancos from "./pages/Bancos";
 import Settings from "./pages/Settings";
 import ContasReceber from "./pages/ContasReceber";
 import Pagadores from "./pages/Pagadores";
-import CategoriasReceitas from "./pages/CategoriasReceitas";
+import CategoriasUnificadas from "./pages/CategoriasUnificadas";
 import Contatos from "./pages/Contatos";
 import LancamentoRecorrente from "./pages/LancamentoRecorrente";
 import NotFound from "./pages/NotFound";
@@ -51,12 +50,11 @@ const App = () => (
           <Route path="/conta-individual" element={<ProtectedRoute><Layout><ContaIndividual /></Layout></ProtectedRoute>} />
           <Route path="/lancamento-lote" element={<ProtectedRoute><Layout><LancamentoLote /></Layout></ProtectedRoute>} />
           <Route path="/credores" element={<ProtectedRoute><Layout><Credores /></Layout></ProtectedRoute>} />
-          <Route path="/categorias" element={<ProtectedRoute><Layout><Categorias /></Layout></ProtectedRoute>} />
+          <Route path="/categorias" element={<ProtectedRoute><Layout><CategoriasUnificadas /></Layout></ProtectedRoute>} />
           <Route path="/bancos" element={<ProtectedRoute><Layout><Bancos /></Layout></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
           <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
           <Route path="/pagadores" element={<ProtectedRoute><Layout><Pagadores /></Layout></ProtectedRoute>} />
-          <Route path="/categorias-receitas" element={<ProtectedRoute><Layout><CategoriasReceitas /></Layout></ProtectedRoute>} />
           <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
           <Route path="/lancamento-recorrente" element={<ProtectedRoute><Layout><LancamentoRecorrente /></Layout></ProtectedRoute>} />
           

@@ -76,7 +76,7 @@ export default function CategoriasUnificadas() {
     return (
       <Layout>
         <div className="p-4 lg:p-8">
-          <LoadingStates.PageSkeleton />
+          <LoadingStates.CardSkeleton />
         </div>
       </Layout>
     );
@@ -86,9 +86,13 @@ export default function CategoriasUnificadas() {
     <Layout>
       <div className="p-4 lg:p-8">
         <PageHeader
-          titulo="Categorias"
-          subtitulo="Gerencie categorias de despesas e receitas"
-          botaoAcao={
+          breadcrumb={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Categorias' }
+          ]}
+          title="Categorias"
+          subtitle="Gerencie categorias de despesas e receitas"
+          actions={
             <Button onClick={abrirModalNova} className="btn-primary">
               <Plus className="h-4 w-4 mr-2" />
               Nova Categoria
