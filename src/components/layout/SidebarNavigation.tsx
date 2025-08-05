@@ -37,36 +37,32 @@ const menuStructure = [
     color: 'text-blue-500'
   },
   
-  // Nova Conta a Pagar (posicionado abaixo do Dashboard)
+  // Grupo: Contas a Pagar
   { 
-    type: 'item', 
-    name: 'Nova Conta a Pagar', 
-    path: '/conta-individual', 
-    icon: Plus,
-    color: 'text-red-500'
+    type: 'group', 
+    name: 'CONTAS A PAGAR', 
+    icon: Receipt,
+    color: 'text-red-500',
+    key: 'contas-pagar',
+    items: [
+      { name: 'Nova Conta', path: '/conta-individual', icon: Plus, color: 'text-red-500' },
+      { name: 'Contas a Pagar', path: '/contas-pagar', icon: Receipt, color: 'text-red-500' },
+      { name: 'Contas Recorrentes', path: '/lancamento-lote', icon: Package, color: 'text-purple-500' }
+    ]
   },
   
-  // Movimentação Financeira (agora itens individuais sempre visíveis)
+  // Grupo: Recebimentos
   { 
-    type: 'item', 
-    name: 'Contas a Pagar', 
-    path: '/contas-pagar', 
-    icon: Receipt,
-    color: 'text-red-500'
-  },
-  { 
-    type: 'item', 
-    name: 'Contas a Receber', 
-    path: '/contas-receber', 
+    type: 'group', 
+    name: 'RECEBIMENTOS', 
     icon: DollarSign,
-    color: 'text-green-500'
-  },
-  { 
-    type: 'item', 
-    name: 'Lançamento em Lote', 
-    path: '/lancamento-lote', 
-    icon: Package,
-    color: 'text-purple-500'
+    color: 'text-green-500',
+    key: 'recebimentos',
+    items: [
+      { name: 'Novo Recebimento', path: '/nova-entrada', icon: Plus, color: 'text-green-500' },
+      { name: 'Contas a Receber', path: '/contas-receber', icon: DollarSign, color: 'text-green-500' },
+      { name: 'Lançamento Recorrente', path: '/lancamento-recorrente', icon: Package, color: 'text-green-600' }
+    ]
   },
   
   // Grupo: Cadastros (atualizado)
@@ -77,10 +73,9 @@ const menuStructure = [
     color: 'text-blue-500',
     key: 'cadastros',
     items: [
-      { name: 'Credores', path: '/credores', icon: Building2, color: 'text-orange-500' },
-      { name: 'Pagadores', path: '/pagadores', icon: Users, color: 'text-blue-500' },
-      { name: 'Categorias Despesas', path: '/categorias', icon: Tags, color: 'text-red-500' },
-      { name: 'Categorias Receitas', path: '/categorias-receitas', icon: BarChart3, color: 'text-green-500' },
+      { name: 'Contatos', path: '/contatos', icon: Users, color: 'text-blue-500' },
+      { name: 'Categorias de Despesas', path: '/categorias', icon: Tags, color: 'text-red-500' },
+      { name: 'Categorias de Receitas', path: '/categorias-receitas', icon: BarChart3, color: 'text-green-500' },
       { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' }
     ]
   }
@@ -97,6 +92,8 @@ export function SidebarNavigation({ expanded, mobile = false, onItemClick }: Sid
 
   // Estado dos grupos expandidos
   const [expandedGroups, setExpandedGroups] = useState({
+    'contas-pagar': false,
+    'recebimentos': false,
     'cadastros': false
   });
 

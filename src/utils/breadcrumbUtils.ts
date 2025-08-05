@@ -26,15 +26,15 @@ export const createBreadcrumb = (path: string, customItems?: BreadcrumbItem[]): 
       { label: 'Contas a Pagar', href: '/contas-pagar' },
       { label: 'Lançamento em Lote' }
     ],
-    '/credores': [
+    '/contatos': [
       { label: 'Início', href: '/dashboard' },
       { label: 'Cadastros' },
-      { label: 'Credores' }
+      { label: 'Contatos' }
     ],
-    '/fornecedores': [
+    '/lancamento-recorrente': [
       { label: 'Início', href: '/dashboard' },
-      { label: 'Cadastros' },
-      { label: 'Credores' }
+      { label: 'Recebimentos' },
+      { label: 'Lançamento Recorrente' }
     ],
     '/categorias': [
       { label: 'Início', href: '/dashboard' },

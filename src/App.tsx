@@ -22,6 +22,8 @@ import Settings from "./pages/Settings";
 import ContasReceber from "./pages/ContasReceber";
 import Pagadores from "./pages/Pagadores";
 import CategoriasReceitas from "./pages/CategoriasReceitas";
+import Contatos from "./pages/Contatos";
+import LancamentoRecorrente from "./pages/LancamentoRecorrente";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -55,6 +57,8 @@ const App = () => (
           <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
           <Route path="/pagadores" element={<ProtectedRoute><Layout><Pagadores /></Layout></ProtectedRoute>} />
           <Route path="/categorias-receitas" element={<ProtectedRoute><Layout><CategoriasReceitas /></Layout></ProtectedRoute>} />
+          <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
+          <Route path="/lancamento-recorrente" element={<ProtectedRoute><Layout><LancamentoRecorrente /></Layout></ProtectedRoute>} />
           
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
