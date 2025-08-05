@@ -37,30 +37,21 @@ const menuStructure = [
     color: 'text-blue-500'
   },
   
-  // Finanças Pessoais (sem grupo)
-  { 
-    type: 'item', 
-    name: 'Finanças Pessoais', 
-    path: '/financas-pessoais', 
-    icon: Wallet,
-    color: 'text-green-500'
-  },
-  
-  // Grupo: Contas a Pagar
+  // Grupo: Movimentação Financeira (NOVO)
   { 
     type: 'group', 
-    name: 'CONTAS A PAGAR', 
-    icon: CreditCard,
-    color: 'text-red-500',
-    key: 'contas-a-pagar',
+    name: 'MOVIMENTAÇÃO FINANCEIRA', 
+    icon: TrendingUp,
+    color: 'text-purple-500',
+    key: 'movimentacao-financeira',
     items: [
-      { name: 'Consultar Contas', path: '/contas-pagar', icon: Eye, color: 'text-blue-500' },
-      { name: 'Nova Conta', path: '/conta-individual', icon: Plus, color: 'text-green-500' },
+      { name: 'Contas a Pagar', path: '/contas-pagar', icon: Receipt, color: 'text-red-500' },
+      { name: 'Contas a Receber', path: '/contas-receber', icon: DollarSign, color: 'text-green-500' },
       { name: 'Lançamento em Lote', path: '/lancamento-lote', icon: Package, color: 'text-purple-500' }
     ]
   },
   
-  // Grupo: Cadastros
+  // Grupo: Cadastros (atualizado)
   { 
     type: 'group', 
     name: 'CADASTROS', 
@@ -69,8 +60,23 @@ const menuStructure = [
     key: 'cadastros',
     items: [
       { name: 'Credores', path: '/credores', icon: Building2, color: 'text-orange-500' },
-      { name: 'Categorias de Despesas', path: '/categorias', icon: Tags, color: 'text-yellow-500' },
+      { name: 'Pagadores', path: '/pagadores', icon: Users, color: 'text-blue-500' },
+      { name: 'Categorias Despesas', path: '/categorias', icon: Tags, color: 'text-red-500' },
+      { name: 'Categorias Receitas', path: '/categorias-receitas', icon: BarChart3, color: 'text-green-500' },
       { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' }
+    ]
+  },
+  
+  // Grupo: Ações Rápidas
+  { 
+    type: 'group', 
+    name: 'AÇÕES RÁPIDAS', 
+    icon: Clipboard,
+    color: 'text-yellow-500',
+    key: 'acoes-rapidas',
+    items: [
+      { name: 'Nova Conta a Pagar', path: '/conta-individual', icon: Plus, color: 'text-red-500' },
+      { name: 'Baixar Contas', path: '/baixar-contas', icon: Download, color: 'text-green-500' }
     ]
   }
 ];
@@ -84,10 +90,11 @@ interface SidebarNavigationProps {
 export function SidebarNavigation({ expanded, mobile = false, onItemClick }: SidebarNavigationProps) {
   const location = useLocation();
 
-  // Estado dos grupos expandidos - Contas a Pagar expandido por padrão
+  // Estado dos grupos expandidos - Movimentação Financeira expandido por padrão
   const [expandedGroups, setExpandedGroups] = useState({
-    'contas-a-pagar': true,
-    'cadastros': false
+    'movimentacao-financeira': true,
+    'cadastros': false,
+    'acoes-rapidas': false
   });
 
   const isActive = (path: string) => {

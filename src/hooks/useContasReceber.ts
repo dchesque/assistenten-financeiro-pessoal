@@ -156,6 +156,64 @@ export function useContasReceber() {
     });
   };
 
+  const lancamentoLote = async (dados: LancamentoLoteReceita): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const contasNovas: ContaReceber[] = [];
+      const dataInicio = new Date(dados.data_inicio);
+
+      for (let i = 0; i < dados.quantidade_parcelas; i++) {
+        const dataVencimento = new Date(dataInicio);
+        
+        switch (dados.periodicidade) {
+          case 'mensal':
+            dataVencimento.setMonth(dataVencimento.getMonth() + i);
+            break;
+          case 'quinzenal':
+            dataVencimento.setDate(dataVencimento.getDate() + (i * 15));
+            break;
+          case 'semanal':
+            dataVencimento.setDate(dataVencimento.getDate() + (i * 7));
+            break;
+        }
+
+        const novaConta: ContaReceber = {
+          id: Date.now() + i,
+          descricao: `${dados.descricao_base} (${i + 1}/${dados.quantidade_parcelas})`,
+          valor: dados.valor,
+          data_vencimento: dataVencimento.toISOString().split('T')[0],
+          pagador_id: dados.pagador_id,
+          categoria_id: dados.categoria_id,
+          banco_id: dados.banco_id,
+          observacoes: dados.observacoes,
+          recorrente: false,
+          status: 'pendente',
+          user_id: user.id,
+          created_at: new Date().toISOString(),
+        };
+
+        contasNovas.push(novaConta);
+      }
+
+      setContas(prev => [...prev, ...contasNovas]);
+
+      toast({
+        title: 'Sucesso',
+        description: `${dados.quantidade_parcelas} contas a receber criadas com sucesso`,
+      });
+
+      return true;
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível criar o lançamento em lote',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   const excluirConta = async (id: number): Promise<boolean> => {
     try {
       setContas(prev => prev.filter(c => c.id !== id));
