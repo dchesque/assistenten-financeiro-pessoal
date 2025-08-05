@@ -19,7 +19,7 @@ import Credores from "./pages/Credores";
 import Categorias from "./pages/Categorias";
 import Bancos from "./pages/Bancos";
 import Settings from "./pages/Settings";
-import FinancasPessoais from "./pages/FinancasPessoais";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -50,7 +50,7 @@ const App = () => (
           <Route path="/categorias" element={<ProtectedRoute><Layout><Categorias /></Layout></ProtectedRoute>} />
           <Route path="/bancos" element={<ProtectedRoute><Layout><Bancos /></Layout></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
-          <Route path="/financas-pessoais" element={<ProtectedRoute><FinancasPessoais /></ProtectedRoute>} />
+          
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
