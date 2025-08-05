@@ -8,8 +8,10 @@ import { useContasReceber } from '@/hooks/useContasReceber';
 import { formatarMoeda } from '@/utils/formatters';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { DollarSign, TrendingUp, Calendar, Clock, Plus, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function ContasReceber() {
+  const navigate = useNavigate();
   const { contas, loading, marcarComoRecebido, obterEstatisticas } = useContasReceber();
   const estatisticas = obterEstatisticas();
 
@@ -47,7 +49,10 @@ export default function ContasReceber() {
         subtitle="Gerencie suas receitas e entradas financeiras • Controle de recebimentos"
         icon={<DollarSign className="h-8 w-8" />}
         actions={
-          <Button className="btn-gradient">
+          <Button 
+            onClick={() => navigate('/nova-entrada')}
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Nova Entrada
           </Button>
