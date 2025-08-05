@@ -12,7 +12,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ContasPagar from "./pages/ContasPagar";
-import BaixarContas from "./pages/BaixarContas";
+
 import ContaIndividual from "./pages/ContaIndividual";
 import LancamentoLote from "./pages/LancamentoLote";
 import Credores from "./pages/Credores";
@@ -45,7 +45,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
           <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
-          <Route path="/baixar-contas" element={<ProtectedRoute><Layout><BaixarContas /></Layout></ProtectedRoute>} />
+          
           <Route path="/conta-individual" element={<ProtectedRoute><Layout><ContaIndividual /></Layout></ProtectedRoute>} />
           <Route path="/lancamento-lote" element={<ProtectedRoute><Layout><LancamentoLote /></Layout></ProtectedRoute>} />
           <Route path="/credores" element={<ProtectedRoute><Layout><Credores /></Layout></ProtectedRoute>} />

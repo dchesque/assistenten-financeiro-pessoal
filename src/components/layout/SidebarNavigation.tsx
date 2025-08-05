@@ -37,6 +37,15 @@ const menuStructure = [
     color: 'text-blue-500'
   },
   
+  // Nova Conta a Pagar (posicionado abaixo do Dashboard)
+  { 
+    type: 'item', 
+    name: 'Nova Conta a Pagar', 
+    path: '/conta-individual', 
+    icon: Plus,
+    color: 'text-red-500'
+  },
+  
   // Movimentação Financeira (agora itens individuais sempre visíveis)
   { 
     type: 'item', 
@@ -74,19 +83,6 @@ const menuStructure = [
       { name: 'Categorias Receitas', path: '/categorias-receitas', icon: BarChart3, color: 'text-green-500' },
       { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' }
     ]
-  },
-  
-  // Grupo: Ações Rápidas
-  { 
-    type: 'group', 
-    name: 'AÇÕES RÁPIDAS', 
-    icon: Clipboard,
-    color: 'text-yellow-500',
-    key: 'acoes-rapidas',
-    items: [
-      { name: 'Nova Conta a Pagar', path: '/conta-individual', icon: Plus, color: 'text-red-500' },
-      { name: 'Baixar Contas', path: '/baixar-contas', icon: Download, color: 'text-green-500' }
-    ]
   }
 ];
 
@@ -99,10 +95,9 @@ interface SidebarNavigationProps {
 export function SidebarNavigation({ expanded, mobile = false, onItemClick }: SidebarNavigationProps) {
   const location = useLocation();
 
-  // Estado dos grupos expandidos - removido movimentacao-financeira
+  // Estado dos grupos expandidos
   const [expandedGroups, setExpandedGroups] = useState({
-    'cadastros': false,
-    'acoes-rapidas': false
+    'cadastros': false
   });
 
   const isActive = (path: string) => {
