@@ -1,6 +1,76 @@
 // Utilitários para máscaras de valores brasileiros
 
 /**
+ * Aplicar máscara de CPF
+ */
+export const aplicarMascaraCPF = (valor: string): string => {
+  return valor
+    .replace(/\D/g, '')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+    .replace(/(-\d{2})\d+?$/, '$1');
+};
+
+/**
+ * Aplicar máscara de CNPJ
+ */
+export const aplicarMascaraCNPJ = (valor: string): string => {
+  return valor
+    .replace(/\D/g, '')
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})/, '$1-$2')
+    .replace(/(-\d{2})\d+?$/, '$1');
+};
+
+/**
+ * Aplicar máscara de telefone brasileiro
+ */
+export const aplicarMascaraTelefone = (valor: string): string => {
+  const numeros = valor.replace(/\D/g, '');
+  
+  if (numeros.length <= 10) {
+    // Telefone fixo: (11) 1234-5678
+    return numeros
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{4})(\d)/, '$1-$2')
+      .substring(0, 14);
+  } else {
+    // Celular: (11) 91234-5678
+    return numeros
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .substring(0, 15);
+  }
+};
+
+/**
+ * Aplicar máscara de CEP
+ */
+export const aplicarMascaraCEP = (valor: string): string => {
+  return valor
+    .replace(/\D/g, '')
+    .replace(/(\d{5})(\d)/, '$1-$2')
+    .replace(/(-\d{3})\d+?$/, '$1');
+};
+
+/**
+ * Aplicar máscara de RG
+ */
+export const aplicarMascaraRG = (valor: string): string => {
+  const numeros = valor.replace(/\D/g, '');
+  if (numeros.length <= 8) {
+    return numeros.replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
+  } else {
+    return numeros
+      .replace(/(\d{2})(\d{3})(\d{3})(\d)/, '$1.$2.$3-$4')
+      .substring(0, 12);
+  }
+};
+
+/**
  * Formatar valor monetário para exibição
  */
 export const formatarMoedaExibicao = (valor: number): string => {
@@ -126,4 +196,24 @@ export const numeroParaMascaraMoeda = (numero: number): string => {
 export const numeroParaMascaraPercentual = (numero: number): string => {
   if (isNaN(numero) || numero === 0) return '';
   return formatarPercentualExibicao(numero);
+};
+
+/**
+ * Objeto com todas as máscaras disponíveis
+ */
+export const MASCARAS = {
+  CPF: aplicarMascaraCPF,
+  CNPJ: aplicarMascaraCNPJ,
+  TELEFONE: aplicarMascaraTelefone,
+  CEP: aplicarMascaraCEP,
+  RG: aplicarMascaraRG,
+  MOEDA: aplicarMascaraMoeda,
+  PERCENTUAL: aplicarMascaraPercentual
+};
+
+/**
+ * Remover todas as máscaras para obter valor limpo
+ */
+export const removerMascara = (valor: string): string => {
+  return valor.replace(/\D/g, '');
 };

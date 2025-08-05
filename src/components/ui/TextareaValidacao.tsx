@@ -2,35 +2,33 @@ import React, { forwardRef, useState } from 'react';
 import { X, Check, AlertCircle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface InputValidacaoProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+interface TextareaValidacaoProps extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange'> {
   id: string;
   label: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  type?: 'text' | 'email' | 'password' | 'tel' | 'number';
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   placeholder?: string;
   obrigatorio?: boolean;
   erro?: string;
   sucesso?: boolean;
   validacao?: (valor: string) => string;
-  mascara?: (valor: string) => string;
+  rows?: number;
   maxLength?: number;
   className?: string;
   dica?: string;
 }
 
-export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(({
+export const TextareaValidacao = forwardRef<HTMLTextAreaElement, TextareaValidacaoProps>(({
   id,
   label,
   value,
   onChange,
-  type = 'text',
   placeholder,
   obrigatorio = false,
   erro,
   sucesso = false,
   validacao,
-  mascara,
+  rows = 4,
   maxLength,
   className,
   dica,
@@ -41,13 +39,8 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
   const [touched, setTouched] = useState(false);
   const [focused, setFocused] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     let valor = e.target.value;
-    
-    // Aplicar máscara se fornecida
-    if (mascara) {
-      valor = mascara(valor);
-    }
     
     // Limitar comprimento se definido
     if (maxLength && valor.length > maxLength) {
@@ -65,7 +58,7 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
     }
   };
 
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     setTouched(true);
     setFocused(false);
     
@@ -77,7 +70,7 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
     props.onBlur?.(e);
   };
 
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
     setFocused(true);
     props.onFocus?.(e);
   };
@@ -85,36 +78,52 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
   const temErro = erro || localErro;
   const temSucesso = sucesso && !temErro && value.length > 0;
 
+  const caracteresRestantes = maxLength ? maxLength - value.length : null;
+
   return (
     <div className={cn("space-y-2", className)}>
       {/* Label */}
-      <label 
-        htmlFor={id}
-        className="block text-sm font-medium text-gray-700"
-      >
-        {label}
-        {obrigatorio && (
-          <span className="text-red-500 ml-1">*</span>
+      <div className="flex justify-between items-center">
+        <label 
+          htmlFor={id}
+          className="block text-sm font-medium text-gray-700"
+        >
+          {label}
+          {obrigatorio && (
+            <span className="text-red-500 ml-1">*</span>
+          )}
+        </label>
+        
+        {/* Contador de caracteres */}
+        {maxLength && (
+          <span className={cn(
+            "text-xs",
+            caracteresRestantes && caracteresRestantes < 50 
+              ? "text-orange-500" 
+              : "text-gray-400"
+          )}>
+            {value.length}/{maxLength}
+          </span>
         )}
-      </label>
+      </div>
       
-      {/* Input Container */}
+      {/* Textarea Container */}
       <div className="relative">
-        <input
+        <textarea
           ref={ref}
           id={id}
-          type={type}
           value={value}
           onChange={handleChange}
           onBlur={handleBlur}
           onFocus={handleFocus}
           placeholder={placeholder}
+          rows={rows}
           disabled={disabled}
           className={cn(
             // Base styles
             "w-full px-4 py-3 bg-white/80 backdrop-blur-sm border rounded-xl",
             "focus:ring-2 focus:border-transparent transition-all duration-200",
-            "placeholder:text-gray-400",
+            "placeholder:text-gray-400 resize-none",
             
             // Estados condicionais
             temErro
@@ -134,7 +143,7 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
         
         {/* Ícone de Status */}
         {(temErro || temSucesso) && !disabled && (
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+          <div className="absolute top-3 right-3">
             {temErro ? (
               <X className="w-5 h-5 text-red-500" />
             ) : (
@@ -168,4 +177,4 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
   );
 });
 
-InputValidacao.displayName = 'InputValidacao';
+TextareaValidacao.displayName = 'TextareaValidacao';
