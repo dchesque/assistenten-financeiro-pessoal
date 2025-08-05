@@ -37,18 +37,27 @@ const menuStructure = [
     color: 'text-blue-500'
   },
   
-  // Grupo: Movimentação Financeira (NOVO)
+  // Movimentação Financeira (agora itens individuais sempre visíveis)
   { 
-    type: 'group', 
-    name: 'MOVIMENTAÇÃO FINANCEIRA', 
-    icon: TrendingUp,
-    color: 'text-purple-500',
-    key: 'movimentacao-financeira',
-    items: [
-      { name: 'Contas a Pagar', path: '/contas-pagar', icon: Receipt, color: 'text-red-500' },
-      { name: 'Contas a Receber', path: '/contas-receber', icon: DollarSign, color: 'text-green-500' },
-      { name: 'Lançamento em Lote', path: '/lancamento-lote', icon: Package, color: 'text-purple-500' }
-    ]
+    type: 'item', 
+    name: 'Contas a Pagar', 
+    path: '/contas-pagar', 
+    icon: Receipt,
+    color: 'text-red-500'
+  },
+  { 
+    type: 'item', 
+    name: 'Contas a Receber', 
+    path: '/contas-receber', 
+    icon: DollarSign,
+    color: 'text-green-500'
+  },
+  { 
+    type: 'item', 
+    name: 'Lançamento em Lote', 
+    path: '/lancamento-lote', 
+    icon: Package,
+    color: 'text-purple-500'
   },
   
   // Grupo: Cadastros (atualizado)
@@ -90,9 +99,8 @@ interface SidebarNavigationProps {
 export function SidebarNavigation({ expanded, mobile = false, onItemClick }: SidebarNavigationProps) {
   const location = useLocation();
 
-  // Estado dos grupos expandidos - Movimentação Financeira expandido por padrão
+  // Estado dos grupos expandidos - removido movimentacao-financeira
   const [expandedGroups, setExpandedGroups] = useState({
-    'movimentacao-financeira': true,
     'cadastros': false,
     'acoes-rapidas': false
   });
