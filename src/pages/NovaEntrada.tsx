@@ -86,17 +86,15 @@ export default function NovaEntrada() {
         status: data.data_recebimento ? 'recebido' as const : 'pendente' as const
       };
 
-      const sucesso = await criarConta(dadosConta);
+      await criarConta(dadosConta);
       
-      if (sucesso) {
-        toast({
-          title: "Sucesso!",
-          description: "Conta a receber cadastrada com sucesso!",
-        });
-        navigate('/contas-receber');
-      }
+      toast({
+        title: "Sucesso",
+        description: "Conta a receber cadastrada com sucesso!",
+      });
+      
+      navigate('/contas-receber');
     } catch (error) {
-      console.error('Erro ao criar conta:', error);
       toast({
         title: "Erro",
         description: "Erro ao cadastrar conta a receber. Tente novamente.",
@@ -154,37 +152,308 @@ export default function NovaEntrada() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            {/* ... keep existing code (all formulário content) */}
-            
-            <Form {...form}>
-              <form id="nova-entrada-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                
-                {/* Seção: Pagador */}
-                <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+            {/* Formulário Principal */}
+            <div className="xl:col-span-2 space-y-6">
+              <Form {...form}>
+                <form id="nova-entrada-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  
+                  {/* Seção: Pagador */}
+                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center space-x-2 text-gray-900">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                        <span>Pagador</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <PagadorSelector
+                        value={watchedValues.pagador_id}
+                        onChange={(value) => form.setValue('pagador_id', value)}
+                        onOpenModal={() => setPagadorSelectorOpen(true)}
+                        onNewPagador={() => setCadastroRapidoOpen(true)}
+                      />
+                      {form.formState.errors.pagador_id && (
+                        <p className="text-sm text-red-600">{form.formState.errors.pagador_id.message}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Seção: Informações da Conta */}
+                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center space-x-2 text-gray-900">
+                        <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                          <DollarSign className="w-4 h-4 text-white" />
+                        </div>
+                        <span>Informações da Conta</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="descricao"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Descrição *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Descrição da receita"
+                                  {...field}
+                                  className="bg-white/80 border-gray-300/50"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="valor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Valor *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="R$ 0,00"
+                                  value={field.value}
+                                  onChange={(e) => handleValorChange(e.target.value)}
+                                  className="bg-white/80 border-gray-300/50"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="data_vencimento"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data de Vencimento *</FormLabel>
+                              <FormControl>
+                                <DatePicker
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  placeholder="Selecionar data"
+                                  className="bg-white/80"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="data_recebimento"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data de Recebimento</FormLabel>
+                              <FormControl>
+                                <DatePicker
+                                  value={field.value || ''}
+                                  onChange={field.onChange}
+                                  placeholder="Selecionar data"
+                                  className="bg-white/80"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Seção: Categorização */}
+                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center space-x-2 text-gray-900">
+                        <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                          <Tag className="w-4 h-4 text-white" />
+                        </div>
+                        <span>Categorização</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Categoria *
+                          </label>
+                          <CategoriaReceitaSelector
+                            value={watchedValues.categoria_id}
+                            onChange={(value) => form.setValue('categoria_id', value)}
+                            onOpenModal={() => setCategoriaSelectorOpen(true)}
+                          />
+                          {form.formState.errors.categoria_id && (
+                            <p className="text-sm text-red-600 mt-1">{form.formState.errors.categoria_id.message}</p>
+                          )}
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="banco_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Banco</FormLabel>
+                              <Select
+                                value={field.value?.toString() || ''}
+                                onValueChange={(value) => field.onChange(value ? parseInt(value) : 0)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="bg-white/80 border-gray-300/50">
+                                    <SelectValue placeholder="Selecionar banco" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="0">Nenhum banco</SelectItem>
+                                  {bancos.map((banco) => (
+                                    <SelectItem key={banco.id} value={banco.id.toString()}>
+                                      {banco.nome}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Seção: Configurações */}
+                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center space-x-2 text-gray-900">
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                          <Settings className="w-4 h-4 text-white" />
+                        </div>
+                        <span>Configurações</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="recorrente"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200/50 p-4 bg-gray-50/50">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base font-medium">
+                                Receita Recorrente
+                              </FormLabel>
+                              <p className="text-sm text-gray-500">
+                                Esta receita se repete mensalmente
+                              </p>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="observacoes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Observações</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Observações adicionais..."
+                                className="bg-white/80 border-gray-300/50 resize-none"
+                                rows={3}
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+                </form>
+              </Form>
+            </div>
+
+            {/* Preview Lateral */}
+            {showPreview && (
+              <div className="xl:col-span-1">
+                <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg sticky top-8">
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center space-x-2 text-gray-900">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <User className="w-4 h-4 text-white" />
+                        <Eye className="w-4 h-4 text-white" />
                       </div>
-                      <span>Pagador</span>
+                      <span>Pré-visualização</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <PagadorSelector
-                      value={watchedValues.pagador_id}
-                      onChange={(value) => form.setValue('pagador_id', value)}
-                      onOpenModal={() => setPagadorSelectorOpen(true)}
-                      onNewPagador={() => setCadastroRapidoOpen(true)}
-                    />
-                    {form.formState.errors.pagador_id && (
-                      <p className="text-sm text-red-600">{form.formState.errors.pagador_id.message}</p>
-                    )}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Descrição</label>
+                        <p className="text-sm text-gray-900 font-medium">
+                          {watchedValues.descricao || 'Não informado'}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Valor</label>
+                        <p className="text-lg font-bold text-green-600">
+                          {watchedValues.valor || 'R$ 0,00'}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Vencimento</label>
+                          <p className="text-sm text-gray-900">
+                            {watchedValues.data_vencimento ? 
+                              new Date(watchedValues.data_vencimento).toLocaleDateString('pt-BR') : 
+                              'Não informado'
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
+                          <Badge variant={watchedValues.data_recebimento ? "default" : "secondary"} className="text-xs">
+                            {watchedValues.data_recebimento ? 'Recebido' : 'Pendente'}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {watchedValues.observacoes && (
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Observações</label>
+                          <p className="text-sm text-gray-700 bg-gray-50/50 p-2 rounded-lg">
+                            {watchedValues.observacoes}
+                          </p>
+                        </div>
+                      )}
+
+                      {watchedValues.recorrente && (
+                        <div className="flex items-center space-x-2 p-3 bg-blue-50/50 rounded-lg">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm text-blue-600 font-medium">Receita Recorrente</span>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
-
-                {/* ... keep existing code (all other form sections) */}
-              </form>
-            </Form>
+              </div>
+            )}
           </div>
         </div>
 
