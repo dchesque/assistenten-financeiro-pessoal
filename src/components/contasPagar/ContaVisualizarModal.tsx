@@ -114,7 +114,7 @@ export default function ContaVisualizarModal({
                     <FieldDisplay label="Documento/Referência" value={conta.documento_referencia} />
                   )}
                   <FieldDisplay 
-                    label="Fornecedor" 
+                    label="Credor" 
                     value={`${conta.fornecedor.nome} (${conta.fornecedor.tipo === 'pessoa_fisica' ? 'Pessoa Física' : 'Pessoa Jurídica'})`} 
                   />
                   <FieldDisplay 

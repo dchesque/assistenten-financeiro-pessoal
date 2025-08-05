@@ -78,7 +78,7 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
         return;
       }
       if (!dadosEdicao.fornecedor?.id) {
-        setErro('Fornecedor é obrigatório');
+        setErro('Credor é obrigatório');
         return;
       }
       if (!dadosEdicao.plano_conta?.id) {
@@ -148,20 +148,20 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
               
               {/* Coluna 1: Dados Básicos */}
               <div className="space-y-8">
-                <SectionHeader icon={User} title="Dados do Fornecedor" color="blue" />
+                <SectionHeader icon={User} title="Dados do Credor" color="blue" />
                 
                  <div className="space-y-4">
-                   {/* Fornecedor */}
+                   {/* Credor */}
                    <div>
                      <label className="text-sm font-medium text-gray-700 mb-2 block">
-                       Fornecedor *
+                       Credor *
                      </label>
                       <FornecedorSelector
                         value={dadosEdicao.fornecedor}
                         onSelect={(fornecedor) => {
                           setDadosEdicao((prev: any) => ({ ...prev, fornecedor }));
 
-                          // Auto-preencher categoria padrão do fornecedor se existir
+                          // Auto-preencher categoria padrão do credor se existir
                           if (fornecedor.categoria_padrao_id && !dadosEdicao.plano_conta) {
                             import('@/integrations/supabase/client').then(({ supabase }) => {
                               supabase
@@ -195,7 +195,7 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
                             });
                           }
                         }}
-                        placeholder="Selecionar fornecedor..."
+                        placeholder="Selecionar credor..."
                         className="w-full"
                       />
                    </div>

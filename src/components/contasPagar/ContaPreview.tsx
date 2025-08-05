@@ -130,7 +130,7 @@ export function ContaPreview({ conta, formaPagamento, className = "" }: ContaPre
 
         {/* Informações principais */}
         <div className="space-y-4">
-          {/* Fornecedor */}
+          {/* Credor */}
           {fornecedor && (
             <div className="flex items-start space-x-3">
               <Building2 className="h-5 w-5 text-blue-600 mt-0.5" />

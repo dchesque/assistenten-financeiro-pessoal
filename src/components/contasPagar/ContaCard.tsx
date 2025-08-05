@@ -109,7 +109,7 @@ export default function ContaCard({
           )}
         </div>
 
-        {/* Fornecedor */}
+        {/* Credor */}
         <h3 className="font-semibold text-gray-900 mb-1">{conta.fornecedor.nome}</h3>
         <p className="text-xs text-gray-500 mb-3">
           {conta.fornecedor.tipo === 'pessoa_fisica' ? 'Pessoa Física' : 'Pessoa Jurídica'}

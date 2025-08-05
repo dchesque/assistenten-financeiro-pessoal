@@ -330,9 +330,9 @@ export default function Credores() {
                 </div>)}
             </LoadingOverlay> :
         // Estado vazio
-        <EmptyState icon={<Building className="w-16 h-16 text-gray-400" />} title="Nenhum fornecedor encontrado" description={filtros.busca || filtros.status !== 'todos' || filtros.tipo !== 'todos' ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro fornecedor'} action={!filtros.busca && filtros.status === 'todos' && filtros.tipo === 'todos' && filtros.tipo_fornecedor === 'todos' && <Button onClick={abrirModalNovo} className="bg-gradient-to-r from-blue-600 to-purple-600">
+        <EmptyState icon={<Building className="w-16 h-16 text-gray-400" />} title="Nenhum credor encontrado" description={filtros.busca || filtros.status !== 'todos' || filtros.tipo !== 'todos' ? 'Tente ajustar os filtros de busca' : 'Comece criando seu primeiro credor'} action={!filtros.busca && filtros.status === 'todos' && filtros.tipo === 'todos' && filtros.tipo_fornecedor === 'todos' && <Button onClick={abrirModalNovo} className="bg-gradient-to-r from-blue-600 to-purple-600">
                     <Plus className="w-4 h-4 mr-2" />
-                    Criar Primeiro Fornecedor
+                    Criar Primeiro Credor
                   </Button>} />}
         </div>
       </div>

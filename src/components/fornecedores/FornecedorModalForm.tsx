@@ -98,7 +98,7 @@ export const FornecedorModalForm: React.FC<FornecedorFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tipo_fornecedor">Tipo de Fornecedor *</Label>
+            <Label htmlFor="tipo_fornecedor">Tipo de Credor *</Label>
             <Select 
               value={formData.tipo_fornecedor} 
               onValueChange={(value: 'receita' | 'despesa') => !readonly && handleChange('tipo_fornecedor', value)}
@@ -108,8 +108,8 @@ export const FornecedorModalForm: React.FC<FornecedorFormProps> = ({
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="despesa">Despesa</SelectItem>
-                <SelectItem value="receita">Receita</SelectItem>
+                <SelectItem value="despesa">Credor de Despesas</SelectItem>
+                <SelectItem value="receita">Credor de Receitas</SelectItem>
               </SelectContent>
             </Select>
             {obterErro('tipo_fornecedor') && (
@@ -374,7 +374,7 @@ export const FornecedorModalForm: React.FC<FornecedorFormProps> = ({
             id="observacoes"
             value={formData.observacoes || ''}
             onChange={(e) => !readonly && handleChange('observacoes', e.target.value)}
-            placeholder="Informações adicionais sobre o fornecedor..."
+            placeholder="Informações adicionais sobre o credor..."
             rows={3}
             disabled={readonly}
           />

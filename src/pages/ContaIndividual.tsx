@@ -11,7 +11,7 @@ import { FormaPagamento } from '@/types/formaPagamento';
 import { useBancosSupabase } from '@/hooks/useBancosSupabase';
 import { useContasPagar } from '@/hooks/useContasPagar';
 import { useCredores } from '@/hooks/useCredores';
-import { FornecedorSelector } from '@/components/contasPagar/FornecedorSelector';
+import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
 import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
 import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
@@ -484,15 +484,15 @@ export default function ContaIndividual() {
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold text-sm">1</span>
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900">Dados do Fornecedor</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Dados do Credor</h2>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-gray-700">
-                        Fornecedor <span className="text-red-500">*</span>
+                        Credor <span className="text-red-500">*</span>
                       </Label>
-                      <FornecedorSelector 
+                      <CredorSelector 
                         value={credorSelecionado} 
                         onSelect={handleCredorSelect} 
                         placeholder="Selecionar credor..." 

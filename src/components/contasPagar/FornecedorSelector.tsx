@@ -19,7 +19,7 @@ interface FornecedorSelectorProps {
 export function FornecedorSelector({ 
   value, 
   onSelect, 
-  placeholder = "Selecionar fornecedor...",
+  placeholder = "Selecionar credor...",
   className = ""
 }: FornecedorSelectorProps) {
   const [open, setOpen] = useState(false);

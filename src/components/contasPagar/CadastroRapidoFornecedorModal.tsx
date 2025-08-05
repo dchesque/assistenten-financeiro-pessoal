@@ -120,7 +120,7 @@ export function CadastroRapidoFornecedorModal({
       
       if (fornecedorCriado) {
         toast({
-          title: "Fornecedor cadastrado",
+          title: "Credor cadastrado",
           description: `${formData.nome} foi cadastrado com sucesso!`
         });
         
@@ -131,7 +131,7 @@ export function CadastroRapidoFornecedorModal({
       console.error('Erro ao criar fornecedor:', error);
       toast({
         title: "Erro ao cadastrar",
-        description: "Não foi possível cadastrar o fornecedor. Tente novamente.",
+        description: "Não foi possível cadastrar o credor. Tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -175,7 +175,7 @@ export function CadastroRapidoFornecedorModal({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Building2 className="h-5 w-5" />
-            <span>Cadastro Rápido de Fornecedor</span>
+            <span>Cadastro Rápido de Credor</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -185,7 +185,7 @@ export function CadastroRapidoFornecedorModal({
             <Label htmlFor="nome">Nome *</Label>
             <Input
               id="nome"
-              placeholder="Nome do fornecedor"
+              placeholder="Nome do credor"
               value={formData.nome}
               onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
               className="bg-white/80 backdrop-blur-sm border-gray-300/50"
@@ -319,8 +319,8 @@ export function CadastroRapidoFornecedorModal({
         </div>
 
         <div className="text-xs text-gray-500 mt-4 p-3 bg-blue-50/80 rounded-lg">
-          <strong>Cadastro Rápido:</strong> Para cadastrar informações completas do fornecedor 
-          (endereço, observações, etc.), acesse o menu Fornecedores.
+          <strong>Cadastro Rápido:</strong> Para cadastrar informações completas do credor 
+          (endereço, observações, etc.), acesse o menu Credores.
         </div>
       </DialogContent>
     </Dialog>

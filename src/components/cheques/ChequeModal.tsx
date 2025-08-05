@@ -148,7 +148,7 @@ export function ChequeModal({ isOpen, onClose, cheque, onSave, loading = false }
     atualizarValidacaoVisual(campo, valor, formData, cheque?.id);
   }, [formData, atualizarValidacaoVisual, cheque?.id]);
 
-  // Filtrar fornecedores para busca
+  // Filtrar credores para busca
   const { bancos } = useBancosSupabase();
   const { fornecedores } = useFornecedoresSupabase();
   
@@ -280,7 +280,7 @@ export function ChequeModal({ isOpen, onClose, cheque, onSave, loading = false }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="fornecedor" id="fornecedor" />
-                    <Label htmlFor="fornecedor">Fornecedor Cadastrado</Label>
+                    <Label htmlFor="fornecedor">Credor Cadastrado</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="outros" id="outros" />
@@ -291,9 +291,9 @@ export function ChequeModal({ isOpen, onClose, cheque, onSave, loading = false }
 
               {formData.tipo_beneficiario === 'fornecedor' ? (
                 <div className="space-y-2">
-                  <Label htmlFor="fornecedor_id" className="text-sm font-medium text-gray-700">Fornecedor *</Label>
+                  <Label htmlFor="fornecedor_id" className="text-sm font-medium text-gray-700">Credor *</Label>
                   
-                  {/* Busca de fornecedor */}
+                  {/* Busca de credor */}
                   <div className="relative mb-2">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
@@ -319,7 +319,7 @@ export function ChequeModal({ isOpen, onClose, cheque, onSave, loading = false }
                       validacaoVisual.fornecedor_id?.hasError ? 'border-red-300' : 
                       validacaoVisual.fornecedor_id?.borderColor || 'border-gray-200'
                     }`}>
-                      <SelectValue placeholder="Selecione o fornecedor" />
+                      <SelectValue placeholder="Selecione o credor" />
                     </SelectTrigger>
                     <SelectContent className="bg-white/95 backdrop-blur-xl border border-white/20 max-h-60">
                       {fornecedoresFiltrados.map(fornecedor => (
@@ -331,7 +331,7 @@ export function ChequeModal({ isOpen, onClose, cheque, onSave, loading = false }
                         </SelectItem>
                       ))}
                       {fornecedoresFiltrados.length === 0 && buscarFornecedor && (
-                        <div className="p-2 text-sm text-gray-500">Nenhum fornecedor encontrado</div>
+                        <div className="p-2 text-sm text-gray-500">Nenhum credor encontrado</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -474,7 +474,7 @@ export function ChequeModal({ isOpen, onClose, cheque, onSave, loading = false }
                   id="finalidade"
                   value={formData.finalidade}
                   onChange={(e) => setFormData(prev => ({ ...prev, finalidade: e.target.value }))}
-                  placeholder="Pagamento de fornecedor, adiantamento, etc."
+                  placeholder="Pagamento de credor, adiantamento, etc."
                   className="bg-white/80 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   rows={3}
                 />

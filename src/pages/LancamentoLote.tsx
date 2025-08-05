@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { FornecedorSelector } from '@/components/contasPagar/FornecedorSelector';
+import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
 import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
 import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
 import { LotePreview } from '@/components/lancamentoLote/LotePreview';
@@ -513,15 +513,15 @@ export default function LancamentoLote() {
                       <span className="text-white font-bold text-sm">1</span>
                     </div>
                     <User className="h-5 w-5 text-blue-600" />
-                    <h2 className="text-xl font-semibold text-gray-900">Dados do Fornecedor</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Dados do Credor</h2>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-gray-700">
-                        Fornecedor <span className="text-red-500">*</span>
+                        Credor <span className="text-red-500">*</span>
                       </Label>
-                      <FornecedorSelector 
+                      <CredorSelector 
                         value={credorSelecionado} 
                         onSelect={handleCredorSelect} 
                         placeholder="Selecionar credor..." 
@@ -543,9 +543,9 @@ export default function LancamentoLote() {
                         {categoriaAutoPreenchida && categoriaSelecionada && (
                           <div className="flex items-center space-x-1 animate-fade-in">
                             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span className="text-xs text-blue-600 italic">
-                              Categoria padrão do fornecedor
-                            </span>
+                          <span className="text-xs text-blue-600 italic">
+                            Categoria padrão do credor
+                          </span>
                           </div>
                         )}
                       </div>

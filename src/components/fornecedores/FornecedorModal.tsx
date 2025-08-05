@@ -226,9 +226,9 @@ export function FornecedorModal({ isOpen, onClose, fornecedor, modo, onSave, loa
   };
 
   // Determinar título e ícone
-  const titulo = modo === 'criar' ? 'Novo Fornecedor' : 
-                 modo === 'editar' ? 'Editar Fornecedor' : 
-                 'Visualizar Fornecedor';
+  const titulo = modo === 'criar' ? 'Novo Credor' : 
+                 modo === 'editar' ? 'Editar Credor' : 
+                 'Visualizar Credor';
   
   const icone = formData.tipo === 'pessoa_fisica' ? 
     <User className="w-5 h-5 text-white" /> : 
@@ -244,7 +244,7 @@ export function FornecedorModal({ isOpen, onClose, fornecedor, modo, onSave, loa
       {!readonly && (
         <Button onClick={handleSalvar} disabled={salvando || loading}>
           {salvando && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>}
-          {modo === 'criar' ? 'Criar Fornecedor' : 'Salvar Alterações'}
+          {modo === 'criar' ? 'Criar Credor' : 'Salvar Alterações'}
         </Button>
       )}
     </ModalFooter>
@@ -255,7 +255,7 @@ export function FornecedorModal({ isOpen, onClose, fornecedor, modo, onSave, loa
       isOpen={isOpen}
       onClose={onClose}
       title={titulo}
-      subtitle={readonly ? "Informações do fornecedor" : "Preencha as informações do fornecedor"}
+      subtitle={readonly ? "Informações do credor" : "Preencha as informações do credor"}
       icon={icone}
       size="3xl"
       footer={footer}
