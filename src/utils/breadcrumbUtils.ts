@@ -46,6 +46,10 @@ export const createBreadcrumb = (path: string, customItems?: BreadcrumbItem[]): 
       { label: 'Cadastros' },
       { label: 'Bancos' }
     ],
+    '/contas-receber': [
+      { label: 'Início', href: '/dashboard' },
+      { label: 'Contas a Receber' }
+    ],
     '/settings': [
       { label: 'Início', href: '/dashboard' },
       { label: 'Configurações' }
