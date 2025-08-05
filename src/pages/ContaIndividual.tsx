@@ -425,14 +425,7 @@ export default function ContaIndividual() {
     }
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-      {/* Background blur abstratos */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl" />
-        <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 left-1/2 w-64 h-64 bg-pink-400/20 rounded-full blur-3xl" />
-      </div>
-
+    <>
       <PageHeader
         breadcrumb={createBreadcrumb('/conta-individual')}
         title="Nova Conta a Pagar"
@@ -822,6 +815,6 @@ export default function ContaIndividual() {
           <span className="text-sm text-green-800">Rascunho salvo</span>
         </div>
       )}
-    </div>
+    </>
   );
 }

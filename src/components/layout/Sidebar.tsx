@@ -16,10 +16,10 @@ export function Sidebar({ expanded, toggleSidebar, mobileOpen, setMobileOpen }: 
 
   // Configurações da empresa (preparado para personalização futura)
   const [companySettings] = useState({
-    showLogo: false,        // false = mostrar nome, true = mostrar logo
+    showLogo: true,         // true = mostrar logo JC obrigatório
     logoUrl: null,          // URL do logo personalizado
-    companyName: 'Assistente Financeiro',
-    companySubtitle: 'Finanças Pessoais'
+    companyName: 'JC Financeiro',
+    companySubtitle: 'Plus Size'
   });
 
   // Desktop: Sidebar sempre aberta fixa
@@ -38,23 +38,14 @@ export function Sidebar({ expanded, toggleSidebar, mobileOpen, setMobileOpen }: 
           
           {/* Header desktop - sem botão de toggle */}
           <div className="p-6 border-b border-gray-700/50">
-            <div className="text-left">
-              {companySettings.showLogo ? (
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-xl">JC</span>
-                  </div>
-                  <div>
-                    <h1 className="font-bold text-lg text-white">{companySettings.companyName}</h1>
-                    <p className="text-xs text-gray-300">{companySettings.companySubtitle}</p>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <h1 className="font-bold text-xl text-white mb-1">{companySettings.companyName}</h1>
-                  <p className="text-sm text-gray-300">{companySettings.companySubtitle}</p>
-                </div>
-              )}
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xl">JC</span>
+              </div>
+              <div>
+                <h1 className="font-bold text-lg text-white">{companySettings.companyName}</h1>
+                <p className="text-xs text-gray-300">{companySettings.companySubtitle}</p>
+              </div>
             </div>
           </div>
           
@@ -86,20 +77,15 @@ export function Sidebar({ expanded, toggleSidebar, mobileOpen, setMobileOpen }: 
         
         {/* Header mobile */}
         <div className="p-6 border-b border-gray-700/50 flex items-center justify-between">
-          {companySettings.showLogo ? (
-            // Opção 1: Mostrar apenas logo
-            <div className="flex items-center justify-center flex-1">
-              <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-xl">JC</span>
-              </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-xl">JC</span>
             </div>
-          ) : (
-            // Opção 2: Mostrar apenas nome da empresa
-            <div className="flex-1">
+            <div>
               <h1 className="font-bold text-lg text-white">{companySettings.companyName}</h1>
               <p className="text-xs text-gray-300">{companySettings.companySubtitle}</p>
             </div>
-          )}
+          </div>
           
           <button 
             onClick={() => setMobileOpen(false)}

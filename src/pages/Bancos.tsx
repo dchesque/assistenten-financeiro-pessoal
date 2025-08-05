@@ -90,12 +90,7 @@ export default function Bancos() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-      {/* Background abstratos */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 transform translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 left-1/4 transform -translate-x-1/2 translate-y-1/2 w-96 h-96 bg-gradient-to-r from-green-400/15 to-blue-400/15 rounded-full blur-3xl"></div>
-      </div>
+    <>
 
       <div>
         {/* Page Header */}
@@ -307,6 +302,6 @@ export default function Bancos() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }

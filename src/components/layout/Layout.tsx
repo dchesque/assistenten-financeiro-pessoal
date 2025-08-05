@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { useSidebar } from '@/hooks/useSidebar';
+import { BlurBackground } from '@/components/ui/BlurBackground';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,6 +13,9 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      
+      {/* Background blur abstrato */}
+      <BlurBackground variant="page" />
       
       {/* Sidebar: Híbrida Desktop/Mobile */}
       <Sidebar 
@@ -29,7 +33,7 @@ export function Layout({ children }: LayoutProps) {
       )}
       
       {/* Área principal */}
-      <div className={`flex-1 min-h-screen ${
+      <div className={`flex-1 min-h-screen relative z-10 ${
         isDesktop ? 'lg:pl-72' : 'ml-0'
       }`}>
         

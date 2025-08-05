@@ -480,30 +480,20 @@ export default function ContasPagar() {
   // Se está carregando, mostrar loading melhorado
   if (estados.carregandoContas) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-        {/* Blur abstratos */}
-        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-300/20 rounded-full blur-3xl" />
-        <div className="absolute top-40 right-20 w-72 h-72 bg-blue-300/20 rounded-full blur-3xl" />
-        
-        {/* Container principal com margem adequada */}
-        <div className="p-4 lg:p-8">
-          {/* Header da página */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Contas a Pagar</h1>
-            <p className="text-gray-600">Visualize e gerencie todas as contas a pagar</p>
-          </div>
-
-          <LoadingContasAprimorado />
+      <div className="p-4 lg:p-8">
+        {/* Header da página */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Contas a Pagar</h1>
+          <p className="text-gray-600">Visualize e gerencie todas as contas a pagar</p>
         </div>
+
+        <LoadingContasAprimorado />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-      {/* Blur abstratos */}
-      <div className="absolute top-20 left-20 w-72 h-72 bg-purple-300/20 rounded-full blur-3xl" />
-      <div className="absolute top-40 right-20 w-72 h-72 bg-blue-300/20 rounded-full blur-3xl" />
+    <>
       
       {/* Page Header */}
       <PageHeader
@@ -875,6 +865,6 @@ export default function ContasPagar() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
