@@ -19,7 +19,7 @@ import Credores from "./pages/Credores";
 import Categorias from "./pages/Categorias";
 import Bancos from "./pages/Bancos";
 import Settings from "./pages/Settings";
-import FinancasPessoais from "./pages/FinancasPessoais";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
