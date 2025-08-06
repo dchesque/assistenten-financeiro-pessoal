@@ -74,7 +74,7 @@ function App() {
               <Route path="/categorias" element={<ProtectedRoute><Layout><Categorias /></Layout></ProtectedRoute>} />
               <Route path="/categorias-unificadas" element={<ProtectedRoute><Layout><CategoriasUnificadas /></Layout></ProtectedRoute>} />
               <Route path="/cheques" element={<ProtectedRoute><Layout><Cheques /></Layout></ProtectedRoute>} />
-              <Route path="/conta/:id" element={<ProtectedRoute><Layout><ContaIndividual /></Layout></ProtectedRoute>} />
+              <Route path="/conta-individual" element={<ProtectedRoute><Layout><ContaIndividual /></Layout></ProtectedRoute>} />
               <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
               <Route path="/credores" element={<ProtectedRoute><Layout><Credores /></Layout></ProtectedRoute>} />
               <Route path="/dre" element={<ProtectedRoute><Layout><DRE /></Layout></ProtectedRoute>} />
