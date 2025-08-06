@@ -79,23 +79,6 @@ const menuStructure = [
     ]
   },
 
-  // Meu Perfil (item especial)
-  { 
-    type: 'item', 
-    name: 'Meu Perfil', 
-    path: '/meu-perfil', 
-    icon: User,
-    color: 'text-purple-500'
-  },
-
-  // Assinatura (item especial)
-  { 
-    type: 'item', 
-    name: 'Assinatura', 
-    path: '/assinatura', 
-    icon: CreditCard,
-    color: 'text-amber-500'
-  }
 ];
 
 interface SidebarNavigationProps {
