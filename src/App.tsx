@@ -26,7 +26,7 @@ const DesignSystemPreview = lazy(() => import('@/pages/DesignSystemPreview'));
 
 const MonitoramentoPerformance = lazy(() => import('@/pages/MonitoramentoPerformance'));
 const Sistema = lazy(() => import('@/pages/Sistema'));
-const StatusSistema = lazy(() => import('@/pages/StatusSistema'));
+// StatusSistema removido - Supabase não mais necessário
 const Usuarios = lazy(() => import('@/pages/Usuarios'));
 
 // Componente de fallback para lazy loading
@@ -66,7 +66,7 @@ function App() {
               
               <Route path="/monitoramento-performance" element={<ProtectedRoute><Layout><MonitoramentoPerformance /></Layout></ProtectedRoute>} />
               <Route path="/sistema" element={<ProtectedRoute><Layout><Sistema /></Layout></ProtectedRoute>} />
-              <Route path="/status-sistema" element={<ProtectedRoute><Layout><StatusSistema /></Layout></ProtectedRoute>} />
+              {/* StatusSistema removido */}
               <Route path="/usuarios" element={<ProtectedRoute><Layout><Usuarios /></Layout></ProtectedRoute>} />
               <Route path="/configuracoes" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
