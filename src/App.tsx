@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from "sonner";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoadingStates } from '@/components/ui/LoadingStates';
+import { Layout } from '@/components/layout/Layout';
 
 // Páginas críticas (carregamento imediato)
 import Index from '@/pages/Index';
@@ -44,13 +45,13 @@ function App() {
           <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/contas-pagar" element={<ProtectedRoute><ContasPagar /></ProtectedRoute>} />
-              <Route path="/contas-receber" element={<ProtectedRoute><ContasReceber /></ProtectedRoute>} />
-              <Route path="/fornecedores" element={<ProtectedRoute><Fornecedores /></ProtectedRoute>} />
-              <Route path="/bancos" element={<ProtectedRoute><Bancos /></ProtectedRoute>} />
-              <Route path="/configuracoes" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/" element={<ProtectedRoute><Layout><Index /></Layout></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+              <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
+              <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
+              <Route path="/fornecedores" element={<ProtectedRoute><Layout><Fornecedores /></Layout></ProtectedRoute>} />
+              <Route path="/bancos" element={<ProtectedRoute><Layout><Bancos /></Layout></ProtectedRoute>} />
+              <Route path="/configuracoes" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
