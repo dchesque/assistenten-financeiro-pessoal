@@ -84,23 +84,6 @@ export function SidebarFooter({ expanded, mobile = false }: SidebarFooterProps) 
                 <span className="text-sm">Meu Perfil</span>
               </button>
 
-              {/* Empresa */}
-              <button
-                onClick={() => handleMenuClick('/empresa')}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white hover:bg-white/10 transition-colors duration-200"
-              >
-                <Building2 className="w-4 h-4 text-green-500" />
-                <span className="text-sm">Empresa</span>
-              </button>
-
-              {/* Usuários */}
-              <button
-                onClick={() => handleMenuClick('/usuarios')}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white hover:bg-white/10 transition-colors duration-200"
-              >
-                <Users className="w-4 h-4 text-purple-500" />
-                <span className="text-sm">Usuários</span>
-              </button>
 
               {/* Sistema */}
               <button
