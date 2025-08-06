@@ -49,7 +49,7 @@ export default function NovoRecebimento() {
     percentual_desconto: 0,
     valor_desconto: 0,
     valor_final: 0,
-    status: 'pendente',
+    status: 'pendente' as 'pendente' | 'pago' | 'vencido' | 'cancelado',
     dda: false,
     observacoes: ''
   });
@@ -489,8 +489,8 @@ export default function NovoRecebimento() {
 
                 <div className="grid gap-6">
                   <CredorSelector
-                    credorSelecionado={credorSelecionado}
-                    onCredorSelect={handleCredorSelect}
+                    value={credorSelecionado}
+                    onSelect={handleCredorSelect}
                     className="w-full"
                   />
                 </div>
@@ -512,46 +512,55 @@ export default function NovoRecebimento() {
 
                 <div className="grid gap-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <CampoComValidacao
-                      label="Documento / Referência"
-                      valor={conta.documento_referencia}
-                      onChange={(valor) => {
-                        setConta(prev => ({ ...prev, documento_referencia: valor }));
-                        validarCampoTempoReal('documento_referencia', valor);
-                      }}
-                      placeholder="Ex: NF 001234, Fatura #567"
-                      validacao={validarDocumento}
-                      erro={errosValidacao.documento_referencia}
-                      maxLength={50}
-                    />
+                    <div className="space-y-2">
+                      <Label htmlFor="documento_referencia">Documento / Referência</Label>
+                      <Input
+                        id="documento_referencia"
+                        value={conta.documento_referencia}
+                        onChange={(e) => {
+                          setConta(prev => ({ ...prev, documento_referencia: e.target.value }));
+                          validarCampoTempoReal('documento_referencia', e.target.value);
+                        }}
+                        placeholder="Ex: NF 001234, Fatura #567"
+                        className="input-base"
+                        maxLength={50}
+                      />
+                      {errosValidacao.documento_referencia && (
+                        <p className="text-sm text-red-600">{errosValidacao.documento_referencia}</p>
+                      )}
+                    </div>
 
                     <PlanoContasSelector
-                      contaSelecionada={contaSelecionada}
-                      onContaSelect={(conta) => {
+                      value={contaSelecionada}
+                      onSelect={(conta) => {
                         setContaSelecionada(conta);
                         setConta(prev => ({
                           ...prev,
                           plano_conta_id: conta?.id
                         }));
                       }}
-                      filtroTipoDRE="receita"
                       className="w-full"
                     />
                   </div>
 
-                  <CampoComValidacao
-                    label="Descrição do Recebimento"
-                    valor={conta.descricao}
-                    onChange={(valor) => {
-                      setConta(prev => ({ ...prev, descricao: valor }));
-                      validarCampoTempoReal('descricao', valor);
-                    }}
-                    placeholder="Descreva o recebimento..."
-                    validacao={validarDescricao}
-                    erro={errosValidacao.descricao}
-                    obrigatorio
-                    maxLength={255}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao">Descrição do Recebimento *</Label>
+                    <Input
+                      id="descricao"
+                      value={conta.descricao}
+                      onChange={(e) => {
+                        setConta(prev => ({ ...prev, descricao: e.target.value }));
+                        validarCampoTempoReal('descricao', e.target.value);
+                      }}
+                      placeholder="Descreva o recebimento..."
+                      className="input-base"
+                      maxLength={255}
+                      required
+                    />
+                    {errosValidacao.descricao && (
+                      <p className="text-sm text-red-600">{errosValidacao.descricao}</p>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -565,18 +574,23 @@ export default function NovoRecebimento() {
                       />
                     </div>
 
-                    <CampoComValidacao
-                      label="Data de Vencimento"
-                      tipo="date"
-                      valor={conta.data_vencimento}
-                      onChange={(valor) => {
-                        setConta(prev => ({ ...prev, data_vencimento: valor }));
-                        validarCampoTempoReal('data_vencimento', valor);
-                      }}
-                      validacao={(valor) => validarDataVencimento(valor, conta.data_emissao)}
-                      erro={errosValidacao.data_vencimento}
-                      obrigatorio
-                    />
+                    <div className="space-y-2">
+                      <Label htmlFor="data_vencimento">Data de Vencimento *</Label>
+                      <Input
+                        id="data_vencimento"
+                        type="date"
+                        value={conta.data_vencimento}
+                        onChange={(e) => {
+                          setConta(prev => ({ ...prev, data_vencimento: e.target.value }));
+                          validarCampoTempoReal('data_vencimento', e.target.value);
+                        }}
+                        className="input-base"
+                        required
+                      />
+                      {errosValidacao.data_vencimento && (
+                        <p className="text-sm text-red-600">{errosValidacao.data_vencimento}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -596,16 +610,21 @@ export default function NovoRecebimento() {
                 </div>
 
                 <div className="grid gap-6">
-                  <CampoComValidacao
-                    label="Valor Original"
-                    valor={valorOriginalMask}
-                    onChange={handleValorOriginal}
-                    placeholder="R$ 0,00"
-                    validacao={validarValorMonetario}
-                    erro={errosValidacao.valor_original}
-                    obrigatorio
-                    maxLength={15}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="valor_original">Valor Original *</Label>
+                    <Input
+                      id="valor_original"
+                      value={valorOriginalMask}
+                      onChange={(e) => handleValorOriginal(e.target.value)}
+                      placeholder="R$ 0,00"
+                      className="input-base"
+                      maxLength={15}
+                      required
+                    />
+                    {errosValidacao.valor_original && (
+                      <p className="text-sm text-red-600">{errosValidacao.valor_original}</p>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-4">
@@ -779,22 +798,22 @@ export default function NovoRecebimento() {
                   </div>
 
                   <div className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <RadioGroupItem value="recebido" id="recebido" />
-                    <Label htmlFor="recebido" className="flex-1 cursor-pointer">
+                    <RadioGroupItem value="pago" id="pago" />
+                    <Label htmlFor="pago" className="flex-1 cursor-pointer">
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span>Recebido</span>
+                        <span>Pago</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Já foi recebido</p>
+                      <p className="text-xs text-gray-500 mt-1">Já foi pago</p>
                     </Label>
                   </div>
                 </RadioGroup>
 
                 {/* Campo de valor pago quando status é "pago" */}
-                {conta.status === 'recebido' && (
+                {conta.status === 'pago' && (
                   <div className="space-y-4 p-4 bg-green-50/50 border border-green-200/50 rounded-xl">
                     <div className="space-y-2">
-                      <Label htmlFor="valor_pago">Valor Recebido</Label>
+                      <Label htmlFor="valor_pago">Valor Pago</Label>
                       <Input
                         id="valor_pago"
                         value={valorPagoMask}
@@ -809,7 +828,7 @@ export default function NovoRecebimento() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="data_pagamento">Data do Recebimento</Label>
+                      <Label htmlFor="data_pagamento">Data do Pagamento</Label>
                       <Input
                         id="data_pagamento"
                         type="date"
@@ -837,10 +856,9 @@ export default function NovoRecebimento() {
                 </div>
 
                 <FormaPagamentoSection
-                  formaPagamento={formaPagamento}
-                  onFormaPagamentoChange={setFormaPagamento}
+                  value={formaPagamento}
+                  onChange={setFormaPagamento}
                   bancos={bancos}
-                  obrigarBanco={conta.status === 'recebido'}
                 />
               </div>
             </Card>
@@ -916,7 +934,7 @@ export default function NovoRecebimento() {
                     )}
                   </Button>
 
-                  {conta.status !== 'recebido' && (
+                  {conta.status !== 'pago' && (
                     <Button
                       onClick={() => salvarConta(true)}
                       disabled={loading}
@@ -937,8 +955,6 @@ export default function NovoRecebimento() {
             <div className="sticky top-8">
               <ContaPreview
                 conta={conta}
-                credor={credorSelecionado}
-                categoria={contaSelecionada}
                 formaPagamento={formaPagamento}
               />
             </div>
