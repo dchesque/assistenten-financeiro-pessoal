@@ -45,7 +45,7 @@ const menuStructure = [
     color: 'text-red-500',
     key: 'contas-pagar',
     items: [
-      { name: 'Nova Conta', path: '/conta-individual', icon: Plus, color: 'text-red-500' },
+      { name: 'Nova Conta', path: '/nova-conta', icon: Plus, color: 'text-red-500' },
       { name: 'Contas a Pagar', path: '/contas-pagar', icon: Receipt, color: 'text-red-500' }
     ]
   },
@@ -58,6 +58,7 @@ const menuStructure = [
     color: 'text-green-500',
     key: 'recebimentos',
     items: [
+      { name: 'Novo Recebimento', path: '/novo-recebimento', icon: Plus, color: 'text-green-500' },
       { name: 'Contas a Receber', path: '/contas-receber', icon: DollarSign, color: 'text-green-500' }
     ]
   },
