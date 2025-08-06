@@ -1,17 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-
-export interface PlanoContas {
-  id: number;
-  nome: string;
-  codigo: string;
-  tipo: 'receita' | 'despesa';
-  categoria_pai_id?: number;
-  ativo: boolean;
-  observacoes?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { PlanoContas } from '@/types/planoContas';
 
 // Dados mock para plano de contas
 const mockPlanoContas: PlanoContas[] = [
@@ -20,7 +9,17 @@ const mockPlanoContas: PlanoContas[] = [
     nome: 'Receitas de Vendas',
     codigo: '3.1.01',
     tipo: 'receita',
+    tipo_dre: 'despesa_pessoal',
+    cor: '#10b981',
+    icone: 'TrendingUp',
+    nivel: 1,
+    aceita_lancamento: true,
     ativo: true,
+    plano_pai_id: null,
+    descricao: 'Receitas provenientes de vendas',
+    total_contas: 5,
+    valor_total: 150000.00,
+    user_id: '1',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
   },
@@ -29,7 +28,17 @@ const mockPlanoContas: PlanoContas[] = [
     nome: 'Fornecedores',
     codigo: '1.2.01',
     tipo: 'despesa',
+    tipo_dre: 'despesa_pessoal',
+    cor: '#ef4444',
+    icone: 'Users',
+    nivel: 1,
+    aceita_lancamento: true,
     ativo: true,
+    plano_pai_id: null,
+    descricao: 'Despesas com fornecedores',
+    total_contas: 12,
+    valor_total: 45000.00,
+    user_id: '1',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
   },
@@ -37,9 +46,17 @@ const mockPlanoContas: PlanoContas[] = [
     id: 3,
     nome: 'Material de Escritório',
     codigo: '1.2.02',
-    tipo: 'despesa',
-    categoria_pai_id: 2,
+    tipo_dre: 'despesa_pessoal',
+    cor: '#f59e0b',
+    icone: 'Package',
+    nivel: 2,
+    aceita_lancamento: true,
     ativo: true,
+    plano_pai_id: 2,
+    descricao: 'Material de escritório e suprimentos',
+    total_contas: 3,
+    valor_total: 8500.00,
+    user_id: '1',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
   },
@@ -47,8 +64,17 @@ const mockPlanoContas: PlanoContas[] = [
     id: 4,
     nome: 'Energia Elétrica',
     codigo: '1.2.03',
-    tipo: 'despesa',
+    tipo_dre: 'despesa_pessoal',
+    cor: '#8b5cf6',
+    icone: 'Zap',
+    nivel: 1,
+    aceita_lancamento: true,
     ativo: true,
+    plano_pai_id: null,
+    descricao: 'Contas de energia elétrica',
+    total_contas: 1,
+    valor_total: 2800.00,
+    user_id: '1',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
   }
@@ -119,12 +145,18 @@ export function usePlanoContas() {
     toast.success('Conta excluída com sucesso!');
   };
 
-  const buscarContasPorTipo = (tipo: 'receita' | 'despesa'): PlanoContas[] => {
-    return contas.filter(c => c.tipo === tipo && c.ativo);
+  const buscarContasPorTipo = (tipo_dre: string): PlanoContas[] => {
+    return contas.filter(c => c.tipo_dre === tipo_dre && c.ativo);
   };
 
-  const buscarContasAtivas = (): PlanoContas[] => {
-    return contas.filter(c => c.ativo);
+  const buscarContasAnaliticas = (termo?: string): PlanoContas[] => {
+    const contasAnaliticas = contas.filter(c => c.aceita_lancamento && c.ativo);
+    if (!termo) return contasAnaliticas;
+    
+    return contasAnaliticas.filter(c => 
+      c.nome.toLowerCase().includes(termo.toLowerCase()) ||
+      c.codigo.includes(termo)
+    );
   };
 
   useEffect(() => {
@@ -145,7 +177,7 @@ export function usePlanoContas() {
     excluirConta,
     excluirPlanoContas: excluirConta, // Alias para compatibilidade
     buscarContasPorTipo,
-    buscarContasAtivas,
-    buscarContasAnaliticas: buscarContasAtivas // Alias para compatibilidade
+    buscarContasAnaliticas,
+    buscarContasAnaliticas: buscarContasAnaliticas // Alias para compatibilidade
   };
 }

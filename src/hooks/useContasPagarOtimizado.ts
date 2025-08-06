@@ -75,18 +75,18 @@ const mockContasOtimizadas: ContaPagar[] = [
   }
 ];
 
-export function useContasPagarOtimizado(filtros?: FiltrosContas) {
+export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
   const [contas, setContas] = useState<ContaPagar[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const contasFiltradas = useMemo(() => {
-    if (!filtros) return contas;
+    if (!filtrosIniciais) return contas;
 
     return contas.filter(conta => {
       // Filtro por busca
-      if (filtros.busca) {
-        const busca = filtros.busca.toLowerCase();
+      if (filtrosIniciais.busca) {
+        const busca = filtrosIniciais.busca.toLowerCase();
         if (!conta.descricao.toLowerCase().includes(busca)) return false;
       }
 
@@ -216,20 +216,59 @@ export function useContasPagarOtimizado(filtros?: FiltrosContas) {
 
   const recarregar = carregarContas;
 
+  // Estados para filtros
+  const [filtros, setFiltros] = useState<FiltrosContas>({});
+  const [filtroRapido, setFiltroRapido] = useState('todos');
+
+  const limparFiltros = () => {
+    setFiltros({});
+    setFiltroRapido('todos');
+  };
+
+  // Mock de funções extras
+  const contasFiltradas = contasFiltradas; // Já calculado acima
+  const resumos = {
+    total: estatisticas.total,
+    valor_total: estatisticas.valor_total
+  };
+  
+  const estados = {
+    carregando: loading,
+    erro: error
+  };
+
+  const salvarEdicao = async (id: number, dados: Partial<ContaPagar>) => {
+    return await atualizarConta(id, dados);
+  };
+
+  const confirmarBaixa = async (id: number, dadosBaixa: any) => {
+    return await baixarConta(id, dadosBaixa);
+  };
+
   useEffect(() => {
     carregarContas();
   }, []);
 
   return {
     contas: contasFiltradas,
+    contasFiltradas,
     loading,
     error,
     estatisticas,
+    resumos,
+    estados,
+    filtros,
+    setFiltros,
+    filtroRapido,
+    setFiltroRapido,
+    limparFiltros,
     carregarContas,
     criarConta,
     atualizarConta,
     excluirConta,
     baixarConta,
+    salvarEdicao,
+    confirmarBaixa,
     recarregar
   };
 }

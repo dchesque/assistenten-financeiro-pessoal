@@ -148,6 +148,8 @@ export function useContasPagar() {
     carregarContas();
   }, []);
 
+  // Tipo ContaEnriquecida para compatibilidade
+
   return {
     contas,
     loading,
