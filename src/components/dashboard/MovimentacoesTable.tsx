@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { StatusBadge } from './StatusBadge';
 import { useMovimentacoesRecentes } from '@/hooks/useMovimentacoesRecentes';
-import { LoadingStates } from '@/components/ui/LoadingStates';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -18,7 +18,19 @@ export function MovimentacoesTable() {
   const { movimentacoes, loading } = useMovimentacoesRecentes();
 
   if (loading) {
-    return <LoadingStates.TableSkeleton />;
+    return (
+      <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg">
+        <div className="p-6">
+          <Skeleton className="h-6 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="space-y-3 p-6">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    );
   }
   return (
     <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg overflow-hidden">

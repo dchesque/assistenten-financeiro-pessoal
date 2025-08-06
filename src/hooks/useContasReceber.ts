@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { mockContasReceber } from '@/utils/mockContasReceber';
 import type { 
   ContaReceber, 
   CriarContaReceber, 
@@ -34,7 +33,7 @@ export function useContasReceber() {
       // Simular delay de carregamento
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      let contasFiltered = [...mockContasReceber];
+      let contasFiltered: any[] = [];
 
       if (filtros?.busca) {
         const busca = filtros.busca.toLowerCase();

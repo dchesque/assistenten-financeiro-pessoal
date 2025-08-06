@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Fornecedor, supabaseToFornecedor, fornecedorToSupabase } from '@/types/fornecedor';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { useDadosExemplo } from '@/hooks/useDadosExemplo';
 
 interface EstatisticasFornecedor {
   total: number;
@@ -27,7 +26,6 @@ interface UseFornecedoresSupabaseReturn {
 
 export function useFornecedoresSupabase(): UseFornecedoresSupabaseReturn {
   const { user } = useAuth();
-  const { dadosExemploCarregados } = useDadosExemplo();
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

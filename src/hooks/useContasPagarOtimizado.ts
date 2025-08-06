@@ -5,7 +5,6 @@ import { ContaPagar, ContaEnriquecida } from '@/types/contaPagar';
 import { useContasPagarFiltros } from './useContasPagarFiltros';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
-import { useDadosExemplo } from '@/hooks/useDadosExemplo';
 
 interface EstadosOperacao {
   carregandoContas: boolean;
@@ -25,7 +24,6 @@ interface ResumoContas {
 export function useContasPagarOtimizado() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { dadosExemploCarregados } = useDadosExemplo();
   
   // Estados locais
   const [estados, setEstados] = useState<EstadosOperacao>({

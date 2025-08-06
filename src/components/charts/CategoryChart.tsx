@@ -1,12 +1,12 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDashboardCharts } from '@/hooks/useDashboardCharts';
-import { LoadingStates } from '@/components/ui/LoadingStates';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function CategoryChart() {
   const { chartData, loading } = useDashboardCharts();
 
   if (loading) {
-    return <LoadingStates.CardSkeleton />;
+    return <Skeleton className="h-80 w-full" />;
   }
 
   return (

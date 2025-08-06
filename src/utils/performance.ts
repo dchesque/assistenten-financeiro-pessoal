@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useEffect } from 'react';
-import { LoadingStates } from '@/components/ui/LoadingStates';
+import { Skeleton } from '@/components/ui/skeleton';
 
 /**
  * ⚡ OTIMIZADOR DE PERFORMANCE PREMIUM
@@ -393,7 +393,7 @@ interface LazyRouteProps {
 }
 
 export function LazyRoute({ component: Component, fallback: Fallback }: LazyRouteProps) {
-  const FallbackComponent = Fallback || LoadingStates.CardSkeleton;
+  const FallbackComponent = Fallback || (() => React.createElement(Skeleton, { className: "h-32 w-full" }));
   
   
   return React.createElement(Suspense, 

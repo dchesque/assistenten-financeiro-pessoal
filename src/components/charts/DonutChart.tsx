@@ -1,12 +1,12 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useDashboardCharts } from '@/hooks/useDashboardCharts';
-import { LoadingStates } from '@/components/ui/LoadingStates';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function StatusDonutChart() {
   const { chartData, loading } = useDashboardCharts();
 
   if (loading) {
-    return <LoadingStates.CardSkeleton />;
+    return <Skeleton className="h-80 w-full" />;
   }
 
   const data = chartData.statusContas;

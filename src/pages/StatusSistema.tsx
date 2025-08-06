@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useValidacaoSistema } from '@/hooks/useValidacaoSistema';
 import { CheckCircle, XCircle, AlertTriangle, RefreshCw, Database, Shield, Zap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LoadingStates } from '@/components/ui/LoadingStates';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function StatusSistema() {
   const { validacao, loading, sistemaEstaFuncional, validarModulo, revalidar } = useValidacaoSistema();
@@ -20,7 +20,7 @@ export default function StatusSistema() {
         
         <div className="relative z-10 p-4 lg:p-8">
           <div className="max-w-4xl mx-auto">
-            <LoadingStates.CardSkeleton />
+            <Skeleton className="h-96 w-full" />
           </div>
         </div>
       </div>

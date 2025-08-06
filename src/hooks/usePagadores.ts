@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { mockPagadores } from '@/utils/mockContasReceber';
 import type { 
   Pagador, 
   CriarPagador, 
@@ -23,7 +22,7 @@ export function usePagadores() {
       // Simular delay de carregamento
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      let pagadoresFiltered = [...mockPagadores];
+      let pagadoresFiltered: any[] = [];
 
       if (filtros?.busca) {
         const busca = filtros.busca.toLowerCase();

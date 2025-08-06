@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { mockCategoriasReceitas } from '@/utils/mockContasReceber';
 import type { 
   CategoriaReceita, 
   CriarCategoriaReceita, 
@@ -22,7 +21,7 @@ export function useCategoriasReceitas() {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      let categoriasFiltered = [...mockCategoriasReceitas];
+      let categoriasFiltered: any[] = [];
 
       if (filtros?.busca) {
         categoriasFiltered = categoriasFiltered.filter(cat =>

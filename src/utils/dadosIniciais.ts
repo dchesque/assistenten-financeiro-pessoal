@@ -1,6 +1,5 @@
 // Dados iniciais para o sistema de finanças pessoais
 import { CategoriaDespesa } from '@/types/categoriaDespesa';
-import { CredorPessoal } from '@/types/credorPessoal';
 
 // Categorias padrão por grupo
 export const categoriasPadrao: Omit<CategoriaDespesa, 'id' | 'user_id' | 'created_at' | 'updated_at'>[] = [
@@ -63,69 +62,6 @@ export const categoriasPadrao: Omit<CategoriaDespesa, 'id' | 'user_id' | 'create
   { nome: 'Diversos', grupo: 'outros', cor: '#6B7280', icone: 'Package', ativo: true }
 ];
 
-// Credores de exemplo
-export const credoresExemplo: Omit<CredorPessoal, 'id' | 'user_id' | 'created_at' | 'updated_at'>[] = [
-  {
-    nome: 'Dr. João Silva',
-    tipo: 'pessoa_fisica',
-    documento: '12345678901',
-    email: 'joao.silva@clinica.com',
-    telefone: '(11) 99999-1234',
-    endereco: 'Rua das Flores, 123',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '01234-567',
-    observacoes: 'Cardiologista - Consultas particulares',
-    ativo: true,
-    total_contas: 0,
-    valor_total: 0
-  },
-  {
-    nome: 'ENEL Distribuição São Paulo',
-    tipo: 'pessoa_juridica',
-    documento: '61695227000193',
-    email: 'atendimento@enel.com',
-    telefone: '0800-123-4567',
-    endereco: 'Av. das Nações Unidas, 12901',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '04578-000',
-    observacoes: 'Concessionária de energia elétrica',
-    ativo: true,
-    total_contas: 0,
-    valor_total: 0
-  },
-  {
-    nome: 'Claro S.A.',
-    tipo: 'pessoa_juridica',
-    documento: '40432544000147',
-    email: 'suporte@claro.com.br',
-    telefone: '1052',
-    endereco: 'Av. Chedid Jafet, 222',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '04551-065',
-    observacoes: 'Provedor de internet e telefonia',
-    ativo: true,
-    total_contas: 0,
-    valor_total: 0
-  },
-  {
-    nome: 'Academia Fitness+',
-    tipo: 'pessoa_juridica',
-    documento: '98765432000187',
-    email: 'info@fitnessmais.com',
-    telefone: '(11) 99999-9012',
-    endereco: 'Rua do Exercício, 789',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '04567-890',
-    observacoes: 'Academia de musculação e pilates',
-    ativo: true,
-    total_contas: 0,
-    valor_total: 0
-  }
-];
 
 // Função para inserir categorias padrão para um usuário
 export const inserirCategoriasPadrao = async (userId: string, supabase: any) => {
@@ -141,26 +77,6 @@ export const inserirCategoriasPadrao = async (userId: string, supabase: any) => 
 
   if (error) {
     console.error('Erro ao inserir categorias padrão:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// Função para inserir credores de exemplo para um usuário
-export const inserirCredoresExemplo = async (userId: string, supabase: any) => {
-  const credoresComUser = credoresExemplo.map(credor => ({
-    ...credor,
-    user_id: userId
-  }));
-
-  const { data, error } = await supabase
-    .from('credores')
-    .insert(credoresComUser)
-    .select();
-
-  if (error) {
-    console.error('Erro ao inserir credores de exemplo:', error);
     throw error;
   }
 
