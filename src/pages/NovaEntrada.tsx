@@ -7,7 +7,7 @@ import { ArrowLeft, Plus, DollarSign, Calendar, User, Tag, Building, FileText, S
 import { toast } from '@/hooks/use-toast';
 import { Layout } from '@/components/layout/Layout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { PageContainer } from '@/components/layout/PageContainer';
+
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 
 import { Button } from '@/components/ui/button';
@@ -148,8 +148,9 @@ export default function NovaEntrada() {
         }
       />
 
-      <PageContainer maxWidth="full" className="px-0">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+        <div className="relative z-10 w-full px-0 py-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8 px-4 lg:px-8">
           {/* Formulário principal */}
           <div className="lg:col-span-2">
             <Card className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
@@ -461,8 +462,9 @@ export default function NovaEntrada() {
               </Card>
             </div>
           )}
+          </div>
         </div>
-      </PageContainer>
+      </div>
 
       {/* Modals */}
       <CadastroRapidoPagadorModal
