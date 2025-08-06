@@ -34,7 +34,7 @@ export function Layout({ children }: LayoutProps) {
       
       {/* Área principal */}
       <div className={`flex-1 min-h-screen relative z-10 ${
-        isDesktop ? 'lg:pl-72' : 'ml-0'
+        isDesktop ? 'ml-72' : 'ml-0'
       }`}>
         
         {/* Header mobile/tablet */}

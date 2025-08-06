@@ -90,156 +90,150 @@ export default function Bancos() {
   };
 
   return (
-    <>
+    <div className="p-4 lg:p-8">
+      {/* Page Header */}
+      <PageHeader
+        breadcrumb={createBreadcrumb('/bancos')}
+        title="Bancos"
+        subtitle="Contas bancárias • Saldos e movimentações"
+        actions={
+          <>
+            <Button 
+              variant="outline" 
+              onClick={() => setUploadModalAberto(true)}
+              className="bg-white/80 backdrop-blur-sm border-white/20"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Importar OFX
+            </Button>
+            <Button 
+              onClick={() => {
+                setBancoSelecionado(null);
+                setBancoModalAberto(true);
+              }}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Conta
+            </Button>
+          </>
+        }
+      />
 
-      <div>
-        {/* Page Header */}
-        <PageHeader
-          breadcrumb={createBreadcrumb('/bancos')}
-          title="Bancos"
-          subtitle="Contas bancárias • Saldos e movimentações"
-          actions={
-            <>
-              <Button 
-                variant="outline" 
-                onClick={() => setUploadModalAberto(true)}
-                className="bg-white/80 backdrop-blur-sm border-white/20"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Importar OFX
-              </Button>
-              <Button 
-                onClick={() => {
-                  setBancoSelecionado(null);
-                  setBancoModalAberto(true);
-                }}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Conta
-              </Button>
-            </>
-          }
-        />
-
-        {/* Conteúdo principal */}
-        <div className="p-4 lg:p-8">
-          <div className="space-y-6">
-          {/* Cards de resumo */}
-          {loading ? (
-            <EstatisticasSkeleton />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Total de Bancos</h3>
-                <p className="text-2xl font-bold text-foreground">{estatisticas.total_bancos}</p>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Saldo Total</h3>
-                <p className="text-2xl font-bold text-foreground">{formatarMoeda(estatisticas.saldo_total)}</p>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Bancos Ativos</h3>
-                <p className="text-2xl font-bold text-foreground">{estatisticas.bancos_ativos}</p>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Maior Saldo</h3>
-                <p className="text-2xl font-bold text-foreground">{formatarMoeda(estatisticas.maior_saldo)}</p>
-              </div>
+      <div className="space-y-6">
+        {/* Cards de resumo */}
+        {loading ? (
+          <EstatisticasSkeleton />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">Total de Bancos</h3>
+              <p className="text-2xl font-bold text-foreground">{estatisticas.total_bancos}</p>
             </div>
-          )}
-
-          {/* Filtros */}
-          <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar bancos..."
-                  value={filtros.busca}
-                  onChange={(e) => setFiltros(prev => ({ ...prev, busca: e.target.value }))}
-                  className="pl-10 input-base"
-                />
-              </div>
-              <Select value={filtros.status} onValueChange={(value) => setFiltros(prev => ({ ...prev, status: value }))}>
-                <SelectTrigger className="input-base">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="ativo">Ativo</SelectItem>
-                  <SelectItem value="inativo">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filtros.tipo_conta} onValueChange={(value) => setFiltros(prev => ({ ...prev, tipo_conta: value }))}>
-                <SelectTrigger className="input-base">
-                  <SelectValue placeholder="Tipo de Conta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os Tipos</SelectItem>
-                  <SelectItem value="conta_corrente">Conta Corrente</SelectItem>
-                  <SelectItem value="poupanca">Poupança</SelectItem>
-                  <SelectItem value="conta_salario">Conta Salário</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filtros.possui_limite} onValueChange={(value) => setFiltros(prev => ({ ...prev, possui_limite: value }))}>
-                <SelectTrigger className="input-base">
-                  <SelectValue placeholder="Possui Limite" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="sim">Com Limite</SelectItem>
-                  <SelectItem value="nao">Sem Limite</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filtros.suporta_ofx} onValueChange={(value) => setFiltros(prev => ({ ...prev, suporta_ofx: value }))}>
-                <SelectTrigger className="input-base">
-                  <SelectValue placeholder="Suporte OFX" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="sim">Com OFX</SelectItem>
-                  <SelectItem value="nao">Sem OFX</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">Saldo Total</h3>
+              <p className="text-2xl font-bold text-foreground">{formatarMoeda(estatisticas.saldo_total)}</p>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">Bancos Ativos</h3>
+              <p className="text-2xl font-bold text-foreground">{estatisticas.bancos_ativos}</p>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">Maior Saldo</h3>
+              <p className="text-2xl font-bold text-foreground">{formatarMoeda(estatisticas.maior_saldo)}</p>
             </div>
           </div>
+        )}
 
-          {/* Grid de bancos */}
-          {loading ? (
-            <BancoSkeletonGrid />
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {bancosFiltrados.map(banco => (
-                <BancoCard
-                  key={banco.id}
-                  banco={banco}
-                  onEdit={(banco) => {
-                    setBancoSelecionado(banco);
-                    setBancoModalAberto(true);
-                  }}
-                  onView={(banco) => {
-                    setBancoSelecionado(banco);
-                    // Modal de visualização seria implementado aqui
-                  }}
-                  onUploadOFX={(banco) => {
-                    setBancoSelecionado(banco);
-                    setUploadModalAberto(true);
-                  }}
-                  onViewExtrato={(banco) => {
-                    setBancoSelecionado(banco);
-                    setExtratoModalAberto(true);
-                  }}
-                  onViewHistorico={(banco) => {
-                    setBancoSelecionado(banco);
-                    // Modal de histórico seria implementado aqui
-                  }}
-                />
-              ))}
+        {/* Filtros */}
+        <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Buscar bancos..."
+                value={filtros.busca}
+                onChange={(e) => setFiltros(prev => ({ ...prev, busca: e.target.value }))}
+                className="pl-10 input-base"
+              />
             </div>
-          )}
+            <Select value={filtros.status} onValueChange={(value) => setFiltros(prev => ({ ...prev, status: value }))}>
+              <SelectTrigger className="input-base">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="ativo">Ativo</SelectItem>
+                <SelectItem value="inativo">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filtros.tipo_conta} onValueChange={(value) => setFiltros(prev => ({ ...prev, tipo_conta: value }))}>
+              <SelectTrigger className="input-base">
+                <SelectValue placeholder="Tipo de Conta" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os Tipos</SelectItem>
+                <SelectItem value="conta_corrente">Conta Corrente</SelectItem>
+                <SelectItem value="poupanca">Poupança</SelectItem>
+                <SelectItem value="conta_salario">Conta Salário</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filtros.possui_limite} onValueChange={(value) => setFiltros(prev => ({ ...prev, possui_limite: value }))}>
+              <SelectTrigger className="input-base">
+                <SelectValue placeholder="Possui Limite" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="sim">Com Limite</SelectItem>
+                <SelectItem value="nao">Sem Limite</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filtros.suporta_ofx} onValueChange={(value) => setFiltros(prev => ({ ...prev, suporta_ofx: value }))}>
+              <SelectTrigger className="input-base">
+                <SelectValue placeholder="Suporte OFX" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="sim">Com OFX</SelectItem>
+                <SelectItem value="nao">Sem OFX</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
+
+        {/* Grid de bancos */}
+        {loading ? (
+          <BancoSkeletonGrid />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {bancosFiltrados.map(banco => (
+              <BancoCard
+                key={banco.id}
+                banco={banco}
+                onEdit={(banco) => {
+                  setBancoSelecionado(banco);
+                  setBancoModalAberto(true);
+                }}
+                onView={(banco) => {
+                  setBancoSelecionado(banco);
+                  // Modal de visualização seria implementado aqui
+                }}
+                onUploadOFX={(banco) => {
+                  setBancoSelecionado(banco);
+                  setUploadModalAberto(true);
+                }}
+                onViewExtrato={(banco) => {
+                  setBancoSelecionado(banco);
+                  setExtratoModalAberto(true);
+                }}
+                onViewHistorico={(banco) => {
+                  setBancoSelecionado(banco);
+                  // Modal de histórico seria implementado aqui
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Modals */}
@@ -304,6 +298,6 @@ export default function Bancos() {
           }}
         />
       )}
-    </>
+    </div>
   );
 }
