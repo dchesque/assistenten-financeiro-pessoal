@@ -26,6 +26,7 @@ const DesignSystemPreview = lazy(() => import('@/pages/DesignSystemPreview'));
 
 const MonitoramentoPerformance = lazy(() => import('@/pages/MonitoramentoPerformance'));
 const NovaEntrada = lazy(() => import('@/pages/NovaEntrada'));
+const Sistema = lazy(() => import('@/pages/Sistema'));
 const StatusSistema = lazy(() => import('@/pages/StatusSistema'));
 const Usuarios = lazy(() => import('@/pages/Usuarios'));
 
@@ -65,6 +66,7 @@ function App() {
               
               <Route path="/monitoramento-performance" element={<ProtectedRoute><Layout><MonitoramentoPerformance /></Layout></ProtectedRoute>} />
               <Route path="/nova-entrada" element={<ProtectedRoute><Layout><NovaEntrada /></Layout></ProtectedRoute>} />
+              <Route path="/sistema" element={<ProtectedRoute><Layout><Sistema /></Layout></ProtectedRoute>} />
               <Route path="/status-sistema" element={<ProtectedRoute><Layout><StatusSistema /></Layout></ProtectedRoute>} />
               <Route path="/usuarios" element={<ProtectedRoute><Layout><Usuarios /></Layout></ProtectedRoute>} />
               <Route path="/configuracoes" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
