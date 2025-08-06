@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { BlurBackground } from '@/components/ui/BlurBackground';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,32 +32,36 @@ export default function ContasReceber() {
   };
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-        <BlurBackground />
-        
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-4 lg:px-8 lg:py-8">
-          {/* Page Header */}
-          <PageHeader
-            breadcrumb={createBreadcrumb('/contas-receber', [
-              { label: 'Início', href: '/dashboard' },
-              { label: 'Contas a Receber' }
-            ])}
-            title="Contas a Receber"
-            subtitle="Gerencie suas receitas e entradas financeiras • Controle de recebimentos"
-            icon={<DollarSign className="h-8 w-8" />}
-            actions={
-              <Button 
-                onClick={() => navigate('/nova-entrada')}
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Nova Entrada
-              </Button>
-            }
-          />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      {/* Background abstratos */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-orange-400/20 rounded-full blur-3xl"></div>
+      </div>
 
-          <div className="space-y-6">
+      {/* Container principal com padding responsivo e max-width */}
+      <div className="relative z-10 max-w-7xl mx-auto p-4 lg:p-8">
+        {/* Page Header */}
+        <PageHeader
+          breadcrumb={createBreadcrumb('/contas-receber', [
+            { label: 'Início', href: '/dashboard' },
+            { label: 'Contas a Receber' }
+          ])}
+          title="Contas a Receber"
+          subtitle="Gerencie suas receitas e entradas financeiras • Controle de recebimentos"
+          icon={<DollarSign className="h-8 w-8" />}
+          actions={
+            <Button 
+              onClick={() => navigate('/nova-entrada')}
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Entrada
+            </Button>
+          }
+        />
+
+        <div className="space-y-6">
           {/* Cards de Estatísticas */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/90">
@@ -247,9 +249,8 @@ export default function ContasReceber() {
               </TabsContent>
             </Tabs>
           </div>
-          </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
