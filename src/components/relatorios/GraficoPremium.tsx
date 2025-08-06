@@ -117,104 +117,114 @@ export function GraficoPremium({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            {tipo === 'linha' && (
-              <LineChart data={dados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="periodo" 
-                  stroke="#64748b"
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <YAxis 
-                  stroke="#64748b"
-                  fontSize={12}
-                  tickLine={false}
-                  tickFormatter={formatarValor}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-                  }}
-                  labelStyle={{ color: '#374151', fontWeight: 500 }}
-                  formatter={(value: any, name: string) => [
-                    formatarValor(value),
-                    name
-                  ]}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="valor" 
-                  stroke={cores[0]} 
-                  strokeWidth={3}
-                  dot={{ fill: cores[0], strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: cores[0], strokeWidth: 2, fill: '#ffffff' }}
-                />
-              </LineChart>
-            )}
-            
-            {tipo === 'barra' && (
-              <BarChart data={dados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="categoria" 
-                  stroke="#64748b" 
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <YAxis 
-                  stroke="#64748b" 
-                  fontSize={12}
-                  tickLine={false}
-                  tickFormatter={formatarValor}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px'
-                  }}
-                  formatter={(value: any) => [formatarValor(value), 'Valor']}
-                />
-                <Bar 
-                  dataKey="valor" 
-                  fill={cores[0]}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            )}
-            
-            {tipo === 'pizza' && (
-              <PieChart>
-                <Pie
-                  data={dados}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  dataKey="valor"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {dados.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={cores[index % cores.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px'
-                  }}
-                  formatter={(value: any) => [formatarValor(value), 'Valor']}
-                />
-              </PieChart>
-            )}
+            {(() => {
+              if (tipo === 'linha') {
+                return (
+                  <LineChart data={dados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="periodo" 
+                      stroke="#64748b"
+                      fontSize={12}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      stroke="#64748b"
+                      fontSize={12}
+                      tickLine={false}
+                      tickFormatter={formatarValor}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+                      }}
+                      labelStyle={{ color: '#374151', fontWeight: 500 }}
+                      formatter={(value: any, name: string) => [
+                        formatarValor(value),
+                        name
+                      ]}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="valor" 
+                      stroke={cores[0]} 
+                      strokeWidth={3}
+                      dot={{ fill: cores[0], strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: cores[0], strokeWidth: 2, fill: '#ffffff' }}
+                    />
+                  </LineChart>
+                );
+              }
+              
+              if (tipo === 'barra') {
+                return (
+                  <BarChart data={dados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="categoria" 
+                      stroke="#64748b" 
+                      fontSize={12}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      stroke="#64748b" 
+                      fontSize={12}
+                      tickLine={false}
+                      tickFormatter={formatarValor}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px'
+                      }}
+                      formatter={(value: any) => [formatarValor(value), 'Valor']}
+                    />
+                    <Bar 
+                      dataKey="valor" 
+                      fill={cores[0]}
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                );
+              }
+              
+              if (tipo === 'pizza') {
+                return (
+                  <PieChart>
+                    <Pie
+                      data={dados}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      dataKey="valor"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {dados.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={cores[index % cores.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px'
+                      }}
+                      formatter={(value: any) => [formatarValor(value), 'Valor']}
+                    />
+                  </PieChart>
+                );
+              }
+              
+              return null;
+            })()}
           </ResponsiveContainer>
         )}
       </div>
