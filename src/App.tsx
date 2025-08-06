@@ -22,6 +22,7 @@ const Settings = lazy(() => import('@/pages/Settings'));
 const NovaConta = lazy(() => import('@/pages/NovaConta'));
 const NovoRecebimento = lazy(() => import('@/pages/NovoRecebimento'));
 const Contatos = lazy(() => import('@/pages/Contatos'));
+const Categorias = lazy(() => import('@/pages/Categorias'));
 const DesignSystemPreview = lazy(() => import('@/pages/DesignSystemPreview'));
 
 const MonitoramentoPerformance = lazy(() => import('@/pages/MonitoramentoPerformance'));
@@ -61,6 +62,7 @@ function App() {
               <Route path="/nova-conta" element={<ProtectedRoute><Layout><NovaConta /></Layout></ProtectedRoute>} />
               <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><NovoRecebimento /></Layout></ProtectedRoute>} />
               <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
+              <Route path="/categorias" element={<ProtectedRoute><Layout><Categorias /></Layout></ProtectedRoute>} />
               <Route path="/design-system" element={<ProtectedRoute><Layout><DesignSystemPreview /></Layout></ProtectedRoute>} />
               
               <Route path="/monitoramento-performance" element={<ProtectedRoute><Layout><MonitoramentoPerformance /></Layout></ProtectedRoute>} />

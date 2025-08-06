@@ -72,6 +72,7 @@ const menuStructure = [
     color: 'text-blue-500',
     key: 'cadastros',
     items: [
+      { name: 'Categorias', path: '/categorias', icon: Package, color: 'text-blue-500' },
       { name: 'Contatos', path: '/contatos', icon: Users, color: 'text-blue-500' },
       { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' }
     ]
