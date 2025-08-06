@@ -148,8 +148,8 @@ export default function NovaEntrada() {
         }
       />
 
-      <PageContainer>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <PageContainer maxWidth="full" className="px-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 lg:px-8">
           {/* Formulário principal */}
           <div className="lg:col-span-2">
             <Card className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
