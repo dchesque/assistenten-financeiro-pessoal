@@ -7,6 +7,12 @@ export interface MetricasPerformance {
   cpu: number;
 }
 
+export interface MetricaDetalhada {
+  metrica: string;
+  status: 'success' | 'warning' | 'error';
+  recomendacao: string;
+}
+
 export function usePerformanceAvancado() {
   const [metricas, setMetricas] = useState<MetricasPerformance>({
     carregamento: 0,
@@ -37,11 +43,18 @@ export function usePerformanceAvancado() {
     coletarMetricas();
   }, []);
 
+  const [metricasDetalhadas] = useState<MetricaDetalhada[]>([
+    { metrica: 'carregamento_pagina', status: 'success', recomendacao: 'Velocidade ótima' },
+    { metrica: 'memoria_cache', status: 'warning', recomendacao: 'Considere limpeza' },
+    { metrica: 'renderizacao_componentes', status: 'success', recomendacao: 'Performance adequada' }
+  ]);
+
   return {
     metricas,
+    metricasDetalhadas,
     loading,
     optimizing: false,
-    estatisticas: [{
+    estatisticas: {
       scoreGeral: 85,
       sucessos: 120,
       problemas: 3,
@@ -50,7 +63,7 @@ export function usePerformanceAvancado() {
       valor_total_mes: 75000,
       contas_pendentes: 25,
       clientes_ativos: 45
-    }],
+    },
     infoCache: {
       totalItens: 250,
       hitRate: 95,
@@ -69,8 +82,8 @@ export function usePerformanceAvancado() {
       operacoes_por_tipo: { create: 100, read: 300, update: 80, delete: 20 }
     },
     coletarMetricas,
-    carregarTodosDados: async () => {},
-    limparCache: async () => {},
+    carregarTodosDados: async (categoria: string) => {},
+    limparCache: async (categoria: string) => {},
     otimizarSistema: async () => {},
     preCarregarDados: async () => {}
   };

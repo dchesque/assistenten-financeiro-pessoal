@@ -28,6 +28,7 @@ export default function MonitoramentoPerformance() {
     optimizing,
     estatisticas,
     metricas,
+    metricasDetalhadas,
     infoCache,
     analise,
     carregarTodosDados,
@@ -83,7 +84,7 @@ export default function MonitoramentoPerformance() {
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            onClick={carregarTodosDados}
+            onClick={() => carregarTodosDados('all')}
             disabled={loadingPerf}
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loadingPerf ? 'animate-spin' : ''}`} />
@@ -169,8 +170,8 @@ export default function MonitoramentoPerformance() {
                     <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
                     <p>Carregando métricas...</p>
                   </div>
-                ) : metricas.length > 0 ? (
-                  metricas.map((metrica, index) => (
+                ) : metricasDetalhadas && metricasDetalhadas.length > 0 ? (
+                  metricasDetalhadas.map((metrica, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         {getStatusIcon(metrica.status)}
@@ -183,7 +184,7 @@ export default function MonitoramentoPerformance() {
                       </div>
                       <div className="text-right">
                         <div className="font-bold">
-                          {metrica.valor.toLocaleString('pt-BR')} {metrica.unidade}
+                          Operacional
                         </div>
                         <Badge 
                           variant="secondary" 
@@ -299,7 +300,7 @@ export default function MonitoramentoPerformance() {
                 
                 <Button
                   variant="outline"
-                  onClick={() => limparCache()}
+                  onClick={() => limparCache('all')}
                   disabled={loadingPerf}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -380,7 +381,7 @@ export default function MonitoramentoPerformance() {
               <CardContent className="space-y-4">
                 <Button
                   variant="outline"
-                  onClick={() => buscarLogs()}
+                  onClick={() => buscarLogs('recent')}
                   disabled={loadingAudit}
                   className="w-full"
                 >
@@ -390,7 +391,7 @@ export default function MonitoramentoPerformance() {
                 
                 <Button
                   variant="outline"
-                  onClick={() => exportarLogs()}
+                  onClick={() => exportarLogs('xlsx')}
                   disabled={loadingAudit}
                   className="w-full"
                 >
@@ -400,7 +401,7 @@ export default function MonitoramentoPerformance() {
                 
                 <Button
                   variant="outline"
-                  onClick={limparLogsAntigos}
+                  onClick={() => limparLogsAntigos()}
                   disabled={loadingAudit}
                   className="w-full"
                 >

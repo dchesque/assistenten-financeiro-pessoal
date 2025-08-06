@@ -67,12 +67,18 @@ export function useAuditoria() {
       total_operacoes: 500,
       atividade_recente: 50,
       usuarios_ativos: 12,
-      operacoes_por_tabela: [{ nome: 'contas', count: 200 }, { nome: 'fornecedores', count: 50 }],
-      operacoes_por_tipo: [{ tipo: 'create', count: 100 }, { tipo: 'read', count: 300 }]
+      operacoes_por_tabela: [
+        { nome: 'contas', count: 200, tabela: 'contas_pagar', total: 200 },
+        { nome: 'fornecedores', count: 50, tabela: 'fornecedores', total: 50 }
+      ],
+      operacoes_por_tipo: [
+        { tipo: 'create', count: 100, operacao: 'CREATE', total: 100 },
+        { tipo: 'read', count: 300, operacao: 'READ', total: 300 }
+      ]
     },
     carregarLogs,
     buscarLogs: async (filtro: string) => {},
     exportarLogs: async (formato: string) => {},
-    limparLogsAntigos: async (dias: number) => {}
+    limparLogsAntigos: async () => {}
   };
 }
