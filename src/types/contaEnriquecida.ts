@@ -1,3 +1,5 @@
+import { ContaPagar } from '@/hooks/useContasPagar';
+
 // Tipo ContaEnriquecida para compatibilidade
 export interface ContaEnriquecida extends ContaPagar {
   fornecedor?: { nome: string };
@@ -8,4 +10,6 @@ export interface ContaEnriquecida extends ContaPagar {
   banco_nome?: string;
   dias_para_vencimento?: number;
   dias_em_atraso?: number;
+  destacar?: boolean;
+  documento_referencia?: string;
 }

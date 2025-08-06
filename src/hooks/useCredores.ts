@@ -9,7 +9,7 @@ export interface UseCredoresReturn {
   criarCredor: (credor: Omit<Credor, 'id' | 'dataCadastro' | 'totalCompras' | 'valorTotal'>) => Promise<Credor>;
   atualizarCredor: (id: number, credor: Partial<Credor>) => Promise<Credor>;
   excluirCredor: (id: number) => Promise<void>;
-  buscarPorDocumento: (documento: string, excludeId?: number) => Promise<Credor | null>;
+  buscarPorDocumento: (documento: string) => Credor | null;
   atualizarEstatisticas: (credorId: number) => Promise<void>;
   recarregar: () => Promise<void>;
 }

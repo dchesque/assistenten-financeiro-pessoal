@@ -8,7 +8,7 @@ export interface ContaPagar {
   valor_final: number;
   data_vencimento: string;
   data_pagamento?: string;
-  status: 'pendente' | 'pago' | 'vencido';
+  status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
   fornecedor_id: number;
   plano_contas_id?: number;
   banco_id?: number;
@@ -58,6 +58,9 @@ const mockContasPagar: ContaPagar[] = [
     updated_at: '2024-12-20T16:45:00Z'
   }
 ];
+
+// Re-export ContaEnriquecida for compatibility
+export type { ContaEnriquecida } from '@/types/contaEnriquecida';
 
 export function useContasPagar() {
   const [contas, setContas] = useState<ContaPagar[]>([]);
@@ -154,6 +157,11 @@ export function useContasPagar() {
     contas,
     loading,
     error,
+    estados: {
+      carregando: loading,
+      salvandoEdicao: false,
+      erro: error
+    },
     carregarContas,
     criarConta,
     atualizarConta,

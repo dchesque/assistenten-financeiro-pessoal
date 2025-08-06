@@ -163,36 +163,25 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
 
                           // Auto-preencher categoria padrão do credor se existir
                           if (fornecedor.categoria_padrao_id && !dadosEdicao.plano_conta) {
-                            import('@/integrations/supabase/client').then(({ supabase }) => {
-                              supabase
-                                .from('plano_contas')
-                                .select('*')
-                                .eq('id', fornecedor.categoria_padrao_id)
-                                .eq('aceita_lancamento', true)
-                                .single()
-                                .then(({ data, error }) => {
-                                  if (data && !error) {
-                                    const categoriaDefault: PlanoContas = {
-                                      id: data.id,
-                                      codigo: data.codigo,
-                                      nome: data.nome,
-                                      tipo_dre: 'despesa_pessoal',
-                                      cor: data.cor || '#6B7280',
-                                      icone: data.icone || 'Package',
-                                      nivel: data.nivel,
-                                      plano_pai_id: data.plano_pai_id,
-                                      aceita_lancamento: data.aceita_lancamento,
-                                      ativo: data.ativo,
-                                      total_contas: 0,
-                                      valor_total: 0,
-                                      created_at: data.created_at,
-                                      updated_at: data.updated_at
-                                    };
-                                    
-                                    setDadosEdicao((prev: any) => ({ ...prev, plano_conta: categoriaDefault }));
-                                  }
-                                });
-                            });
+                            // Mock: buscar categoria padrão
+                            const categoriaDefault: PlanoContas = {
+                              id: fornecedor.categoria_padrao_id,
+                              codigo: 'CATPADRAO',
+                              nome: 'Categoria Padrão',
+                              tipo_dre: 'despesa_pessoal',
+                              cor: '#6B7280',
+                              icone: 'Package',
+                              nivel: 1,
+                              plano_pai_id: null,
+                              aceita_lancamento: true,
+                              ativo: true,
+                              total_contas: 0,
+                              valor_total: 0,
+                              created_at: new Date().toISOString(),
+                              updated_at: new Date().toISOString()
+                            };
+                            
+                            setDadosEdicao((prev: any) => ({ ...prev, plano_conta: categoriaDefault }));
                           }
                         }}
                         placeholder="Selecionar credor..."

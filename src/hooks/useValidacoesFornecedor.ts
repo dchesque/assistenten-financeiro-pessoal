@@ -118,7 +118,7 @@ export const useValidacoesFornecedor = () => {
     // Verificar duplicidade
     try {
       setValidando(true);
-      const fornecedorExistente = await buscarPorDocumento(documentoLimpo, fornecedorId);
+      const fornecedorExistente = buscarPorDocumento(documentoLimpo);
       
       if (fornecedorExistente) {
         adicionarErro('documento', 'Este documento já está cadastrado');

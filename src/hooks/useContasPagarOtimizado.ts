@@ -5,7 +5,8 @@ import { ContaPagar } from './useContasPagar';
 export interface FiltrosContas {
   busca?: string;
   status?: string;
-  fornecedor_id?: number;
+  fornecedor_id?: number | string;
+  plano_conta_id?: number | string;
   data_inicio?: string;
   data_fim?: string;
   valor_min?: number;
@@ -80,13 +81,15 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const contasFiltradas = useMemo(() => {
-    if (!filtrosIniciais) return contas;
+  // Estados para filtros
+  const [filtros, setFiltros] = useState<FiltrosContas>({});
+  const [filtroRapido, setFiltroRapido] = useState('todos');
 
+  const contasFiltradas = useMemo(() => {
     return contas.filter(conta => {
       // Filtro por busca
-      if (filtrosIniciais.busca) {
-        const busca = filtrosIniciais.busca.toLowerCase();
+      if (filtros.busca) {
+        const busca = filtros.busca.toLowerCase();
         if (!conta.descricao.toLowerCase().includes(busca)) return false;
       }
 
@@ -216,24 +219,54 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
 
   const recarregar = carregarContas;
 
-  // Estados para filtros
-  const [filtros, setFiltros] = useState<FiltrosContas>({});
-  const [filtroRapido, setFiltroRapido] = useState('todos');
-
   const limparFiltros = () => {
     setFiltros({});
     setFiltroRapido('todos');
   };
 
-  // Mock de funções extras
-  const contasFiltradas = contasFiltradas; // Já calculado acima
+  // Estatísticas expandidas
+  const pendentesContas = contasFiltradas.filter(c => c.status === 'pendente');
+  const vencidasContas = contasFiltradas.filter(c => c.status === 'vencido');
+  const vence7DiasContas = contasFiltradas.filter(c => {
+    const hoje = new Date();
+    const vencimento = new Date(c.data_vencimento);
+    const diasParaVencimento = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    return c.status === 'pendente' && diasParaVencimento <= 7 && diasParaVencimento >= 0;
+  });
+  const pagasMesContas = contasFiltradas.filter(c => {
+    const hoje = new Date();
+    const pagamento = c.data_pagamento ? new Date(c.data_pagamento) : null;
+    return c.status === 'pago' && pagamento && 
+      pagamento.getMonth() === hoje.getMonth() && 
+      pagamento.getFullYear() === hoje.getFullYear();
+  });
+
   const resumos = {
     total: estatisticas.total,
-    valor_total: estatisticas.valor_total
+    valor_total: estatisticas.valor_total,
+    pendentes: {
+      total: pendentesContas.length,
+      valor: pendentesContas.reduce((acc, c) => acc + c.valor_final, 0)
+    },
+    vencidas: {
+      total: vencidasContas.length,
+      valor: vencidasContas.reduce((acc, c) => acc + c.valor_final, 0)
+    },
+    vence7Dias: {
+      total: vence7DiasContas.length,
+      valor: vence7DiasContas.reduce((acc, c) => acc + c.valor_final, 0)
+    },
+    pagasMes: {
+      total: pagasMesContas.length,
+      valor: pagasMesContas.reduce((acc, c) => acc + c.valor_final, 0)
+    }
   };
   
   const estados = {
     carregando: loading,
+    carregandoContas: loading,
+    salvandoEdicao: false,
+    processandoBaixa: false,
     erro: error
   };
 
@@ -243,6 +276,11 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
 
   const confirmarBaixa = async (id: number, dadosBaixa: any) => {
     return await baixarConta(id, dadosBaixa);
+  };
+
+  const cancelarConta = async (id: number): Promise<void> => {
+    await atualizarConta(id, { status: 'pendente' });
+    toast.success('Conta cancelada com sucesso!');
   };
 
   useEffect(() => {
@@ -269,6 +307,7 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
     baixarConta,
     salvarEdicao,
     confirmarBaixa,
+    cancelarConta,
     recarregar
   };
 }

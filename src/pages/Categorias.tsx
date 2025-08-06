@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
 import { PlanoContas } from '@/types/planoContas';
-import { supabase } from '@/integrations/supabase/client';
+// Supabase removido - usando dados mock
 import * as LucideIcons from 'lucide-react';
 import { ConfirmacaoModal } from '@/components/ui/ConfirmacaoModal';
 
@@ -138,8 +138,7 @@ export default function Categorias() {
     try {
       setLoading(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      // Mock: usuário sempre autenticado
 
       const dadosCategoria = {
         codigo: formData.codigo.trim(),
@@ -153,7 +152,7 @@ export default function Categorias() {
         plano_pai_id: null,
         total_contas: 0,
         valor_total: 0,
-        user_id: user.id
+        // user_id removido por estar usando mock
       };
 
       if (categoriaEdicao) {

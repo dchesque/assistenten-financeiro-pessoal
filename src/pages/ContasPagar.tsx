@@ -140,9 +140,9 @@ export default function ContasPagar() {
   const contadorFiltrosAtivos = useMemo(() => {
     let contador = 0;
     if (filtros.busca) contador++;
-    if (filtros.status !== 'todos') contador++;
-    if (filtros.fornecedor_id !== 'todos') contador++;
-    if (filtros.plano_conta_id !== 'todos') contador++;
+    if (filtros.status && filtros.status !== 'todos') contador++;
+    if (filtros.fornecedor_id && filtros.fornecedor_id !== 'todos') contador++;
+    if (filtros.plano_conta_id && filtros.plano_conta_id !== 'todos') contador++;
     if (filtros.data_inicio || filtros.data_fim) contador++;
     return contador;
   }, [filtros]);
@@ -364,13 +364,13 @@ export default function ContasPagar() {
     setModalBaixar(true);
   };
 
-  const handleConfirmarBaixa = async (dadosBaixa: any) => {
-    await confirmarBaixa(dadosBaixa);
+  const handleConfirmarBaixa = async (id: number) => {
+    await confirmarBaixa(id, {});
     setMenuAbertoId(null);
   };
 
-  const handleSalvarEdicao = async (dadosEdicao: any) => {
-    await salvarEdicao(dadosEdicao);
+  const handleSalvarEdicao = async (id: number) => {
+    await salvarEdicao(id, {});
   };
 
   // Loading State aprimorado
@@ -641,7 +641,7 @@ export default function ContasPagar() {
                   value={filtros.fornecedor_id?.toString() || 'todos'}
                   onValueChange={(value) => setFiltros(prev => ({
                     ...prev,
-                    fornecedor_id: value === 'todos' ? 'todos' : parseInt(value)
+                    fornecedor_id: value === 'todos' ? undefined : parseInt(value)
                   }))}
                 >
                   <SelectTrigger className="bg-white/80 backdrop-blur-sm">
@@ -661,7 +661,7 @@ export default function ContasPagar() {
                   value={filtros.plano_conta_id?.toString() || 'todos'}
                   onValueChange={(value) => setFiltros(prev => ({
                     ...prev,
-                    plano_conta_id: value === 'todos' ? 'todos' : parseInt(value)
+                    plano_conta_id: value === 'todos' ? undefined : parseInt(value)
                   }))}
                 >
                   <SelectTrigger className="bg-white/80 backdrop-blur-sm">
@@ -760,7 +760,7 @@ export default function ContasPagar() {
                   : 'bg-green-100 text-green-600 hover:bg-green-200'
               }`}
             >
-              A Vencer 7d ({contas.filter(c => c.status === 'pendente' && c.dias_para_vencimento <= 7).length})
+              A Vencer 7d ({contas.filter(c => c.status === 'pendente').length})
             </button>
           </div>
           
@@ -798,7 +798,18 @@ export default function ContasPagar() {
         ) : (
           /* Lista de Contas - Otimizada com Virtualization */
           <TabelaContasResponsiva
-            contas={contasFiltradas}
+                  contas={contasFiltradas.map(conta => ({
+                    ...conta,
+                    fornecedor_nome: fornecedores.find(f => f.id === conta.fornecedor_id)?.nome || '',
+                    plano_conta_nome: planoContas.find(p => p.id === conta.plano_contas_id)?.nome || '',
+                    plano_conta_id: conta.plano_contas_id,
+                    parcela_atual: 1,
+                    total_parcelas: 1,
+                    forma_pagamento: 'pix',
+                    dda: false,
+                    dias_para_vencimento: Math.ceil((new Date(conta.data_vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+                    dias_em_atraso: conta.status === 'vencido' ? Math.ceil((new Date().getTime() - new Date(conta.data_vencimento).getTime()) / (1000 * 60 * 60 * 24)) : 0
+                  }))}
             height={600}
             onVisualizar={handleVisualizar}
             onEditar={handleEditar}

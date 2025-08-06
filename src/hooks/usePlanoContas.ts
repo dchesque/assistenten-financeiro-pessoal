@@ -8,7 +8,6 @@ const mockPlanoContas: PlanoContas[] = [
     id: 1,
     nome: 'Receitas de Vendas',
     codigo: '3.1.01',
-    tipo: 'receita',
     tipo_dre: 'despesa_pessoal',
     cor: '#10b981',
     icone: 'TrendingUp',
@@ -19,7 +18,6 @@ const mockPlanoContas: PlanoContas[] = [
     descricao: 'Receitas provenientes de vendas',
     total_contas: 5,
     valor_total: 150000.00,
-    user_id: '1',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
   },
@@ -27,7 +25,6 @@ const mockPlanoContas: PlanoContas[] = [
     id: 2,
     nome: 'Fornecedores',
     codigo: '1.2.01',
-    tipo: 'despesa',
     tipo_dre: 'despesa_pessoal',
     cor: '#ef4444',
     icone: 'Users',
@@ -38,7 +35,6 @@ const mockPlanoContas: PlanoContas[] = [
     descricao: 'Despesas com fornecedores',
     total_contas: 12,
     valor_total: 45000.00,
-    user_id: '1',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
   },
@@ -56,7 +52,6 @@ const mockPlanoContas: PlanoContas[] = [
     descricao: 'Material de escritório e suprimentos',
     total_contas: 3,
     valor_total: 8500.00,
-    user_id: '1',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
   },
@@ -74,7 +69,6 @@ const mockPlanoContas: PlanoContas[] = [
     descricao: 'Contas de energia elétrica',
     total_contas: 1,
     valor_total: 2800.00,
-    user_id: '1',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-15T10:00:00Z'
   }
@@ -177,7 +171,6 @@ export function usePlanoContas() {
     excluirConta,
     excluirPlanoContas: excluirConta, // Alias para compatibilidade
     buscarContasPorTipo,
-    buscarContasAnaliticas,
-    buscarContasAnaliticas: buscarContasAnaliticas // Alias para compatibilidade
+    buscarContasAnaliticas
   };
 }
