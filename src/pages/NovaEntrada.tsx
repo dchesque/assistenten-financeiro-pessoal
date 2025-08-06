@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, DollarSign, Calendar, User, Tag, Building, FileText, S
 import { toast } from '@/hooks/use-toast';
 import { Layout } from '@/components/layout/Layout';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { PageContainer } from '@/components/layout/PageContainer';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 
 import { Button } from '@/components/ui/button';
@@ -147,48 +148,48 @@ export default function NovaEntrada() {
         }
       />
 
-      <div className="relative p-4 lg:p-8">
+      <PageContainer>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Formulário principal */}
-          <div className="lg:col-span-2 space-y-8">
-              <Form {...form}>
-                <form id="nova-entrada-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="lg:col-span-2">
+            <Card className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="p-8 space-y-8">
+                <Form {...form}>
+                  <form id="nova-entrada-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   
-            {/* Seção 1: Pagador */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-gray-900">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                    1
-                  </div>
-                  <span>Pagador</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <PagadorSelector
-                  value={watchedValues.pagador_id}
-                  onChange={(value) => form.setValue('pagador_id', value)}
-                  onOpenModal={() => setPagadorSelectorOpen(true)}
-                  onNewPagador={() => setCadastroRapidoOpen(true)}
-                />
-                {form.formState.errors.pagador_id && (
-                  <p className="text-sm text-red-600">{form.formState.errors.pagador_id.message}</p>
-                )}
-              </CardContent>
-            </Card>
+                    {/* Seção 1: Pagador */}
+                    <div>
+                      <div className="flex items-center space-x-2 mb-6">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                          1
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Pagador</h3>
+                      </div>
+                      <div className="space-y-4">
+                        <PagadorSelector
+                          value={watchedValues.pagador_id}
+                          onChange={(value) => form.setValue('pagador_id', value)}
+                          onOpenModal={() => setPagadorSelectorOpen(true)}
+                          onNewPagador={() => setCadastroRapidoOpen(true)}
+                        />
+                        {form.formState.errors.pagador_id && (
+                          <p className="text-sm text-red-600">{form.formState.errors.pagador_id.message}</p>
+                        )}
+                      </div>
+                    </div>
 
-            {/* Seção 2: Informações da Conta */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-gray-900">
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                    2
-                  </div>
-                  <span>Informações da Conta</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Separator />
+
+                    {/* Seção 2: Informações da Conta */}
+                    <div>
+                      <div className="flex items-center space-x-2 mb-6">
+                        <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                          2
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Informações da Conta</h3>
+                      </div>
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="descricao"
@@ -227,7 +228,7 @@ export default function NovaEntrada() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="data_vencimento"
@@ -266,21 +267,20 @@ export default function NovaEntrada() {
                     )}
                   />
                 </div>
-              </CardContent>
-            </Card>
+                      </div>
+                    </div>
 
-            {/* Seção 3: Categorização */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-gray-900">
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                    3
-                  </div>
-                  <span>Categorização</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Separator />
+
+                    {/* Seção 3: Categorização */}
+                    <div>
+                      <div className="flex items-center space-x-2 mb-6">
+                        <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                          3
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Categorização</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Categoria *
@@ -323,21 +323,20 @@ export default function NovaEntrada() {
                       </FormItem>
                     )}
                   />
-                </div>
-              </CardContent>
-            </Card>
+                      </div>
+                    </div>
 
-            {/* Seção 4: Configurações */}
-            <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-gray-900">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                    4
-                  </div>
-                  <span>Configurações</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                    <Separator />
+
+                    {/* Seção 4: Configurações */}
+                    <div>
+                      <div className="flex items-center space-x-2 mb-6">
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                          4
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Configurações</h3>
+                      </div>
+                      <div className="space-y-6">
                 <FormField
                   control={form.control}
                   name="recorrente"
@@ -379,16 +378,18 @@ export default function NovaEntrada() {
                     </FormItem>
                   )}
                 />
-              </CardContent>
+                      </div>
+                    </div>
+                  </form>
+                </Form>
+              </div>
             </Card>
-          </form>
-        </Form>
-      </div>
+          </div>
 
           {/* Preview Lateral */}
           {showPreview && (
             <div className="lg:col-span-1">
-              <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg sticky top-8">
+              <Card className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg sticky top-8">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center space-x-2 text-gray-900">
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -413,46 +414,55 @@ export default function NovaEntrada() {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Vencimento</label>
-                        <p className="text-sm text-gray-900">
-                          {watchedValues.data_vencimento ? 
-                            new Date(watchedValues.data_vencimento).toLocaleDateString('pt-BR') : 
-                            'Não informado'
-                          }
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
-                        <Badge variant={watchedValues.data_recebimento ? "default" : "secondary"} className="text-xs">
-                          {watchedValues.data_recebimento ? 'Recebido' : 'Pendente'}
-                        </Badge>
-                      </div>
-                    </div>
+                     <div className="grid grid-cols-2 gap-3">
+                       <div>
+                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Vencimento</label>
+                         <p className="text-sm text-gray-900">
+                           {watchedValues.data_vencimento || 'Não informado'}
+                         </p>
+                       </div>
+                       
+                       <div>
+                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Recebimento</label>
+                         <p className="text-sm text-gray-900">
+                           {watchedValues.data_recebimento || 'Não informado'}
+                         </p>
+                       </div>
+                     </div>
 
-                    {watchedValues.observacoes && (
-                      <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Observações</label>
-                        <p className="text-sm text-gray-700 bg-gray-50/50 p-2 rounded-lg">
-                          {watchedValues.observacoes}
-                        </p>
-                      </div>
-                    )}
+                     <div>
+                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
+                       <Badge 
+                         variant={watchedValues.data_recebimento ? "default" : "secondary"}
+                         className="mt-1"
+                       >
+                         {watchedValues.data_recebimento ? 'Recebido' : 'Pendente'}
+                       </Badge>
+                     </div>
 
-                    {watchedValues.recorrente && (
-                      <div className="flex items-center space-x-2 p-3 bg-blue-50/50 rounded-lg">
-                        <Calendar className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm text-blue-600 font-medium">Receita Recorrente</span>
-                      </div>
-                    )}
+                     {watchedValues.recorrente && (
+                       <div>
+                         <Badge variant="outline" className="mt-2">
+                           📅 Recorrente
+                         </Badge>
+                       </div>
+                     )}
+
+                     {watchedValues.observacoes && (
+                       <div>
+                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Observações</label>
+                         <p className="text-sm text-gray-600 italic">
+                           {watchedValues.observacoes}
+                         </p>
+                       </div>
+                     )}
                   </div>
                 </CardContent>
               </Card>
             </div>
           )}
         </div>
-      </div>
+      </PageContainer>
 
       {/* Modals */}
       <CadastroRapidoPagadorModal
