@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { formatDocument, validateCPF, validateCNPJ } from '@/utils/validators';
+import { toast } from 'sonner';
 
 interface ContatoModalProps {
   isOpen: boolean;
@@ -16,7 +17,6 @@ interface ContatoModalProps {
 }
 
 export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor' }: ContatoModalProps) {
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome: contato?.nome || '',
@@ -34,17 +34,10 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
     
     try {
       await onSave(formData);
-      toast({
-        title: "Sucesso",
-        description: contato ? "Contato atualizado!" : "Contato criado!"
-      });
+      toast.success(contato ? "Contato atualizado!" : "Contato criado!");
       onClose();
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar contato",
-        variant: "destructive"
-      });
+      toast.error("Erro ao salvar contato");
     } finally {
       setLoading(false);
     }
@@ -93,8 +86,23 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
               <Label htmlFor="documento">Documento</Label>
               <Input
                 id="documento"
-                value={formData.documento}
-                onChange={(e) => setFormData(prev => ({ ...prev, documento: e.target.value }))}
+                value={formatDocument(formData.documento)}
+                onChange={(e) => {
+                  const formatted = formatDocument(e.target.value);
+                  setFormData(prev => ({ ...prev, documento: formatted }));
+                }}
+                onBlur={() => {
+                  if (formData.documento) {
+                    const numbers = formData.documento.replace(/\D/g, '');
+                    const isValid = numbers.length <= 11 
+                      ? validateCPF(formData.documento)
+                      : validateCNPJ(formData.documento);
+                    
+                    if (!isValid) {
+                      toast.error('Documento inválido');
+                    }
+                  }
+                }}
                 placeholder={formData.tipo_pessoa === 'pessoa_fisica' ? 'CPF' : 'CNPJ'}
               />
             </div>

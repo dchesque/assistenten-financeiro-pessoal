@@ -373,6 +373,20 @@ export default function ContasPagar() {
     await salvarEdicao(id, {});
   };
 
+  // Nova função para pagar conta inline
+  const handlePagar = async (conta: any) => {
+    try {
+      await confirmarBaixa(conta.id, {
+        data_pagamento: new Date().toISOString().split('T')[0],
+        valor_pago: conta.valor_original,
+        status: 'pago'
+      });
+      // O hook já recarrega a lista automaticamente
+    } catch (error) {
+      console.error('Erro ao pagar conta:', error);
+    }
+  };
+
   // Loading State aprimorado
   const LoadingContasAprimorado = () => (
     <div className="space-y-6">
@@ -510,7 +524,7 @@ export default function ContasPagar() {
               Lote
             </Button>
             <Button 
-              onClick={() => navigate('/conta-individual')}
+              onClick={() => navigate('/nova-conta')}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -816,6 +830,7 @@ export default function ContasPagar() {
             onBaixar={handleBaixar}
             onDuplicar={handleDuplicar}
             onExcluir={handleExcluir}
+            onPagar={handlePagar}
           />
         )}
 

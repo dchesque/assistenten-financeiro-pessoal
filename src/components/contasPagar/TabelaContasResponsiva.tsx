@@ -3,7 +3,7 @@ import { FixedSizeList as List } from 'react-window';
 import { ContaEnriquecida } from '@/types/contaPagar';
 import { formatarMoeda, formatarData } from '@/utils/formatters';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, Eye, Edit, DollarSign, Copy, Trash2 } from 'lucide-react';
+import { MoreVertical, Eye, Edit, DollarSign, Copy, Trash2, Check } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
@@ -15,6 +15,7 @@ interface TabelaContasResponsivaProps {
   onBaixar: (conta: ContaEnriquecida) => void;
   onDuplicar: (conta: ContaEnriquecida) => void;
   onExcluir: (conta: ContaEnriquecida) => void;
+  onPagar?: (conta: ContaEnriquecida) => void;
 }
 
 interface ItemRowProps {
@@ -27,6 +28,7 @@ interface ItemRowProps {
     onBaixar: (conta: ContaEnriquecida) => void;
     onDuplicar: (conta: ContaEnriquecida) => void;
     onExcluir: (conta: ContaEnriquecida) => void;
+    onPagar?: (conta: ContaEnriquecida) => void;
   };
 }
 
@@ -65,7 +67,7 @@ const getVencimentoIndicator = (conta: ContaEnriquecida) => {
 };
 
 const ItemRow: React.FC<ItemRowProps> = ({ index, style, data }) => {
-  const { contas, onVisualizar, onEditar, onBaixar, onDuplicar, onExcluir } = data;
+  const { contas, onVisualizar, onEditar, onBaixar, onDuplicar, onExcluir, onPagar } = data;
   const conta = contas[index];
   const statusConfig = getStatusConfig(conta.status);
   const vencimentoIndicator = getVencimentoIndicator(conta);
@@ -109,7 +111,20 @@ const ItemRow: React.FC<ItemRowProps> = ({ index, style, data }) => {
         </div>
 
         {/* Ações */}
-        <div className="col-span-1 flex justify-end">
+        <div className="col-span-1 flex justify-end items-center space-x-2">
+          {/* Botão Pagar Inline */}
+          {conta.status === 'pendente' && onPagar && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onPagar(conta)}
+              className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 h-7 px-2"
+            >
+              <Check className="w-3 h-3 mr-1" />
+              Pagar
+            </Button>
+          )}
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -157,7 +172,8 @@ export const TabelaContasResponsiva: React.FC<TabelaContasResponsivaProps> = ({
   onEditar,
   onBaixar,
   onDuplicar,
-  onExcluir
+  onExcluir,
+  onPagar
 }) => {
   const itemData = useMemo(() => ({
     contas,
@@ -165,8 +181,9 @@ export const TabelaContasResponsiva: React.FC<TabelaContasResponsivaProps> = ({
     onEditar,
     onBaixar,
     onDuplicar,
-    onExcluir
-  }), [contas, onVisualizar, onEditar, onBaixar, onDuplicar, onExcluir]);
+    onExcluir,
+    onPagar
+  }), [contas, onVisualizar, onEditar, onBaixar, onDuplicar, onExcluir, onPagar]);
 
   if (contas.length === 0) {
     return (

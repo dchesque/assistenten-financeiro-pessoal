@@ -170,6 +170,7 @@ export default function Categorias() {
       }
 
       setModalAberto(false);
+      // Recarregar lista
       await listarPlanoContas();
     } catch (error: any) {
       toast({

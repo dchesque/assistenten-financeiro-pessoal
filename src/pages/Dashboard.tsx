@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   TrendingUp, 
+  TrendingDown,
   DollarSign, 
   AlertTriangle, 
   CheckCircle, 
@@ -173,6 +174,24 @@ export default function Dashboard() {
           formato="numero"
           icone={<CheckCircle className="w-6 h-6 text-blue-600" />}
           cor="blue"
+        />
+
+        {/* Gastos do Mês */}
+        <MetricCard
+          titulo="Gastos do Mês"
+          valor={contas_pagar.valor_pago_mes}
+          formato="moeda"
+          icone={<TrendingDown className="w-6 h-6 text-red-600" />}
+          cor="red"
+        />
+
+        {/* Saldo Líquido */}
+        <MetricCard
+          titulo="Saldo Líquido"
+          valor={fluxoLiquido}
+          formato="moeda"
+          icone={<DollarSign className="w-6 h-6 text-purple-600" />}
+          cor="purple"
         />
       </div>
 

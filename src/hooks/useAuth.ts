@@ -70,6 +70,8 @@ export function useAuth() {
       setUser(null);
       setSession(null);
       toast.info('Logout realizado com sucesso');
+      // Forçar navegação imediata para auth
+      window.location.href = '/auth';
       return { error: null };
     } catch (error) {
       toast.error('Erro no logout');
