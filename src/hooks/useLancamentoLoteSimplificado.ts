@@ -51,23 +51,9 @@ export function useLancamentoLoteSimplificado() {
       errors.push('Máximo de 100 parcelas permitidas');
     }
 
-    // Validações de cheque simplificadas
-    if (formaPagamento.tipo === 'cheque') {
-      if (!formaPagamento.banco_id) {
-        errors.push('Banco é obrigatório para cheques');
-      }
-
-      const parcelasSemCheque = parcelas.filter(p => !p.numero_cheque?.trim());
-      if (parcelasSemCheque.length > 0) {
-        errors.push('Todas as parcelas devem ter números de cheque');
-      }
-
-      // Duplicatas
-      const numerosCheques = parcelas.map(p => p.numero_cheque).filter(n => n);
-      const duplicatas = numerosCheques.filter((num, index) => numerosCheques.indexOf(num) !== index);
-      if (duplicatas.length > 0) {
-        errors.push('Números de cheque duplicados encontrados');
-      }
+    // Validações básicas de forma de pagamento
+    if (formaPagamento.tipo === 'cartao' && !formaPagamento.tipo_cartao) {
+      errors.push('Tipo de cartão é obrigatório');
     }
 
     // Validar valores e datas
@@ -139,18 +125,8 @@ export function useLancamentoLoteSimplificado() {
 
       setProgresso(50);
 
-      // Preparar dados de cheques se necessário
+      // Não há mais dados de cheques
       let chequesData = null;
-      if (formaPagamento.tipo === 'cheque' && formaPagamento.banco_id) {
-        chequesData = parcelas.map(parcela => ({
-          numero_cheque: parcela.numero_cheque!.padStart(6, '0'),
-          banco_id: formaPagamento.banco_id,
-          valor: parcela.valor,
-          data_emissao: formData.data_emissao,
-          data_vencimento: parcela.data_vencimento,
-          beneficiario_nome: 'Fornecedor'
-        }));
-      }
 
       setProgresso(70);
 

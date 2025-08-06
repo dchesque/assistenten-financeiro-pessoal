@@ -1,4 +1,4 @@
-export type TipoPagamento = 'dinheiro_pix' | 'transferencia' | 'cheque' | 'cartao';
+export type TipoPagamento = 'dinheiro_pix' | 'cartao';
 
 export interface FormaPagamento {
   tipo: TipoPagamento;
@@ -26,14 +26,10 @@ export interface ChequeParaCriacao {
 
 export const TIPOS_PAGAMENTO_LABELS = {
   dinheiro_pix: 'Dinheiro/PIX',
-  transferencia: 'Transferência/TED',
-  cheque: 'Cheque',
   cartao: 'Cartão'
 } as const;
 
 export const TIPOS_PAGAMENTO_ICONS = {
   dinheiro_pix: '💰',
-  transferencia: '🏦',
-  cheque: '📋',
   cartao: '💳'
 } as const;

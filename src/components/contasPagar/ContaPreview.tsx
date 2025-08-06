@@ -239,40 +239,23 @@ export function ContaPreview({ conta, formaPagamento, className = "" }: ContaPre
                   </div>
                 </div>
                 
-                {/* Banco para Transferência ou Cheque */}
-                {(formaPagamento.tipo === 'transferencia' || formaPagamento.tipo === 'cheque') && formaPagamento.banco_id && (
+                {/* Tipo de Cartão */}
+                {formaPagamento.tipo === 'cartao' && formaPagamento.tipo_cartao && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Banco:</span>
-                    <span className="text-sm font-medium">
-                      {bancos.find(b => b.id === formaPagamento.banco_id)?.nome}
-                    </span>
+                    <span className="text-sm text-gray-600">Tipo:</span>
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {formaPagamento.tipo_cartao}
+                    </Badge>
                   </div>
                 )}
                 
-                {/* Número do Cheque (Individual) */}
-                {formaPagamento.tipo === 'cheque' && formaPagamento.numero_cheque && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Cheque:</span>
-                    <span className="text-sm font-mono font-medium bg-blue-100/80 px-2 py-1 rounded">
-                      #{formaPagamento.numero_cheque}
-                    </span>
-                  </div>
-                )}
                 
-                {/* Números dos Cheques (Lote) */}
-                {formaPagamento.tipo === 'cheque' && formaPagamento.numeros_cheques && formaPagamento.numeros_cheques.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Cheques:</span>
-                      <Badge variant="outline" className="text-xs">
-                        {formaPagamento.numeros_cheques.length} cheques
-                      </Badge>
-                    </div>
-                    <div className="text-sm font-mono bg-blue-100/80 px-2 py-1 rounded">
-                      #{formaPagamento.numeros_cheques[0]} a #{formaPagamento.numeros_cheques[formaPagamento.numeros_cheques.length - 1]}
-                    </div>
-                  </div>
-                )}
+                 <div className="flex items-center justify-between">
+                   <span className="text-sm text-gray-600">DDA:</span>
+                   <Badge variant={conta.dda ? 'default' : 'outline'} className="text-xs">
+                     {conta.dda ? '✓ Ativo' : '✗ Inativo'}
+                   </Badge>
+                 </div>
                 
                 {/* Tipo de Cartão */}
                 {formaPagamento.tipo === 'cartao' && formaPagamento.tipo_cartao && (

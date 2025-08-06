@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
-import { ArrowLeft, Save, CreditCard, Calendar, AlertTriangle, FileText, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Save, CreditCard, Calendar, AlertTriangle, FileText, CheckCircle, Repeat } from 'lucide-react';
 import { ContaPagar } from '@/types/contaPagar';
 import { Fornecedor } from '@/types/fornecedor';
 import { PlanoContas } from '@/types/planoContas';
@@ -73,6 +73,12 @@ export default function ContaIndividual() {
   // Estados do auto-save
   const [rascunhoSalvo, setRascunhoSalvo] = useState(false);
   const [temRascunho, setTemRascunho] = useState(false);
+  
+  // Estados para recorrência
+  const [contaRecorrente, setContaRecorrente] = useState(false);
+  const [periodicidade, setPeriodicidade] = useState<'semanal' | 'quinzenal' | 'mensal' | 'bimestral' | 'trimestral' | 'semestral' | 'anual'>('mensal');
+  const [quantidadeParcelas, setQuantidadeParcelas] = useState(1);
+  const [dataInicioRecorrencia, setDataInicioRecorrencia] = useState(new Date().toISOString().split('T')[0]);
   
   // Usar loading do hook
   const loading = estados.salvandoEdicao;
@@ -672,11 +678,94 @@ export default function ContaIndividual() {
 
                 <Separator />
 
-                {/* Seção: Status da Conta */}
+                {/* Seção: Recorrência */}
                 <div className="space-y-6">
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold text-sm">4</span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Recorrência</h2>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center space-x-3">
+                      <Checkbox 
+                        id="conta-recorrente"
+                        checked={contaRecorrente}
+                        onCheckedChange={(checked) => setContaRecorrente(checked as boolean)}
+                      />
+                      <Label htmlFor="conta-recorrente" className="text-sm font-medium text-gray-700">
+                        Esta é uma conta recorrente
+                      </Label>
+                    </div>
+
+                    {contaRecorrente && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-blue-50/80 backdrop-blur-sm border border-blue-200 rounded-xl">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Periodicidade <span className="text-red-500">*</span>
+                          </Label>
+                          <Select value={periodicidade} onValueChange={(value: any) => setPeriodicidade(value)}>
+                            <SelectTrigger className="bg-white/80 backdrop-blur-sm border-gray-300/50">
+                              <SelectValue placeholder="Selecionar periodicidade" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="semanal">Semanal</SelectItem>
+                              <SelectItem value="quinzenal">Quinzenal</SelectItem>
+                              <SelectItem value="mensal">Mensal</SelectItem>
+                              <SelectItem value="bimestral">Bimestral</SelectItem>
+                              <SelectItem value="trimestral">Trimestral</SelectItem>
+                              <SelectItem value="semestral">Semestral</SelectItem>
+                              <SelectItem value="anual">Anual</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Quantidade de parcelas <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="60"
+                            value={quantidadeParcelas}
+                            onChange={(e) => setQuantidadeParcelas(parseInt(e.target.value) || 1)}
+                            className="bg-white/80 backdrop-blur-sm border-gray-300/50"
+                            placeholder="1"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Data de início <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            type="date"
+                            value={dataInicioRecorrencia}
+                            onChange={(e) => setDataInicioRecorrencia(e.target.value)}
+                            className="bg-white/80 backdrop-blur-sm border-gray-300/50"
+                          />
+                        </div>
+
+                        <div className="md:col-span-3 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg p-4">
+                          <p className="text-sm text-gray-600">
+                            <strong>Resumo:</strong> Serão criadas <strong>{quantidadeParcelas} parcelas</strong> com 
+                            periodicidade <strong>{periodicidade}</strong> a partir de <strong>{new Date(dataInicioRecorrencia).toLocaleDateString('pt-BR')}</strong>.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Seção: Status da Conta */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">5</span>
                     </div>
                     <h2 className="text-xl font-semibold text-gray-900">Status da Conta</h2>
                   </div>
