@@ -33,13 +33,13 @@ export function useContasPagar(): UseContasPagarReturn {
   // Calcular estatísticas
   const estatisticas = {
     total_contas: contas.length,
-    valor_total: contas.reduce((total, conta) => total + conta.valor, 0),
+    valor_total: contas.reduce((total, conta) => total + conta.valor_original, 0),
     pendentes: contas.filter(conta => conta.status === 'pendente').length,
-    valor_pendente: contas.filter(conta => conta.status === 'pendente').reduce((total, conta) => total + conta.valor, 0),
+    valor_pendente: contas.filter(conta => conta.status === 'pendente').reduce((total, conta) => total + conta.valor_original, 0),
     vencidas: contas.filter(conta => conta.status === 'vencido').length,
-    valor_vencido: contas.filter(conta => conta.status === 'vencido').reduce((total, conta) => total + conta.valor, 0),
+    valor_vencido: contas.filter(conta => conta.status === 'vencido').reduce((total, conta) => total + conta.valor_original, 0),
     pagas: contas.filter(conta => conta.status === 'pago').length,
-    valor_pago: contas.filter(conta => conta.status === 'pago').reduce((total, conta) => total + conta.valor, 0)
+    valor_pago: contas.filter(conta => conta.status === 'pago').reduce((total, conta) => total + (conta.valor_pago || conta.valor_original), 0)
   };
 
   const carregarContas = async () => {
@@ -64,7 +64,7 @@ export function useContasPagar(): UseContasPagarReturn {
       setLoading(true);
       
       // Validações básicas
-      if (dadosConta.valor <= 0) {
+      if (dadosConta.valor_original <= 0) {
         throw new Error('Valor deve ser maior que zero');
       }
 
@@ -94,7 +94,7 @@ export function useContasPagar(): UseContasPagarReturn {
       setLoading(true);
       
       // Validações
-      if (dadosAtualizacao.valor !== undefined && dadosAtualizacao.valor <= 0) {
+      if (dadosAtualizacao.valor_original !== undefined && dadosAtualizacao.valor_original <= 0) {
         throw new Error('Valor deve ser maior que zero');
       }
 
@@ -154,7 +154,7 @@ export function useContasPagar(): UseContasPagarReturn {
       const dadosAtualizacao: Partial<ContaPagar> = {
         status: 'pago',
         data_pagamento: dados.data_pagamento,
-        valor: dados.valor_pago ?? conta.valor
+        valor_pago: dados.valor_pago ?? conta.valor_original
       };
 
       const contaAtualizada = await mockDataService.updateContaPagar(id, dadosAtualizacao);

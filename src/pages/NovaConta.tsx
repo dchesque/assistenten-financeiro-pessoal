@@ -8,9 +8,9 @@ import { Fornecedor } from '@/types/fornecedor';
 import { PlanoContas } from '@/types/planoContas';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
-import { useBancosSupabase } from '@/hooks/useBancosSupabase';
-import { useContasPagar } from '@/hooks/useContasPagar';
-import { useCredores } from '@/hooks/useCredores';
+import { useBancos } from '@/hooks/useBancos';
+import { useContasPagar } from '@/hooks/useContasPagarMock';
+import { useContatos } from '@/hooks/useContatos';
 import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
 import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
@@ -33,9 +33,9 @@ import { validarValor, validarDescricao, validarDocumento, validarDataVencimento
 export default function NovaConta() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { criarConta, estados } = useContasPagar();
-  const { bancos } = useBancosSupabase();
-  const { credores } = useCredores();
+  const { criarConta, loading } = useContasPagar();
+  const { bancos } = useBancos();
+  const { credores } = useContatos();
 
   // Estados do formulário
   const [conta, setConta] = useState<Partial<ContaPagar>>({
@@ -79,9 +79,6 @@ export default function NovaConta() {
   const [periodicidade, setPeriodicidade] = useState<'semanal' | 'quinzenal' | 'mensal' | 'bimestral' | 'trimestral' | 'semestral' | 'anual'>('mensal');
   const [quantidadeParcelas, setQuantidadeParcelas] = useState(1);
   const [dataInicioRecorrencia, setDataInicioRecorrencia] = useState(new Date().toISOString().split('T')[0]);
-  
-  // Usar loading do hook
-  const loading = estados.salvandoEdicao;
 
   // Função de validação em tempo real
   const validarCampoTempoReal = async (campo: string, valor: any) => {

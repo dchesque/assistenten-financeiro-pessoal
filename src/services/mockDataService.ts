@@ -11,14 +11,26 @@ interface BaseEntity {
 // Interfaces principais
 export interface ContaPagar extends BaseEntity {
   fornecedor_id: string;
-  categoria_id: string;
+  plano_conta_id: string;
+  banco_id?: string;
+  documento_referencia?: string;
   descricao: string;
-  valor: number;
+  data_emissao?: string;
   data_vencimento: string;
-  data_pagamento?: string;
+  valor_original: number;
+  percentual_juros?: number;
+  valor_juros?: number;
+  percentual_desconto?: number;
+  valor_desconto?: number;
+  valor_final: number;
   status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
-  parcela?: string;
-  forma_pagamento?: string;
+  data_pagamento?: string;
+  valor_pago?: number;
+  grupo_lancamento?: string;
+  parcela_atual: number;
+  total_parcelas: number;
+  forma_pagamento: string;
+  dda: boolean;
   observacoes?: string;
 }
 
@@ -58,11 +70,23 @@ export interface Contato extends BaseEntity {
 
 export interface Banco extends BaseEntity {
   nome: string;
-  tipo: 'conta_corrente' | 'poupanca' | 'cartao_credito';
+  codigo_banco: string;
   agencia?: string;
   conta?: string;
+  digito_verificador: string;
+  tipo_conta: 'conta_corrente' | 'poupanca' | 'conta_salario';
   saldo_inicial: number;
   saldo_atual: number;
+  limite?: number;
+  limite_usado: number;
+  suporta_ofx: boolean;
+  url_ofx?: string;
+  ultimo_fitid?: string;
+  data_ultima_sincronizacao?: string;
+  gerente?: string;
+  telefone?: string;
+  email?: string;
+  observacoes?: string;
   ativo: boolean;
 }
 
@@ -264,11 +288,16 @@ class MockDataService {
       {
         id: uuidv4(),
         nome: 'Banco do Brasil',
-        tipo: 'conta_corrente',
+        codigo_banco: '001',
         agencia: '1234-5',
         conta: '12345-6',
+        digito_verificador: '6',
+        tipo_conta: 'conta_corrente',
         saldo_inicial: 5000,
         saldo_atual: 5000,
+        limite: 1000,
+        limite_usado: 0,
+        suporta_ofx: true,
         ativo: true,
         created_at: now,
         updated_at: now,
@@ -277,9 +306,14 @@ class MockDataService {
       {
         id: uuidv4(),
         nome: 'Nubank',
-        tipo: 'cartao_credito',
+        codigo_banco: '260',
+        digito_verificador: '0',
+        tipo_conta: 'conta_corrente',
         saldo_inicial: 0,
         saldo_atual: 0,
+        limite: 2000,
+        limite_usado: 0,
+        suporta_ofx: false,
         ativo: true,
         created_at: now,
         updated_at: now,
@@ -293,12 +327,16 @@ class MockDataService {
       {
         id: uuidv4(),
         fornecedor_id: contatos[0].id,
-        categoria_id: categorias[0].id,
+        plano_conta_id: categorias[0].id,
         descricao: 'Compras do mês',
-        valor: 350.00,
+        valor_original: 350.00,
+        valor_final: 350.00,
         data_vencimento: new Date(hoje.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         status: 'pendente',
         forma_pagamento: 'PIX',
+        parcela_atual: 1,
+        total_parcelas: 1,
+        dda: false,
         created_at: now,
         updated_at: now,
         user_id: userId
@@ -306,12 +344,16 @@ class MockDataService {
       {
         id: uuidv4(),
         fornecedor_id: contatos[0].id,
-        categoria_id: categorias[2].id,
+        plano_conta_id: categorias[2].id,
         descricao: 'Aluguel',
-        valor: 1200.00,
+        valor_original: 1200.00,
+        valor_final: 1200.00,
         data_vencimento: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         status: 'vencido',
         forma_pagamento: 'Transferência',
+        parcela_atual: 1,
+        total_parcelas: 1,
+        dda: false,
         created_at: now,
         updated_at: now,
         user_id: userId
@@ -565,11 +607,11 @@ class MockDataService {
       saldo_total: saldoTotal,
       contas_pagar: {
         pendentes: contasPendentes.length,
-        valor_pendente: contasPendentes.reduce((sum, c) => sum + c.valor, 0),
+        valor_pendente: contasPendentes.reduce((sum, c) => sum + c.valor_original, 0),
         vencidas: contasVencidas.length,
-        valor_vencido: contasVencidas.reduce((sum, c) => sum + c.valor, 0),
+        valor_vencido: contasVencidas.reduce((sum, c) => sum + c.valor_original, 0),
         pagas_mes: contasPagasMes.length,
-        valor_pago_mes: contasPagasMes.reduce((sum, c) => sum + c.valor, 0)
+        valor_pago_mes: contasPagasMes.reduce((sum, c) => sum + (c.valor_pago || c.valor_original), 0)
       },
       contas_receber: {
         pendentes: receitasPendentes.length,

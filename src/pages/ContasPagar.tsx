@@ -21,7 +21,7 @@ import { TabelaContasSkeleton, ContaCardsSkeleton } from '@/components/contasPag
 import { useContasPagarOtimizado } from '@/hooks/useContasPagarOtimizado';
 import { TabelaContasResponsiva } from '@/components/contasPagar/TabelaContasResponsiva';
 import { TabelaContasVirtualizada } from '@/components/contasPagar/TabelaContasVirtualizada';
-import { useFornecedoresSupabase } from '@/hooks/useFornecedoresSupabase';
+import { useContatos } from '@/hooks/useContatos';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
 
 export default function ContasPagar() {
@@ -45,7 +45,7 @@ export default function ContasPagar() {
   } = useContasPagarOtimizado();
 
   // Hooks para dados de filtros
-  const { fornecedores } = useFornecedoresSupabase();
+  const { credores } = useContatos();
   const { planoContas } = usePlanoContas();
 
   const [vistaAtual, setVistaAtual] = useState<'tabela' | 'cards'>('tabela');
@@ -649,9 +649,9 @@ export default function ContasPagar() {
                   </SelectTrigger>
                   <SelectContent className="bg-white/95 backdrop-blur-xl">
                     <SelectItem value="todos">Todos os Fornecedores</SelectItem>
-                    {fornecedores.filter(f => f.ativo).map(fornecedor => (
-                      <SelectItem key={fornecedor.id} value={fornecedor.id.toString()}>
-                        {fornecedor.nome}
+                    {credores.filter(f => f.ativo).map(credor => (
+                      <SelectItem key={credor.id} value={credor.id.toString()}>
+                        {credor.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -800,7 +800,7 @@ export default function ContasPagar() {
           <TabelaContasResponsiva
                   contas={contasFiltradas.map(conta => ({
                     ...conta,
-                    fornecedor_nome: fornecedores.find(f => f.id === conta.fornecedor_id)?.nome || '',
+                    fornecedor_nome: credores.find(f => f.id.toString() === conta.fornecedor_id.toString())?.nome || '',
                     plano_conta_nome: planoContas.find(p => p.id === conta.plano_contas_id)?.nome || '',
                     plano_conta_id: conta.plano_contas_id,
                     parcela_atual: 1,
