@@ -16,6 +16,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 // Lazy loading das páginas restantes
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const ContasPagar = lazy(() => import('@/pages/ContasPagar'));
+const ContasReceber = lazy(() => import('@/pages/ContasReceber'));
 const Bancos = lazy(() => import('@/pages/Bancos'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const ContaIndividual = lazy(() => import('@/pages/ContaIndividual'));
@@ -54,6 +55,7 @@ function App() {
               <Route path="/" element={<ProtectedRoute><Layout><Index /></Layout></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
               <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
+              <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
               <Route path="/bancos" element={<ProtectedRoute><Layout><Bancos /></Layout></ProtectedRoute>} />
               <Route path="/conta-individual" element={<ProtectedRoute><Layout><ContaIndividual /></Layout></ProtectedRoute>} />
               <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />

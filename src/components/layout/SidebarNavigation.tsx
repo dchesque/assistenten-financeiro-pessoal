@@ -50,6 +50,18 @@ const menuStructure = [
     ]
   },
   
+  // Grupo: Recebimentos
+  { 
+    type: 'group', 
+    name: 'RECEBIMENTOS', 
+    icon: DollarSign,
+    color: 'text-green-500',
+    key: 'recebimentos',
+    items: [
+      { name: 'Contas a Receber', path: '/contas-receber', icon: DollarSign, color: 'text-green-500' }
+    ]
+  },
+  
   
   // Grupo: Cadastros (simplificado)
   { 
