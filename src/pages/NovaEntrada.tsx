@@ -113,30 +113,20 @@ export default function NovaEntrada() {
   };
 
   return (
-    <Layout>
+    <>
       <PageHeader
         breadcrumb={createBreadcrumb('/nova-entrada')}
         title="Nova Entrada"
         subtitle="Cadastre uma nova conta a receber • Lançamento individual"
         actions={
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/contas-receber')}
-              className="bg-white/80 hover:bg-white/90"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowPreview(!showPreview)}
-              className="bg-white/80 hover:bg-white"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              {showPreview ? 'Ocultar' : 'Visualizar'}
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/contas-receber')}
+            className="bg-white/80 hover:bg-white/90"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
         }
       />
 
@@ -155,237 +145,226 @@ export default function NovaEntrada() {
                 <form id="nova-entrada-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   
                   {/* Card 1: Dados do Pagador */}
-                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg rounded-2xl">
-                    <div className="p-8 space-y-8">
-                      <div className="space-y-6">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-green-700 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">1</span>
-                          </div>
-                          <h2 className="text-xl font-semibold text-gray-900">Dados do Pagador</h2>
+                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/90 rounded-2xl">
+                    <div className="p-6 space-y-6">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-green-700 rounded-lg flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-sm">1</span>
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="md:col-span-2">
-                            <PagadorSelector
-                              value={watchedValues.pagador_id}
-                              onChange={(value) => form.setValue('pagador_id', value)}
-                              onOpenModal={() => setPagadorSelectorOpen(true)}
-                              onNewPagador={() => setCadastroRapidoOpen(true)}
-                            />
-                            {form.formState.errors.pagador_id && (
-                              <p className="text-sm text-red-600 mt-1">{form.formState.errors.pagador_id.message}</p>
-                            )}
-                          </div>
-                        </div>
+                        <h2 className="text-xl font-semibold text-gray-900">Dados do Pagador</h2>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <PagadorSelector
+                          value={watchedValues.pagador_id}
+                          onChange={(value) => form.setValue('pagador_id', value)}
+                          onOpenModal={() => setPagadorSelectorOpen(true)}
+                          onNewPagador={() => setCadastroRapidoOpen(true)}
+                        />
+                        {form.formState.errors.pagador_id && (
+                          <p className="text-sm text-red-600 mt-1">{form.formState.errors.pagador_id.message}</p>
+                        )}
                       </div>
                     </div>
                   </Card>
 
                   {/* Card 2: Informações da Conta */}
-                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg rounded-2xl">
-                    <div className="p-8 space-y-8">
-                      <div className="space-y-6">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">2</span>
-                          </div>
-                          <h2 className="text-xl font-semibold text-gray-900">Informações da Conta</h2>
+                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/90 rounded-2xl">
+                    <div className="p-6 space-y-6">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-sm">2</span>
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <FormField
-                            control={form.control}
-                            name="descricao"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Descrição *</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Descrição da receita"
-                                    {...field}
-                                    className="bg-white/80 border-gray-300/50"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                        <h2 className="text-xl font-semibold text-gray-900">Informações da Conta</h2>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="descricao"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Descrição *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Descrição da receita"
+                                  {...field}
+                                  className="bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                          <FormField
-                            control={form.control}
-                            name="valor"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Valor *</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="R$ 0,00"
-                                    value={field.value}
-                                    onChange={(e) => handleValorChange(e.target.value)}
-                                    className="bg-white/80 border-gray-300/50"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                        <FormField
+                          control={form.control}
+                          name="valor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Valor *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="R$ 0,00"
+                                  value={field.value}
+                                  onChange={(e) => handleValorChange(e.target.value)}
+                                  className="bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                          <FormField
-                            control={form.control}
-                            name="data_vencimento"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Data de Vencimento *</FormLabel>
-                                <FormControl>
-                                  <DatePicker
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    placeholder="Selecionar data"
-                                    className="bg-white/80"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                        <FormField
+                          control={form.control}
+                          name="data_vencimento"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data de Vencimento *</FormLabel>
+                              <FormControl>
+                                <DatePicker
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  placeholder="Selecionar data"
+                                  className="bg-white/80"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                          <FormField
-                            control={form.control}
-                            name="data_recebimento"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Data de Recebimento</FormLabel>
-                                <FormControl>
-                                  <DatePicker
-                                    value={field.value || ''}
-                                    onChange={field.onChange}
-                                    placeholder="Selecionar data"
-                                    className="bg-white/80"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                        <FormField
+                          control={form.control}
+                          name="data_recebimento"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data de Recebimento</FormLabel>
+                              <FormControl>
+                                <DatePicker
+                                  value={field.value || ''}
+                                  onChange={field.onChange}
+                                  placeholder="Selecionar data"
+                                  className="bg-white/80"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
                   </Card>
 
                   {/* Card 3: Categorização */}
-                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg rounded-2xl">
-                    <div className="p-8 space-y-8">
-                      <div className="space-y-6">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-gradient-to-r from-orange-600 to-red-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">3</span>
-                          </div>
-                          <h2 className="text-xl font-semibold text-gray-900">Categorização</h2>
+                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/90 rounded-2xl">
+                    <div className="p-6 space-y-6">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-orange-600 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-sm">3</span>
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Categoria *
-                            </label>
-                            <CategoriaReceitaSelector
-                              value={watchedValues.categoria_id}
-                              onChange={(value) => form.setValue('categoria_id', value)}
-                              onOpenModal={() => setCategoriaSelectorOpen(true)}
-                            />
-                            {form.formState.errors.categoria_id && (
-                              <p className="text-sm text-red-600 mt-1">{form.formState.errors.categoria_id.message}</p>
-                            )}
-                          </div>
-
-                          <FormField
-                            control={form.control}
-                            name="banco_id"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Banco</FormLabel>
-                                <Select
-                                  value={field.value?.toString() || ''}
-                                  onValueChange={(value) => field.onChange(value ? parseInt(value) : 0)}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger className="bg-white/80 border-gray-300/50">
-                                      <SelectValue placeholder="Selecionar banco" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="0">Nenhum banco</SelectItem>
-                                    {bancos.map((banco) => (
-                                      <SelectItem key={banco.id} value={banco.id.toString()}>
-                                        {banco.nome}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                        <h2 className="text-xl font-semibold text-gray-900">Categorização</h2>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Categoria *
+                          </label>
+                          <CategoriaReceitaSelector
+                            value={watchedValues.categoria_id}
+                            onChange={(value) => form.setValue('categoria_id', value)}
+                            onOpenModal={() => setCategoriaSelectorOpen(true)}
                           />
+                          {form.formState.errors.categoria_id && (
+                            <p className="text-sm text-red-600 mt-1">{form.formState.errors.categoria_id.message}</p>
+                          )}
                         </div>
+
+                        <FormField
+                          control={form.control}
+                          name="banco_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Banco</FormLabel>
+                              <Select
+                                value={field.value?.toString() || ''}
+                                onValueChange={(value) => field.onChange(value ? parseInt(value) : 0)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <SelectValue placeholder="Selecionar banco" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="0">Nenhum banco</SelectItem>
+                                  {bancos.map((banco) => (
+                                    <SelectItem key={banco.id} value={banco.id.toString()}>
+                                      {banco.nome}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
                   </Card>
 
                   {/* Card 4: Configurações */}
-                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg rounded-2xl">
-                    <div className="p-8 space-y-8">
-                      <div className="space-y-6">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">4</span>
-                          </div>
-                          <h2 className="text-xl font-semibold text-gray-900">Configurações</h2>
+                  <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/90 rounded-2xl">
+                    <div className="p-6 space-y-6">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-sm">4</span>
                         </div>
-                        
-                        <div className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="recorrente"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-200/50 p-4 bg-gray-50/50">
-                                <div className="space-y-0.5">
-                                  <FormLabel className="text-base font-medium">
-                                    Receita Recorrente
-                                  </FormLabel>
-                                  <p className="text-sm text-gray-500">
-                                    Esta receita se repete mensalmente
-                                  </p>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
+                        <h2 className="text-xl font-semibold text-gray-900">Configurações</h2>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="recorrente"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-xl border border-gray-200/50 p-4 bg-gray-50/50">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base font-medium">
+                                  Receita Recorrente
+                                </FormLabel>
+                                <p className="text-sm text-gray-500">
+                                  Esta receita se repete mensalmente
+                                </p>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
 
-                          <FormField
-                            control={form.control}
-                            name="observacoes"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Observações</FormLabel>
-                                <FormControl>
-                                  <Textarea
-                                    placeholder="Observações adicionais..."
-                                    className="bg-white/80 border-gray-300/50 resize-none"
-                                    rows={3}
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                        <FormField
+                          control={form.control}
+                          name="observacoes"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Observações</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Observações adicionais..."
+                                  {...field}
+                                  className="bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
                   </Card>
@@ -393,107 +372,127 @@ export default function NovaEntrada() {
               </Form>
             </div>
 
-            {/* Sidebar Direita */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Preview Condicional */}
-              {showPreview && (
-                <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg rounded-2xl sticky top-8">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center space-x-2">
-                      <Eye className="w-5 h-5 text-green-600" />
-                      <CardTitle className="text-lg">Preview da Entrada</CardTitle>
+            {/* Sidebar responsiva */}
+            <div className="lg:col-span-1">
+              <div className="lg:sticky lg:top-8">
+                <Card className="bg-white/95 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl">
+                  <div className="p-6 space-y-6">
+                    {/* Header da sidebar */}
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Eye className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">Preview da Conta</h3>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                     <div className="space-y-3">
-                       <div>
-                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Descrição</label>
-                         <p className="text-sm text-gray-900 font-medium">
-                           {watchedValues.descricao || 'Não informado'}
-                         </p>
-                       </div>
+                    
+                    <Separator />
+                    
+                    {/* Preview dos dados */}
+                    <div className="space-y-4">
+                      {watchedValues.descricao ? (
+                        <div className="bg-gray-50/50 rounded-xl p-4">
+                          <p className="text-sm font-medium text-gray-600 mb-1">Descrição</p>
+                          <p className="text-gray-900 font-medium">{watchedValues.descricao}</p>
+                        </div>
+                      ) : (
+                        <div className="bg-gray-50/30 rounded-xl p-4 border-2 border-dashed border-gray-200">
+                          <p className="text-sm text-gray-500">Aguardando descrição...</p>
+                        </div>
+                      )}
 
-                       <div>
-                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Valor</label>
-                         <p className="text-lg font-bold text-green-600">
-                           {watchedValues.valor || 'R$ 0,00'}
-                         </p>
-                       </div>
+                      {watchedValues.valor ? (
+                        <div className="bg-green-50/50 rounded-xl p-4">
+                          <p className="text-sm font-medium text-gray-600 mb-1">Valor</p>
+                          <p className="text-2xl font-bold text-green-600">{watchedValues.valor}</p>
+                        </div>
+                      ) : (
+                        <div className="bg-gray-50/30 rounded-xl p-4 border-2 border-dashed border-gray-200">
+                          <p className="text-sm text-gray-500">Aguardando valor...</p>
+                        </div>
+                      )}
 
-                       <div>
-                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Data Vencimento</label>
-                         <p className="text-sm text-gray-900">
-                           {watchedValues.data_vencimento || 'Não informado'}
-                         </p>
-                       </div>
+                      {watchedValues.data_vencimento ? (
+                        <div className="bg-blue-50/50 rounded-xl p-4">
+                          <p className="text-sm font-medium text-gray-600 mb-1">Vencimento</p>
+                          <p className="text-gray-900 font-medium">
+                            {new Date(watchedValues.data_vencimento).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="bg-gray-50/30 rounded-xl p-4 border-2 border-dashed border-gray-200">
+                          <p className="text-sm text-gray-500">Aguardando data de vencimento...</p>
+                        </div>
+                      )}
 
-                       <div>
-                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Data Recebimento</label>
-                         <p className="text-sm text-gray-900">
-                           {watchedValues.data_recebimento || 'Não informado'}
-                         </p>
-                       </div>
+                      {watchedValues.data_recebimento && (
+                        <div className="bg-purple-50/50 rounded-xl p-4">
+                          <p className="text-sm font-medium text-gray-600 mb-1">Recebimento</p>
+                          <p className="text-gray-900 font-medium">
+                            {new Date(watchedValues.data_recebimento).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                      )}
 
-                       <div>
-                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
-                         <Badge 
-                           variant={watchedValues.data_recebimento ? 'default' : 'secondary'}
-                           className="mt-1"
-                         >
-                           {watchedValues.data_recebimento ? 'Recebido' : 'Pendente'}
-                         </Badge>
-                       </div>
-                     </div>
-                   </CardContent>
-                 </Card>
-               )}
+                      {watchedValues.recorrente && (
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="secondary" className="bg-blue-100/80 text-blue-700 px-3 py-1 rounded-full">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
+                            Recorrente
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Separator />
+                    
+                    {/* Ações */}
+                    <div className="space-y-3">
+                      <Button 
+                        form="nova-entrada-form"
+                        type="submit"
+                        disabled={loadingConta}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
+                      >
+                        {loadingConta ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Salvando...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            Salvar Conta
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        onClick={() => form.reset()}
+                        className="w-full bg-white/80 backdrop-blur-sm hover:bg-white/90 border border-gray-300/50 rounded-xl"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Limpar Formulário
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-               {/* Card Actions (Sempre Visível) */}
-               <Card className="bg-gradient-to-br from-green-50/80 to-emerald-50/80 backdrop-blur-sm border border-green-200/50 shadow-lg rounded-2xl sticky top-8">
-                 <CardContent className="p-6 space-y-4">
-                   <Button
-                     type="submit"
-                     form="nova-entrada-form"
-                     disabled={!form.formState.isValid || loadingConta}
-                     className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 h-12"
-                   >
-                     {loadingConta ? (
-                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                     ) : (
-                       <Save className="w-4 h-4 mr-2" />
-                     )}
-                     Salvar Entrada
-                   </Button>
-                   
-                   <Button
-                     type="button"
-                     variant="outline"
-                     className="w-full"
-                     onClick={() => form.reset()}
-                   >
-                     <RotateCcw className="w-4 h-4 mr-2" />
-                     Limpar Formulário
-                   </Button>
-                 </CardContent>
-               </Card>
-             </div>
-           </div>
-         </div>
-       </div>
-
-       {/* Modal de Cadastro Rápido */}
-       <CadastroRapidoPagadorModal
-         isOpen={cadastroRapidoOpen}
-         onClose={() => setCadastroRapidoOpen(false)}
-         onPagadorCriado={(pagadorId) => {
-           form.setValue('pagador_id', pagadorId);
-           setCadastroRapidoOpen(false);
-           toast({
-             title: "Sucesso",
-             description: "Pagador cadastrado com sucesso!",
-           });
-         }}
-       />
-    </Layout>
+      {/* Modal para cadastro rápido de pagador */}
+      <CadastroRapidoPagadorModal
+        isOpen={cadastroRapidoOpen}
+        onClose={() => setCadastroRapidoOpen(false)}
+        onPagadorCriado={(pagadorId) => {
+          form.setValue('pagador_id', pagadorId);
+          setCadastroRapidoOpen(false);
+        }}
+      />
+    </>
   );
 }
