@@ -29,7 +29,7 @@ export function PageHeader({
             {breadcrumb.map((item, index) => {
               const isLast = index === breadcrumb.length - 1;
               return (
-                <React.Fragment key={`breadcrumb-${index}`}>
+                <div key={`breadcrumb-${index}`}>
                   <BreadcrumbItem>
                     {item.href ? (
                       <BreadcrumbLink asChild>
@@ -50,7 +50,7 @@ export function PageHeader({
                       <ChevronRight className="w-4 h-4" />
                     </BreadcrumbSeparator>
                   )}
-                </React.Fragment>
+                </div>
               );
             })}
           </BreadcrumbList>

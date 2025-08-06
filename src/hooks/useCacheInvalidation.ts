@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { cache, DomainCache } from '@/services/CacheService';
+import { cache, DomainCache } from '@/services/cacheService';
 import { performanceService } from '@/services/PerformanceService';
 import { useToast } from '@/hooks/use-toast';
 
