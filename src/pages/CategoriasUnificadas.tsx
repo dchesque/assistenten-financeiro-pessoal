@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Layout } from '@/components/layout/Layout';
+import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,22 +74,35 @@ export default function CategoriasUnificadas() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="p-4 lg:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+        {/* Background abstratos */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-orange-400/20 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto p-4 lg:p-8">
           <LoadingStates.CardSkeleton />
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="p-4 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      {/* Background abstratos */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-orange-400/20 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Container principal com padding responsivo e max-width */}
+      <div className="relative z-10 max-w-7xl mx-auto p-4 lg:p-8">
         <PageHeader
-          breadcrumb={[
+          breadcrumb={createBreadcrumb('/categorias', [
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Categorias' }
-          ]}
+          ])}
           title="Categorias"
           subtitle="Gerencie categorias de despesas e receitas"
           actions={
@@ -100,124 +113,126 @@ export default function CategoriasUnificadas() {
           }
         />
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="card-base">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-primary">{estatisticas.total_categorias}</p>
-                <p className="text-sm text-muted-foreground">Total de Categorias</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="card-base">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-red-600">{estatisticas.total_despesas}</p>
-                <p className="text-sm text-muted-foreground">Categorias de Despesa</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="card-base">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">{estatisticas.total_receitas}</p>
-                <p className="text-sm text-muted-foreground">Categorias de Receita</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Buscar categorias..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="pl-10 input-base"
-            />
-          </div>
-          <Select value={filtroTipo} onValueChange={(value: any) => setFiltroTipo(value)}>
-            <SelectTrigger className="input-base">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os tipos</SelectItem>
-              <SelectItem value="despesa">Despesas</SelectItem>
-              <SelectItem value="receita">Receitas</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filtroGrupo} onValueChange={setFiltroGrupo}>
-            <SelectTrigger className="input-base">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os grupos</SelectItem>
-              {filtroTipo !== 'todos' && Object.entries(obterGrupos(filtroTipo)).map(([key, label]) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Lista de categorias */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categoriasFiltradas.map((categoria) => (
-            <Card key={categoria.id} className="card-base">
+        <div className="space-y-6">
+          {/* Estatísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="card-base">
               <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-                      style={{ backgroundColor: categoria.cor }}
-                    >
-                      {categoria.icone}
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{categoria.nome}</h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant={categoria.tipo === 'despesa' ? 'destructive' : 'default'}>
-                          {categoria.tipo === 'despesa' ? 'Despesa' : 'Receita'}
-                        </Badge>
-                        <span className="text-sm text-gray-500">
-                          {obterGrupos(categoria.tipo)[categoria.grupo as keyof typeof obterGrupos]}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-1">
-                    <Button size="sm" variant="ghost" onClick={() => abrirModalVisualizar(categoria)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => abrirModalEditar(categoria)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleExcluir(categoria)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-primary">{estatisticas.total_categorias}</p>
+                  <p className="text-sm text-muted-foreground">Total de Categorias</p>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-
-        {categoriasFiltradas.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Nenhuma categoria encontrada</p>
+            <Card className="card-base">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-red-600">{estatisticas.total_despesas}</p>
+                  <p className="text-sm text-muted-foreground">Categorias de Despesa</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="card-base">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{estatisticas.total_receitas}</p>
+                  <p className="text-sm text-muted-foreground">Categorias de Receita</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
 
-        <CategoriaModal
-          aberto={modalAberto}
-          categoria={categoriaSelecionada}
-          modo={modoModal}
-          onFechar={fecharModal}
-          onSalvar={handleSalvar}
-        />
+          {/* Filtros */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar categorias..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="pl-10 input-base"
+              />
+            </div>
+            <Select value={filtroTipo} onValueChange={(value: any) => setFiltroTipo(value)}>
+              <SelectTrigger className="input-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os tipos</SelectItem>
+                <SelectItem value="despesa">Despesas</SelectItem>
+                <SelectItem value="receita">Receitas</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filtroGrupo} onValueChange={setFiltroGrupo}>
+              <SelectTrigger className="input-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os grupos</SelectItem>
+                {filtroTipo !== 'todos' && Object.entries(obterGrupos(filtroTipo)).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Lista de categorias */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {categoriasFiltradas.map((categoria) => (
+              <Card key={categoria.id} className="card-base">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div 
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
+                        style={{ backgroundColor: categoria.cor }}
+                      >
+                        {categoria.icone}
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{categoria.nome}</h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge variant={categoria.tipo === 'despesa' ? 'destructive' : 'default'}>
+                            {categoria.tipo === 'despesa' ? 'Despesa' : 'Receita'}
+                          </Badge>
+                          <span className="text-sm text-gray-500">
+                            {obterGrupos(categoria.tipo)[categoria.grupo as keyof typeof obterGrupos]}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-1">
+                      <Button size="sm" variant="ghost" onClick={() => abrirModalVisualizar(categoria)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => abrirModalEditar(categoria)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleExcluir(categoria)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {categoriasFiltradas.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Nenhuma categoria encontrada</p>
+            </div>
+          )}
+
+          <CategoriaModal
+            aberto={modalAberto}
+            categoria={categoriaSelecionada}
+            modo={modoModal}
+            onFechar={fecharModal}
+            onSalvar={handleSalvar}
+          />
+        </div>
       </div>
-    </Layout>
+    </div>
   );
 }
