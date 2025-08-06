@@ -7,7 +7,7 @@ export interface MovimentacaoRecente {
   fornecedor: string;
   descricao: string;
   valor: number;
-  status: 'pendente' | 'paga' | 'vencida';
+  status: 'pendente' | 'pago' | 'vencido';
 }
 
 export const useMovimentacoesRecentes = () => {
@@ -44,7 +44,7 @@ export const useMovimentacoesRecentes = () => {
         fornecedor: conta.fornecedores?.nome || 'Fornecedor não informado',
         descricao: conta.descricao,
         valor: conta.valor_final,
-        status: conta.status === 'pago' ? 'paga' : conta.status as 'pendente' | 'paga' | 'vencida'
+        status: conta.status === 'vencida' ? 'vencido' : conta.status as 'pendente' | 'pago' | 'vencido'
       }));
 
       setMovimentacoes(movimentacoesFormatadas);

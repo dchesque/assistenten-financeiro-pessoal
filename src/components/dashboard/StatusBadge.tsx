@@ -1,29 +1,21 @@
+import { STATUS_BADGES, getStatusBadge } from '@/constants/designSystem';
+
 interface StatusBadgeProps {
-  status: 'pendente' | 'paga' | 'vencida';
+  status: 'pendente' | 'pago' | 'vencido';
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const variants = {
-    pendente: 'badge-info',
-    paga: 'badge-success',
-    vencida: 'badge-danger'
-  };
-
-  const dotColors = {
-    pendente: 'bg-blue-600',
-    paga: 'bg-green-600',
-    vencida: 'bg-red-600'
-  };
+  const statusConfig = getStatusBadge(status);
 
   const labels = {
     pendente: 'Pendente',
-    paga: 'Paga',
-    vencida: 'Vencida'
+    pago: 'Pago',
+    vencido: 'Vencido'
   };
 
   return (
-    <span className={variants[status]}>
-      <div className={`badge-dot ${dotColors[status]}`}></div>
+    <span className={statusConfig.container}>
+      <div className={statusConfig.dot}></div>
       {labels[status]}
     </span>
   );
