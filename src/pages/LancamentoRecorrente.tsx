@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Calendar, DollarSign, Package, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Calendar, DollarSign, Package, ArrowRight, CheckCircle, AlertCircle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,8 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Layout } from '@/components/layout/Layout';
-import { PageContainer } from '@/components/layout/PageContainer';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { PagadorSelector } from '@/components/contasReceber/PagadorSelector';
@@ -150,104 +148,111 @@ export default function LancamentoRecorrente() {
 
   const valorTotal = parcelas.reduce((total, parcela) => total + parcela.valor, 0);
 
+  // Etapa de processamento
   if (etapa === 'processando') {
     return (
-      <Layout>
-        <PageContainer>
-          <PageHeader 
-            title="Processando Lançamento" 
-            subtitle="Criando contas a receber..."
-            breadcrumb={breadcrumbItems}
-          />
+      <>
+        <PageHeader 
+          title="Processando Lançamento" 
+          subtitle="Criando contas a receber..."
+          breadcrumb={breadcrumbItems}
+        />
 
-          <Card className="card-base max-w-2xl mx-auto">
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-              <h3 className="text-xl font-semibold mb-4">Processando lançamento...</h3>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                <div 
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progresso}%` }}
-                ></div>
-              </div>
-              <p className="text-gray-600">{Math.round(progresso)}% concluído</p>
-            </CardContent>
-          </Card>
-        </PageContainer>
-      </Layout>
+        <div className="relative p-4 lg:p-8">
+          <div className="max-w-2xl mx-auto">
+            <Card className="card-base">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                <h3 className="text-xl font-semibold mb-4">Processando lançamento...</h3>
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div 
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${progresso}%` }}
+                  ></div>
+                </div>
+                <p className="text-gray-600">{Math.round(progresso)}% concluído</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </>
     );
   }
 
+  // Etapa de conclusão
   if (etapa === 'concluido') {
     return (
-      <Layout>
-        <PageContainer>
-          <PageHeader 
-            title="Lançamento Concluído" 
-            subtitle="Contas a receber criadas com sucesso"
-            breadcrumb={breadcrumbItems}
-          />
+      <>
+        <PageHeader 
+          title="Lançamento Concluído" 
+          subtitle="Contas a receber criadas com sucesso"
+          breadcrumb={breadcrumbItems}
+        />
 
-          <Card className="card-base max-w-2xl mx-auto">
-            <CardContent className="p-8 text-center">
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
-              <h3 className="text-xl font-semibold mb-4">Lançamento realizado com sucesso!</h3>
-              <p className="text-gray-600 mb-6">
-                {parcelas.length} contas a receber foram criadas no sistema.
-              </p>
-              
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-green-800">Total de parcelas:</span>
-                    <span className="ml-2 text-green-600">{parcelas.length}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-green-800">Valor total:</span>
-                    <span className="ml-2 text-green-600">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}
-                    </span>
+        <div className="relative p-4 lg:p-8">
+          <div className="max-w-2xl mx-auto">
+            <Card className="card-base">
+              <CardContent className="p-8 text-center">
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
+                <h3 className="text-xl font-semibold mb-4">Lançamento realizado com sucesso!</h3>
+                <p className="text-gray-600 mb-6">
+                  {parcelas.length} contas a receber foram criadas no sistema.
+                </p>
+                
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-green-800">Total de parcelas:</span>
+                      <span className="ml-2 text-green-600">{parcelas.length}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-green-800">Valor total:</span>
+                      <span className="ml-2 text-green-600">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex gap-3 justify-center">
-                <Button onClick={handleNovoLancamento} className="btn-primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Lançamento
-                </Button>
-                <Button variant="outline" onClick={() => window.location.href = '/contas-receber'}>
-                  Ver Contas a Receber
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </PageContainer>
-      </Layout>
+                <div className="flex gap-3 justify-center">
+                  <Button onClick={handleNovoLancamento} className="btn-primary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Novo Lançamento
+                  </Button>
+                  <Button variant="outline" onClick={() => window.location.href = '/contas-receber'}>
+                    Ver Contas a Receber
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </>
     );
   }
 
+  // Etapa de preview
   if (etapa === 'preview') {
     return (
-      <Layout>
-        <PageContainer>
-          <PageHeader 
-            title="Preview do Lançamento" 
-            subtitle="Confirme os dados antes de processar"
-            breadcrumb={breadcrumbItems}
-            actions={
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setEtapa('configuracao')}>
-                  Voltar
-                </Button>
-                <Button onClick={handleConfirmarLancamento} className="btn-primary">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Confirmar Lançamento
-                </Button>
-              </div>
-            }
-          />
+      <>
+        <PageHeader 
+          title="Preview do Lançamento" 
+          subtitle="Confirme os dados antes de processar"
+          breadcrumb={breadcrumbItems}
+          actions={
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEtapa('configuracao')}>
+                Voltar
+              </Button>
+              <Button onClick={handleConfirmarLancamento} className="btn-primary">
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Confirmar Lançamento
+              </Button>
+            </div>
+          }
+        />
 
+        <div className="relative p-4 lg:p-8">
           <div className="grid gap-6">
             {/* Resumo */}
             <Card className="card-base">
@@ -311,189 +316,255 @@ export default function LancamentoRecorrente() {
               </CardContent>
             </Card>
           </div>
-        </PageContainer>
-      </Layout>
+        </div>
+      </>
     );
   }
 
+  // Etapa de configuração
   return (
-    <Layout>
-      <PageContainer>
-        <PageHeader 
-          title="Lançamento Recorrente" 
-          subtitle="Crie múltiplas contas a receber automaticamente"
-          breadcrumb={breadcrumbItems}
-        />
+    <>
+      <PageHeader 
+        title="Lançamento Recorrente" 
+        subtitle="Crie múltiplas contas a receber automaticamente"
+        breadcrumb={breadcrumbItems}
+      />
 
-        <Card className="card-base max-w-4xl mx-auto">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              Configuração do Lançamento Recorrente
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Dados principais */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pagador">Pagador *</Label>
-                <PagadorSelector
-                  value={formData.pagador_id}
-                  onChange={(value) => setFormData(prev => ({ ...prev, pagador_id: value }))}
-                />
-              </div>
+      <div className="relative p-4 lg:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Formulário Principal - 2 colunas */}
+          <div className="lg:col-span-2">
+            <Card className="card-base">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="w-5 h-5" />
+                  Configuração do Lançamento Recorrente
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Dados principais */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pagador">Pagador *</Label>
+                    <PagadorSelector
+                      value={formData.pagador_id}
+                      onChange={(value) => setFormData(prev => ({ ...prev, pagador_id: value }))}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="categoria">Categoria de Receita *</Label>
-                <CategoriaReceitaSelector
-                  value={formData.categoria_receita_id}
-                  onChange={(value) => setFormData(prev => ({ ...prev, categoria_receita_id: value }))}
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="categoria">Categoria de Receita *</Label>
+                    <CategoriaReceitaSelector
+                      value={formData.categoria_receita_id}
+                      onChange={(value) => setFormData(prev => ({ ...prev, categoria_receita_id: value }))}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição *</Label>
-                <Input
-                  id="descricao"
-                  placeholder="Ex: Aluguel, Salário, etc."
-                  value={formData.descricao}
-                  onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="documento">Documento/Referência</Label>
-                <Input
-                  id="documento"
-                  placeholder="Número do contrato, nota fiscal, etc."
-                  value={formData.documento_referencia}
-                  onChange={(e) => setFormData(prev => ({ ...prev, documento_referencia: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            {/* Configuração das parcelas */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Configuração das Parcelas
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="valor">Valor por Parcela *</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao">Descrição *</Label>
                     <Input
-                      id="valor"
-                      type="number"
-                      placeholder="0,00"
-                      step="0.01"
-                      min="0"
-                      className="pl-10"
-                      value={formData.valor_parcela || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, valor_parcela: parseFloat(e.target.value) || 0 }))}
+                      id="descricao"
+                      placeholder="Ex: Aluguel, Salário, etc."
+                      value={formData.descricao}
+                      onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="documento">Documento/Referência</Label>
+                    <Input
+                      id="documento"
+                      placeholder="Número do contrato, nota fiscal, etc."
+                      value={formData.documento_referencia}
+                      onChange={(e) => setFormData(prev => ({ ...prev, documento_referencia: e.target.value }))}
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="data-inicial">Primeira Data *</Label>
-                <DatePicker
-                  value={formData.primeira_data_vencimento}
-                  onChange={(date) => setFormData(prev => ({ 
-                    ...prev, 
-                    primeira_data_vencimento: date
-                  }))}
-                />
-                </div>
+                {/* Configuração das parcelas */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Configuração das Parcelas
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="valor">Valor por Parcela *</Label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          id="valor"
+                          type="number"
+                          placeholder="0,00"
+                          step="0.01"
+                          min="0"
+                          className="pl-10"
+                          value={formData.valor_parcela || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, valor_parcela: parseFloat(e.target.value) || 0 }))}
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="quantidade">Quantidade *</Label>
-                  <Input
-                    id="quantidade"
-                    type="number"
-                    min="1"
-                    max="120"
-                    value={formData.quantidade_parcelas}
-                    onChange={(e) => setFormData(prev => ({ ...prev, quantidade_parcelas: parseInt(e.target.value) || 1 }))}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="data-inicial">Primeira Data *</Label>
+                      <DatePicker
+                        value={formData.primeira_data_vencimento}
+                        onChange={(date) => setFormData(prev => ({ 
+                          ...prev, 
+                          primeira_data_vencimento: date
+                        }))}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="intervalo">Intervalo *</Label>
-                  <Select 
-                    value={formData.intervalo_parcelas} 
-                    onValueChange={(value: any) => setFormData(prev => ({ ...prev, intervalo_parcelas: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {INTERVALOS_OPCOES.map(opcao => (
-                        <SelectItem key={opcao.value} value={opcao.value}>
-                          {opcao.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="quantidade">Quantidade *</Label>
+                      <Input
+                        id="quantidade"
+                        type="number"
+                        min="1"
+                        max="120"
+                        value={formData.quantidade_parcelas}
+                        onChange={(e) => setFormData(prev => ({ ...prev, quantidade_parcelas: parseInt(e.target.value) || 1 }))}
+                      />
+                    </div>
 
-            {/* Data de emissão */}
-            <div className="border-t pt-6">
-              <div className="space-y-2">
-                <Label htmlFor="data-emissao">Data de Emissão</Label>
-                <DatePicker
-                  value={formData.data_emissao}
-                  onChange={(date) => setFormData(prev => ({ 
-                    ...prev, 
-                    data_emissao: date
-                  }))}
-                />
-              </div>
-            </div>
-
-            {/* Resumo rápido */}
-            {formData.valor_parcela > 0 && formData.quantidade_parcelas > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-800 mb-2">Resumo:</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <span className="text-blue-600">Parcelas:</span>
-                    <span className="ml-2 font-medium">{formData.quantidade_parcelas}x</span>
-                  </div>
-                  <div>
-                    <span className="text-blue-600">Valor total:</span>
-                    <span className="ml-2 font-medium">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-                        .format(formData.valor_parcela * formData.quantidade_parcelas)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-blue-600">Periodicidade:</span>
-                    <span className="ml-2 font-medium">
-                      {INTERVALOS_OPCOES.find(i => i.value === formData.intervalo_parcelas)?.label.split(' ')[0]}
-                    </span>
+                    <div className="space-y-2">
+                      <Label htmlFor="intervalo">Intervalo *</Label>
+                      <Select 
+                        value={formData.intervalo_parcelas} 
+                        onValueChange={(value: any) => setFormData(prev => ({ ...prev, intervalo_parcelas: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {INTERVALOS_OPCOES.map(opcao => (
+                            <SelectItem key={opcao.value} value={opcao.value}>
+                              {opcao.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Botões */}
-            <div className="flex justify-end gap-3 pt-6 border-t">
-              <Button variant="outline" onClick={() => window.history.back()}>
-                Cancelar
-              </Button>
-              <Button onClick={handleGerarPreview} className="btn-primary">
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Gerar Preview
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </PageContainer>
-    </Layout>
+                {/* Data de emissão */}
+                <div className="border-t pt-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="data-emissao">Data de Emissão</Label>
+                    <DatePicker
+                      value={formData.data_emissao}
+                      onChange={(date) => setFormData(prev => ({ 
+                        ...prev, 
+                        data_emissao: date
+                      }))}
+                    />
+                  </div>
+                </div>
+
+                {/* Botões */}
+                <div className="flex justify-end gap-3 pt-6 border-t">
+                  <Button variant="outline" onClick={() => window.history.back()}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleGerarPreview} className="btn-primary">
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    Gerar Preview
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Preview/Resumo - 1 coluna */}
+          <div className="lg:col-span-1">
+            <Card className="card-base sticky top-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="w-5 h-5" />
+                  Resumo do Lançamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {formData.valor_parcela > 0 && formData.quantidade_parcelas > 0 ? (
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-800 mb-3">Preview:</h4>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-blue-600">Parcelas:</span>
+                          <span className="font-medium">{formData.quantidade_parcelas}x</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-600">Valor por parcela:</span>
+                          <span className="font-medium">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(formData.valor_parcela)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-600">Valor total:</span>
+                          <span className="font-medium">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+                              .format(formData.valor_parcela * formData.quantidade_parcelas)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-600">Periodicidade:</span>
+                          <span className="font-medium">
+                            {INTERVALOS_OPCOES.find(i => i.value === formData.intervalo_parcelas)?.label.split(' ')[0]}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {formData.primeira_data_vencimento && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 className="font-medium text-green-800 mb-3">Datas:</h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-green-600">Primeira:</span>
+                            <span className="font-medium">
+                              {new Date(formData.primeira_data_vencimento).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                          {formData.quantidade_parcelas > 1 && (
+                            <div className="flex justify-between">
+                              <span className="text-green-600">Última:</span>
+                              <span className="font-medium">
+                                {(() => {
+                                  const primeiraData = new Date(formData.primeira_data_vencimento);
+                                  const intervalo = INTERVALOS_OPCOES.find(i => i.value === formData.intervalo_parcelas);
+                                  if (intervalo) {
+                                    let ultimaData: Date;
+                                    if (formData.intervalo_parcelas === 'mensal') {
+                                      ultimaData = addMonths(primeiraData, formData.quantidade_parcelas - 1);
+                                    } else {
+                                      ultimaData = addDays(primeiraData, (formData.quantidade_parcelas - 1) * intervalo.dias);
+                                    }
+                                    return ultimaData.toLocaleDateString('pt-BR');
+                                  }
+                                  return '-';
+                                })()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">Preencha os dados para ver o resumo</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
