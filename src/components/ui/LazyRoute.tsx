@@ -181,11 +181,6 @@ export const LazyRoutes = {
     'ContasPagar'
   ),
   
-  ContasReceber: createLazyRoute(
-    () => import('@/pages/ContasReceber'),
-    'ContasReceber'
-  ),
-  
   
   Bancos: createLazyRoute(
     () => import('@/pages/Bancos'),

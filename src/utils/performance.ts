@@ -11,7 +11,6 @@ export class PerformanceOptimizer {
   static lazyComponents = {
     Dashboard: lazy(() => import('@/pages/Dashboard')),
     ContasPagar: lazy(() => import('@/pages/ContasPagar')),
-    ContasReceber: lazy(() => import('@/pages/ContasReceber')),
     Bancos: lazy(() => import('@/pages/Bancos')),
     Settings: lazy(() => import('@/pages/Settings')),
     
