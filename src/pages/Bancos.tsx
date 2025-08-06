@@ -123,7 +123,8 @@ export default function Bancos() {
         />
 
         {/* Conteúdo principal */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 lg:p-8">
+          <div className="space-y-6">
           {/* Cards de resumo */}
           {loading ? (
             <EstatisticasSkeleton />
@@ -237,6 +238,7 @@ export default function Bancos() {
               ))}
             </div>
           )}
+          </div>
         </div>
       </div>
 

@@ -23,7 +23,8 @@ export default function Dashboard() {
   const percentualMeta = (kpisPersonal.gastosMes / kpisPersonal.metaMensal) * 100;
 
   return (
-    <div className="space-y-8">
+    <div className="p-4 lg:p-8">
+      <div className="space-y-8">
       {/* Header Premium */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -107,6 +108,7 @@ export default function Dashboard() {
       <div>
         <AcoesRapidas />
       </div>
+    </div>
     </div>
   );
 }

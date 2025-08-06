@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineIndicator } from "@/hooks/useOffline";
 import { Layout } from "./components/layout/Layout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
@@ -41,6 +42,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <OfflineIndicator />
         <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
