@@ -10,11 +10,12 @@ import { Plus, Search, Edit, Eye, Trash2 } from 'lucide-react';
 import { CategoriaModal } from '@/components/categorias/CategoriaModal';
 import { useCategorias } from '@/hooks/useCategorias';
 import { LoadingStates } from '@/components/ui/LoadingStates';
+import { DatabaseSetupGuide } from '@/components/setup/DatabaseSetupGuide';
 import type { Categoria, CriarCategoria, AtualizarCategoria } from '@/types/categoria';
 import { obterGrupos } from '@/types/categoria';
 
 export default function CategoriasUnificadas() {
-  const { categorias, loading, carregarCategorias, criarCategoria, atualizarCategoria, excluirCategoria, obterEstatisticas } = useCategorias();
+  const { categorias, loading, error, carregarCategorias, criarCategoria, atualizarCategoria, excluirCategoria, obterEstatisticas } = useCategorias();
   
   const [busca, setBusca] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'despesa' | 'receita'>('todos');
@@ -71,6 +72,16 @@ export default function CategoriasUnificadas() {
       await excluirCategoria(categoria.id);
     }
   };
+
+  // Verificar se há erro de tabela não encontrada
+  if (error && error.includes('does not exist')) {
+    return (
+      <DatabaseSetupGuide 
+        tableName="categorias_despesas"
+        description="a funcionalidade de categorias de despesas"
+      />
+    );
+  }
 
   if (loading) {
     return (
