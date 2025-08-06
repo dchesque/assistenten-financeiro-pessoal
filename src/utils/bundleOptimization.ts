@@ -91,11 +91,7 @@ export class ResourcePreloader {
     const routeMap: Record<string, () => Promise<any>> = {
       dashboard: () => import('@/pages/Dashboard'),
       'contas-pagar': () => import('@/pages/ContasPagar'),
-      fornecedores: () => import('@/pages/Fornecedores'),
-      bancos: () => import('@/pages/Bancos'),
-      cheques: () => import('@/pages/Cheques'),
-      dre: () => import('@/pages/DRE'),
-      relatorios: () => import('@/pages/Relatorios')
+      bancos: () => import('@/pages/Bancos')
     };
 
     const loader = routeMap[routeName];

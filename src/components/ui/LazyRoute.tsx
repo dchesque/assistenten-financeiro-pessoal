@@ -186,29 +186,10 @@ export const LazyRoutes = {
     'ContasReceber'
   ),
   
-  Fornecedores: createLazyRoute(
-    () => import('@/pages/Fornecedores'),
-    'Fornecedores'
-  ),
   
   Bancos: createLazyRoute(
     () => import('@/pages/Bancos'),
     'Bancos'
-  ),
-  
-  Cheques: createLazyRoute(
-    () => import('@/pages/Cheques'),
-    'Cheques'
-  ),
-  
-  DRE: createLazyRoute(
-    () => import('@/pages/DRE'),
-    'DRE'
-  ),
-  
-  Relatorios: createLazyRoute(
-    () => import('@/pages/Relatorios'),
-    'Relatorios'
   )
 };
 

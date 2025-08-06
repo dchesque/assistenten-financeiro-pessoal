@@ -64,7 +64,7 @@ const menuStructure = [
     ]
   },
   
-  // Grupo: Cadastros (atualizado)
+  // Grupo: Cadastros (simplificado)
   { 
     type: 'group', 
     name: 'CADASTROS', 
@@ -73,7 +73,6 @@ const menuStructure = [
     key: 'cadastros',
     items: [
       { name: 'Contatos', path: '/contatos', icon: Users, color: 'text-blue-500' },
-      { name: 'Categorias', path: '/categorias', icon: Tags, color: 'text-purple-500' },
       { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' }
     ]
   }

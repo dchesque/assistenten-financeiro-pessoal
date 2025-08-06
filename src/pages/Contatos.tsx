@@ -10,7 +10,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { useCredores } from '@/hooks/useCredores';
 import { usePagadores } from '@/hooks/usePagadores';
-import { FornecedorModal } from '@/components/fornecedores/FornecedorModal';
+import { ContatoModal } from '@/components/ui/ContatoModal';
 import { toast } from 'sonner';
 
 type ContatoTipo = 'credor' | 'pagador';
@@ -265,12 +265,12 @@ export default function Contatos() {
       </div>
 
       {/* Modal de Contato */}
-      <FornecedorModal
+      <ContatoModal
         isOpen={modalAberto}
         onClose={() => setModalAberto(false)}
-        fornecedor={itemSelecionado}
-        modo={modoEdicao ? 'editar' : 'criar'}
+        contato={itemSelecionado}
         onSave={handleSalvarContato}
+        tipo={tipoModal}
       />
       </div>
     </div>

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Search, Edit, Eye, Trash2 } from 'lucide-react';
-import { CategoriaModal } from '@/components/categorias/CategoriaModal';
+import { CategoriaModal } from '@/components/ui/CategoriaModal';
 import { useCategorias } from '@/hooks/useCategorias';
 import { LoadingStates } from '@/components/ui/LoadingStates';
 import { DatabaseSetupGuide } from '@/components/setup/DatabaseSetupGuide';
@@ -227,11 +227,10 @@ export default function CategoriasUnificadas() {
           )}
 
           <CategoriaModal
-            aberto={modalAberto}
+            isOpen={modalAberto}
+            onClose={fecharModal}
             categoria={categoriaSelecionada}
-            modo={modoModal}
-            onFechar={fecharModal}
-            onSalvar={handleSalvar}
+            onSave={handleSalvar}
           />
         </div>
       </div>

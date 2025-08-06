@@ -10,17 +10,13 @@ export class PerformanceOptimizer {
   // 🔄 LAZY LOADING DE COMPONENTES
   static lazyComponents = {
     Dashboard: lazy(() => import('@/pages/Dashboard')),
-    Fornecedores: lazy(() => import('@/pages/Fornecedores')),
     ContasPagar: lazy(() => import('@/pages/ContasPagar')),
     ContasReceber: lazy(() => import('@/pages/ContasReceber')),
     Bancos: lazy(() => import('@/pages/Bancos')),
-    DRE: lazy(() => import('@/pages/DRE')),
-    Relatorios: lazy(() => import('@/pages/Relatorios')),
     Settings: lazy(() => import('@/pages/Settings')),
     
     // Modais pesados
-    ContaModal: lazy(() => import('@/components/contasPagar/ContaEditarModal')),
-    FornecedorModal: lazy(() => import('@/components/fornecedores/FornecedorModal').then(module => ({ default: module.FornecedorModal })))
+    ContaModal: lazy(() => import('@/components/contasPagar/ContaEditarModal'))
   };
 
   // 🚀 PRELOAD DE RECURSOS CRÍTICOS
