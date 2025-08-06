@@ -170,7 +170,7 @@ export default function MonitoramentoPerformance() {
                     <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
                     <p>Carregando métricas...</p>
                   </div>
-                ) : metricasDetalhadas && metricasDetalhadas.length > 0 ? (
+                ) : metricasDetalhadas && Array.isArray(metricasDetalhadas) && metricasDetalhadas.length > 0 ? (
                   metricasDetalhadas.map((metrica, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
@@ -215,28 +215,28 @@ export default function MonitoramentoPerformance() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-primary">
-                      {estatisticas.total_vendas_mes || 0}
+                      {(estatisticas as any)?.total_vendas_mes || 0}
                     </div>
                     <div className="text-sm text-muted-foreground">Vendas/Mês</div>
                   </div>
                   
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-green-600">
-                      {formatarMoeda(estatisticas.valor_total_mes || 0)}
+                      {formatarMoeda((estatisticas as any)?.valor_total_mes || 0)}
                     </div>
                     <div className="text-sm text-muted-foreground">Faturamento</div>
                   </div>
                   
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">
-                      {estatisticas.contas_pendentes || 0}
+                      {(estatisticas as any)?.contas_pendentes || 0}
                     </div>
                     <div className="text-sm text-muted-foreground">Contas Pendentes</div>
                   </div>
                   
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">
-                      {estatisticas.clientes_ativos || 0}
+                      {(estatisticas as any)?.clientes_ativos || 0}
                     </div>
                     <div className="text-sm text-muted-foreground">Clientes Ativos</div>
                   </div>
