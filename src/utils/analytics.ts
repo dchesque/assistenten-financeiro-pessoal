@@ -66,8 +66,8 @@ export class Analytics {
     };
 
     // Google Analytics 4
-    if (typeof gtag !== 'undefined' && analytics.isEnabled) {
-      gtag('event', event.action, {
+    if (typeof window !== 'undefined' && window.gtag && analytics.isEnabled) {
+      window.gtag('event', event.action, {
         event_category: event.category,
         event_label: event.label,
         value: event.value,
@@ -78,8 +78,8 @@ export class Analytics {
     }
 
     // Facebook Pixel (se configurado)
-    if (typeof fbq !== 'undefined' && analytics.isEnabled) {
-      fbq('track', event.action, event.metadata);
+    if (typeof window !== 'undefined' && window.fbq && analytics.isEnabled) {
+      window.fbq('track', event.action, event.metadata);
     }
 
     // Log estruturado para desenvolvimento
@@ -119,8 +119,8 @@ export class Analytics {
       timestamp: new Date().toISOString()
     };
 
-    if (typeof gtag !== 'undefined') {
-      gtag('config', 'GA_MEASUREMENT_ID', {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('config', 'GA_MEASUREMENT_ID', {
         page_path: event.page,
         page_title: event.title,
         user_id: event.userId,
@@ -142,8 +142,8 @@ export class Analytics {
     const analytics = Analytics.getInstance();
     analytics.userId = user.userId;
 
-    if (typeof gtag !== 'undefined') {
-      gtag('config', 'GA_MEASUREMENT_ID', {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('config', 'GA_MEASUREMENT_ID', {
         user_id: user.userId,
         custom_map: {
           user_email: user.email,

@@ -20,8 +20,7 @@ export class PerformanceOptimizer {
     
     // Modais pesados
     ContaModal: lazy(() => import('@/components/contasPagar/ContaEditarModal')),
-    FornecedorModal: lazy(() => import('@/components/fornecedores/FornecedorModal')),
-    RelatorioModal: lazy(() => import('@/components/relatorios/RelatorioModal'))
+    FornecedorModal: lazy(() => import('@/components/fornecedores/FornecedorModal').then(module => ({ default: module.FornecedorModal })))
   };
 
   // 🚀 PRELOAD DE RECURSOS CRÍTICOS
@@ -169,8 +168,8 @@ export class PerformanceOptimizer {
       console.log('🎯 LCP:', lastEntry.startTime);
       
       // Reportar para analytics
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'LCP', {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'LCP', {
           event_category: 'performance',
           value: Math.round(lastEntry.startTime),
           metric_id: 'lcp'
@@ -181,12 +180,14 @@ export class PerformanceOptimizer {
     // First Input Delay
     new PerformanceObserver((list) => {
       const firstInput = list.getEntries()[0];
-      console.log('⚡ FID:', firstInput.processingStart - firstInput.startTime);
+      const processingTime = (firstInput as any).processingStart ? 
+        (firstInput as any).processingStart - firstInput.startTime : 0;
+      console.log('⚡ FID:', processingTime);
       
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'FID', {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'FID', {
           event_category: 'performance',
-          value: Math.round(firstInput.processingStart - firstInput.startTime),
+          value: Math.round(processingTime),
           metric_id: 'fid'
         });
       }
@@ -202,8 +203,8 @@ export class PerformanceOptimizer {
       }
       console.log('📐 CLS:', clsValue);
       
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'CLS', {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'CLS', {
           event_category: 'performance',
           value: Math.round(clsValue * 1000),
           metric_id: 'cls'
@@ -218,8 +219,8 @@ export class PerformanceOptimizer {
       const tti = performance.now();
       console.log('🚀 TTI:', tti);
       
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'TTI', {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'TTI', {
           event_category: 'performance',
           value: Math.round(tti),
           metric_id: 'tti'
@@ -232,8 +233,8 @@ export class PerformanceOptimizer {
       const fmp = performance.now();
       console.log('🎨 FMP:', fmp);
       
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'FMP', {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'FMP', {
           event_category: 'performance',
           value: Math.round(fmp),
           metric_id: 'fmp'
@@ -302,22 +303,22 @@ export class PerformanceOptimizer {
 
   private static cleanupTimers() {
     // Rastrear timers para cleanup
-    const timers = new Set();
+    const timers = new Set<NodeJS.Timeout>();
     
     const originalSetTimeout = window.setTimeout;
     const originalSetInterval = window.setInterval;
     
-    window.setTimeout = function(callback, delay, ...args) {
+    window.setTimeout = function(callback: any, delay: any, ...args: any[]) {
       const id = originalSetTimeout.call(this, callback, delay, ...args);
       timers.add(id);
       return id;
-    };
+    } as typeof setTimeout;
     
-    window.setInterval = function(callback, delay, ...args) {
+    window.setInterval = function(callback: any, delay: any, ...args: any[]) {
       const id = originalSetInterval.call(this, callback, delay, ...args);
       timers.add(id);
       return id;
-    };
+    } as typeof setInterval;
 
     // Cleanup na destruição
     window.addEventListener('beforeunload', () => {
@@ -397,7 +398,8 @@ interface LazyRouteProps {
 }
 
 export function LazyRoute({ component: Component, fallback: Fallback }: LazyRouteProps) {
-  const FallbackComponent = Fallback || LoadingStates.PageSkeleton;
+  const FallbackComponent = Fallback || LoadingStates.CardSkeleton;
+  
   
   return React.createElement(Suspense, 
     { fallback: React.createElement(FallbackComponent) },
@@ -415,8 +417,8 @@ export function usePerformance() {
     measureCustomMetric: (name: string, value: number) => {
       console.log(`📊 Custom Metric - ${name}:`, value);
       
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'custom_metric', {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'custom_metric', {
           event_category: 'performance',
           event_label: name,
           value: Math.round(value)
