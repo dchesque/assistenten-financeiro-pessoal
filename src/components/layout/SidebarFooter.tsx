@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   Building2,
   Settings,
-  Users,
   LogOut,
   ChevronUp,
   User,
@@ -93,16 +92,6 @@ export function SidebarFooter({ expanded, mobile = false }: SidebarFooterProps) 
                 <CreditCard className="w-4 h-4 text-amber-500" />
                 <span className="text-sm">Assinatura</span>
               </button>
-
-              {/* Usuários */}
-              <button
-                onClick={() => handleMenuClick('/usuarios')}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white hover:bg-white/10 transition-colors duration-200"
-              >
-                <Users className="w-4 h-4 text-blue-500" />
-                <span className="text-sm">Usuários</span>
-              </button>
-
 
               {/* Sistema */}
               <button
