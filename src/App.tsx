@@ -19,7 +19,8 @@ const ContasPagar = lazy(() => import('@/pages/ContasPagar'));
 const ContasReceber = lazy(() => import('@/pages/ContasReceber'));
 const Bancos = lazy(() => import('@/pages/Bancos'));
 const Settings = lazy(() => import('@/pages/Settings'));
-const ContaIndividual = lazy(() => import('@/pages/ContaIndividual'));
+const NovaConta = lazy(() => import('@/pages/NovaConta'));
+const NovoRecebimento = lazy(() => import('@/pages/NovoRecebimento'));
 const Contatos = lazy(() => import('@/pages/Contatos'));
 const DesignSystemPreview = lazy(() => import('@/pages/DesignSystemPreview'));
 
@@ -57,7 +58,8 @@ function App() {
               <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
               <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
               <Route path="/bancos" element={<ProtectedRoute><Layout><Bancos /></Layout></ProtectedRoute>} />
-              <Route path="/conta-individual" element={<ProtectedRoute><Layout><ContaIndividual /></Layout></ProtectedRoute>} />
+              <Route path="/nova-conta" element={<ProtectedRoute><Layout><NovaConta /></Layout></ProtectedRoute>} />
+              <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><NovoRecebimento /></Layout></ProtectedRoute>} />
               <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
               <Route path="/design-system" element={<ProtectedRoute><Layout><DesignSystemPreview /></Layout></ProtectedRoute>} />
               

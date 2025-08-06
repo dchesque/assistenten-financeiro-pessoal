@@ -30,7 +30,7 @@ import { ValidationService } from '@/services/ValidationService';
 import { supabase } from '@/integrations/supabase/client';
 import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
 import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
-export default function ContaIndividual() {
+export default function NovaConta() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { criarConta, estados } = useContasPagar();
