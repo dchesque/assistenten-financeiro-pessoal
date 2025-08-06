@@ -11,7 +11,7 @@ import { FormaPagamento } from '@/types/formaPagamento';
 import { useBancosSupabase } from '@/hooks/useBancosSupabase';
 import { useContasPagar } from '@/hooks/useContasPagar';
 import { useCredores } from '@/hooks/useCredores';
-import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
+import { FornecedorSelector as PagadorSelector } from '@/components/contasPagar/FornecedorSelector';
 import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
 import { FormaRecebimentoSection } from '@/components/contasPagar/FormaRecebimentoSection';
@@ -61,7 +61,7 @@ export default function NovoRecebimento() {
   const [percentualDescontoMask, setPercentualDescontoMask] = useState('');
   const [valorDescontoMask, setValorDescontoMask] = useState('');
   const [valorPagoMask, setValorPagoMask] = useState('');
-  const [credorSelecionado, setCredorSelecionado] = useState<Fornecedor | null>(null);
+  const [pagadorSelecionado, setPagadorSelecionado] = useState<Fornecedor | null>(null);
   const [contaSelecionada, setContaSelecionada] = useState<PlanoContas | null>(null);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
     tipo: 'dinheiro_pix'
@@ -89,9 +89,9 @@ export default function NovoRecebimento() {
     const erro = ValidationService.validarContaPagar({ 
       [campo]: valor,
       // Passar contexto completo para validações mais precisas
-      fornecedor_id: credorSelecionado?.id,
+      fornecedor_id: pagadorSelecionado?.id,
       plano_conta_id: contaSelecionada?.id,
-      data_emissao: conta.data_emissao  // 🔥 CORREÇÃO: Passar data de emissão para validação correta
+      data_emissao: conta.data_emissao
     });
     
     setErrosValidacao(prev => ({ 
@@ -104,10 +104,10 @@ export default function NovoRecebimento() {
   useEffect(() => {
     const timer = setTimeout(() => {
       // Só salva se há dados preenchidos
-      if (conta.descricao || conta.valor_original > 0 || credorSelecionado || contaSelecionada) {
+      if (conta.descricao || conta.valor_original > 0 || pagadorSelecionado || contaSelecionada) {
         const rascunho = {
           conta,
-          credor: credorSelecionado,
+          pagador: pagadorSelecionado,
           categoria: contaSelecionada,
           formaPagamento,
           timestamp: Date.now(),
@@ -123,7 +123,7 @@ export default function NovoRecebimento() {
     }, 3000); // Salva após 3 segundos de inatividade
     
     return () => clearTimeout(timer);
-  }, [conta, credorSelecionado, contaSelecionada, formaPagamento]);
+  }, [conta, pagadorSelecionado, contaSelecionada, formaPagamento]);
 
   // Recuperar rascunho ao carregar página
   useEffect(() => {
@@ -162,22 +162,22 @@ export default function NovoRecebimento() {
     }));
   }, [conta.valor_original, conta.valor_juros, conta.valor_desconto]);
 
-  // Função para selecionar credor e auto-preencher categoria
-  const handleCredorSelect = (credor: Fornecedor) => {
-    setCredorSelecionado(credor);
+  // Função para selecionar pagador e auto-preencher categoria
+  const handlePagadorSelect = (pagador: Fornecedor) => {
+    setPagadorSelecionado(pagador);
     setConta(prev => ({
       ...prev,
-      fornecedor_id: credor.id
+      fornecedor_id: pagador.id
     }));
 
-    // Auto-preencher categoria padrão do credor se existir
-    if (credor.categoria_padrao_id) {
+    // Auto-preencher categoria padrão do pagador se existir
+    if (pagador.categoria_padrao_id) {
       // Buscar a categoria padrão do Supabase
       import('@/integrations/supabase/client').then(({ supabase }) => {
         supabase
           .from('plano_contas')
           .select('*')
-          .eq('id', credor.categoria_padrao_id)
+          .eq('id', pagador.categoria_padrao_id)
           .eq('aceita_lancamento', true)
           .single()
           .then(({ data, error }) => {
@@ -214,7 +214,7 @@ export default function NovoRecebimento() {
           });
       });
     } else {
-      // Credor sem categoria padrão - não alterar seleção atual
+      // Pagador sem categoria padrão - não alterar seleção atual
       if (!contaSelecionada) {
         setConta(prev => ({
           ...prev,
@@ -308,7 +308,7 @@ export default function NovoRecebimento() {
     
     // Usar validação robusta do serviço
     const erros = ValidationService.validarContaPagar({
-      fornecedor_id: credorSelecionado?.id,
+      fornecedor_id: pagadorSelecionado?.id,
       plano_conta_id: contaSelecionada?.id,
       descricao: conta.descricao,
       data_vencimento: conta.data_vencimento,
@@ -346,7 +346,7 @@ export default function NovoRecebimento() {
     if (rascunhoSalvo) {
       const dados = JSON.parse(rascunhoSalvo);
       setConta(dados.conta);
-      setCredorSelecionado(dados.credor || dados.fornecedor); // Retrocompatibilidade
+      setPagadorSelecionado(dados.pagador || dados.credor); // Retrocompatibilidade
       setContaSelecionada(dados.categoria);
       setFormaPagamento(dados.formaPagamento);
       setTemRascunho(false);
@@ -378,7 +378,7 @@ export default function NovoRecebimento() {
       if (!user) throw new Error('Usuário não autenticado');
 
       const contaParaSalvar: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'> = {
-        fornecedor_id: credorSelecionado!.id!,
+        fornecedor_id: pagadorSelecionado!.id!,
         plano_conta_id: contaSelecionada!.id!,
         banco_id: marcarComoPago && formaPagamento.banco_id ? formaPagamento.banco_id : conta.banco_id,
         documento_referencia: conta.documento_referencia,
@@ -438,7 +438,7 @@ export default function NovoRecebimento() {
         title="Novo Recebimento"
         subtitle="Lançamento individual de recebimentos • Cadastro detalhado"
         actions={
-          <Button 
+          <Button
             variant="outline" 
             onClick={() => navigate('/contas-receber')}
             className="bg-white/80 hover:bg-white/90"
@@ -475,7 +475,7 @@ export default function NovoRecebimento() {
 
         <div className="grid lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3 space-y-8">
-            {/* Seção 1: Dados do Credor */}
+            {/* Seção 1: Dados do Pagador */}
             <Card className="card-base">
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-3">
@@ -483,22 +483,35 @@ export default function NovoRecebimento() {
                     <span className="text-white font-semibold">1</span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Dados do Credor</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Dados do Pagador</h3>
                     <p className="text-sm text-gray-600">Selecione quem pagará esta conta</p>
                   </div>
                 </div>
 
                 <div className="grid gap-6">
-                  <CredorSelector
-                    value={credorSelecionado}
-                    onSelect={handleCredorSelect}
+                  <PagadorSelector
+                    value={pagadorSelecionado}
+                    onSelect={handlePagadorSelect}
+                    className="w-full"
+                  />
+
+                  {/* Seletor de Categoria */}
+                  <PlanoContasSelector
+                    value={contaSelecionada}
+                    onSelect={(conta) => {
+                      setContaSelecionada(conta);
+                      setConta(prev => ({
+                        ...prev,
+                        plano_conta_id: conta?.id
+                      }));
+                    }}
                     className="w-full"
                   />
                 </div>
               </div>
             </Card>
 
-            {/* Seção 2: Dados da Conta */}
+            {/* Seção 2: Dados do Recebimento */}
             <Card className="card-base">
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-3">
@@ -507,41 +520,27 @@ export default function NovoRecebimento() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Dados do Recebimento</h3>
-                    <p className="text-sm text-gray-600">Informações básicas e categoria</p>
+                    <p className="text-sm text-gray-600">Informações básicas e descrição</p>
                   </div>
                 </div>
 
                 <div className="grid gap-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="documento_referencia">Documento / Referência</Label>
-                      <Input
-                        id="documento_referencia"
-                        value={conta.documento_referencia}
-                        onChange={(e) => {
-                          setConta(prev => ({ ...prev, documento_referencia: e.target.value }));
-                          validarCampoTempoReal('documento_referencia', e.target.value);
-                        }}
-                        placeholder="Ex: NF 001234, Fatura #567"
-                        className="input-base"
-                        maxLength={50}
-                      />
-                      {errosValidacao.documento_referencia && (
-                        <p className="text-sm text-red-600">{errosValidacao.documento_referencia}</p>
-                      )}
-                    </div>
-
-                    <PlanoContasSelector
-                      value={contaSelecionada}
-                      onSelect={(conta) => {
-                        setContaSelecionada(conta);
-                        setConta(prev => ({
-                          ...prev,
-                          plano_conta_id: conta?.id
-                        }));
+                  <div className="space-y-2">
+                    <Label htmlFor="documento_referencia">Documento / Referência</Label>
+                    <Input
+                      id="documento_referencia"
+                      value={conta.documento_referencia}
+                      onChange={(e) => {
+                        setConta(prev => ({ ...prev, documento_referencia: e.target.value }));
+                        validarCampoTempoReal('documento_referencia', e.target.value);
                       }}
-                      className="w-full"
+                      placeholder="Ex: NF 001234, Fatura #567"
+                      className="input-base"
+                      maxLength={50}
                     />
+                    {errosValidacao.documento_referencia && (
+                      <p className="text-sm text-red-600">{errosValidacao.documento_referencia}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
