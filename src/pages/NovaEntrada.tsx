@@ -150,7 +150,7 @@ export default function NovaEntrada() {
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
         <div className="relative z-10 w-full px-0 py-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8 px-4 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8 pl-4 lg:pl-8">
           {/* Formulário principal */}
           <div className="lg:col-span-2">
             <Card className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
