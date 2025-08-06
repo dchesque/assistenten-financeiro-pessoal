@@ -1,105 +1,94 @@
-import { useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { NotificationService } from '@/services/NotificationService';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+export interface User {
+  id: string;
+  email: string;
+  nome?: string;
+  user_metadata?: {
+    nome?: string;
+    avatar_url?: string;
+  };
+}
+
+export interface Session {
+  user: User;
+  access_token: string;
+}
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Configurar listener PRIMEIRO
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    // DEPOIS verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const [user, setUser] = useState<User | null>({
+    id: '1',
+    email: 'usuario@exemplo.com',
+    nome: 'Usuário Exemplo',
+    user_metadata: {
+      nome: 'Usuário Exemplo',
+      avatar_url: ''
+    }
+  });
+  const [session, setSession] = useState<Session | null>({
+    user: {
+      id: '1',
+      email: 'usuario@exemplo.com',
+      nome: 'Usuário Exemplo'
+    },
+    access_token: 'mock-token'
+  });
+  const [loading, setLoading] = useState(false);
 
   const signUp = async (email: string, password: string, userData?: { nome?: string }) => {
     setLoading(true);
-    const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: userData
-      }
-    });
-
+    // Simular delay de API
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     setLoading(false);
-    
-    if (error) {
-      NotificationService.erro('Erro no cadastro', error.message);
-      return { error };
-    }
-
-    NotificationService.sucesso('Cadastro realizado!', 'Verifique seu email para confirmar a conta.');
+    toast.success('Cadastro realizado com sucesso!');
     return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    setLoading(false);
+    // Simular delay de API
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    if (error) {
-      NotificationService.erro('Erro no login', error.message);
-      return { error };
-    }
-
-    NotificationService.sucesso('Login realizado!', 'Bem-vindo ao sistema.');
+    const mockUser = {
+      id: '1',
+      email,
+      nome: 'Usuário Exemplo'
+    };
+    
+    setUser(mockUser);
+    setSession({
+      user: mockUser,
+      access_token: 'mock-token'
+    });
+    
+    setLoading(false);
+    toast.success('Login realizado com sucesso!');
     return { error: null };
   };
 
   const signOut = async () => {
     setLoading(true);
     
-    const { error } = await supabase.auth.signOut();
+    // Simular delay de API
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    setUser(null);
+    setSession(null);
     
     setLoading(false);
-    
-    if (error) {
-      NotificationService.erro('Erro ao sair', error.message);
-      return { error };
-    }
-
-    NotificationService.info('Logout realizado', 'Até logo!');
+    toast.info('Logout realizado com sucesso');
     return { error: null };
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/auth?mode=reset`;
+    // Simular delay de API
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl
-    });
-
-    if (error) {
-      NotificationService.erro('Erro ao enviar email', error.message);
-      return { error };
-    }
-
-    NotificationService.sucesso('Email enviado!', 'Verifique sua caixa de entrada para redefinir a senha.');
+    toast.success('Email de recuperação enviado!');
     return { error: null };
   };
 

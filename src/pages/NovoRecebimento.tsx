@@ -27,7 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { aplicarMascaraMoeda, aplicarMascaraPercentual, converterMoedaParaNumero, converterPercentualParaNumero, numeroParaMascaraMoeda, numeroParaMascaraPercentual, validarValorMonetario, validarPercentual, formatarMoedaExibicao } from '@/utils/masks';
 import { ValidationService } from '@/services/ValidationService';
-import { supabase } from '@/integrations/supabase/client';
+// Supabase removido - usando dados mock
 import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
 import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
 export default function NovoRecebimento() {
@@ -374,7 +374,8 @@ export default function NovoRecebimento() {
     
     try {
       // ✅ OBRIGATÓRIO: Obter user_id
-      const { data: { user } } = await supabase.auth.getUser();
+      // Mock user - Supabase removido
+      const user = { id: '1' };
       if (!user) throw new Error('Usuário não autenticado');
 
       const contaParaSalvar: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'> = {

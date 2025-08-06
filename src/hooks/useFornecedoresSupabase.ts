@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Fornecedor, supabaseToFornecedor, fornecedorToSupabase } from '@/types/fornecedor';
-import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { Fornecedor } from '@/types/fornecedor';
 
-interface EstatisticasFornecedor {
+export interface EstatisticasFornecedor {
   total: number;
   ativos: number;
   inativos: number;
@@ -12,7 +10,7 @@ interface EstatisticasFornecedor {
   valorTotal: number;
 }
 
-interface UseFornecedoresSupabaseReturn {
+export interface UseFornecedoresSupabaseReturn {
   fornecedores: Fornecedor[];
   loading: boolean;
   error: string | null;
@@ -24,220 +22,141 @@ interface UseFornecedoresSupabaseReturn {
   recarregar: () => Promise<void>;
 }
 
+// Dados mock para fornecedores
+const mockFornecedores: Fornecedor[] = [
+  {
+    id: 1,
+    nome: 'ABC Fornecimentos Ltda',
+    documento: '12.345.678/0001-90',
+    tipo: 'pessoa_juridica',
+    tipo_fornecedor: 'despesa',
+    email: 'contato@abc.com',
+    telefone: '(11) 99999-9999',
+    endereco: 'Rua Principal, 123',
+    cidade: 'São Paulo',
+    estado: 'SP',
+    cep: '01234-567',
+    observacoes: 'Fornecedor principal',
+    ativo: true,
+    dataCadastro: '2024-01-15',
+    totalCompras: 15,
+    valorTotal: 25000.00,
+    ultimaCompra: '2024-12-20'
+  },
+  {
+    id: 2,
+    nome: 'João Silva',
+    documento: '123.456.789-01',
+    tipo: 'pessoa_fisica',
+    tipo_fornecedor: 'receita',
+    email: 'joao@email.com',
+    telefone: '(11) 88888-8888',
+    endereco: 'Av. Secundária, 456',
+    cidade: 'Rio de Janeiro',
+    estado: 'RJ',
+    cep: '20000-000',
+    observacoes: '',
+    ativo: true,
+    dataCadastro: '2024-02-10',
+    totalCompras: 8,
+    valorTotal: 12000.00,
+    ultimaCompra: '2024-12-18'
+  }
+];
+
 export function useFornecedoresSupabase(): UseFornecedoresSupabaseReturn {
-  const { user } = useAuth();
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [estatisticas, setEstatisticas] = useState<EstatisticasFornecedor>({
-    total: 0,
-    ativos: 0,
-    inativos: 0,
-    totalCompras: 0,
-    valorTotal: 0
-  });
 
+  const calcularEstatisticas = (fornecedoresList: Fornecedor[]): EstatisticasFornecedor => {
+    const ativos = fornecedoresList.filter(f => f.ativo);
+    const inativos = fornecedoresList.filter(f => !f.ativo);
+    
+    return {
+      total: fornecedoresList.length,
+      ativos: ativos.length,
+      inativos: inativos.length,
+      totalCompras: fornecedoresList.reduce((acc, f) => acc + (f.totalCompras || 0), 0),
+      valorTotal: fornecedoresList.reduce((acc, f) => acc + (f.valorTotal || 0), 0)
+    };
+  };
 
-  // Listar todos os fornecedores
   const listarFornecedores = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
-
-      const { data, error: supabaseError } = await supabase
-        .from('fornecedores')
-        .select('*')
-        .order('nome');
-
-      if (supabaseError) {
-        throw supabaseError;
-      }
-
-      const fornecedoresConvertidos = data.map((item: any) => supabaseToFornecedor(item));
-      setFornecedores(fornecedoresConvertidos);
+      // Simular delay de API
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Calcular estatísticas
-      calcularEstatisticas(fornecedoresConvertidos);
-    } catch (err: any) {
-      console.error('Erro ao listar fornecedores:', err);
-      setError(err.message || 'Erro ao carregar fornecedores');
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar fornecedores",
-        variant: "destructive"
-      });
+      setFornecedores(mockFornecedores);
+    } catch (error) {
+      setError('Erro ao carregar fornecedores');
+      toast.error('Erro ao carregar fornecedores');
     } finally {
       setLoading(false);
     }
   };
 
-  // Calcular estatísticas
-  const calcularEstatisticas = (fornecedoresList: Fornecedor[]) => {
-    const novasEstatisticas: EstatisticasFornecedor = {
-      total: fornecedoresList.length,
-      ativos: fornecedoresList.filter(f => f.ativo).length,
-      inativos: fornecedoresList.filter(f => !f.ativo).length,
-      totalCompras: fornecedoresList.reduce((sum, f) => sum + (f.totalCompras || 0), 0),
-      valorTotal: fornecedoresList.reduce((sum, f) => sum + (f.valorTotal || 0), 0)
+  const criarFornecedor = async (fornecedor: Omit<Fornecedor, 'id' | 'dataCadastro'>): Promise<Fornecedor> => {
+    // Simular delay de API
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const novoFornecedor: Fornecedor = {
+      ...fornecedor,
+      id: Math.max(...fornecedores.map(f => f.id)) + 1,
+      dataCadastro: new Date().toISOString(),
+      totalCompras: 0,
+      valorTotal: 0
     };
-    setEstatisticas(novasEstatisticas);
+    
+    setFornecedores(prev => [...prev, novoFornecedor]);
+    toast.success('Fornecedor criado com sucesso!');
+    
+    return novoFornecedor;
   };
 
-  // Criar fornecedor
-  const criarFornecedor = async (novoFornecedor: Omit<Fornecedor, 'id' | 'dataCadastro'>): Promise<Fornecedor> => {
-    try {
-      const fornecedorCompleto = { ...novoFornecedor, id: 0, dataCadastro: '' } as Fornecedor;
-      const dadosSupabase = fornecedorToSupabase(fornecedorCompleto);
-
-      const { data, error: supabaseError } = await supabase
-        .from('fornecedores')
-        .insert([{
-          ...dadosSupabase,
-          user_id: user?.id
-        }])
-        .select()
-        .single();
-
-      if (supabaseError) {
-        throw supabaseError;
-      }
-
-      const fornecedorCriado = supabaseToFornecedor(data as any);
-      
-      // Atualizar lista local
-      setFornecedores(prev => [...prev, fornecedorCriado]);
-      calcularEstatisticas([...fornecedores, fornecedorCriado]);
-
-      toast({
-        title: "Sucesso",
-        description: "Fornecedor criado com sucesso!"
-      });
-
-      return fornecedorCriado;
-    } catch (err: any) {
-      console.error('Erro ao criar fornecedor:', err);
-      const mensagem = err.message || 'Erro ao criar fornecedor';
-      
-      toast({
-        title: "Erro",
-        description: mensagem,
-        variant: "destructive"
-      });
-      
-      throw new Error(mensagem);
+  const atualizarFornecedor = async (id: number, dadosAtualizacao: Partial<Fornecedor>): Promise<Fornecedor> => {
+    // Simular delay de API
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const fornecedorAtualizado = fornecedores.find(f => f.id === id);
+    if (!fornecedorAtualizado) {
+      throw new Error('Fornecedor não encontrado');
     }
+    
+    const fornecedorNovo = { ...fornecedorAtualizado, ...dadosAtualizacao };
+    
+    setFornecedores(prev => prev.map(f => f.id === id ? fornecedorNovo : f));
+    toast.success('Fornecedor atualizado com sucesso!');
+    
+    return fornecedorNovo;
   };
 
-  // Atualizar fornecedor
-  const atualizarFornecedor = async (id: number, dadosAtualizados: Partial<Fornecedor>): Promise<Fornecedor> => {
-    try {
-      const fornecedorCompleto = { ...dadosAtualizados, id: id, dataCadastro: '' } as Fornecedor;
-      const dadosSupabase = fornecedorToSupabase(fornecedorCompleto);
-
-      const { data, error: supabaseError } = await supabase
-        .from('fornecedores')
-        .update(dadosSupabase)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (supabaseError) {
-        throw supabaseError;
-      }
-
-      const fornecedorAtualizado = supabaseToFornecedor(data as any);
-      
-      // Atualizar lista local
-      setFornecedores(prev => prev.map(f => f.id === id ? fornecedorAtualizado : f));
-      calcularEstatisticas(fornecedores.map(f => f.id === id ? fornecedorAtualizado : f));
-
-      toast({
-        title: "Sucesso",
-        description: "Fornecedor atualizado com sucesso!"
-      });
-
-      return fornecedorAtualizado;
-    } catch (err: any) {
-      console.error('Erro ao atualizar fornecedor:', err);
-      const mensagem = err.message || 'Erro ao atualizar fornecedor';
-      
-      toast({
-        title: "Erro",
-        description: mensagem,
-        variant: "destructive"
-      });
-      
-      throw new Error(mensagem);
-    }
-  };
-
-  // Excluir fornecedor
   const excluirFornecedor = async (id: number): Promise<void> => {
-    try {
-      // Verificar se há contas vinculadas
-      const { count } = await supabase
-        .from('contas_pagar')
-        .select('*', { count: 'exact', head: true })
-        .eq('fornecedor_id', id);
-
-      if (count && count > 0) {
-        throw new Error('Não é possível excluir um fornecedor que possui contas vinculadas');
-      }
-
-      const { error: supabaseError } = await supabase
-        .from('fornecedores')
-        .delete()
-        .eq('id', id);
-
-      if (supabaseError) {
-        throw supabaseError;
-      }
-
-      // Atualizar lista local
-      const novaLista = fornecedores.filter(f => f.id !== id);
-      setFornecedores(novaLista);
-      calcularEstatisticas(novaLista);
-
-      toast({
-        title: "Sucesso",
-        description: "Fornecedor excluído com sucesso!"
-      });
-    } catch (err: any) {
-      console.error('Erro ao excluir fornecedor:', err);
-      const mensagem = err.message || 'Erro ao excluir fornecedor';
-      
-      toast({
-        title: "Erro",
-        description: mensagem,
-        variant: "destructive"
-      });
-      
-      throw new Error(mensagem);
-    }
+    // Simular delay de API
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    setFornecedores(prev => prev.filter(f => f.id !== id));
+    toast.success('Fornecedor excluído com sucesso!');
   };
 
-  // Buscar fornecedores por termo
   const buscarFornecedores = (termo: string): Fornecedor[] => {
-    if (!termo.trim()) {
-      return fornecedores.filter(f => f.ativo);
-    }
-
-    const termoBusca = termo.toLowerCase().trim();
-    return fornecedores.filter(fornecedor => 
-      fornecedor.ativo &&
-      (fornecedor.nome.toLowerCase().includes(termoBusca) ||
-       fornecedor.documento.includes(termoBusca) ||
-       (fornecedor.nome_fantasia && fornecedor.nome_fantasia.toLowerCase().includes(termoBusca)) ||
-       (fornecedor.email && fornecedor.email.toLowerCase().includes(termoBusca)))
+    if (!termo) return fornecedores;
+    
+    const termoLower = termo.toLowerCase();
+    return fornecedores.filter(f => 
+      f.nome.toLowerCase().includes(termoLower) ||
+      f.documento.includes(termo) ||
+      f.email?.toLowerCase().includes(termoLower)
     );
   };
 
-  // Recarregar dados
-  const recarregar = async () => {
+  const recarregar = async (): Promise<void> => {
     await listarFornecedores();
   };
 
-  // Carregar dados iniciais
   useEffect(() => {
     listarFornecedores();
   }, []);
@@ -246,7 +165,7 @@ export function useFornecedoresSupabase(): UseFornecedoresSupabaseReturn {
     fornecedores,
     loading,
     error,
-    estatisticas,
+    estatisticas: calcularEstatisticas(fornecedores),
     criarFornecedor,
     atualizarFornecedor,
     excluirFornecedor,

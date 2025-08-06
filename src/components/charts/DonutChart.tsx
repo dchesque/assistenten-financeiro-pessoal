@@ -26,7 +26,7 @@ export function StatusDonutChart() {
               dataKey="value"
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+                <Cell key={`cell-${index}`} fill={entry.cor} />
               ))}
             </Pie>
             <Tooltip 
@@ -48,9 +48,9 @@ export function StatusDonutChart() {
           <div key={index} className="flex items-center space-x-2">
             <div 
               className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: item.color }}
+              style={{ backgroundColor: item.cor }}
             ></div>
-            <span className="text-sm text-gray-600">{item.name} {item.value}%</span>
+            <span className="text-sm text-gray-600">{item.status} {item.quantidade}</span>
           </div>
         ))}
       </div>

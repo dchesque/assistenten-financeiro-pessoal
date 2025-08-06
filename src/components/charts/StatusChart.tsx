@@ -23,7 +23,7 @@ export function StatusChart() {
             dataKey="value"
           >
             {chartData.statusContas.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell key={`cell-${index}`} fill={entry.cor} />
             ))}
           </Pie>
           <Tooltip 
@@ -42,13 +42,13 @@ export function StatusChart() {
       {/* Legend */}
       <div className="flex justify-center gap-6 mt-4">
         {chartData.statusContas.map((item) => (
-          <div key={item.name} className="flex items-center gap-2">
+          <div key={item.status} className="flex items-center gap-2">
             <div 
               className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: item.color }}
+              style={{ backgroundColor: item.cor }}
             />
-            <span className="text-sm text-muted-foreground">{item.name}</span>
-            <span className="text-sm font-medium">{item.value}%</span>
+            <span className="text-sm text-muted-foreground">{item.status}</span>
+            <span className="text-sm font-medium">{item.quantidade}</span>
           </div>
         ))}
       </div>

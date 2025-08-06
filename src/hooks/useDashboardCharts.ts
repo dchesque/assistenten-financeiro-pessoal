@@ -1,207 +1,74 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
-interface ChartDataCategoria {
-  name: string;
-  value: number;
-  color: string;
+export interface ChartDataCategoria {
+  categoria: string;
+  valor: number;
+  cor: string;
 }
 
-interface ChartDataFluxoMensal {
+export interface ChartDataFluxoMensal {
   mes: string;
-  material: number;
-  servicos: number;
-  aluguel: number;
-  outros: number;
+  valor: number;
+  meta?: number;
 }
 
-interface ChartDataStatus {
-  name: string;
-  value: number;
-  color: string;
+export interface ChartDataStatus {
+  status: string;
+  quantidade: number;
+  cor: string;
 }
 
-interface ChartData {
+export interface ChartData {
   categorias: ChartDataCategoria[];
   fluxoMensal: ChartDataFluxoMensal[];
   statusContas: ChartDataStatus[];
 }
 
+// Dados mock para os gráficos
+const mockChartData: ChartData = {
+  categorias: [
+    { categoria: 'Fornecedores', valor: 15000, cor: '#3b82f6' },
+    { categoria: 'Serviços', valor: 8500, cor: '#10b981' },
+    { categoria: 'Material de Escritório', valor: 3200, cor: '#f59e0b' },
+    { categoria: 'Energia', valor: 2800, cor: '#ef4444' },
+    { categoria: 'Telecomunicações', valor: 1800, cor: '#8b5cf6' }
+  ],
+  fluxoMensal: [
+    { mes: 'Out', valor: 25000, meta: 30000 },
+    { mes: 'Nov', valor: 28000, meta: 30000 },
+    { mes: 'Dez', valor: 31300, meta: 30000 }
+  ],
+  statusContas: [
+    { status: 'Pago', quantidade: 45, cor: '#10b981' },
+    { status: 'Pendente', quantidade: 23, cor: '#f59e0b' },
+    { status: 'Vencido', quantidade: 8, cor: '#ef4444' }
+  ]
+};
+
 export const useDashboardCharts = () => {
   const [loading, setLoading] = useState(true);
-  const [contasPagar, setContasPagar] = useState<any[]>([]);
-  const [planoContas, setPlanoContas] = useState<any[]>([]);
+
+  const chartData = useMemo(() => mockChartData, []);
 
   useEffect(() => {
-    carregarDados();
+    // Simular carregamento
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const carregarDados = async () => {
-    try {
-      setLoading(true);
-
-      // Buscar contas a pagar
-      const { data: contas, error: contasError } = await supabase
-        .from('contas_pagar')
-        .select('*');
-
-      if (contasError) throw contasError;
-
-      // Buscar plano de contas
-      const { data: planos, error: planosError } = await supabase
-        .from('plano_contas')
-        .select('*')
-        .eq('ativo', true);
-
-      if (planosError) throw planosError;
-
-      setContasPagar(contas || []);
-      setPlanoContas(planos || []);
-    } catch (error) {
-      console.error('Erro ao carregar dados dos gráficos:', error);
-    } finally {
-      setLoading(false);
-    }
+  const recarregar = async () => {
+    setLoading(true);
+    // Simular delay de API
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setLoading(false);
   };
-
-  const chartData: ChartData = useMemo(() => {
-    if (!contasPagar.length || !planoContas.length) {
-      return {
-        categorias: [],
-        fluxoMensal: [],
-        statusContas: []
-      };
-    }
-
-    // Dados por categoria - buscar categoria do plano de contas
-    const categoriaMap = new Map<string, { valor: number; cor: string }>();
-    
-    contasPagar.forEach(conta => {
-      const planoConta = planoContas.find(p => p.id === conta.plano_conta_id);
-      const categoria = planoConta?.nome || 'Outros';
-      const valor = conta.valor_final || 0;
-      
-      if (categoriaMap.has(categoria)) {
-        categoriaMap.get(categoria)!.valor += valor;
-      } else {
-        const cor = getCategoryCor(categoria, planoConta?.tipo_dre);
-        categoriaMap.set(categoria, { valor, cor });
-      }
-    });
-
-    const categorias: ChartDataCategoria[] = Array.from(categoriaMap.entries()).map(([name, data]) => ({
-      name,
-      value: data.valor,
-      color: data.cor
-    }));
-
-    // Fluxo mensal (últimos 3 meses)
-    const hoje = new Date();
-    const fluxoMensal: ChartDataFluxoMensal[] = [];
-
-    for (let i = 2; i >= 0; i--) {
-      const mesData = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-      const proximoMes = new Date(hoje.getFullYear(), hoje.getMonth() - i + 1, 0);
-      const mesNome = mesData.toLocaleString('pt-BR', { month: 'short' });
-
-      const contasMes = contasPagar.filter(conta => {
-        const dataVencimento = new Date(conta.data_vencimento);
-        return dataVencimento >= mesData && dataVencimento <= proximoMes;
-      });
-
-      let material = 0, servicos = 0, aluguel = 0, outros = 0;
-
-      contasMes.forEach(conta => {
-        const planoConta = planoContas.find(p => p.id === conta.plano_conta_id);
-        const nomeCategoria = planoConta?.nome?.toLowerCase() || '';
-        const valor = conta.valor_final || 0;
-
-        if (planoConta?.tipo_dre === 'cmv' || nomeCategoria.includes('material')) {
-          material += valor;
-        } else if (nomeCategoria.includes('servi')) {
-          servicos += valor;
-        } else if (nomeCategoria.includes('aluguel')) {
-          aluguel += valor;
-        } else {
-          outros += valor;
-        }
-      });
-
-      fluxoMensal.push({
-        mes: mesNome,
-        material,
-        servicos,
-        aluguel,
-        outros
-      });
-    }
-
-    // Status das contas
-    const statusMap = new Map<string, number>();
-    contasPagar.forEach(conta => {
-      const status = getStatusLabel(conta.status);
-      statusMap.set(status, (statusMap.get(status) || 0) + 1);
-    });
-
-    const statusContas: ChartDataStatus[] = Array.from(statusMap.entries()).map(([name, value]) => ({
-      name,
-      value,
-      color: getStatusColor(name)
-    }));
-
-    return {
-      categorias,
-      fluxoMensal,
-      statusContas
-    };
-  }, [contasPagar, planoContas]);
 
   return {
     chartData,
     loading,
-    recarregar: carregarDados
+    recarregar
   };
-};
-
-// Funções auxiliares
-const getCategoryCor = (categoria: string, tipoDre?: string): string => {
-  const cores = {
-    'material': '#10B981',
-    'cmv': '#10B981',
-    'servi': '#06B6D4',
-    'aluguel': '#8B5CF6',
-    'energia': '#F59E0B',
-    'outros': '#EF4444'
-  };
-
-  const categoriaLower = categoria.toLowerCase();
-  
-  if (tipoDre === 'cmv' || categoriaLower.includes('material')) return cores.material;
-  if (categoriaLower.includes('servi')) return cores.servi;
-  if (categoriaLower.includes('aluguel')) return cores.aluguel;
-  if (categoriaLower.includes('energia')) return cores.energia;
-  
-  return cores.outros;
-};
-
-const getStatusLabel = (status: string): string => {
-  const labels: Record<string, string> = {
-    'pendente': 'Pendentes',
-    'pago': 'Pagas',
-    'vencido': 'Vencidas',
-    'cancelado': 'Canceladas'
-  };
-  
-  return labels[status] || 'Outros';
-};
-
-const getStatusColor = (status: string): string => {
-  const cores: Record<string, string> = {
-    'Pendentes': '#4F46E5',
-    'Pagas': '#10B981',
-    'Vencidas': '#EF4444',
-    'Canceladas': '#6B7280'
-  };
-  
-  return cores[status] || '#6B7280';
 };

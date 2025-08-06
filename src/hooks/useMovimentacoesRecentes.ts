@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface MovimentacaoRecente {
   id: string;
@@ -9,6 +8,50 @@ export interface MovimentacaoRecente {
   valor: number;
   status: 'pendente' | 'pago' | 'vencido';
 }
+
+// Dados mock para movimentações
+const mockMovimentacoes: MovimentacaoRecente[] = [
+  {
+    id: '1',
+    data: new Date('2024-12-22'),
+    fornecedor: 'ABC Fornecimentos Ltda',
+    descricao: 'Material de escritório',
+    valor: 850.00,
+    status: 'pago'
+  },
+  {
+    id: '2',
+    data: new Date('2024-12-21'),
+    fornecedor: 'XYZ Serviços',
+    descricao: 'Manutenção preventiva',
+    valor: 1200.00,
+    status: 'pendente'
+  },
+  {
+    id: '3',
+    data: new Date('2024-12-20'),
+    fornecedor: 'Energia Elétrica SA',
+    descricao: 'Conta de luz - dezembro',
+    valor: 450.75,
+    status: 'vencido'
+  },
+  {
+    id: '4',
+    data: new Date('2024-12-19'),
+    fornecedor: 'João Silva',
+    descricao: 'Serviços de consultoria',
+    valor: 2500.00,
+    status: 'pago'
+  },
+  {
+    id: '5',
+    data: new Date('2024-12-18'),
+    fornecedor: 'TechSoft Ltda',
+    descricao: 'Licença de software',
+    valor: 890.00,
+    status: 'pendente'
+  }
+];
 
 export const useMovimentacoesRecentes = () => {
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoRecente[]>([]);
@@ -22,32 +65,10 @@ export const useMovimentacoesRecentes = () => {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from('contas_pagar')
-        .select(`
-          id,
-          descricao,
-          valor_final,
-          data_vencimento,
-          data_pagamento,
-          status,
-          fornecedores(nome)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      // Simular delay de API
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (error) throw error;
-
-      const movimentacoesFormatadas: MovimentacaoRecente[] = (data || []).map(conta => ({
-        id: conta.id.toString(),
-        data: new Date(conta.data_vencimento),
-        fornecedor: conta.fornecedores?.nome || 'Fornecedor não informado',
-        descricao: conta.descricao,
-        valor: conta.valor_final,
-        status: conta.status === 'vencida' ? 'vencido' : conta.status as 'pendente' | 'pago' | 'vencido'
-      }));
-
-      setMovimentacoes(movimentacoesFormatadas);
+      setMovimentacoes(mockMovimentacoes);
     } catch (error) {
       console.error('Erro ao carregar movimentações recentes:', error);
     } finally {

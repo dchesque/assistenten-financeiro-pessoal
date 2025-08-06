@@ -128,19 +128,19 @@ export default function Bancos() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-2">Total de Bancos</h3>
-              <p className="text-2xl font-bold text-foreground">{estatisticas.total_bancos}</p>
+              <p className="text-2xl font-bold text-foreground">{estatisticas.totalBancos}</p>
             </div>
             <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-2">Saldo Total</h3>
-              <p className="text-2xl font-bold text-foreground">{formatarMoeda(estatisticas.saldo_total)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatarMoeda(estatisticas.saldoTotal)}</p>
             </div>
             <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-2">Bancos Ativos</h3>
-              <p className="text-2xl font-bold text-foreground">{estatisticas.bancos_ativos}</p>
+              <p className="text-2xl font-bold text-foreground">{estatisticas.bancosAtivos}</p>
             </div>
             <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-2">Maior Saldo</h3>
-              <p className="text-2xl font-bold text-foreground">{formatarMoeda(estatisticas.maior_saldo)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatarMoeda(estatisticas.maiorSaldo)}</p>
             </div>
           </div>
         )}
