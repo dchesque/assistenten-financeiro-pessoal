@@ -101,35 +101,39 @@ export default function Dashboard() {
       {/* KPIs Principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
-          title="Saldo Total"
-          value={formatarMoeda(saldo_total)}
-          icon={<DollarSign className="w-6 h-6" />}
-          variant={saldo_total >= 0 ? 'success' : 'danger'}
-          description="Saldo atual em bancos"
+          titulo="Saldo Total"
+          valor={formatarMoeda(saldo_total)}
+          icone={<DollarSign className="w-6 h-6" />}
+          gradiente="from-blue-600 to-blue-700"
+          status={saldo_total >= 0 ? 'saudavel' : 'critico'}
+          subtitulo="Saldo atual em bancos"
         />
 
         <KPICard
-          title="Contas a Pagar"
-          value={formatarMoeda(contas_pagar.valor_pendente)}
-          icon={<AlertTriangle className="w-6 h-6" />}
-          variant="warning"
-          description={`${contas_pagar.pendentes} conta${contas_pagar.pendentes !== 1 ? 's' : ''} pendente${contas_pagar.pendentes !== 1 ? 's' : ''}`}
+          titulo="Contas a Pagar"
+          valor={formatarMoeda(contas_pagar.valor_pendente)}
+          icone={<AlertTriangle className="w-6 h-6" />}
+          gradiente="from-orange-500 to-orange-600"
+          status="atencao"
+          subtitulo={`${contas_pagar.pendentes} conta${contas_pagar.pendentes !== 1 ? 's' : ''} pendente${contas_pagar.pendentes !== 1 ? 's' : ''}`}
         />
 
         <KPICard
-          title="Contas a Receber"
-          value={formatarMoeda(contas_receber.valor_pendente)}
-          icon={<CheckCircle className="w-6 h-6" />}
-          variant="info"
-          description={`${contas_receber.pendentes} conta${contas_receber.pendentes !== 1 ? 's' : ''} pendente${contas_receber.pendentes !== 1 ? 's' : ''}`}
+          titulo="Contas a Receber"
+          valor={formatarMoeda(contas_receber.valor_pendente)}
+          icone={<CheckCircle className="w-6 h-6" />}
+          gradiente="from-green-500 to-green-600"
+          status="saudavel"
+          subtitulo={`${contas_receber.pendentes} conta${contas_receber.pendentes !== 1 ? 's' : ''} pendente${contas_receber.pendentes !== 1 ? 's' : ''}`}
         />
 
         <KPICard
-          title="Fluxo do Mês"
-          value={formatarMoeda(fluxoLiquido)}
-          icon={<TrendingUp className="w-6 h-6" />}
-          variant={fluxoLiquido >= 0 ? 'success' : 'danger'}
-          description="Receitas - Despesas"
+          titulo="Fluxo do Mês"
+          valor={formatarMoeda(fluxoLiquido)}
+          icone={<TrendingUp className="w-6 h-6" />}
+          gradiente={fluxoLiquido >= 0 ? "from-green-500 to-green-600" : "from-red-500 to-red-600"}
+          status={fluxoLiquido >= 0 ? 'saudavel' : 'critico'}
+          subtitulo="Receitas - Despesas"
         />
       </div>
 
@@ -137,46 +141,38 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Contas Pendentes */}
         <MetricCard
-          title="Contas Pendentes"
-          value={contas_pagar.pendentes}
-          subtitle={formatarMoeda(contas_pagar.valor_pendente)}
-          icon={<Calendar className="w-6 h-6 text-blue-600" />}
-          trend="neutral"
-          onClick={() => navigate('/contas-pagar?status=pendente')}
-          className="hover:shadow-lg transition-shadow cursor-pointer"
+          titulo="Contas Pendentes"
+          valor={contas_pagar.pendentes}
+          formato="numero"
+          icone={<Calendar className="w-6 h-6 text-blue-600" />}
+          cor="blue"
         />
 
         {/* Contas Vencidas */}
         <MetricCard
-          title="Contas Vencidas"
-          value={contas_pagar.vencidas}
-          subtitle={formatarMoeda(contas_pagar.valor_vencido)}
-          icon={<AlertTriangle className="w-6 h-6 text-red-600" />}
-          trend="negative"
-          onClick={() => navigate('/contas-pagar?status=vencido')}
-          className="hover:shadow-lg transition-shadow cursor-pointer"
+          titulo="Contas Vencidas"
+          valor={contas_pagar.vencidas}
+          formato="numero"
+          icone={<AlertTriangle className="w-6 h-6 text-red-600" />}
+          cor="red"
         />
 
         {/* Receitas Pendentes */}
         <MetricCard
-          title="Receitas Pendentes"
-          value={contas_receber.pendentes}
-          subtitle={formatarMoeda(contas_receber.valor_pendente)}
-          icon={<CheckCircle className="w-6 h-6 text-green-600" />}
-          trend="positive"
-          onClick={() => navigate('/contas-receber?status=pendente')}
-          className="hover:shadow-lg transition-shadow cursor-pointer"
+          titulo="Receitas Pendentes"
+          valor={contas_receber.pendentes}
+          formato="numero"
+          icone={<CheckCircle className="w-6 h-6 text-green-600" />}
+          cor="green"
         />
 
         {/* Pagas no Mês */}
         <MetricCard
-          title="Pagas no Mês"
-          value={contas_pagar.pagas_mes}
-          subtitle={formatarMoeda(contas_pagar.valor_pago_mes)}
-          icon={<CheckCircle className="w-6 h-6 text-blue-600" />}
-          trend="positive"
-          onClick={() => navigate('/contas-pagar?status=pago')}
-          className="hover:shadow-lg transition-shadow cursor-pointer"
+          titulo="Pagas no Mês"
+          valor={contas_pagar.pagas_mes}
+          formato="numero"
+          icone={<CheckCircle className="w-6 h-6 text-blue-600" />}
+          cor="blue"
         />
       </div>
 
