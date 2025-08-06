@@ -1,10 +1,10 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { DESIGN_SYSTEM, type StatusType } from "@/constants/designSystem"
+import { STATUS_BADGES, BORDER_RADIUS, type StatusType } from "@/constants/designSystem"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  `inline-flex items-center text-xs font-medium ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${BORDER_RADIUS.badge}`,
   {
     variants: {
       variant: {
@@ -13,13 +13,13 @@ const badgeVariants = cva(
         destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
         // Status específicos brasileiros
-        ativo: DESIGN_SYSTEM.status.ativo,
-        inativo: DESIGN_SYSTEM.status.inativo,
-        pendente: DESIGN_SYSTEM.status.pendente,
-        pago: DESIGN_SYSTEM.status.pago,
-        vencido: DESIGN_SYSTEM.status.vencido,
-        cancelado: DESIGN_SYSTEM.status.cancelado,
-        processando: DESIGN_SYSTEM.status.processando,
+        ativo: STATUS_BADGES.ativo.container,
+        inativo: STATUS_BADGES.inativo.container,
+        pendente: STATUS_BADGES.pendente.container,
+        pago: STATUS_BADGES.pago.container,
+        vencido: STATUS_BADGES.vencido.container,
+        cancelado: STATUS_BADGES.cancelado.container,
+        processando: STATUS_BADGES.processando.container,
       },
     },
     defaultVariants: {
@@ -46,7 +46,7 @@ function Badge({ className, variant, status, showDot = true, children, ...props 
         <div 
           className={cn(
             "w-2 h-2 rounded-full mr-2",
-            DESIGN_SYSTEM.statusDots[status]
+            STATUS_BADGES[status]?.dot?.replace('w-2 h-2 rounded-full mr-2 ', '') || 'bg-gray-600'
           )}
         />
       )}

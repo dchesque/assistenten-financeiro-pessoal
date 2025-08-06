@@ -1,6 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { DESIGN_SYSTEM, MENSAGENS } from "@/constants/designSystem"
+import { GLASSMORPHISM, MENSAGENS } from "@/constants/designSystem"
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -64,7 +64,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const hasSuccess = sucesso && !hasError
 
     const inputClasses = cn(
-      DESIGN_SYSTEM.glassmorphism.input,
+      GLASSMORPHISM.input,
       "flex h-10 w-full px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
       hasError && "border-red-500/70 focus:ring-red-500 bg-red-50/80",
       hasSuccess && "border-green-500/70 focus:ring-green-500 bg-green-50/80",

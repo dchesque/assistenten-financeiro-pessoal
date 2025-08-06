@@ -2,27 +2,27 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { DESIGN_SYSTEM } from "@/constants/designSystem"
+import { GRADIENTES, ANIMATIONS, BORDER_RADIUS } from "@/constants/designSystem"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  `inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 ${BORDER_RADIUS.button}`,
   {
     variants: {
       variant: {
-        default: `bg-gradient-to-r ${DESIGN_SYSTEM.gradients.primary} text-white shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-purple-700`,
-        destructive: `bg-gradient-to-r ${DESIGN_SYSTEM.gradients.erro} text-white shadow-lg hover:shadow-xl hover:from-red-600 hover:to-red-700`,
-        outline: `${DESIGN_SYSTEM.glassmorphism.card} text-gray-700 border hover:bg-white/95 hover:text-gray-900`,
-        secondary: `bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg hover:shadow-xl hover:from-gray-600 hover:to-gray-700`,
-        ghost: "hover:bg-white/20 hover:text-gray-900 backdrop-blur-sm rounded-xl",
+        default: `bg-gradient-to-r ${GRADIENTES.primary} text-white shadow-lg hover:${GRADIENTES.primaryHover} ${ANIMATIONS.hoverButton}`,
+        destructive: `bg-gradient-to-r ${GRADIENTES.erro} text-white shadow-lg hover:${GRADIENTES.erroHover} ${ANIMATIONS.hoverButton}`,
+        outline: "border border-input bg-white/80 backdrop-blur-sm hover:bg-white/95 hover:text-gray-900",
+        secondary: `bg-gradient-to-r ${GRADIENTES.secundario} text-gray-700 hover:${GRADIENTES.secundarioHover} shadow-md ${ANIMATIONS.hoverButton}`,
+        ghost: "hover:bg-white/20 hover:text-gray-900 backdrop-blur-sm",
         link: "text-blue-600 underline-offset-4 hover:underline",
-        success: `bg-gradient-to-r ${DESIGN_SYSTEM.gradients.sucesso} text-white shadow-lg hover:shadow-xl hover:from-green-600 hover:to-green-700`,
-        warning: `bg-gradient-to-r ${DESIGN_SYSTEM.gradients.aviso} text-white shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700`,
-        premium: `bg-gradient-to-r ${DESIGN_SYSTEM.gradients.empresa} text-white shadow-lg hover:shadow-xl hover:from-pink-600 hover:to-purple-700`,
+        success: `bg-gradient-to-r ${GRADIENTES.sucesso} text-white shadow-lg hover:${GRADIENTES.sucessoHover} ${ANIMATIONS.hoverButton}`,
+        warning: `bg-gradient-to-r ${GRADIENTES.aviso} text-white shadow-lg hover:${GRADIENTES.avisoHover} ${ANIMATIONS.hoverButton}`,
+        premium: `bg-gradient-to-r ${GRADIENTES.empresa} text-white shadow-lg hover:${GRADIENTES.empresaHover} ${ANIMATIONS.hoverButton}`,
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-lg px-3",
-        lg: "h-11 rounded-xl px-8",
+        sm: "h-9 px-3",
+        lg: "h-11 px-8",
         icon: "h-10 w-10",
       },
     },
