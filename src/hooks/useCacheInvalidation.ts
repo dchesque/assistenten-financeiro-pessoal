@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { cache, DomainCache } from '@/services/cacheService';
+import { globalCache } from '@/services/cacheService';
 import { performanceService } from '@/services/PerformanceService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -10,7 +10,7 @@ export function useCacheInvalidation() {
   const invalidarAposCRUD = useCallback((entidade: string, operacao: 'criar' | 'atualizar' | 'excluir') => {
     try {
       // Invalidar cache da entidade específica
-      DomainCache.invalidateAfterOperation(operacao, entidade);
+      globalCache.delete(`${entidade}_${operacao}`);
       
       // Invalidar cache do performance service também
       performanceService.invalidarCache(entidade);
@@ -61,7 +61,7 @@ export function useCacheInvalidation() {
       });
 
       // Limpar todo o cache
-      cache.clear();
+      globalCache.clear();
       performanceService.invalidarCache();
       
       // Pré-carregar dados críticos

@@ -173,8 +173,8 @@ export class CacheService {
     const shouldCompress = this.config.compress && size > this.config.compressionThreshold;
     const finalValue = shouldCompress ? this.compress(value) : value;
 
-    const item: CacheItem<T> = {
-      value: finalValue,
+  const item: CacheItem = {
+    value: finalValue as any,
       timestamp: now,
       ttl,
       accessCount: 0,
