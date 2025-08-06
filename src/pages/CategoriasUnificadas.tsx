@@ -73,15 +73,6 @@ export default function CategoriasUnificadas() {
     }
   };
 
-  // Verificar se há erro de tabela não encontrada
-  if (error && error.includes('does not exist')) {
-    return (
-      <DatabaseSetupGuide 
-        tableName="categorias_despesas"
-        description="a funcionalidade de categorias de despesas"
-      />
-    );
-  }
 
   if (loading) {
     return (
