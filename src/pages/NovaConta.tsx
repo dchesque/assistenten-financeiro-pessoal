@@ -356,16 +356,15 @@ export default function NovaConta() {
       const user = { id: '1' };
       if (!user) throw new Error('Usuário não autenticado');
 
-      const contaParaSalvar: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'> = {
-        fornecedor_id: credorSelecionado!.id!,
-        plano_conta_id: contaSelecionada!.id!,
-        banco_id: marcarComoPago && formaPagamento.banco_id ? formaPagamento.banco_id : conta.banco_id,
+      const contaParaSalvar = {
+        fornecedor_id: credorSelecionado!.id!.toString(),
+        plano_conta_id: contaSelecionada!.id!.toString(),
+        banco_id: marcarComoPago && formaPagamento.banco_id ? formaPagamento.banco_id.toString() : undefined,
         documento_referencia: conta.documento_referencia,
         descricao: conta.descricao!,
         data_emissao: conta.data_emissao,
         data_vencimento: conta.data_vencimento!,
         valor_original: conta.valor_original!,
-        // Novos campos obrigatórios
         parcela_atual: 1,
         total_parcelas: 1,
         forma_pagamento: 'dinheiro_pix',
@@ -378,8 +377,7 @@ export default function NovaConta() {
         data_pagamento: marcarComoPago ? new Date().toISOString().split('T')[0] : conta.data_pagamento,
         valor_pago: marcarComoPago ? conta.valor_final : conta.valor_pago,
         dda: conta.dda!,
-        observacoes: conta.observacoes,
-        user_id: user.id  // 🔥 ADICIONAR USER_ID
+        observacoes: conta.observacoes
       };
 
       await criarConta(contaParaSalvar);
@@ -815,7 +813,7 @@ export default function NovaConta() {
                   value={formaPagamento}
                   onChange={setFormaPagamento}
                   numeroParcelas={1}
-                  bancos={bancos}
+                  bancos={bancos as any}
                 />
 
                 <Separator />
