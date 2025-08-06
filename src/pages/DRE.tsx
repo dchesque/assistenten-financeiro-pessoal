@@ -147,7 +147,7 @@ export default function DRE() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 lg:p-8 space-y-6">
       {/* Header Premium */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>

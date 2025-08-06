@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,8 +35,7 @@ export default function Pagadores() {
   };
 
   return (
-    <Layout>
-      <div className="flex-1 space-y-4 p-4 pt-6">
+    <div className="p-4 lg:p-8 space-y-6">
         <PageHeader
           breadcrumb={[
             { label: 'Dashboard', href: '/' },
@@ -51,7 +49,7 @@ export default function Pagadores() {
 
         {/* Cards de Estatísticas */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/20 hover:shadow-xl transition-all duration-300 hover:bg-white/90 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Pagadores</CardTitle>
               <Users className="h-4 w-4 text-blue-600" />
@@ -62,7 +60,7 @@ export default function Pagadores() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/20 hover:shadow-xl transition-all duration-300 hover:bg-white/90 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pessoas Físicas</CardTitle>
               <User className="h-4 w-4 text-green-600" />
@@ -73,7 +71,7 @@ export default function Pagadores() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/20 hover:shadow-xl transition-all duration-300 hover:bg-white/90 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pessoas Jurídicas</CardTitle>
               <Building2 className="h-4 w-4 text-purple-600" />
@@ -84,7 +82,7 @@ export default function Pagadores() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/20 hover:shadow-xl transition-all duration-300 hover:bg-white/90 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Ativos</CardTitle>
               <Users className="h-4 w-4 text-orange-600" />
@@ -129,7 +127,7 @@ export default function Pagadores() {
                 const TipoIcon = getTipoIcon(pagador.tipo);
                 
                 return (
-                  <Card key={pagador.id} className="hover:shadow-md transition-shadow">
+                  <Card key={pagador.id} className="bg-white/80 backdrop-blur-sm border border-white/20 hover:shadow-xl transition-all duration-300 hover:bg-white/90 hover:scale-105">
                     <CardContent className="pt-6">
                       <div className="space-y-4">
                         <div className="flex items-start justify-between">
@@ -204,7 +202,6 @@ export default function Pagadores() {
             )}
           </TabsContent>
         </Tabs>
-      </div>
-    </Layout>
+    </div>
   );
 }
