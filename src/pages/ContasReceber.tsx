@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Layout } from '@/components/layout/Layout';
+import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,28 +34,29 @@ export default function ContasReceber() {
   };
 
   return (
-    <>
-      {/* Page Header */}
-      <PageHeader
-        breadcrumb={createBreadcrumb('/contas-receber', [
-          { label: 'Início', href: '/dashboard' },
-          { label: 'Contas a Receber' }
-        ])}
-        title="Contas a Receber"
-        subtitle="Gerencie suas receitas e entradas financeiras • Controle de recebimentos"
-        icon={<DollarSign className="h-8 w-8" />}
-        actions={
-          <Button 
-            onClick={() => navigate('/nova-entrada')}
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Entrada
-          </Button>
-        }
-      />
+    <Layout>
+      <PageContainer>
+        {/* Page Header */}
+        <PageHeader
+          breadcrumb={createBreadcrumb('/contas-receber', [
+            { label: 'Início', href: '/dashboard' },
+            { label: 'Contas a Receber' }
+          ])}
+          title="Contas a Receber"
+          subtitle="Gerencie suas receitas e entradas financeiras • Controle de recebimentos"
+          icon={<DollarSign className="h-8 w-8" />}
+          actions={
+            <Button 
+              onClick={() => navigate('/nova-entrada')}
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Entrada
+            </Button>
+          }
+        />
 
-      <div className="p-4 lg:p-8 space-y-6">
+        <div className="space-y-6">
         {/* Cards de Estatísticas */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/90">
@@ -241,7 +244,8 @@ export default function ContasReceber() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
-    </>
+        </div>
+      </PageContainer>
+    </Layout>
   );
 }

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { ArrowLeft, Plus, DollarSign, Calendar, User, Tag, Building, FileText, Settings, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Layout } from '@/components/layout/Layout';
+import { PageContainer } from '@/components/layout/PageContainer';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -110,46 +111,45 @@ export default function NovaEntrada() {
 
   return (
     <Layout>
-      <div className="p-4 lg:p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/contas-receber')}
-                className="hover:bg-white/50"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Nova Entrada</h1>
-                <p className="text-gray-600">Cadastre uma nova conta a receber</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowPreview(!showPreview)}
-                className="bg-white/80 hover:bg-white"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                {showPreview ? 'Ocultar' : 'Visualizar'}
-              </Button>
-              <Button
-                type="submit"
-                form="nova-entrada-form"
-                disabled={loadingConta}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                {loadingConta ? 'Salvando...' : 'Salvar Entrada'}
-              </Button>
+      <PageContainer>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/contas-receber')}
+              className="hover:bg-white/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Nova Entrada</h1>
+              <p className="text-gray-600">Cadastre uma nova conta a receber</p>
             </div>
           </div>
+          
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowPreview(!showPreview)}
+              className="bg-white/80 hover:bg-white"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              {showPreview ? 'Ocultar' : 'Visualizar'}
+            </Button>
+            <Button
+              type="submit"
+              form="nova-entrada-form"
+              disabled={loadingConta}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {loadingConta ? 'Salvando...' : 'Salvar Entrada'}
+            </Button>
+          </div>
+        </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* Formulário Principal */}
@@ -455,7 +455,6 @@ export default function NovaEntrada() {
               </div>
             )}
           </div>
-        </div>
 
         {/* Modals */}
         <CadastroRapidoPagadorModal
@@ -466,7 +465,7 @@ export default function NovaEntrada() {
             setCadastroRapidoOpen(false);
           }}
         />
-      </div>
+      </PageContainer>
     </Layout>
   );
 }

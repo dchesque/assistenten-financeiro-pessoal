@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Layout } from '@/components/layout/Layout';
+import { PageContainer } from '@/components/layout/PageContainer';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { PagadorSelector } from '@/components/contasReceber/PagadorSelector';
@@ -152,7 +153,7 @@ export default function LancamentoRecorrente() {
   if (etapa === 'processando') {
     return (
       <Layout>
-        <div className="p-4 lg:p-8">
+        <PageContainer>
           <PageHeader 
             title="Processando Lançamento" 
             subtitle="Criando contas a receber..."
@@ -172,7 +173,7 @@ export default function LancamentoRecorrente() {
               <p className="text-gray-600">{Math.round(progresso)}% concluído</p>
             </CardContent>
           </Card>
-        </div>
+        </PageContainer>
       </Layout>
     );
   }
@@ -180,7 +181,7 @@ export default function LancamentoRecorrente() {
   if (etapa === 'concluido') {
     return (
       <Layout>
-        <div className="p-4 lg:p-8">
+        <PageContainer>
           <PageHeader 
             title="Lançamento Concluído" 
             subtitle="Contas a receber criadas com sucesso"
@@ -221,7 +222,7 @@ export default function LancamentoRecorrente() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </PageContainer>
       </Layout>
     );
   }
@@ -229,7 +230,7 @@ export default function LancamentoRecorrente() {
   if (etapa === 'preview') {
     return (
       <Layout>
-        <div className="p-4 lg:p-8">
+        <PageContainer>
           <PageHeader 
             title="Preview do Lançamento" 
             subtitle="Confirme os dados antes de processar"
@@ -310,14 +311,14 @@ export default function LancamentoRecorrente() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </PageContainer>
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <div className="p-4 lg:p-8">
+      <PageContainer>
         <PageHeader 
           title="Lançamento Recorrente" 
           subtitle="Crie múltiplas contas a receber automaticamente"
@@ -492,7 +493,7 @@ export default function LancamentoRecorrente() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     </Layout>
   );
 }
