@@ -245,9 +245,9 @@ export function BancoModal({ isOpen, onClose, banco, bancos = [], onSave }: Banc
                   onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                   placeholder="Ex: Banco do Brasil"
                   obrigatorio
-                  erro={erros.nome}
-                  sucesso={formData.nome.length >= 3 && erros.nome.length === 0}
-                  validacao={(valor) => validarCampo('nome', valor, formData)}
+                  erro={Array.isArray(erros.nome) ? erros.nome[0] : erros.nome}
+                  sucesso={formData.nome.length >= 3 && (!erros.nome || (Array.isArray(erros.nome) ? erros.nome.length === 0 : !erros.nome))}
+                  validacao={() => ''}
                 />
               </div>
               
@@ -259,9 +259,9 @@ export function BancoModal({ isOpen, onClose, banco, bancos = [], onSave }: Banc
                   onChange={(e) => setFormData(prev => ({ ...prev, codigo_banco: e.target.value }))}
                   placeholder="Ex: 001"
                   obrigatorio
-                  erro={erros.codigo_banco}
-                  sucesso={/^\d{3}$/.test(formData.codigo_banco) && erros.codigo_banco.length === 0}
-                  validacao={(valor) => validarCampo('codigo_banco', valor, formData)}
+                  erro={Array.isArray(erros.codigo_banco) ? erros.codigo_banco[0] : erros.codigo_banco}
+                  sucesso={/^\d{3}$/.test(formData.codigo_banco) && (!erros.codigo_banco || (Array.isArray(erros.codigo_banco) ? erros.codigo_banco.length === 0 : !erros.codigo_banco))}
+                  validacao={() => ''}
                   maxLength={3}
                 />
               </div>
@@ -274,9 +274,9 @@ export function BancoModal({ isOpen, onClose, banco, bancos = [], onSave }: Banc
                   onChange={(e) => setFormData(prev => ({ ...prev, agencia: e.target.value }))}
                   placeholder="Ex: 1234-5"
                   obrigatorio
-                  erro={erros.agencia}
-                  sucesso={/^\d{4,5}(-\d)?$/.test(formData.agencia) && erros.agencia.length === 0}
-                  validacao={(valor) => validarCampo('agencia', valor, formData)}
+                  erro={Array.isArray(erros.agencia) ? erros.agencia[0] : erros.agencia}
+                  sucesso={/^\d{4,5}(-\d)?$/.test(formData.agencia) && (!erros.agencia || (Array.isArray(erros.agencia) ? erros.agencia.length === 0 : !erros.agencia))}
+                  validacao={() => ''}
                 />
               </div>
               
@@ -288,9 +288,9 @@ export function BancoModal({ isOpen, onClose, banco, bancos = [], onSave }: Banc
                   onChange={(e) => setFormData(prev => ({ ...prev, conta: e.target.value }))}
                   placeholder="Ex: 12345-6"
                   obrigatorio
-                  erro={erros.conta}
-                  sucesso={/^\d{5,10}(-\d)?$/.test(formData.conta) && erros.conta.length === 0}
-                  validacao={(valor) => validarCampo('conta', valor, formData)}
+                  erro={Array.isArray(erros.conta) ? erros.conta[0] : erros.conta}
+                  sucesso={/^\d{5,10}(-\d)?$/.test(formData.conta) && (!erros.conta || (Array.isArray(erros.conta) ? erros.conta.length === 0 : !erros.conta))}
+                  validacao={() => ''}
                 />
               </div>
               
@@ -302,9 +302,9 @@ export function BancoModal({ isOpen, onClose, banco, bancos = [], onSave }: Banc
                   onChange={(e) => setFormData(prev => ({ ...prev, digito_verificador: e.target.value }))}
                   placeholder="Ex: 7"
                   obrigatorio
-                  erro={erros.digito_verificador}
-                  sucesso={/^\d{1,2}$/.test(formData.digito_verificador) && erros.digito_verificador.length === 0}
-                  validacao={(valor) => validarCampo('digito_verificador', valor, formData)}
+                  erro={Array.isArray(erros.digito_verificador) ? erros.digito_verificador[0] : erros.digito_verificador}
+                  sucesso={/^\d{1,2}$/.test(formData.digito_verificador) && (!erros.digito_verificador || (Array.isArray(erros.digito_verificador) ? erros.digito_verificador.length === 0 : !erros.digito_verificador))}
+                  validacao={() => ''}
                   maxLength={2}
                 />
               </div>
@@ -354,9 +354,9 @@ export function BancoModal({ isOpen, onClose, banco, bancos = [], onSave }: Banc
                       value={formData.url_ofx}
                       onChange={(e) => setFormData(prev => ({ ...prev, url_ofx: e.target.value }))}
                       placeholder="https://..."
-                      erro={erros.url_ofx}
-                      sucesso={formData.url_ofx === '' || (/^https?:\/\/.+/.test(formData.url_ofx) && erros.url_ofx.length === 0)}
-                      validacao={(valor) => validarCampo('url_ofx', valor, formData)}
+                      erro={Array.isArray(erros.url_ofx) ? erros.url_ofx[0] : erros.url_ofx}
+                      sucesso={formData.url_ofx === '' || (/^https?:\/\/.+/.test(formData.url_ofx) && (!erros.url_ofx || (Array.isArray(erros.url_ofx) ? erros.url_ofx.length === 0 : !erros.url_ofx)))}
+                      validacao={() => ''}
                       dica="URL para conexão automatizada com o banco"
                     />
                   </div>
@@ -468,9 +468,9 @@ export function BancoModal({ isOpen, onClose, banco, bancos = [], onSave }: Banc
                   value={formData.telefone}
                   onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
                   placeholder="(11) 99999-9999"
-                  erro={erros.telefone}
-                  sucesso={formData.telefone === '' || (/^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(formData.telefone) && erros.telefone.length === 0)}
-                  validacao={(valor) => validarCampo('telefone', valor, formData)}
+                  erro={Array.isArray(erros.telefone) ? erros.telefone[0] : erros.telefone}
+                  sucesso={formData.telefone === '' || (/^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(formData.telefone) && (!erros.telefone || (Array.isArray(erros.telefone) ? erros.telefone.length === 0 : !erros.telefone)))}
+                  validacao={() => ''}
                   mascara={aplicarMascaraTelefone}
                 />
               </div>
@@ -483,9 +483,9 @@ export function BancoModal({ isOpen, onClose, banco, bancos = [], onSave }: Banc
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="contato@banco.com.br"
-                  erro={erros.email}
-                  sucesso={formData.email === '' || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && erros.email.length === 0)}
-                  validacao={(valor) => validarCampo('email', valor, formData)}
+                  erro={Array.isArray(erros.email) ? erros.email[0] : erros.email}
+                  sucesso={formData.email === '' || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (!erros.email || (Array.isArray(erros.email) ? erros.email.length === 0 : !erros.email)))}
+                  validacao={() => ''}
                 />
               </div>
               
