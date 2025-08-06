@@ -6,23 +6,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, EyeOff, Building2, ArrowLeft } from 'lucide-react';
+import { MessageCircle, Building2, ArrowLeft, Send, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export default function Auth() {
-  const { signIn, signUp, resetPassword, isAuthenticated, loading } = useAuth();
+  const { signInWithWhatsApp, signUpWithWhatsApp, verifyCode, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'login';
   
-  const [showPassword, setShowPassword] = useState(false);
+  const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
+    whatsapp: '',
+    code: '',
     nome: ''
   });
   const [formLoading, setFormLoading] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
 
   // Redirecionar se já autenticado
   useEffect(() => {
@@ -35,41 +36,68 @@ export default function Auth() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password) return;
+  const formatWhatsApp = (value: string) => {
+    // Remove tudo que não é número
+    const numbers = value.replace(/\D/g, '');
     
-    setFormLoading(true);
-    await signIn(formData.email, formData.password);
-    setFormLoading(false);
+    // Aplica máscara (xx) xxxxx-xxxx
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d)/, '$1-$2')
+        .replace(/(-\d{4})\d+?$/, '$1');
+    }
+    return value;
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.password || !formData.nome) return;
+    if (!formData.whatsapp) return;
     
-    if (formData.password !== formData.confirmPassword) {
-      alert('As senhas não coincidem');
+    // Validar formato do WhatsApp
+    const numbers = formData.whatsapp.replace(/\D/g, '');
+    if (numbers.length < 11) {
+      toast.error('Por favor, digite um número válido');
       return;
     }
     
-    if (formData.password.length < 6) {
-      alert('A senha deve ter pelo menos 6 caracteres');
-      return;
-    }
-    
     setFormLoading(true);
-    await signUp(formData.email, formData.password, { nome: formData.nome });
-    setFormLoading(false);
+    
+    try {
+      if (mode === 'signup') {
+        if (!formData.nome.trim()) {
+          toast.error('Por favor, digite seu nome');
+          setFormLoading(false);
+          return;
+        }
+        await signUpWithWhatsApp(formData.whatsapp, { nome: formData.nome });
+      } else {
+        await signInWithWhatsApp(formData.whatsapp);
+      }
+      
+      setCodeSent(true);
+      setStep('code');
+      toast.success('Código enviado para seu WhatsApp!');
+    } catch (error) {
+      toast.error('Erro ao enviar código');
+    } finally {
+      setFormLoading(false);
+    }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email) return;
+    if (!formData.code) return;
     
     setFormLoading(true);
-    await resetPassword(formData.email);
-    setFormLoading(false);
+    try {
+      await verifyCode(formData.whatsapp, formData.code);
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error('Código inválido');
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   if (loading) {
@@ -104,113 +132,116 @@ export default function Auth() {
 
           <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-2xl">
             <CardHeader className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center">
-                <Building2 className="w-8 h-8 text-white" />
+              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center">
+                <MessageCircle className="w-8 h-8 text-white" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   JC Financeiro
                 </CardTitle>
                 <CardDescription>
-                  Sistema de gestão financeira empresarial
+                  {step === 'phone' ? 'Entre com seu número do WhatsApp' : 'Digite o código enviado'}
                 </CardDescription>
               </div>
             </CardHeader>
 
             <CardContent>
-              {mode === 'reset' ? (
-                <form onSubmit={handleResetPassword} className="space-y-4">
+              {step === 'code' ? (
+                // Tela de verificação de código
+                <form onSubmit={handleVerifyCode} className="space-y-6">
+                  <div className="text-center space-y-2">
+                    <Shield className="w-12 h-12 text-green-600 mx-auto" />
+                    <h3 className="text-lg font-semibold">Verificação</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enviamos um código para<br />
+                      <strong>{formData.whatsapp}</strong>
+                    </p>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="code">Código de verificação</Label>
                     <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="bg-white/80 backdrop-blur-sm"
+                      id="code"
+                      type="text"
+                      value={formData.code}
+                      onChange={(e) => handleInputChange('code', e.target.value)}
+                      className="bg-white/80 backdrop-blur-sm text-center text-lg tracking-widest"
+                      placeholder="123456"
+                      maxLength={6}
                       required
                     />
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                     disabled={formLoading}
                   >
-                    {formLoading ? 'Enviando...' : 'Redefinir Senha'}
+                    {formLoading ? 'Verificando...' : 'Confirmar código'}
                   </Button>
 
-                  <div className="text-center">
-                    <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground">
-                      Voltar ao login
-                    </Link>
+                  <div className="text-center space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep('phone');
+                        setCodeSent(false);
+                        setFormData(prev => ({ ...prev, code: '' }));
+                      }}
+                      className="text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      Alterar número
+                    </button>
+                    <br />
+                    <button
+                      type="button"
+                      onClick={handleSendCode}
+                      className="text-sm text-green-600 hover:text-green-700"
+                      disabled={formLoading}
+                    >
+                      Reenviar código
+                    </button>
                   </div>
                 </form>
               ) : (
+                // Tela de inserção do número
                 <Tabs value={mode === 'signup' ? 'signup' : 'login'} className="space-y-4">
                   <TabsList className="grid w-full grid-cols-2 bg-gray-100/50">
-                    <TabsTrigger value="login" onClick={() => navigate('/auth')}>Login</TabsTrigger>
-                    <TabsTrigger value="signup" onClick={() => navigate('/auth?mode=signup')}>Cadastro</TabsTrigger>
+                    <TabsTrigger value="login" onClick={() => navigate('/auth')}>Entrar</TabsTrigger>
+                    <TabsTrigger value="signup" onClick={() => navigate('/auth?mode=signup')}>Cadastrar</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="login">
-                    <form onSubmit={handleLogin} className="space-y-4">
+                    <form onSubmit={handleSendCode} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="whatsapp">Número do WhatsApp</Label>
                         <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          id="whatsapp"
+                          type="tel"
+                          value={formatWhatsApp(formData.whatsapp)}
+                          onChange={(e) => handleInputChange('whatsapp', e.target.value)}
                           className="bg-white/80 backdrop-blur-sm"
+                          placeholder="(11) 99999-9999"
                           required
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="password">Senha</Label>
-                        <div className="relative">
-                          <Input
-                            id="password"
-                            type={showPassword ? 'text' : 'password'}
-                            value={formData.password}
-                            onChange={(e) => handleInputChange('password', e.target.value)}
-                            className="bg-white/80 backdrop-blur-sm pr-10"
-                            required
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </Button>
-                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Digite seu número com DDD
+                        </p>
                       </div>
 
                       <Button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                         disabled={formLoading}
                       >
-                        {formLoading ? 'Entrando...' : 'Entrar'}
+                        <Send className="w-4 h-4 mr-2" />
+                        {formLoading ? 'Enviando código...' : 'Enviar código'}
                       </Button>
-
-                      <div className="text-center">
-                        <Link 
-                          to="/auth?mode=reset" 
-                          className="text-sm text-muted-foreground hover:text-foreground"
-                        >
-                          Esqueceu sua senha?
-                        </Link>
-                      </div>
                     </form>
                   </TabsContent>
 
                   <TabsContent value="signup">
-                    <form onSubmit={handleSignUp} className="space-y-4">
+                    <form onSubmit={handleSendCode} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="nome">Nome completo</Label>
                         <Input
@@ -224,65 +255,37 @@ export default function Auth() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="email-signup">Email</Label>
+                        <Label htmlFor="whatsapp-signup">Número do WhatsApp</Label>
                         <Input
-                          id="email-signup"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          id="whatsapp-signup"
+                          type="tel"
+                          value={formatWhatsApp(formData.whatsapp)}
+                          onChange={(e) => handleInputChange('whatsapp', e.target.value)}
                           className="bg-white/80 backdrop-blur-sm"
+                          placeholder="(11) 99999-9999"
                           required
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="password-signup">Senha</Label>
-                        <div className="relative">
-                          <Input
-                            id="password-signup"
-                            type={showPassword ? 'text' : 'password'}
-                            value={formData.password}
-                            onChange={(e) => handleInputChange('password', e.target.value)}
-                            className="bg-white/80 backdrop-blur-sm pr-10"
-                            minLength={6}
-                            required
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirmar senha</Label>
-                        <Input
-                          id="confirm-password"
-                          type="password"
-                          value={formData.confirmPassword}
-                          onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                          className="bg-white/80 backdrop-blur-sm"
-                          minLength={6}
-                          required
-                        />
+                        <p className="text-xs text-muted-foreground">
+                          Digite seu número com DDD
+                        </p>
                       </div>
 
                       <Button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                         disabled={formLoading}
                       >
+                        <Send className="w-4 h-4 mr-2" />
                         {formLoading ? 'Criando conta...' : 'Criar conta'}
                       </Button>
                     </form>
                   </TabsContent>
                 </Tabs>
               )}
+
+              <div className="mt-6 text-center text-xs text-muted-foreground">
+                <p>Por enquanto, aceita qualquer número e código para teste</p>
+              </div>
             </CardContent>
           </Card>
         </div>

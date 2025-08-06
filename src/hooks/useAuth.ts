@@ -31,6 +31,58 @@ export function useAuth() {
     setLoading(false);
   }, []);
 
+  const signInWithWhatsApp = async (whatsapp: string) => {
+    setLoading(true);
+    try {
+      // Por enquanto, simular envio de código para qualquer número
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Código enviado para seu WhatsApp!');
+      return { error: null };
+    } catch (error) {
+      toast.error('Erro ao enviar código');
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUpWithWhatsApp = async (whatsapp: string, userData?: { nome?: string }) => {
+    setLoading(true);
+    try {
+      // Por enquanto, simular envio de código para qualquer número
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Código enviado para seu WhatsApp!');
+      return { error: null };
+    } catch (error) {
+      toast.error('Erro ao enviar código');
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyCode = async (whatsapp: string, code: string) => {
+    setLoading(true);
+    try {
+      // Por enquanto, aceitar qualquer código
+      if (code.length >= 4) {
+        // Simular criação de sessão
+        const sessionData = await mockDataService.signIn('user@whatsapp.com', 'password');
+        setUser(sessionData.user);
+        setSession(sessionData);
+        toast.success('Login realizado com sucesso!');
+        return { error: null };
+      } else {
+        throw new Error('Código inválido');
+      }
+    } catch (error) {
+      toast.error('Código inválido');
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signUp = async (email: string, password: string, userData?: { nome?: string }) => {
     setLoading(true);
     try {
@@ -93,6 +145,9 @@ export function useAuth() {
     user,
     session,
     loading,
+    signInWithWhatsApp,
+    signUpWithWhatsApp,
+    verifyCode,
     signUp,
     signIn,
     signOut,
