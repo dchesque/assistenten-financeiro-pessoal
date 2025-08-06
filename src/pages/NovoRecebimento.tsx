@@ -14,7 +14,7 @@ import { useCredores } from '@/hooks/useCredores';
 import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
 import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
-import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
+import { FormaRecebimentoSection } from '@/components/contasPagar/FormaRecebimentoSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -328,10 +328,11 @@ export default function NovoRecebimento() {
     }
     
     // Validações específicas de status
-    if (conta.status === 'pago' && !conta.banco_id) {
+    // Validação simplificada para recebimentos
+    if (conta.status === 'pago' && !formaPagamento.tipo) {
       toast({
         title: "Erro",
-        description: "Selecione o banco para contas pagas",
+        description: "Defina a forma de recebimento",
         variant: "destructive"
       });
       return false;
@@ -388,7 +389,7 @@ export default function NovoRecebimento() {
         // Novos campos obrigatórios
         parcela_atual: 1,
         total_parcelas: 1,
-        forma_pagamento: 'dinheiro_pix',
+        forma_pagamento: formaPagamento.tipo || 'dinheiro_pix',
         percentual_juros: conta.percentual_juros,
         valor_juros: conta.valor_juros || 0,
         percentual_desconto: conta.percentual_desconto,
@@ -397,8 +398,8 @@ export default function NovoRecebimento() {
         status: marcarComoPago ? 'pago' : (conta.status as 'pendente' | 'pago' | 'vencido' | 'cancelado'),
         data_pagamento: marcarComoPago ? new Date().toISOString().split('T')[0] : conta.data_pagamento,
         valor_pago: marcarComoPago ? conta.valor_final : conta.valor_pago,
-        dda: conta.dda!,
-        observacoes: conta.observacoes,
+        dda: false,
+        observacoes: null,
         user_id: user.id  // 🔥 ADICIONAR USER_ID
       };
 
@@ -842,11 +843,11 @@ export default function NovoRecebimento() {
               </div>
             </Card>
 
-            {/* Seção 6: Forma de Pagamento */}
+            {/* Seção 6: Forma de Recebimento */}
             <Card className="card-base">
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
                     <CreditCard className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -855,60 +856,11 @@ export default function NovoRecebimento() {
                   </div>
                 </div>
 
-                <FormaPagamentoSection
+                <FormaRecebimentoSection
                   value={formaPagamento}
                   onChange={setFormaPagamento}
                   bancos={bancos}
                 />
-              </div>
-            </Card>
-
-            {/* Seção 7: Configurações Adicionais */}
-            <Card className="card-base">
-              <div className="p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-gray-600 to-gray-700 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Configurações Adicionais</h3>
-                    <p className="text-sm text-gray-600">Opções extras e observações</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="dda"
-                      checked={conta.dda}
-                      onCheckedChange={(checked) => setConta(prev => ({ ...prev, dda: checked as boolean }))}
-                    />
-                    <Label htmlFor="dda" className="text-sm">
-                      É um recebimento DDA (Débito Direto Autorizado)
-                    </Label>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="observacoes">Observações</Label>
-                    <Textarea
-                      id="observacoes"
-                      value={conta.observacoes}
-                      onChange={(e) => {
-                        setConta(prev => ({ ...prev, observacoes: e.target.value }));
-                        validarCampoTempoReal('observacoes', e.target.value);
-                      }}
-                      placeholder="Observações adicionais sobre o recebimento..."
-                      className="input-base min-h-20"
-                      maxLength={500}
-                    />
-                    {errosValidacao.observacoes && (
-                      <p className="text-sm text-red-600">{errosValidacao.observacoes}</p>
-                    )}
-                    <p className="text-xs text-gray-500">
-                      {conta.observacoes?.length || 0}/500 caracteres
-                    </p>
-                  </div>
-                </div>
               </div>
             </Card>
 
