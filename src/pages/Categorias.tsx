@@ -146,62 +146,63 @@ export default function Categorias() {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+        <div className="max-w-7xl mx-auto px-4 py-4 lg:px-8 lg:py-8">
+          <div className="relative">
+            {/* Header Skeleton */}
+            <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 px-6 py-4 sticky top-0 z-40">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div className="flex items-center space-x-4">
+                  <Skeleton className="w-12 h-12 rounded-xl" />
+                  <div>
+                    <Skeleton className="h-6 w-48 mb-2" />
+                    <Skeleton className="h-4 w-64" />
+                  </div>
+                </div>
+                <Skeleton className="h-10 w-40" />
+              </div>
+            </div>
 
-        <div className="relative">
-          {/* Header Skeleton */}
-          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 px-6 py-4 sticky top-0 z-40">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-              <div className="flex items-center space-x-4">
-                <Skeleton className="w-12 h-12 rounded-xl" />
-                <div>
-                  <Skeleton className="h-6 w-48 mb-2" />
-                  <Skeleton className="h-4 w-64" />
+            <div className="p-6 space-y-6">
+              {/* Filtros Skeleton */}
+              <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
                 </div>
               </div>
-              <Skeleton className="h-10 w-40" />
-            </div>
-          </div>
 
-          <div className="p-6 space-y-6">
-            {/* Filtros Skeleton */}
-            <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
+              {/* Toggle Skeleton */}
+              <div className="flex justify-end">
+                <Skeleton className="h-10 w-20" />
               </div>
-            </div>
 
-            {/* Toggle Skeleton */}
-            <div className="flex justify-end">
-              <Skeleton className="h-10 w-20" />
-            </div>
-
-            {/* Table Skeleton */}
-            <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200/50">
-                  <thead className="bg-gray-50/80">
-                    <tr>
-                      {[...Array(7)].map((_, i) => (
-                        <th key={i} className="px-6 py-4">
-                          <Skeleton className="h-4 w-20" />
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white/60 divide-y divide-gray-200/50">
-                    {[...Array(5)].map((_, i) => (
-                      <tr key={i}>
-                        {[...Array(7)].map((_, j) => (
-                          <td key={j} className="px-6 py-4">
-                            <Skeleton className="h-4 w-16" />
-                          </td>
+              {/* Table Skeleton */}
+              <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200/50">
+                    <thead className="bg-gray-50/80">
+                      <tr>
+                        {[...Array(7)].map((_, i) => (
+                          <th key={i} className="px-6 py-4">
+                            <Skeleton className="h-4 w-20" />
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white/60 divide-y divide-gray-200/50">
+                      {[...Array(5)].map((_, i) => (
+                        <tr key={i}>
+                          {[...Array(7)].map((_, j) => (
+                            <td key={j} className="px-6 py-4">
+                              <Skeleton className="h-4 w-16" />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -211,7 +212,12 @@ export default function Categorias() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      {/* Background abstratos */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-orange-400/20 rounded-full blur-3xl"></div>
+      </div>
 
       {/* Page Header */}
       <PageHeader
@@ -229,11 +235,9 @@ export default function Categorias() {
         }
       />
 
-      <div className="relative">
-        
-
-        <div className="p-6 space-y-6">
-
+      {/* Container principal com padding responsivo e max-width */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-4 lg:px-8 lg:py-8">
+        <div className="space-y-6">
           {/* Card de filtros */}
           <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -456,6 +460,6 @@ export default function Categorias() {
         modo={modoModal}
         onSave={salvarPlanoContas}
       />
-    </>
+    </div>
   );
 }

@@ -108,7 +108,15 @@ export default function Contatos() {
   };
 
   return (
-    <div className="p-4 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      {/* Background abstratos */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-orange-400/20 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Container principal com padding responsivo e max-width */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-4 lg:px-8 lg:py-8">
       <PageHeader 
         title="Contatos" 
         subtitle="Gerencie credores e pagadores"
@@ -264,6 +272,7 @@ export default function Contatos() {
         modo={modoEdicao ? 'editar' : 'criar'}
         onSave={handleSalvarContato}
       />
+      </div>
     </div>
   );
 }
