@@ -86,6 +86,15 @@ const menuStructure = [
     path: '/meu-perfil', 
     icon: User,
     color: 'text-purple-500'
+  },
+
+  // Assinatura (item especial)
+  { 
+    type: 'item', 
+    name: 'Assinatura', 
+    path: '/assinatura', 
+    icon: CreditCard,
+    color: 'text-amber-500'
   }
 ];
 
