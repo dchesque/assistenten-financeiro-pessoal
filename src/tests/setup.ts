@@ -1,78 +1,82 @@
 import React from 'react';
 import '@testing-library/jest-dom';
+import { vi, afterEach } from 'vitest';
 
 // Mock do useToast
 const mockToast = {
-  toast: jest.fn(),
-  dismiss: jest.fn(),
-  update: jest.fn()
+  toast: vi.fn(),
+  dismiss: vi.fn(),
+  update: vi.fn()
 };
 
-jest.mock('@/hooks/use-toast', () => ({
+vi.mock('@/hooks/use-toast', () => ({
   useToast: () => mockToast,
   toast: mockToast.toast
 }));
 
 // Mock do Supabase
-jest.mock('@/integrations/supabase/client', () => ({
+vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        order: jest.fn(() => Promise.resolve({
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        order: vi.fn(() => Promise.resolve({
           data: [],
           error: null
         })),
-        eq: jest.fn(() => ({
-          order: jest.fn(() => Promise.resolve({
+        eq: vi.fn(() => ({
+          order: vi.fn(() => Promise.resolve({
             data: [],
             error: null
           }))
         }))
       })),
-      insert: jest.fn(() => Promise.resolve({
+      insert: vi.fn(() => Promise.resolve({
         data: [],
         error: null
       })),
-      update: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({
+      update: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({
           data: [],
           error: null
         }))
       })),
-      delete: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({
+      delete: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({
           data: [],
           error: null
         }))
       }))
     })),
     auth: {
-      getSession: jest.fn(() => Promise.resolve({
+      getSession: vi.fn(() => Promise.resolve({
         data: { session: null },
         error: null
       })),
-      signInWithPassword: jest.fn(),
-      signUp: jest.fn(),
-      signOut: jest.fn()
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn()
     }
   }
 }));
 
 // Mock do React Router
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => jest.fn(),
-  useLocation: () => ({
-    pathname: '/',
-    search: '',
-    hash: '',
-    state: null,
-    key: 'default'
-  })
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+    useLocation: () => ({
+      pathname: '/',
+      search: '',
+      hash: '',
+      state: null,
+      key: 'default'
+    })
+  };
+});
 
 // Mock do Framer Motion
-jest.mock('framer-motion', () => ({
+vi.mock('framer-motion', () => ({
   motion: {
     div: (props: any) => React.createElement('div', props),
     span: (props: any) => React.createElement('span', props),
@@ -84,24 +88,29 @@ jest.mock('framer-motion', () => ({
 // Mock de APIs do navegador
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });
 
-// Mock do IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+// Mock do IntersectionObserver  
+(global as any).IntersectionObserver = class {
+  root = null;
+  rootMargin = '';
+  thresholds = [];
+  
   constructor() {}
   observe() { return null; }
   disconnect() { return null; }
   unobserve() { return null; }
+  takeRecords() { return []; }
 };
 
 // Mock do ResizeObserver
@@ -114,5 +123,5 @@ global.ResizeObserver = class ResizeObserver {
 
 // Limpar mocks após cada teste
 afterEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });

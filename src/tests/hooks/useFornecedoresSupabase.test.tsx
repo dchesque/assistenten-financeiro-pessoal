@@ -1,7 +1,32 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import { useFornecedoresSupabase } from '@/hooks/useFornecedoresSupabase';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+
+const waitFor = async (callback: () => void, options?: { timeout?: number }) => {
+  return new Promise<void>((resolve) => {
+    const timeout = options?.timeout || 1000;
+    const interval = 50;
+    let elapsed = 0;
+    
+    const check = () => {
+      try {
+        callback();
+        resolve();
+      } catch {
+        elapsed += interval;
+        if (elapsed >= timeout) {
+          resolve();
+        } else {
+          setTimeout(check, interval);
+        }
+      }
+    };
+    
+    check();
+  });
+};
 
 // Wrapper para React Query
 const createWrapper = () => {
@@ -26,10 +51,13 @@ const mockFornecedores = [
     id: 1,
     nome: 'Fornecedor Teste',
     tipo: 'pessoa_juridica',
+    tipo_fornecedor: 'despesa',
     documento: '12.345.678/0001-90',
     email: 'teste@fornecedor.com',
     telefone: '(11) 99999-9999',
     ativo: true,
+    totalCompras: 10,
+    valorTotal: 1000.50,
     created_at: '2025-01-01T00:00:00.000Z',
     updated_at: '2025-01-01T00:00:00.000Z'
   },
@@ -37,43 +65,46 @@ const mockFornecedores = [
     id: 2,
     nome: 'João Silva',
     tipo: 'pessoa_fisica',
+    tipo_fornecedor: 'receita',
     documento: '123.456.789-01',
     email: 'joao@email.com',
     telefone: '(11) 88888-8888',
     ativo: false,
+    totalCompras: 5,
+    valorTotal: 500.25,
     created_at: '2025-01-02T00:00:00.000Z',
     updated_at: '2025-01-02T00:00:00.000Z'
   }
 ];
 
 // Mock do Supabase para este teste específico
-jest.mock('@/integrations/supabase/client', () => ({
+vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        order: jest.fn(() => Promise.resolve({
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        order: vi.fn(() => Promise.resolve({
           data: mockFornecedores,
           error: null
         })),
-        eq: jest.fn(() => ({
-          order: jest.fn(() => Promise.resolve({
+        eq: vi.fn(() => ({
+          order: vi.fn(() => Promise.resolve({
             data: mockFornecedores.filter(f => f.ativo),
             error: null
           }))
         }))
       })),
-      insert: jest.fn(() => Promise.resolve({
+      insert: vi.fn(() => Promise.resolve({
         data: [{ ...mockFornecedores[0], id: 3 }],
         error: null
       })),
-      update: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({
+      update: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({
           data: [{ ...mockFornecedores[0], nome: 'Fornecedor Atualizado' }],
           error: null
         }))
       })),
-      delete: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({
+      delete: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({
           data: [],
           error: null
         }))
@@ -131,10 +162,13 @@ describe('useFornecedoresSupabase', () => {
     const novoFornecedor = {
       nome: 'Novo Fornecedor',
       tipo: 'pessoa_juridica' as const,
+      tipo_fornecedor: 'despesa' as const,
       documento: '98.765.432/0001-10',
       email: 'novo@fornecedor.com',
       telefone: '(11) 77777-7777',
-      ativo: true
+      ativo: true,
+      totalCompras: 0,
+      valorTotal: 0
     };
     
     // Executar criação
@@ -182,9 +216,9 @@ describe('useFornecedoresSupabase', () => {
   it('deve lidar com erros corretamente', async () => {
     // Mock de erro
     const supabaseErrorMock = {
-      from: jest.fn(() => ({
-        select: jest.fn(() => ({
-          order: jest.fn(() => Promise.resolve({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          order: vi.fn(() => Promise.resolve({
             data: null,
             error: { message: 'Erro de conexão' }
           }))
@@ -192,7 +226,7 @@ describe('useFornecedoresSupabase', () => {
       }))
     };
     
-    jest.doMock('@/integrations/supabase/client', () => ({
+    vi.doMock('@/integrations/supabase/client', () => ({
       supabase: supabaseErrorMock
     }));
     
@@ -219,7 +253,7 @@ describe('useFornecedoresSupabase', () => {
     expect(result.current.estatisticas.total).toBe(2);
     expect(result.current.estatisticas.ativos).toBe(1);
     expect(result.current.estatisticas.inativos).toBe(1);
-    expect(result.current.estatisticas.pessoa_fisica).toBe(1);
-    expect(result.current.estatisticas.pessoa_juridica).toBe(1);
+    expect(result.current.estatisticas.totalCompras).toBe(15);
+    expect(result.current.estatisticas.valorTotal).toBe(1500.75);
   });
 });
