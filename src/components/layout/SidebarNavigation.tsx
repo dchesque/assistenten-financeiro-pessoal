@@ -23,7 +23,8 @@ import {
   ChevronDown,
   Settings,
   Upload,
-  Wallet
+  Wallet,
+  User
 } from 'lucide-react';
 
 // Estrutura do menu para Finanças Pessoais
@@ -76,6 +77,15 @@ const menuStructure = [
       { name: 'Contatos', path: '/contatos', icon: Users, color: 'text-blue-500' },
       { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' }
     ]
+  },
+
+  // Meu Perfil (item especial)
+  { 
+    type: 'item', 
+    name: 'Meu Perfil', 
+    path: '/meu-perfil', 
+    icon: User,
+    color: 'text-purple-500'
   }
 ];
 
