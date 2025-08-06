@@ -89,7 +89,7 @@ export const LazyRoute = ({
   const FallbackComponent = CustomFallback || (() => (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <LoadingStates.PageLoading />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
         <p className="mt-4 text-gray-600">Carregando {routeName}...</p>
       </div>
     </div>

@@ -1,34 +1,31 @@
-import { useEffect } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { OfflineIndicator } from "@/hooks/useOffline";
-import { PerformanceOptimizer, LazyRoute } from "@/utils/performance";
-import { Analytics } from "@/utils/analytics";
-import { Layout } from "./components/layout/Layout";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as SonnerToaster } from "sonner";
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { LoadingStates } from '@/components/ui/LoadingStates';
 
-// Pages
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import ContasPagar from "./pages/ContasPagar";
-import NovaEntrada from "./pages/NovaEntrada";
-import ContaIndividual from "./pages/ContaIndividual";
-import LancamentoLote from "./pages/LancamentoLote";
-import Credores from "./pages/Credores";
-import Bancos from "./pages/Bancos";
-import Settings from "./pages/Settings";
-import ContasReceber from "./pages/ContasReceber";
-import Pagadores from "./pages/Pagadores";
-import CategoriasUnificadas from "./pages/CategoriasUnificadas";
-import Contatos from "./pages/Contatos";
-import LancamentoRecorrente from "./pages/LancamentoRecorrente";
-import DesignSystemPreview from "./pages/DesignSystemPreview";
-import NotFound from "./pages/NotFound";
+// Páginas críticas (carregamento imediato)
+import Index from '@/pages/Index';
+import Auth from '@/pages/Auth';
+import NotFound from '@/pages/NotFound';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+
+// Lazy loading das páginas
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const ContasPagar = lazy(() => import('@/pages/ContasPagar'));
+const ContasReceber = lazy(() => import('@/pages/ContasReceber'));
+const Fornecedores = lazy(() => import('@/pages/Fornecedores'));
+const Bancos = lazy(() => import('@/pages/Bancos'));
+const Settings = lazy(() => import('@/pages/Settings'));
+
+// Componente de fallback para lazy loading
+const PageFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,50 +36,30 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => {
-  // Inicializar analytics e performance
-  useEffect(() => {
-    PerformanceOptimizer.initialize();
-    Analytics.pageView({
-      page: window.location.pathname,
-      title: document.title
-    });
-  }, []);
-
+function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <OfflineIndicator />
-          <BrowserRouter>
+        <Router>
+          <Suspense fallback={<PageFallback />}>
             <Routes>
-              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Layout><LazyRoute component={PerformanceOptimizer.lazyComponents.Dashboard} /></Layout></ProtectedRoute>} />
-              <Route path="/contas-pagar" element={<ProtectedRoute><Layout><LazyRoute component={PerformanceOptimizer.lazyComponents.ContasPagar} /></Layout></ProtectedRoute>} />
-              <Route path="/nova-entrada" element={<ProtectedRoute><Layout><NovaEntrada /></Layout></ProtectedRoute>} />
-              <Route path="/conta-individual" element={<ProtectedRoute><Layout><ContaIndividual /></Layout></ProtectedRoute>} />
-              <Route path="/lancamento-lote" element={<ProtectedRoute><Layout><LancamentoLote /></Layout></ProtectedRoute>} />
-              <Route path="/credores" element={<ProtectedRoute><Layout><Credores /></Layout></ProtectedRoute>} />
-              <Route path="/categorias" element={<ProtectedRoute><Layout><CategoriasUnificadas /></Layout></ProtectedRoute>} />
-              <Route path="/bancos" element={<ProtectedRoute><Layout><LazyRoute component={PerformanceOptimizer.lazyComponents.Bancos} /></Layout></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Layout><LazyRoute component={PerformanceOptimizer.lazyComponents.Settings} /></Layout></ProtectedRoute>} />
-              <Route path="/contas-receber" element={<ProtectedRoute><Layout><LazyRoute component={PerformanceOptimizer.lazyComponents.ContasReceber} /></Layout></ProtectedRoute>} />
-              <Route path="/pagadores" element={<ProtectedRoute><Layout><Pagadores /></Layout></ProtectedRoute>} />
-              <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
-              <Route path="/lancamento-recorrente" element={<ProtectedRoute><Layout><LancamentoRecorrente /></Layout></ProtectedRoute>} />
-              <Route path="/design-system" element={<DesignSystemPreview />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/contas-pagar" element={<ProtectedRoute><ContasPagar /></ProtectedRoute>} />
+              <Route path="/contas-receber" element={<ProtectedRoute><ContasReceber /></ProtectedRoute>} />
+              <Route path="/fornecedores" element={<ProtectedRoute><Fornecedores /></ProtectedRoute>} />
+              <Route path="/bancos" element={<ProtectedRoute><Bancos /></ProtectedRoute>} />
+              <Route path="/configuracoes" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+          </Suspense>
+          <Toaster />
+          <SonnerToaster />
+        </Router>
       </QueryClientProvider>
     </ErrorBoundary>
   );
-};
+}
 
 export default App;
