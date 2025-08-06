@@ -60,8 +60,7 @@ const menuStructure = [
     key: 'recebimentos',
     items: [
       { name: 'Novo Recebimento', path: '/nova-entrada', icon: Plus, color: 'text-green-500' },
-      { name: 'Contas a Receber', path: '/contas-receber', icon: DollarSign, color: 'text-green-500' },
-      { name: 'Lançamento Recorrente', path: '/lancamento-recorrente', icon: Package, color: 'text-green-600' }
+      { name: 'Contas a Receber', path: '/contas-receber', icon: DollarSign, color: 'text-green-500' }
     ]
   },
   
