@@ -23,7 +23,7 @@ const CategoriasUnificadas = lazy(() => import('@/pages/CategoriasUnificadas'));
 const ContaIndividual = lazy(() => import('@/pages/ContaIndividual'));
 const Contatos = lazy(() => import('@/pages/Contatos'));
 const DesignSystemPreview = lazy(() => import('@/pages/DesignSystemPreview'));
-const LancamentoLote = lazy(() => import('@/pages/LancamentoLote'));
+
 const MonitoramentoPerformance = lazy(() => import('@/pages/MonitoramentoPerformance'));
 const NovaEntrada = lazy(() => import('@/pages/NovaEntrada'));
 const StatusSistema = lazy(() => import('@/pages/StatusSistema'));
@@ -62,7 +62,7 @@ function App() {
               <Route path="/conta-individual" element={<ProtectedRoute><Layout><ContaIndividual /></Layout></ProtectedRoute>} />
               <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
               <Route path="/design-system" element={<ProtectedRoute><Layout><DesignSystemPreview /></Layout></ProtectedRoute>} />
-              <Route path="/lancamento-lote" element={<ProtectedRoute><Layout><LancamentoLote /></Layout></ProtectedRoute>} />
+              
               <Route path="/monitoramento-performance" element={<ProtectedRoute><Layout><MonitoramentoPerformance /></Layout></ProtectedRoute>} />
               <Route path="/nova-entrada" element={<ProtectedRoute><Layout><NovaEntrada /></Layout></ProtectedRoute>} />
               <Route path="/status-sistema" element={<ProtectedRoute><Layout><StatusSistema /></Layout></ProtectedRoute>} />

@@ -46,8 +46,7 @@ const menuStructure = [
     key: 'contas-pagar',
     items: [
       { name: 'Nova Conta', path: '/conta-individual', icon: Plus, color: 'text-red-500' },
-      { name: 'Contas a Pagar', path: '/contas-pagar', icon: Receipt, color: 'text-red-500' },
-      { name: 'Contas Recorrentes', path: '/lancamento-lote', icon: Package, color: 'text-purple-500' }
+      { name: 'Contas a Pagar', path: '/contas-pagar', icon: Receipt, color: 'text-red-500' }
     ]
   },
   
