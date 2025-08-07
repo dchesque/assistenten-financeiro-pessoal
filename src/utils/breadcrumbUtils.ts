@@ -53,6 +53,15 @@ export const createBreadcrumb = (path: string, customItems?: BreadcrumbItem[]): 
     '/settings': [
       { label: 'Início', href: '/dashboard' },
       { label: 'Configurações' }
+    ],
+    '/administrador': [
+      { label: 'Início', href: '/dashboard' },
+      { label: 'Administrador' }
+    ],
+    '/administrador/usuarios': [
+      { label: 'Início', href: '/dashboard' },
+      { label: 'Administrador', href: '/administrador' },
+      { label: 'Gestão de Usuários' }
     ]
   };
   

@@ -27,7 +27,8 @@ const Assinatura = lazy(() => import('@/pages/Assinatura'));
 const DesignSystemPreview = lazy(() => import('@/pages/DesignSystemPreview'));
 
 const MonitoramentoPerformance = lazy(() => import('@/pages/MonitoramentoPerformance'));
-const Sistema = lazy(() => import('@/pages/Sistema'));
+const Administrador = lazy(() => import('@/pages/Administrador'));
+const UsuariosAdmin = lazy(() => import('@/pages/UsuariosAdmin'));
 // StatusSistema removido - Supabase não mais necessário
 
 // Componente de fallback para lazy loading
@@ -68,7 +69,8 @@ function App() {
               <Route path="/design-system" element={<ProtectedRoute><Layout><DesignSystemPreview /></Layout></ProtectedRoute>} />
               
               <Route path="/monitoramento-performance" element={<ProtectedRoute><Layout><MonitoramentoPerformance /></Layout></ProtectedRoute>} />
-              <Route path="/sistema" element={<ProtectedRoute><Layout><Sistema /></Layout></ProtectedRoute>} />
+              <Route path="/administrador" element={<ProtectedRoute><Layout><Administrador /></Layout></ProtectedRoute>} />
+              <Route path="/administrador/usuarios" element={<ProtectedRoute><Layout><UsuariosAdmin /></Layout></ProtectedRoute>} />
               <Route path="/configuracoes" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

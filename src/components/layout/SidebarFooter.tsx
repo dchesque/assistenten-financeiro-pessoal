@@ -93,13 +93,13 @@ export function SidebarFooter({ expanded, mobile = false }: SidebarFooterProps) 
                 <span className="text-sm">Assinatura</span>
               </button>
 
-              {/* Sistema */}
+              {/* Administrador */}
               <button
-                onClick={() => handleMenuClick('/sistema')}
+                onClick={() => handleMenuClick('/administrador')}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white hover:bg-white/10 transition-colors duration-200"
               >
                 <Settings className="w-4 h-4 text-gray-500" />
-                <span className="text-sm">Sistema</span>
+                <span className="text-sm">Administrador</span>
               </button>
 
               {/* Separador */}

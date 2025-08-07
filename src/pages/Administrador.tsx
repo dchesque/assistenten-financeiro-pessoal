@@ -14,18 +14,28 @@ import {
   Eye
 } from 'lucide-react';
 
-export default function Sistema() {
+export default function Administrador() {
   const navigate = useNavigate();
 
   const sistemaCards = [
+    {
+      id: 'gestao-usuarios',
+      titulo: 'Gestão de Usuários',
+      descricao: 'Controle completo dos usuários, assinaturas e permissões do sistema',
+      icone: Shield,
+      rota: '/administrador/usuarios',
+      cor: 'from-blue-500 to-blue-600',
+      corFundo: 'bg-blue-50/80',
+      badges: ['Usuários', 'Assinaturas']
+    },
     {
       id: 'monitoramento-performance',
       titulo: 'Monitoramento de Performance',
       descricao: 'Visualize métricas de desempenho, tempo de resposta e uso de recursos do sistema',
       icone: Activity,
       rota: '/monitoramento-performance',
-      cor: 'from-blue-500 to-blue-600',
-      corFundo: 'bg-blue-50/80',
+      cor: 'from-green-500 to-green-600',
+      corFundo: 'bg-green-50/80',
       badges: ['Tempo Real', 'Métricas']
     },
     {
@@ -47,8 +57,8 @@ export default function Sistema() {
   return (
     <div className="p-4 lg:p-8">
       <PageHeader
-        breadcrumb={createBreadcrumb('/sistema')}
-        title="Sistema"
+        breadcrumb={createBreadcrumb('/administrador')}
+        title="Administrador"
         subtitle="Ferramentas de administração e monitoramento • Controle total"
       />
 
@@ -166,10 +176,10 @@ export default function Sistema() {
               <h3 className="text-lg font-semibold text-foreground">Centro de Controle do Sistema</h3>
             </div>
             <p className="text-muted-foreground leading-relaxed">
-              Estas ferramentas permitem o monitoramento completo do sistema financeiro. 
-              Use o <strong>Monitoramento de Performance</strong> para verificar a velocidade e eficiência, 
-              o <strong>Design System</strong> para explorar componentes visuais, e o 
-              <strong>Status do Sistema</strong> para acompanhar a saúde operacional.
+              Estas ferramentas permitem o controle administrativo completo do sistema. 
+              Use a <strong>Gestão de Usuários</strong> para controlar assinaturas e permissões,
+              o <strong>Monitoramento de Performance</strong> para verificar a velocidade e eficiência, 
+              e o <strong>Design System</strong> para explorar componentes visuais.
             </p>
           </CardContent>
         </Card>
