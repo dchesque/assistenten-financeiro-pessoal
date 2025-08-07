@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { mockDataService } from '@/services/mockDataService';
+import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
@@ -42,7 +42,7 @@ export function useDashboard(): UseDashboardReturn {
     try {
       setLoading(true);
       setError(null);
-      const data = await mockDataService.getDashboardSummary();
+      const data = await dataService.dashboard.getSummary();
       setSummary(data);
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
