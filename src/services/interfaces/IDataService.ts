@@ -1,11 +1,9 @@
 // Interface unificada para abstração de dados
-import type { 
-  ContaPagar, 
-  Categoria, 
-  Banco,
-  Fornecedor
-} from '@/types';
+import type { ContaPagar } from '@/types/contaPagar';
 import type { ContaReceber } from '@/types/contaReceber';
+import type { Categoria } from '@/types/categoria';
+import type { Banco } from '@/types/banco';
+import type { Fornecedor } from '@/types/fornecedor';
 
 export interface User {
   id: string;

@@ -3,9 +3,8 @@ import { toast } from 'sonner';
 import { dataService } from '@/services/DataServiceFactory';
 import type { ContaPagar } from '@/types/contaPagar';
 
-// Dados mock removidos - agora usando dataService
-
-// Re-export ContaEnriquecida for compatibility
+// Re-export types for compatibility
+export type { ContaPagar } from '@/types/contaPagar';
 export type { ContaEnriquecida } from '@/types/contaEnriquecida';
 
 export function useContasPagar() {

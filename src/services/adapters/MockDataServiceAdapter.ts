@@ -1,20 +1,9 @@
-// Adaptador para MockDataService - mantém compatibilidade total
+// Adaptador simplificado para MockDataService
 import { IDataService } from '../interfaces/IDataService';
 import { mockDataService } from '../mockDataService';
-import type { 
-  ContaPagar, 
-  Categoria, 
-  Banco,
-  Fornecedor
-} from '@/types';
-import type { ContaReceber } from '@/types/contaReceber';
 
 export class MockDataServiceAdapter implements IDataService {
   private mockService = mockDataService;
-  
-  constructor() {
-    // MockDataService já inicializa automaticamente
-  }
   
   // ============ AUTENTICAÇÃO ============
   auth = {
@@ -48,7 +37,6 @@ export class MockDataServiceAdapter implements IDataService {
     },
     
     updateProfile: async (userId: string, data: any) => {
-      // Mock implementation
       const session = this.mockService.getSession();
       if (session) {
         return { ...session.user, ...data };
@@ -60,24 +48,28 @@ export class MockDataServiceAdapter implements IDataService {
   // ============ CONTAS A PAGAR ============
   contasPagar = {
     getAll: async (filtros?: any) => {
-      return this.mockService.getContasPagar() as any;
+      const contas = await this.mockService.getContasPagar();
+      return contas.map(conta => ({ ...conta, id: Number(conta.id) })) as any;
     },
     
     getById: async (id: string | number) => {
       const contas = await this.mockService.getContasPagar();
-      return contas.find(conta => conta.id === Number(id)) || null;
+      const conta = contas.find(c => c.id === String(id));
+      return conta ? { ...conta, id: Number(conta.id) } as any : null;
     },
     
-    create: async (data: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'>) => {
-      return this.mockService.createContaPagar(data);
+    create: async (data: any) => {
+      const conta = await this.mockService.createContaPagar(data as any);
+      return { ...conta, id: Number(conta.id) } as any;
     },
     
-    update: async (id: string | number, data: Partial<ContaPagar>) => {
-      return this.mockService.updateContaPagar(Number(id), data);
+    update: async (id: string | number, data: any) => {
+      const conta = await this.mockService.updateContaPagar(String(id), data as any);
+      return { ...conta, id: Number(conta.id) } as any;
     },
     
     delete: async (id: string | number) => {
-      return this.mockService.deleteContaPagar(Number(id));
+      await this.mockService.deleteContaPagar(String(id));
     },
     
     getByVencimento: async (dataInicio: Date, dataFim: Date) => {
@@ -85,49 +77,46 @@ export class MockDataServiceAdapter implements IDataService {
       return todas.filter(conta => {
         const vencimento = new Date(conta.data_vencimento);
         return vencimento >= dataInicio && vencimento <= dataFim;
-      });
+      }).map(conta => ({ ...conta, id: Number(conta.id) })) as any;
     },
     
     getByStatus: async (status: string) => {
       const todas = await this.mockService.getContasPagar();
-      return todas.filter(conta => conta.status === status);
+      return todas.filter(conta => conta.status === status)
+        .map(conta => ({ ...conta, id: Number(conta.id) })) as any;
     },
     
     marcarComoPaga: async (id: string | number, dataPagamento: Date, valorPago?: number) => {
-      const conta = await this.contasPagar.getById(id);
-      if (!conta) {
-        throw new Error('Conta não encontrada');
-      }
-      
-      return this.mockService.updateContaPagar(Number(id), {
+      const conta = await this.mockService.updateContaPagar(String(id), {
         status: 'pago',
         data_pagamento: dataPagamento.toISOString(),
-        valor_final: valorPago || conta.valor_final
-      });
+        valor_final: valorPago
+      } as any);
+      return { ...conta, id: Number(conta.id) } as any;
     }
   };
   
   // ============ CONTAS A RECEBER ============
   contasReceber = {
     getAll: async (filtros?: any) => {
-      return this.mockService.getContasReceber(filtros);
+      return this.mockService.getContasReceber() as any;
     },
     
     getById: async (id: string | number) => {
       const contas = await this.mockService.getContasReceber();
-      return contas.find(conta => conta.id === Number(id)) || null;
+      return contas.find(conta => conta.id === String(id)) as any || null;
     },
     
-    create: async (data: Omit<ContaReceber, 'id' | 'created_at' | 'updated_at'>) => {
-      return this.mockService.createContaReceber(data);
+    create: async (data: any) => {
+      return this.mockService.createContaReceber(data as any) as any;
     },
     
-    update: async (id: string | number, data: Partial<ContaReceber>) => {
-      return this.mockService.updateContaReceber(Number(id), data);
+    update: async (id: string | number, data: any) => {
+      return this.mockService.updateContaReceber(String(id), data as any) as any;
     },
     
     delete: async (id: string | number) => {
-      return this.mockService.deleteContaReceber(Number(id));
+      await this.mockService.deleteContaReceber(String(id));
     },
     
     getByVencimento: async (dataInicio: Date, dataFim: Date) => {
@@ -135,121 +124,111 @@ export class MockDataServiceAdapter implements IDataService {
       return todas.filter(conta => {
         const vencimento = new Date(conta.data_vencimento);
         return vencimento >= dataInicio && vencimento <= dataFim;
-      });
+      }) as any;
     },
     
     getByStatus: async (status: string) => {
       const todas = await this.mockService.getContasReceber();
-      return todas.filter(conta => conta.status === status);
+      return todas.filter(conta => conta.status === status) as any;
     },
     
     marcarComoRecebida: async (id: string | number, dataRecebimento: Date, valorRecebido?: number) => {
-      const conta = await this.contasReceber.getById(id);
-      if (!conta) {
-        throw new Error('Conta não encontrada');
-      }
-      
-      return this.mockService.updateContaReceber(Number(id), {
+      return this.mockService.updateContaReceber(String(id), {
         status: 'recebido',
         data_recebimento: dataRecebimento.toISOString(),
-        valor_final: valorRecebido || conta.valor_final
-      });
+        valor: valorRecebido
+      } as any) as any;
     }
   };
   
   // ============ FORNECEDORES/CONTATOS ============
   fornecedores = {
     getAll: async (filtros?: any) => {
-      return this.mockService.getContatos(filtros);
+      return this.mockService.getContatos() as any;
     },
     
     getById: async (id: number) => {
       const contatos = await this.mockService.getContatos();
-      return contatos.find(contato => contato.id === id) || null;
+      return contatos.find(contato => contato.id === String(id)) as any || null;
     },
     
-    create: async (data: Omit<Fornecedor, 'id' | 'dataCadastro' | 'totalCompras' | 'valorTotal'>) => {
-      return this.mockService.createContato({
-        ...data,
-        dataCadastro: new Date().toISOString(),
-        totalCompras: 0,
-        valorTotal: 0
-      });
+    create: async (data: any) => {
+      return this.mockService.createContato(data as any) as any;
     },
     
-    update: async (id: number, data: Partial<Fornecedor>) => {
-      return this.mockService.updateContato(id, data);
+    update: async (id: number, data: any) => {
+      return this.mockService.updateContato(String(id), data as any) as any;
     },
     
     delete: async (id: number) => {
-      return this.mockService.deleteContato(id);
+      await this.mockService.deleteContato(String(id));
     },
     
     getAtivos: async () => {
       const todos = await this.mockService.getContatos();
-      return todos.filter(contato => contato.ativo);
+      return todos.filter(contato => contato.ativo) as any;
     },
     
     buscarPorDocumento: async (documento: string) => {
       const todos = await this.mockService.getContatos();
-      return todos.find(contato => contato.documento === documento) || null;
+      return todos.find(contato => contato.documento === documento) as any || null;
     }
   };
   
   // ============ CATEGORIAS ============
   categorias = {
     getAll: async (filtros?: any) => {
-      return this.mockService.getCategorias(filtros);
+      return this.mockService.getCategorias() as any;
     },
     
     getById: async (id: string | number) => {
       const categorias = await this.mockService.getCategorias();
-      return categorias.find(categoria => categoria.id === String(id)) || null;
+      return categorias.find(categoria => categoria.id === String(id)) as any || null;
     },
     
-    create: async (data: Omit<Categoria, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
-      return this.mockService.createCategoria(data);
+    create: async (data: any) => {
+      return this.mockService.createCategoria(data as any) as any;
     },
     
-    update: async (id: string | number, data: Partial<Categoria>) => {
-      return this.mockService.updateCategoria(String(id), data);
+    update: async (id: string | number, data: any) => {
+      return this.mockService.updateCategoria(String(id), data as any) as any;
     },
     
     delete: async (id: string | number) => {
-      return this.mockService.deleteCategoria(String(id));
+      await this.mockService.deleteCategoria(String(id));
     },
     
     getByTipo: async (tipo: 'receita' | 'despesa') => {
       const todas = await this.mockService.getCategorias();
-      return todas.filter(categoria => categoria.tipo === tipo);
+      return todas.filter(categoria => categoria.tipo === tipo) as any;
     }
   };
   
   // ============ BANCOS ============
   bancos = {
     getAll: async () => {
-      return this.mockService.getBancos();
+      return this.mockService.getBancos() as any;
     },
     
     getById: async (id: number) => {
       const bancos = await this.mockService.getBancos();
-      return bancos.find(banco => banco.id === id) || null;
+      return bancos.find(banco => banco.id === String(id)) as any || null;
     },
     
-    create: async (data: Omit<Banco, 'id' | 'created_at' | 'updated_at'>) => {
-      return this.mockService.createBanco(data);
+    create: async (data: any) => {
+      return this.mockService.createBanco(data as any) as any;
     },
     
-    update: async (id: number, data: Partial<Banco>) => {
-      return this.mockService.updateBanco(id, data);
+    update: async (id: number, data: any) => {
+      return this.mockService.updateBanco(String(id), data as any) as any;
     },
     
     delete: async (id: number) => {
-      return this.mockService.deleteBanco(id);
+      await this.mockService.deleteBanco(String(id));
     },
     
     atualizarSaldo: async (id: number, novoSaldo: number) => {
-      return this.mockService.updateBanco(id, { saldo_atual: novoSaldo });
+      return this.mockService.updateBanco(String(id), { saldo_atual: novoSaldo } as any) as any;
     }
   };
   
@@ -263,22 +242,18 @@ export class MockDataServiceAdapter implements IDataService {
   // ============ UTILITÁRIOS ============
   utils = {
     exportarDados: async (tabela: string, formato: 'json' | 'csv') => {
-      // Implementar exportação mock se necessário
       throw new Error('Exportação não implementada no MockDataService');
     },
     
     importarDados: async (tabela: string, arquivo: File) => {
-      // Implementar importação mock se necessário
       throw new Error('Importação não implementada no MockDataService');
     },
     
     limparCache: async () => {
-      // Mock não tem cache específico
       return Promise.resolve();
     },
     
     verificarConexao: async () => {
-      // Mock sempre está "conectado"
       return Promise.resolve(true);
     },
     

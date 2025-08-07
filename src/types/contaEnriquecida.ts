@@ -1,4 +1,4 @@
-import { ContaPagar } from '@/hooks/useContasPagar';
+import { ContaPagar } from '@/types/contaPagar';
 
 // Tipo ContaEnriquecida para compatibilidade
 export interface ContaEnriquecida extends ContaPagar {
@@ -11,5 +11,4 @@ export interface ContaEnriquecida extends ContaPagar {
   dias_para_vencimento?: number;
   dias_em_atraso?: number;
   destacar?: boolean;
-  documento_referencia?: string;
 }

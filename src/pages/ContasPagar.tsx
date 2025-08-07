@@ -829,8 +829,7 @@ export default function ContasPagar() {
                   contas={contasFiltradas.map(conta => ({
                     ...conta,
                     fornecedor_nome: credores.find(f => f.id.toString() === conta.fornecedor_id.toString())?.nome || '',
-                    plano_conta_nome: planoContas.find(p => p.id === conta.plano_contas_id)?.nome || '',
-                    plano_conta_id: conta.plano_contas_id,
+                    plano_conta_nome: planoContas.find(p => p.id === conta.plano_conta_id)?.nome || '',
                     parcela_atual: 1,
                     total_parcelas: 1,
                     forma_pagamento: 'pix',

@@ -33,7 +33,11 @@ const mockContasOtimizadas: ContaPagar[] = [
     data_vencimento: '2024-12-25',
     status: 'pendente',
     fornecedor_id: 1,
-    plano_contas_id: 3,
+    plano_conta_id: 3,
+    parcela_atual: 1,
+    total_parcelas: 1,
+    forma_pagamento: 'boleto',
+    dda: false,
     observacoes: 'Pagamento mensal',
     created_at: '2024-12-20T10:00:00Z',
     updated_at: '2024-12-20T10:00:00Z'
@@ -46,7 +50,11 @@ const mockContasOtimizadas: ContaPagar[] = [
     data_vencimento: '2024-12-30',
     status: 'pendente',
     fornecedor_id: 2,
-    plano_contas_id: 4,
+    plano_conta_id: 4,
+    parcela_atual: 1,
+    total_parcelas: 1,
+    forma_pagamento: 'debito',
+    dda: true,
     created_at: '2024-12-21T14:20:00Z',
     updated_at: '2024-12-21T14:20:00Z'
   },
@@ -60,6 +68,11 @@ const mockContasOtimizadas: ContaPagar[] = [
     status: 'pago',
     fornecedor_id: 1,
     banco_id: 1,
+    plano_conta_id: 5,
+    parcela_atual: 1,
+    total_parcelas: 1,
+    forma_pagamento: 'transferencia',
+    dda: false,
     created_at: '2024-12-18T09:30:00Z',
     updated_at: '2024-12-20T16:45:00Z'
   },
@@ -71,6 +84,11 @@ const mockContasOtimizadas: ContaPagar[] = [
     data_vencimento: '2024-12-18',
     status: 'vencido',
     fornecedor_id: 2,
+    plano_conta_id: 6,
+    parcela_atual: 1,
+    total_parcelas: 1,
+    forma_pagamento: 'boleto',
+    dda: false,
     created_at: '2024-12-15T11:15:00Z',
     updated_at: '2024-12-15T11:15:00Z'
   }
@@ -169,7 +187,7 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
     
     const novaConta: ContaPagar = {
       ...conta,
-      id: Math.max(...contas.map(c => c.id)) + 1,
+      id: Math.max(...contas.map(c => Number(c.id))) + 1,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

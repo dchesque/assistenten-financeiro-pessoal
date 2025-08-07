@@ -1,10 +1,10 @@
 export interface ContaPagar {
-  id?: number;
+  id?: number | string;
   
   // Relacionamentos
-  fornecedor_id: number;
-  plano_conta_id: number;
-  banco_id?: number; // Se pago
+  fornecedor_id: number | string;
+  plano_conta_id: number | string;
+  banco_id?: number | string; // Se pago
   
   // Dados principais
   documento_referencia?: string;
