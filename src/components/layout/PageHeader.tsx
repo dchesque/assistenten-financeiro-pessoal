@@ -25,35 +25,7 @@ export function PageHeader({
       {/* Breadcrumb */}
       <div className="mb-4">
         <Breadcrumb>
-          <BreadcrumbList>
-            {breadcrumb.map((item, index) => {
-              const isLast = index === breadcrumb.length - 1;
-              return (
-                <div key={`breadcrumb-${index}`}>
-                  <BreadcrumbItem>
-                    {item.href ? (
-                      <BreadcrumbLink asChild>
-                        <Link to={item.href} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                          {item.icon}
-                          {item.label}
-                        </Link>
-                      </BreadcrumbLink>
-                    ) : (
-                      <BreadcrumbPage className="flex items-center gap-2 font-medium text-gray-900">
-                        {item.icon}
-                        {item.label}
-                      </BreadcrumbPage>
-                    )}
-                  </BreadcrumbItem>
-                  {!isLast && (
-                    <BreadcrumbSeparator>
-                      <ChevronRight className="w-4 h-4" />
-                    </BreadcrumbSeparator>
-                  )}
-                </div>
-              );
-            })}
-          </BreadcrumbList>
+          
         </Breadcrumb>
       </div>
 
