@@ -5,6 +5,8 @@ import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/LoadingButton';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,10 +21,12 @@ import ContaVisualizarModal from '@/components/contasPagar/ContaVisualizarModal'
 import ContaEditarModal from '@/components/contasPagar/ContaEditarModal';
 import { TabelaContasSkeleton, ContaCardsSkeleton } from '@/components/contasPagar/TabelaContasSkeleton';
 import { useContasPagarOtimizado } from '@/hooks/useContasPagarOtimizado';
+import { useLoadingStates } from '@/hooks/useLoadingStates';
 import { TabelaContasResponsiva } from '@/components/contasPagar/TabelaContasResponsiva';
 import { TabelaContasVirtualizada } from '@/components/contasPagar/TabelaContasVirtualizada';
 import { useContatos } from '@/hooks/useContatos';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
+import { toast } from 'sonner';
 
 export default function ContasPagar() {
   const navigate = useNavigate();
@@ -65,6 +69,12 @@ export default function ContasPagar() {
   // Estados para modal de confirmação
   const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false);
   const [acaoConfirmacao, setAcaoConfirmacao] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [itemToCancel, setItemToCancel] = useState<any>(null);
+  
+  const { isDeleting, setLoading } = useLoadingStates();
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -166,11 +176,7 @@ export default function ContasPagar() {
   // Melhorar feedback de filtros
   const handleLimparFiltros = () => {
     limparFiltros();
-    const { toast } = require('@/hooks/use-toast');
-    toast({
-      title: "✨ Filtros limpos",
-      description: `${contadorFiltrosAtivos} filtro${contadorFiltrosAtivos > 1 ? 's' : ''} ${contadorFiltrosAtivos > 1 ? 'foram removidos' : 'foi removido'}`,
-    });
+    toast.success(`${contadorFiltrosAtivos} filtro${contadorFiltrosAtivos > 1 ? 's' : ''} ${contadorFiltrosAtivos > 1 ? 'foram removidos' : 'foi removido'}`);
   };
 
   const handleFiltroRapido = (novoFiltro: string) => {
@@ -182,27 +188,29 @@ export default function ContasPagar() {
       'vencido': 'contas vencidas'
     };
     
-    const { toast } = require('@/hooks/use-toast');
-    toast({
-      title: "🔍 Filtro aplicado",
-      description: `Exibindo: ${labels[novoFiltro] || novoFiltro}`,
-    });
+    toast.success(`Exibindo: ${labels[novoFiltro] || novoFiltro}`);
   };
 
   const handleCancelar = (conta: any) => {
-    setAcaoConfirmacao({
-      tipo: 'cancelar',
-      conta,
-      titulo: 'Cancelar Conta',
-      mensagem: `Tem certeza que deseja cancelar a conta "${conta.descricao}"?`,
-      acao: async () => {
-        await cancelarConta(conta.id);
-        setModalConfirmacaoAberto(false);
-        setAcaoConfirmacao(null);
-      }
-    });
-    setModalConfirmacaoAberto(true);
+    setItemToCancel(conta);
+    setCancelDialogOpen(true);
     setMenuAbertoId(null);
+  };
+
+  const confirmCancel = async () => {
+    if (!itemToCancel) return;
+    
+    setLoading('deleting', true);
+    try {
+      await cancelarConta(itemToCancel.id);
+      toast.success('Conta cancelada com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao cancelar conta');
+    } finally {
+      setLoading('deleting', false);
+      setCancelDialogOpen(false);
+      setItemToCancel(null);
+    }
   };
 
   const handleVerHistorico = (conta: any) => {
@@ -277,19 +285,25 @@ export default function ContasPagar() {
   };
 
   const handleExcluir = (conta: any) => {
-    setAcaoConfirmacao({
-      tipo: 'excluir',
-      conta,
-      titulo: 'Excluir Conta',
-      mensagem: `Tem certeza que deseja EXCLUIR permanentemente a conta "${conta.descricao}"?\n\nEsta ação não pode ser desfeita.`,
-      acao: async () => {
-        await excluirConta(conta.id);
-        setModalConfirmacaoAberto(false);
-        setAcaoConfirmacao(null);
-      }
-    });
-    setModalConfirmacaoAberto(true);
+    setItemToDelete(conta);
+    setDeleteDialogOpen(true);
     setMenuAbertoId(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    setLoading('deleting', true);
+    try {
+      await excluirConta(itemToDelete.id);
+      toast.success('Conta excluída com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao excluir conta');
+    } finally {
+      setLoading('deleting', false);
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    }
   };
 
   const DropdownMenuComponent = ({ conta }: { conta: any }) => {
@@ -887,7 +901,32 @@ export default function ContasPagar() {
             <Loader2 className="w-4 h-4 text-green-600 animate-spin" />
             <span className="text-sm text-green-800">Processando baixa...</span>
           </div>
-        )}
+          )}
+        
+        {/* Diálogos de Confirmação */}
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Confirmar exclusão"
+          description={`Tem certeza que deseja excluir "${itemToDelete?.descricao}"? Esta ação não pode ser desfeita.`}
+          onConfirm={confirmDelete}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
+          loading={isDeleting}
+        />
+
+        <ConfirmDialog
+          open={cancelDialogOpen}
+          onOpenChange={setCancelDialogOpen}
+          title="Cancelar conta"
+          description={`Tem certeza que deseja cancelar "${itemToCancel?.descricao}"? A conta será marcada como cancelada.`}
+          onConfirm={confirmCancel}
+          confirmText="Cancelar Conta"
+          cancelText="Manter Conta"
+          variant="destructive"
+          loading={isDeleting}
+        />
       </div>
     </div>
   );

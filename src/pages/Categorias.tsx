@@ -3,6 +3,8 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { Plus, Search, Filter, Edit, Trash2, Eye, Package, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/LoadingButton';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
@@ -11,12 +13,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
+import { useLoadingStates } from '@/hooks/useLoadingStates';
 import { PlanoContas } from '@/types/planoContas';
+import { toast } from 'sonner';
 // Supabase removido - usando dados mock
 import * as LucideIcons from 'lucide-react';
-import { ConfirmacaoModal } from '@/components/ui/ConfirmacaoModal';
 
 const CORES_DISPONIVEIS = [
   { nome: 'Azul', valor: '#3B82F6' },
@@ -36,7 +38,6 @@ const ICONES_DISPONIVEIS = [
 ];
 
 export default function Categorias() {
-  const { toast } = useToast();
   const { planoContas, loading: loadingPlano, criarPlanoContas, atualizarPlanoContas, excluirPlanoContas, listarPlanoContas } = usePlanoContas();
   
   // Estados para filtros e busca
@@ -118,20 +119,12 @@ export default function Categorias() {
   // Salvar categoria
   const salvarCategoria = async () => {
     if (!formData.nome.trim()) {
-      toast({
-        title: "Erro",
-        description: "Nome da categoria é obrigatório",
-        variant: "destructive"
-      });
+      toast.error("Nome da categoria é obrigatório");
       return;
     }
 
     if (!formData.codigo.trim()) {
-      toast({
-        title: "Erro", 
-        description: "Código da categoria é obrigatório",
-        variant: "destructive"
-      });
+      toast.error("Código da categoria é obrigatório");
       return;
     }
 
@@ -157,27 +150,17 @@ export default function Categorias() {
 
       if (categoriaEdicao) {
         await atualizarPlanoContas(categoriaEdicao.id, dadosCategoria);
-        toast({
-          title: "✅ Categoria atualizada",
-          description: `"${formData.nome}" foi atualizada com sucesso`
-        });
+        toast.success(`"${formData.nome}" foi atualizada com sucesso`);
       } else {
         await criarPlanoContas(dadosCategoria);
-        toast({
-          title: "✅ Categoria criada",
-          description: `"${formData.nome}" foi criada com sucesso`
-        });
+        toast.success(`"${formData.nome}" foi criada com sucesso`);
       }
 
       setModalAberto(false);
       // Recarregar lista
       await listarPlanoContas();
     } catch (error: any) {
-      toast({
-        title: "❌ Erro ao salvar",
-        description: error.message || "Erro interno do servidor",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Erro interno do servidor");
     } finally {
       setLoading(false);
     }
@@ -197,20 +180,13 @@ export default function Categorias() {
       setLoading(true);
       await excluirPlanoContas(categoriaExclusao.id);
       
-      toast({
-        title: "✅ Categoria excluída",
-        description: `"${categoriaExclusao.nome}" foi excluída com sucesso`
-      });
+      toast.success(`"${categoriaExclusao.nome}" foi excluída com sucesso`);
       
       setModalExclusao(false);
       setCategoriaExclusao(null);
       await listarPlanoContas();
     } catch (error: any) {
-      toast({
-        title: "❌ Erro ao excluir",
-        description: error.message || "Erro interno do servidor",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Erro interno do servidor");
     } finally {
       setLoading(false);
     }
@@ -539,14 +515,16 @@ export default function Categorias() {
       </Dialog>
 
       {/* Modal de Confirmação de Exclusão */}
-      <ConfirmacaoModal
-        isOpen={modalExclusao}
-        onClose={() => setModalExclusao(false)}
+      <ConfirmDialog
+        open={modalExclusao}
+        onOpenChange={setModalExclusao}
+        title="Excluir categoria"
+        description={`Tem certeza que deseja excluir a categoria "${categoriaExclusao?.nome}"? Esta ação não pode ser desfeita.`}
         onConfirm={excluirCategoria}
-        titulo="Excluir Categoria"
-        mensagem={`Tem certeza que deseja excluir a categoria "${categoriaExclusao?.nome}"? Esta ação não pode ser desfeita.`}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="destructive"
         loading={loading}
-        tipo="danger"
       />
     </>
   );

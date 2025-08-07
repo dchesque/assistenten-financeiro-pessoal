@@ -5,6 +5,8 @@ import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/LoadingButton';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,6 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { formatarMoeda, formatarData } from '@/utils/formatters';
+import { useLoadingStates } from '@/hooks/useLoadingStates';
+import { toast } from 'sonner';
 
 export default function ContasReceber() {
   const navigate = useNavigate();
@@ -60,6 +64,12 @@ export default function ContasReceber() {
   // Estados para modal de confirmação
   const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false);
   const [acaoConfirmacao, setAcaoConfirmacao] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [itemToCancel, setItemToCancel] = useState<any>(null);
+  
+  const { isDeleting, setLoading } = useLoadingStates();
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -157,11 +167,7 @@ export default function ContasReceber() {
       data_fim: ''
     });
     
-    const { toast } = require('@/hooks/use-toast');
-    toast({
-      title: "✨ Filtros limpos",
-      description: `${contadorFiltrosAtivos} filtro${contadorFiltrosAtivos > 1 ? 's' : ''} ${contadorFiltrosAtivos > 1 ? 'foram removidos' : 'foi removido'}`,
-    });
+    toast.success(`${contadorFiltrosAtivos} filtro${contadorFiltrosAtivos > 1 ? 's' : ''} ${contadorFiltrosAtivos > 1 ? 'foram removidos' : 'foi removido'}`);
   };
 
   const handleFiltroRapido = (novoFiltro: string) => {
@@ -173,16 +179,30 @@ export default function ContasReceber() {
       'vencido': 'contas vencidas'
     };
     
-    const { toast } = require('@/hooks/use-toast');
-    toast({
-      title: "🔍 Filtro aplicado",
-      description: `Exibindo: ${labels[novoFiltro] || novoFiltro}`,
-    });
+    toast.success(`Exibindo: ${labels[novoFiltro] || novoFiltro}`);
   };
 
   const handleCancelar = (conta: any) => {
-    console.log('Cancelar conta:', conta);
+    setItemToCancel(conta);
+    setCancelDialogOpen(true);
     setMenuAbertoId(null);
+  };
+
+  const confirmCancel = async () => {
+    if (!itemToCancel) return;
+    
+    setLoading('deleting', true);
+    try {
+      // Mock function para cancelar
+      console.log('Cancelar conta:', itemToCancel);
+      toast.success('Conta cancelada com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao cancelar conta');
+    } finally {
+      setLoading('deleting', false);
+      setCancelDialogOpen(false);
+      setItemToCancel(null);
+    }
   };
 
   const handleVerHistorico = (conta: any) => {
@@ -252,8 +272,26 @@ export default function ContasReceber() {
   };
 
   const handleExcluir = (conta: any) => {
-    console.log('Excluir conta:', conta);
+    setItemToDelete(conta);
+    setDeleteDialogOpen(true);
     setMenuAbertoId(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    setLoading('deleting', true);
+    try {
+      // Mock function para excluir
+      console.log('Excluir conta:', itemToDelete);
+      toast.success('Conta excluída com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao excluir conta');
+    } finally {
+      setLoading('deleting', false);
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    }
   };
 
   const DropdownMenuComponent = ({ conta }: { conta: any }) => {
@@ -792,9 +830,34 @@ export default function ContasReceber() {
                           <CheckCircle className="w-4 h-4 mr-2" />
                           Receber
                         </Button>
-                      )}
-                    </div>
-                  </div>
+        )}
+
+        {/* Diálogos de Confirmação */}
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Confirmar exclusão"
+          description={`Tem certeza que deseja excluir "${itemToDelete?.descricao}"? Esta ação não pode ser desfeita.`}
+          onConfirm={confirmDelete}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
+          loading={isDeleting}
+        />
+
+        <ConfirmDialog
+          open={cancelDialogOpen}
+          onOpenChange={setCancelDialogOpen}
+          title="Cancelar conta"
+          description={`Tem certeza que deseja cancelar "${itemToCancel?.descricao}"? A conta será marcada como cancelada.`}
+          onConfirm={confirmCancel}
+          confirmText="Cancelar Conta"
+          cancelText="Manter Conta"
+          variant="destructive"
+          loading={isDeleting}
+        />
+      </div>
+    </div>
                 ))}
               </div>
             )}
