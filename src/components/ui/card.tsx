@@ -11,11 +11,11 @@ const cardVariants = cva(
         default: DESIGN_SYSTEM.glassmorphism.card,
         metric: `${DESIGN_SYSTEM.glassmorphism.card} p-6`,
         dashboard: `${DESIGN_SYSTEM.glassmorphism.card} overflow-hidden`,
-        outline: "border border-white/20 rounded-2xl bg-transparent backdrop-blur-sm hover:bg-white/5 transition-all duration-300",
-        solid: "bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300",
+        outline: "border border-white/20 rounded-2xl bg-transparent backdrop-blur-sm hover:bg-white/5 transition-all duration-200",
+        solid: "bg-white rounded-2xl shadow-lg hover:shadow-lg transition-all duration-200",
       },
       hover: {
-        true: "hover:scale-[1.02] cursor-pointer",
+        true: "cursor-pointer",
         false: "",
       },
       gradient: {

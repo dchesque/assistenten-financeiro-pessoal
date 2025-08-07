@@ -82,9 +82,9 @@ export function AcoesRapidas() {
                 key={index}
                 onClick={() => navigate(acao.link)}
                 className={`
-                  group relative p-4 rounded-xl transition-all duration-300
+                  group relative p-4 rounded-xl transition-all duration-200
                   bg-gradient-to-br ${acao.cor} ${acao.corHover}
-                  hover:shadow-lg hover:-translate-y-1
+                  hover:shadow-lg
                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
                 `}
               >

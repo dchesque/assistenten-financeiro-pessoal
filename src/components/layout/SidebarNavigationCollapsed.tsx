@@ -180,8 +180,8 @@ export function SidebarNavigationCollapsed({ onItemClick }: SidebarNavigationCol
                 onClick={handleItemClick}
                 className={`sidebar-icon flex items-center justify-center w-16 h-12 rounded-lg transition-all duration-200 relative group mx-auto ${
                   active 
-                    ? 'bg-blue-500/20 border-l-4 border-blue-400 text-blue-300 scale-105' 
-                    : 'hover:bg-white/10 text-gray-300 hover:text-white hover:scale-105'
+                    ? 'bg-blue-500/20 border-l-4 border-blue-400 text-blue-300' 
+                    : 'hover:bg-white/10 text-gray-300 hover:text-white'
                 }`}
               >
                 <Icon className={`w-5 h-5 ${active ? 'text-blue-400' : item.color}`} />
@@ -211,8 +211,8 @@ export function SidebarNavigationCollapsed({ onItemClick }: SidebarNavigationCol
               <div 
                 className={`sidebar-icon flex items-center justify-center w-16 h-12 rounded-lg transition-all duration-200 cursor-pointer mx-auto ${
                   hasActive 
-                    ? 'bg-blue-500/20 border-l-4 border-blue-400 text-blue-300 scale-105' 
-                    : 'hover:bg-white/10 text-gray-300 hover:text-white hover:scale-105'
+                    ? 'bg-blue-500/20 border-l-4 border-blue-400 text-blue-300' 
+                    : 'hover:bg-white/10 text-gray-300 hover:text-white'
                 } ${isFlyoutActive ? 'bg-white/10' : ''}`}
                 onClick={() => handleFlyoutClick(item.items)}
               >

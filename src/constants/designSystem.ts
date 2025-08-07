@@ -63,9 +63,9 @@ export const STATUS_BADGES = {
 
 // 🎨 GLASSMORPHISM ELEMENTS
 export const GLASSMORPHISM = {
-  // Cards
+  // Cards - efeitos reduzidos
   card: 'bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg',
-  cardHover: 'hover:shadow-xl transition-all duration-300 hover:bg-white/90',
+  cardHover: 'hover:shadow-lg transition-all duration-200 hover:bg-white/85',
   
   // Modais
   modalOverlay: 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50',
@@ -123,10 +123,10 @@ export const ANIMATIONS = {
   fast: 'transition-all duration-200',
   slow: 'transition-all duration-500',
   
-  // Hover effects (reduzidos)
-  hoverCard: 'hover:shadow-xl hover:bg-white/90',
-  hoverButton: 'hover:shadow-lg',
-  hoverScale: 'hover:scale-[1.02]', // Reduzido de 1.05 para 1.02
+  // Hover effects - movimento mínimo
+  hoverCard: 'hover:shadow-lg hover:bg-white/85',
+  hoverButton: 'hover:shadow-md',
+  hoverScale: '', // Removido hover scale
   
   // Loading
   spin: 'animate-spin',

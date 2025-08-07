@@ -52,7 +52,7 @@ export function KPICard({
   };
 
   return (
-    <Card className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/90 hover:-translate-y-1">
+    <Card className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg hover:shadow-lg transition-all duration-200 hover:bg-white/85">
       <CardContent className="p-6">
         {/* Header com ícone e status */}
         <div className="flex items-start justify-between mb-4">

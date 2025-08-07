@@ -33,7 +33,7 @@ const formatarValor = (valor: number, formato: MetricCardProps['formato']) => {
 
 export function MetricCard({ titulo, valor, formato, icone, cor }: MetricCardProps) {
   return (
-    <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:bg-white/90 transition-all duration-300">
+    <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-lg hover:bg-white/85 transition-all duration-200">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600 mb-2">{titulo}</p>

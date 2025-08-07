@@ -64,8 +64,8 @@ export const ContaCardAprimorado = ({
   return (
     <Card 
       className={cn(
-        "transition-all duration-300 cursor-pointer group",
-        "hover:shadow-lg hover:-translate-y-1",
+        "transition-all duration-200 cursor-pointer group",
+        "hover:shadow-lg",
         conta.destacar && "ring-2 ring-blue-500 shadow-lg bg-blue-50/50",
         conta.status === 'vencido' && "border-l-4 border-l-red-500",
         conta.status === 'pendente' && conta.dias_para_vencimento <= 7 && "border-l-4 border-l-yellow-500"
@@ -86,7 +86,7 @@ export const ContaCardAprimorado = ({
               {/* Badge de status com animação */}
               <Badge 
                 className={cn(
-                  "transition-all duration-200 hover:scale-105",
+                  "transition-all duration-200",
                   getStatusVariant(conta.status)
                 )}
               >

@@ -3,41 +3,41 @@
  * Todos os componentes devem usar essas classes para garantir uniformidade
  */
 export const HOVER_EFFECTS = {
-  // Cards principais
-  card: 'hover:shadow-xl hover:bg-white/90 hover:scale-[1.02] transition-all duration-300 hover:-translate-y-1',
+  // Cards principais - efeitos reduzidos
+  card: 'hover:shadow-lg hover:bg-white/85 transition-all duration-200',
   
-  // Cards secundários (menos destaque)
-  cardSubtle: 'hover:shadow-lg hover:bg-white/85 hover:scale-[1.01] transition-all duration-200',
+  // Cards secundários (ainda mais sutil)
+  cardSubtle: 'hover:shadow-md hover:bg-white/80 transition-all duration-200',
   
-  // Botões primários
-  buttonPrimary: 'hover:shadow-lg hover:scale-105 transition-all duration-200 hover:brightness-110',
+  // Botões primários - movimento mínimo
+  buttonPrimary: 'hover:shadow-md hover:brightness-105 transition-all duration-200',
   
   // Botões secundários
-  buttonSecondary: 'hover:shadow-md hover:scale-102 transition-all duration-200 hover:bg-opacity-90',
+  buttonSecondary: 'hover:shadow-sm hover:bg-opacity-95 transition-all duration-200',
   
   // Inputs
-  input: 'hover:border-blue-400 hover:shadow-md transition-all duration-200 hover:bg-white/95',
+  input: 'hover:border-blue-400 hover:shadow-sm transition-all duration-200 hover:bg-white/90',
   
   // Modals
-  modal: 'hover:backdrop-blur-xl transition-all duration-300',
+  modal: 'hover:backdrop-blur-lg transition-all duration-200',
   
   // Links e elementos clicáveis
   clickable: 'hover:text-blue-600 hover:underline transition-all duration-200 cursor-pointer',
   
-  // Ícones
-  icon: 'hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer',
+  // Ícones - sem scale
+  icon: 'hover:text-blue-600 transition-all duration-200 cursor-pointer',
   
   // Tabelas (linhas)
-  tableRow: 'hover:bg-white/60 hover:shadow-sm transition-all duration-200',
+  tableRow: 'hover:bg-white/50 transition-all duration-200',
   
-  // Navegação (sidebar)
-  navItem: 'hover:bg-white/10 hover:text-white hover:translate-x-1 transition-all duration-200',
+  // Navegação (sidebar) - sem translate
+  navItem: 'hover:bg-white/10 hover:text-white transition-all duration-200',
   
-  // Badges e status
-  badge: 'hover:shadow-md hover:scale-105 transition-all duration-200',
+  // Badges e status - sem scale
+  badge: 'hover:shadow-sm transition-all duration-200',
   
   // Containers especiais
-  containerGlass: 'hover:bg-white/90 hover:backdrop-blur-xl hover:shadow-2xl transition-all duration-300'
+  containerGlass: 'hover:bg-white/85 hover:backdrop-blur-lg hover:shadow-lg transition-all duration-200'
 };
 
 /**
