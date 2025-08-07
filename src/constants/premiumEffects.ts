@@ -3,41 +3,41 @@
  * Todos os componentes devem usar essas classes para garantir uniformidade
  */
 export const HOVER_EFFECTS = {
-  // Cards principais - efeitos reduzidos
-  card: 'hover:shadow-lg hover:bg-white/85 transition-all duration-200',
+  // Cards principais - efeitos balanceados com scale sutil
+  card: 'hover:shadow-xl hover:bg-white/90 hover:scale-[1.02] transition-all duration-300 ease-out',
   
-  // Cards secundários (ainda mais sutil)
-  cardSubtle: 'hover:shadow-md hover:bg-white/80 transition-all duration-200',
+  // Cards secundários - scale mínimo mas perceptível
+  cardSubtle: 'hover:shadow-lg hover:bg-white/85 hover:scale-[1.01] transition-all duration-300 ease-out',
   
-  // Botões primários - movimento mínimo
-  buttonPrimary: 'hover:shadow-md hover:brightness-105 transition-all duration-200',
+  // Botões primários - movimento e brilho aprimorados
+  buttonPrimary: 'hover:shadow-lg hover:brightness-110 hover:scale-[1.03] transition-all duration-300 ease-out',
   
-  // Botões secundários
-  buttonSecondary: 'hover:shadow-sm hover:bg-opacity-95 transition-all duration-200',
+  // Botões secundários - efeitos mais visíveis
+  buttonSecondary: 'hover:shadow-md hover:bg-opacity-90 hover:scale-[1.02] transition-all duration-300 ease-out',
   
-  // Inputs
-  input: 'hover:border-blue-400 hover:shadow-sm transition-all duration-200 hover:bg-white/90',
+  // Inputs - destaque aprimorado
+  input: 'hover:border-blue-400 hover:shadow-md transition-all duration-300 ease-out hover:bg-white/95 hover:scale-[1.01]',
   
-  // Modals
-  modal: 'hover:backdrop-blur-lg transition-all duration-200',
+  // Modals - backdrop aprimorado
+  modal: 'hover:backdrop-blur-xl hover:shadow-2xl transition-all duration-300 ease-out',
   
-  // Links e elementos clicáveis
-  clickable: 'hover:text-blue-600 hover:underline transition-all duration-200 cursor-pointer',
+  // Links e elementos clicáveis - mais responsivos
+  clickable: 'hover:text-blue-600 hover:underline hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer',
   
-  // Ícones - sem scale
-  icon: 'hover:text-blue-600 transition-all duration-200 cursor-pointer',
+  // Ícones - scale sutil para feedback
+  icon: 'hover:text-blue-600 hover:scale-110 transition-all duration-300 ease-out cursor-pointer',
   
-  // Tabelas (linhas)
-  tableRow: 'hover:bg-white/50 transition-all duration-200',
+  // Tabelas (linhas) - destaque aprimorado
+  tableRow: 'hover:bg-white/60 hover:shadow-sm transition-all duration-300 ease-out',
   
-  // Navegação (sidebar) - sem translate
-  navItem: 'hover:bg-white/10 hover:text-white transition-all duration-200',
+  // Navegação (sidebar) - efeitos suaves
+  navItem: 'hover:bg-white/15 hover:text-white hover:scale-[1.02] transition-all duration-300 ease-out',
   
-  // Badges e status - sem scale
-  badge: 'hover:shadow-sm transition-all duration-200',
+  // Badges e status - feedback visual
+  badge: 'hover:shadow-md hover:scale-105 transition-all duration-300 ease-out',
   
-  // Containers especiais
-  containerGlass: 'hover:bg-white/85 hover:backdrop-blur-lg hover:shadow-lg transition-all duration-200'
+  // Containers especiais - efeitos premium
+  containerGlass: 'hover:bg-white/90 hover:backdrop-blur-xl hover:shadow-xl hover:scale-[1.01] transition-all duration-300 ease-out'
 };
 
 /**

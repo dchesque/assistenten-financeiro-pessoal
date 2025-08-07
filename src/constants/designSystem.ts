@@ -63,9 +63,9 @@ export const STATUS_BADGES = {
 
 // 🎨 GLASSMORPHISM ELEMENTS
 export const GLASSMORPHISM = {
-  // Cards - efeitos reduzidos
+  // Cards - efeitos balanceados
   card: 'bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg',
-  cardHover: 'hover:shadow-lg transition-all duration-200 hover:bg-white/85',
+  cardHover: 'hover:shadow-xl hover:bg-white/90 hover:scale-[1.01] transition-all duration-300 ease-out',
   
   // Modais
   modalOverlay: 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50',
@@ -118,15 +118,15 @@ export const BORDER_RADIUS = {
 
 // ✨ ANIMATIONS & TRANSITIONS
 export const ANIMATIONS = {
-  // Transições padrão
-  smooth: 'transition-all duration-300',
-  fast: 'transition-all duration-200',
-  slow: 'transition-all duration-500',
+  // Transições padrão - com ease-out
+  smooth: 'transition-all duration-300 ease-out',
+  fast: 'transition-all duration-200 ease-out',
+  slow: 'transition-all duration-500 ease-out',
   
-  // Hover effects - movimento mínimo
-  hoverCard: 'hover:shadow-lg hover:bg-white/85',
-  hoverButton: 'hover:shadow-md',
-  hoverScale: '', // Removido hover scale
+  // Hover effects - balanceados e perceptíveis
+  hoverCard: 'hover:shadow-xl hover:bg-white/90 hover:scale-[1.02] transition-all duration-300 ease-out',
+  hoverButton: 'hover:shadow-lg hover:scale-[1.02] transition-all duration-300 ease-out',
+  hoverScale: 'hover:scale-[1.02] transition-transform duration-300 ease-out',
   
   // Loading
   spin: 'animate-spin',
