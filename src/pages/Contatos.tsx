@@ -6,10 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { useCredores } from '@/hooks/useCredores';
 import { usePagadores } from '@/hooks/usePagadores';
+import { useLoadingStates } from '@/hooks/useLoadingStates';
 import { ContatoModal } from '@/components/ui/ContatoModal';
 import { toast } from 'sonner';
 
@@ -22,6 +24,10 @@ export default function Contatos() {
   const [tipoModal, setTipoModal] = useState<ContatoTipo>('credor');
   const [itemSelecionado, setItemSelecionado] = useState<any>(null);
   const [modoEdicao, setModoEdicao] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  
+  const { isDeleting, setLoading } = useLoadingStates();
 
   const { credores, loading: loadingCredores, criarCredor, atualizarCredor, excluirCredor } = useCredores();
   const { pagadores, loading: loadingPagadores } = usePagadores();
@@ -63,16 +69,28 @@ export default function Contatos() {
     setModalAberto(true);
   };
 
-  const handleExcluirContato = async (contato: any) => {
+  const handleExcluirContato = (contato: any) => {
+    setItemToDelete(contato);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    setLoading('deleting', true);
     try {
-      if (contato.tipo === 'credor') {
-        await excluirCredor(contato.id);
+      if (itemToDelete.tipo === 'credor') {
+        await excluirCredor(itemToDelete.id);
       } else {
-        await excluirPagador(contato.id);
+        await excluirPagador(itemToDelete.id);
       }
       toast.success('Contato excluído com sucesso!');
     } catch (error) {
       toast.error('Erro ao excluir contato');
+    } finally {
+      setLoading('deleting', false);
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
   };
 
@@ -271,6 +289,19 @@ export default function Contatos() {
         contato={itemSelecionado}
         onSave={handleSalvarContato}
         tipo={tipoModal}
+      />
+
+      {/* Diálogo de Confirmação de Exclusão */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Confirmar exclusão"
+        description={`Tem certeza que deseja excluir "${itemToDelete?.nome}"? Esta ação não pode ser desfeita.`}
+        onConfirm={confirmDelete}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={isDeleting}
       />
       </div>
     </div>

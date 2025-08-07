@@ -1,6 +1,37 @@
 import { useState, useCallback } from 'react';
 
+interface LoadingStates {
+  isLoading: boolean;
+  isSaving: boolean;
+  isDeleting: boolean;
+  isUpdating: boolean;
+}
+
 // Hook para gerenciar estados de loading de forma consistente
+export function useLoadingStates(): LoadingStates & {
+  setLoading: (key: 'loading' | 'saving' | 'deleting' | 'updating', value: boolean) => void;
+} {
+  const [states, setStates] = useState<LoadingStates>({
+    isLoading: false,
+    isSaving: false,
+    isDeleting: false,
+    isUpdating: false
+  });
+
+  const setLoading = useCallback((key: 'loading' | 'saving' | 'deleting' | 'updating', value: boolean) => {
+    setStates(prev => ({
+      ...prev,
+      [`is${key.charAt(0).toUpperCase() + key.slice(1)}`]: value
+    }));
+  }, []);
+
+  return {
+    ...states,
+    setLoading
+  };
+}
+
+// Hook original mantido para compatibilidade
 export function useLoadingState() {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
 

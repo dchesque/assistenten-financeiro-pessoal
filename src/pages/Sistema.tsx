@@ -38,16 +38,6 @@ export default function Sistema() {
       corFundo: 'bg-purple-50/80',
       badges: ['Componentes', 'UI/UX']
     },
-    {
-      id: 'status-sistema',
-      titulo: 'Status do Sistema',
-      descricao: 'Acompanhe o status operacional, saúde dos serviços e logs do sistema',
-      icone: Shield,
-      rota: '/status-sistema',
-      cor: 'from-green-500 to-green-600',
-      corFundo: 'bg-green-50/80',
-      badges: ['Operacional', 'Logs']
-    }
   ];
 
   const handleNavegar = (rota: string) => {

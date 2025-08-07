@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { LoadingButton } from '@/components/ui/LoadingButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MaskedInput, masks } from '@/components/ui/MaskedInput';
 import { formatDocument, validateCPF, validateCNPJ } from '@/utils/validators';
+import { validateForm, validationRules, showValidationErrors } from '@/utils/validacoesBrasil';
 import { toast } from 'sonner';
 
 interface ContatoModalProps {
@@ -28,8 +31,32 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
     observacoes: contato?.observacoes || ''
   });
 
+  // Schema de validação
+  const validationSchema = {
+    nome: [
+      validationRules.required('Nome'),
+    ],
+    documento: [
+      validationRules.required('Documento'),
+      formData.tipo_pessoa === 'pessoa_fisica' 
+        ? validationRules.cpf()
+        : validationRules.cnpj()
+    ],
+    email: formData.email ? [validationRules.email()] : [],
+    telefone: formData.telefone ? [validationRules.phone()] : []
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar formulário
+    const { isValid, errors } = validateForm(formData, validationSchema);
+    
+    if (!isValid) {
+      showValidationErrors(errors);
+      return;
+    }
+    
     setLoading(true);
     
     try {
@@ -83,36 +110,24 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="documento">Documento</Label>
-              <Input
-                id="documento"
-                value={formatDocument(formData.documento)}
-                onChange={(e) => {
-                  const formatted = formatDocument(e.target.value);
-                  setFormData(prev => ({ ...prev, documento: formatted }));
-                }}
-                onBlur={() => {
-                  if (formData.documento) {
-                    const numbers = formData.documento.replace(/\D/g, '');
-                    const isValid = numbers.length <= 11 
-                      ? validateCPF(formData.documento)
-                      : validateCNPJ(formData.documento);
-                    
-                    if (!isValid) {
-                      toast.error('Documento inválido');
-                    }
-                  }
-                }}
+              <Label htmlFor="documento">
+                Documento <span className="text-red-500">*</span>
+              </Label>
+              <MaskedInput
+                mask={formData.tipo_pessoa === 'pessoa_fisica' ? masks.cpf : masks.cnpj}
+                value={formData.documento}
+                onChange={(value) => setFormData(prev => ({ ...prev, documento: value }))}
                 placeholder={formData.tipo_pessoa === 'pessoa_fisica' ? 'CPF' : 'CNPJ'}
               />
             </div>
             
             <div>
               <Label htmlFor="telefone">Telefone</Label>
-              <Input
-                id="telefone"
+              <MaskedInput
+                mask={masks.phone}
                 value={formData.telefone}
-                onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
+                onChange={(value) => setFormData(prev => ({ ...prev, telefone: value }))}
+                placeholder="(11) 99999-9999"
               />
             </div>
           </div>
@@ -146,12 +161,12 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
           </div>
           
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar'}
-            </Button>
+            <LoadingButton type="submit" loading={loading} loadingText="Salvando...">
+              Salvar
+            </LoadingButton>
           </div>
         </form>
       </DialogContent>

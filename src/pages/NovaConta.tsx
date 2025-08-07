@@ -16,6 +16,7 @@ import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelecto
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
 import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/LoadingButton';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -25,17 +26,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { useLoadingStates } from '@/hooks/useLoadingStates';
 import { aplicarMascaraMoeda, aplicarMascaraPercentual, converterMoedaParaNumero, converterPercentualParaNumero, numeroParaMascaraMoeda, numeroParaMascaraPercentual, validarValorMonetario, validarPercentual, formatarMoedaExibicao } from '@/utils/masks';
 import { ValidationService } from '@/services/ValidationService';
 // Supabase removido - usando dados mock
 import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
 import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
+import { toast } from 'sonner';
 export default function NovaConta() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { criarConta, loading } = useContasPagar();
   const { bancos } = useBancos();
   const { credores } = useContatos();
+  const { isSaving, setLoading } = useLoadingStates();
 
   // Estados do formulário
   const [conta, setConta] = useState<Partial<ContaPagar>>({
@@ -282,36 +285,66 @@ export default function NovaConta() {
       valor_pago: numero
     }));
   };
-  const validarFormulario = async () => {
-    const { ValidationService } = await import('@/services/ValidationService');
+  const validarFormulario = (): boolean => {
+    const errors: string[] = [];
     
-    // Usar validação robusta do serviço
-    const erros = ValidationService.validarContaPagar({
-      fornecedor_id: credorSelecionado?.id,
-      plano_conta_id: contaSelecionada?.id,
-      descricao: conta.descricao,
-      data_vencimento: conta.data_vencimento,
-      valor_original: conta.valor_original,
-      data_emissao: conta.data_emissao
-    });
+    // Validações obrigatórias
+    if (!credorSelecionado || !credorSelecionado.id) {
+      errors.push('Selecione um credor');
+    }
     
-    // Mostrar primeiro erro encontrado
-    const primeiroErro = Object.values(erros)[0] as string;
-    if (primeiroErro) {
-      toast({
-        title: "Erro de validação",
-        description: primeiroErro,
-        variant: "destructive"
-      });
-      return false;
+    if (!conta.descricao || conta.descricao.trim() === '') {
+      errors.push('Descrição é obrigatória');
+    } else if (conta.descricao.length < 3) {
+      errors.push('Descrição deve ter pelo menos 3 caracteres');
+    } else if (conta.descricao.length > 500) {
+      errors.push('Descrição deve ter no máximo 500 caracteres');
+    }
+    
+    if (!conta.valor_original || conta.valor_original <= 0) {
+      errors.push('Valor deve ser maior que zero');
+    } else if (conta.valor_original > 999999.99) {
+      errors.push('Valor máximo excedido (R$ 999.999,99)');
+    }
+    
+    if (!conta.data_emissao) {
+      errors.push('Data de emissão é obrigatória');
+    }
+    
+    if (!conta.data_vencimento) {
+      errors.push('Data de vencimento é obrigatória');
+    }
+    
+    // Validações de lógica de negócio
+    if (conta.data_emissao && conta.data_vencimento) {
+      const emissao = new Date(conta.data_emissao);
+      const vencimento = new Date(conta.data_vencimento);
+      
+      if (vencimento < emissao) {
+        errors.push('Data de vencimento não pode ser anterior à emissão');
+      }
+      
+      // Validar se não é muito no futuro (ex: máximo 5 anos)
+      const maxFutureDate = new Date();
+      maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 5);
+      if (vencimento > maxFutureDate) {
+        errors.push('Data de vencimento não pode ser superior a 5 anos');
+      }
+    }
+    
+    if (!contaSelecionada || !contaSelecionada.id) {
+      errors.push('Selecione uma categoria');
     }
     
     // Validações específicas de status
     if (conta.status === 'pago' && !conta.banco_id) {
-      toast({
-        title: "Erro",
-        description: "Selecione o banco para contas pagas",
-        variant: "destructive"
+      errors.push('Selecione o banco para contas pagas');
+    }
+    
+    // Mostrar erros se houver
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        toast.error(error);
       });
       return false;
     }
@@ -329,10 +362,7 @@ export default function NovaConta() {
       setFormaPagamento(dados.formaPagamento);
       setTemRascunho(false);
       
-      toast({
-        title: "Rascunho aplicado",
-        description: "Dados anteriores foram restaurados com sucesso",
-      });
+      toast.success("Rascunho aplicado - dados restaurados com sucesso");
     }
   };
 
@@ -341,15 +371,13 @@ export default function NovaConta() {
     localStorage.removeItem('rascunho_conta_individual');
     setTemRascunho(false);
     
-    toast({
-      title: "Rascunho descartado",
-      description: "Dados anteriores foram removidos",
-    });
+    toast.success("Rascunho descartado");
   };
 
   const salvarConta = async (marcarComoPago = false) => {
-    if (!(await validarFormulario())) return;
+    if (!validarFormulario()) return;
     
+    setLoading('saving', true);
     try {
       // ✅ OBRIGATÓRIO: Obter user_id
       // Mock user - Supabase removido
@@ -387,25 +415,12 @@ export default function NovaConta() {
       setRascunhoSalvo(false);
       
       // ✅ MELHORAR TOAST DE SUCESSO
-      toast({
-        title: "✅ Conta criada com sucesso",
-        description: `"${conta.descricao}" foi cadastrada`,
-        action: (
-          <div className="space-x-2">
-            <Button size="sm" onClick={() => navigate('/contas-pagar')}>
-              Ver todas
-            </Button>
-          </div>
-        )
-      });
-
+      toast.success(`Conta "${conta.descricao}" criada com sucesso!`);
       navigate('/contas-pagar');
     } catch (error: any) {
-      toast({
-        title: "❌ Erro ao salvar conta", 
-        description: error.message || "Erro interno do servidor. Tente novamente.",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Erro ao salvar conta. Tente novamente.");
+    } finally {
+      setLoading('saving', false);
     }
   };
   return (
@@ -854,15 +869,25 @@ export default function NovaConta() {
                     Cancelar
                   </Button>
                   
-                  <Button onClick={() => salvarConta(false)} disabled={loading} className="btn-primary flex-1">
-                    {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                  <LoadingButton 
+                    onClick={() => salvarConta(false)} 
+                    loading={isSaving} 
+                    loadingText="Salvando..."
+                    icon={<Save className="h-4 w-4" />}
+                    className="btn-primary flex-1"
+                  >
                     Salvar
-                  </Button>
+                  </LoadingButton>
                   
-                  <Button onClick={() => salvarConta(true)} disabled={loading} className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800">
-                    {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
+                  <LoadingButton 
+                    onClick={() => salvarConta(true)} 
+                    loading={isSaving}
+                    loadingText="Salvando..."
+                    icon={<CreditCard className="h-4 w-4" />}
+                    className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800"
+                  >
                     Salvar e Pagar
-                  </Button>
+                  </LoadingButton>
                 </div>
               </div>
             </Card>

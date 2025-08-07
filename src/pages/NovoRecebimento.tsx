@@ -16,6 +16,7 @@ import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelecto
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
 import { FormaRecebimentoSection } from '@/components/contasPagar/FormaRecebimentoSection';
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/LoadingButton';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -25,17 +26,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { useLoadingStates } from '@/hooks/useLoadingStates';
 import { aplicarMascaraMoeda, aplicarMascaraPercentual, converterMoedaParaNumero, converterPercentualParaNumero, numeroParaMascaraMoeda, numeroParaMascaraPercentual, validarValorMonetario, validarPercentual, formatarMoedaExibicao } from '@/utils/masks';
 import { ValidationService } from '@/services/ValidationService';
 // Supabase removido - usando dados mock
 import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
 import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
+import { toast } from 'sonner';
 export default function NovoRecebimento() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { criarConta, estados } = useContasPagar();
   const { bancos } = useBancosSupabase();
   const { credores } = useCredores();
+  const { isSaving, setLoading } = useLoadingStates();
 
   // Estados do formulário
   const [conta, setConta] = useState<Partial<ContaPagar>>({
@@ -285,37 +288,66 @@ export default function NovoRecebimento() {
       valor_pago: numero
     }));
   };
-  const validarFormulario = async () => {
-    const { ValidationService } = await import('@/services/ValidationService');
+  const validarFormulario = (): boolean => {
+    const errors: string[] = [];
     
-    // Usar validação robusta do serviço
-    const erros = ValidationService.validarContaPagar({
-      fornecedor_id: pagadorSelecionado?.id,
-      plano_conta_id: contaSelecionada?.id,
-      descricao: conta.descricao,
-      data_vencimento: conta.data_vencimento,
-      valor_original: conta.valor_original,
-      data_emissao: conta.data_emissao
-    });
+    // Validações obrigatórias
+    if (!pagadorSelecionado || !pagadorSelecionado.id) {
+      errors.push('Selecione um pagador');
+    }
     
-    // Mostrar primeiro erro encontrado
-    const primeiroErro = Object.values(erros)[0] as string;
-    if (primeiroErro) {
-      toast({
-        title: "Erro de validação",
-        description: primeiroErro,
-        variant: "destructive"
-      });
-      return false;
+    if (!conta.descricao || conta.descricao.trim() === '') {
+      errors.push('Descrição é obrigatória');
+    } else if (conta.descricao.length < 3) {
+      errors.push('Descrição deve ter pelo menos 3 caracteres');
+    } else if (conta.descricao.length > 500) {
+      errors.push('Descrição deve ter no máximo 500 caracteres');
+    }
+    
+    if (!conta.valor_original || conta.valor_original <= 0) {
+      errors.push('Valor deve ser maior que zero');
+    } else if (conta.valor_original > 999999.99) {
+      errors.push('Valor máximo excedido (R$ 999.999,99)');
+    }
+    
+    if (!conta.data_emissao) {
+      errors.push('Data de emissão é obrigatória');
+    }
+    
+    if (!conta.data_vencimento) {
+      errors.push('Data de vencimento é obrigatória');
+    }
+    
+    // Validações de lógica de negócio
+    if (conta.data_emissao && conta.data_vencimento) {
+      const emissao = new Date(conta.data_emissao);
+      const vencimento = new Date(conta.data_vencimento);
+      
+      if (vencimento < emissao) {
+        errors.push('Data de vencimento não pode ser anterior à emissão');
+      }
+      
+      // Validar se não é muito no futuro (ex: máximo 5 anos)
+      const maxFutureDate = new Date();
+      maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 5);
+      if (vencimento > maxFutureDate) {
+        errors.push('Data de vencimento não pode ser superior a 5 anos');
+      }
+    }
+    
+    if (!contaSelecionada || !contaSelecionada.id) {
+      errors.push('Selecione uma categoria');
     }
     
     // Validações específicas de status
-    // Validação simplificada para recebimentos
     if (conta.status === 'pago' && !formaPagamento.tipo) {
-      toast({
-        title: "Erro",
-        description: "Defina a forma de recebimento",
-        variant: "destructive"
+      errors.push('Defina a forma de recebimento');
+    }
+    
+    // Mostrar erros se houver
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        toast.error(error);
       });
       return false;
     }
@@ -333,10 +365,7 @@ export default function NovoRecebimento() {
       setFormaPagamento(dados.formaPagamento);
       setTemRascunho(false);
       
-      toast({
-        title: "Rascunho aplicado",
-        description: "Dados anteriores foram restaurados com sucesso",
-      });
+      toast.success("Rascunho aplicado - dados restaurados com sucesso");
     }
   };
 
@@ -345,14 +374,11 @@ export default function NovoRecebimento() {
     localStorage.removeItem('rascunho_recebimento');
     setTemRascunho(false);
     
-    toast({
-      title: "Rascunho descartado",
-      description: "Dados anteriores foram removidos",
-    });
+    toast.success("Rascunho descartado");
   };
 
   const salvarConta = async (marcarComoPago = false) => {
-    if (!(await validarFormulario())) return;
+    if (!validarFormulario()) return;
     
     try {
       // ✅ OBRIGATÓRIO: Obter user_id
@@ -393,25 +419,12 @@ export default function NovoRecebimento() {
       setRascunhoSalvo(false);
       
       // ✅ MELHORAR TOAST DE SUCESSO
-      toast({
-        title: "✅ Recebimento criado com sucesso",
-        description: `"${conta.descricao}" foi cadastrado`,
-        action: (
-          <div className="space-x-2">
-            <Button size="sm" onClick={() => navigate('/contas-receber')}>
-              Ver todas
-            </Button>
-          </div>
-        )
-      });
-
+      toast.success(`Recebimento "${conta.descricao}" criado com sucesso!`);
       navigate('/contas-receber');
     } catch (error: any) {
-      toast({
-        title: "❌ Erro ao salvar recebimento", 
-        description: error.message || "Erro interno do servidor. Tente novamente.",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Erro ao salvar recebimento. Tente novamente.");
+    } finally {
+      setLoading('saving', false);
     }
   };
   return (
