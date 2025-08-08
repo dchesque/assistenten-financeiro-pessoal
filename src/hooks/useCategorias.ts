@@ -64,7 +64,7 @@ export function useCategorias(): UseCategoriastReturn {
 
     try {
       const novaCategoria = await showMessage.promise(
-        withRetry(() => mockDataService.criarCategoria(dadosCategoria)),
+        withRetry(() => mockDataService.createCategoria(dadosCategoria)),
         {
           loading: 'Salvando categoria...',
           success: 'Categoria criada com sucesso!',
@@ -83,7 +83,7 @@ export function useCategorias(): UseCategoriastReturn {
   const atualizarCategoria = async (id: string, dadosAtualizacao: Partial<Categoria>): Promise<Categoria | null> => {
     // Verificar se novo nome já existe (se nome estiver sendo alterado)
     if (dadosAtualizacao.nome) {
-      const nomeValido = await validacoesCategorias.validarNomeUnico(dadosAtualizacao.nome, id);
+      const nomeValido = await validacoesCategorias.validarNomeUnico(dadosAtualizacao.nome, parseInt(id));
       if (!nomeValido) {
         throw new Error('Nome da categoria inválido');
       }

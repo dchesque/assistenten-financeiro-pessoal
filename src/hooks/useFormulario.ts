@@ -9,7 +9,7 @@ interface UseFormularioReturn<T> {
   resetar: () => void;
   estaCarregando: boolean;
   setCarregando: (carregando: boolean) => void;
-  salvar: () => Promise<void>;
+  salvar: (dadosParaSalvar?: any) => Promise<void>;
   erros: Record<string, string>;
   validarCampo: (campo: string, valor: string) => string;
   validarTodos: () => boolean;
@@ -63,14 +63,16 @@ export function useFormulario<T extends Record<string, any>>(
     return validarTodosInterno(dados);
   }, [validarTodosInterno, dados]);
 
-  const salvar = useCallback(async () => {
+  const salvar = useCallback(async (dadosParaSalvar?: any) => {
+    const dadosFinais = dadosParaSalvar || dados;
+    
     if (validacao && !validarTodos()) {
       return;
     }
     
     setCarregando(true);
     try {
-      await onSalvar(dados);
+      await onSalvar(dadosFinais);
     } finally {
       setCarregando(false);
     }

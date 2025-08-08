@@ -7,7 +7,7 @@ interface CancelButtonProps {
   isLoading?: boolean;
   disabled?: boolean;
   label?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'lg' | 'default';
   variant?: 'ghost' | 'outline' | 'destructive';
   className?: string;
 }
@@ -17,7 +17,7 @@ export const CancelButton: React.FC<CancelButtonProps> = ({
   isLoading = false,
   disabled = false,
   label = 'Cancelar',
-  size = 'md',
+  size = 'default',
   variant = 'ghost',
   className = ''
 }) => {
