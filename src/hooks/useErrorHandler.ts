@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { logService } from '@/services/logService';
 import { createAppError, type AppError, type AppErrorType } from '@/types/appError';
 import { MESSAGES } from '@/constants/messages';
@@ -32,15 +32,19 @@ export function useErrorHandler(defaultContext?: string) {
 
     switch (type) {
       case 'validation':
+        toast.warning(m, { description: "Corrija os campos destacados" });
+        break;
       case 'permission':
-        toast({ title: 'Atenção', description: m });
+        toast.error(m, { description: "Sem permissão para esta ação" });
         break;
       case 'network':
+        toast.error("Erro de conexão", { description: "Verifique sua internet" });
+        break;
       case 'timeout':
-        toast({ title: 'Erro', description: m, variant: 'destructive' });
+        toast.error(m, { description: "Operação demorou muito" });
         break;
       default:
-        toast({ title: 'Erro', description: m, variant: 'destructive' });
+        toast.error(m);
     }
   };
 

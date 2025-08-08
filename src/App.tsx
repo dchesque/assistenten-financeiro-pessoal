@@ -1,8 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from "sonner";
+import { Toaster } from "sonner";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Layout } from '@/components/layout/Layout';
 import { Loader2 } from 'lucide-react';
@@ -76,8 +75,21 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          <Toaster />
-          <SonnerToaster />
+          <Toaster 
+            position="top-right"
+            expand={false}
+            richColors
+            closeButton
+            duration={4000}
+            theme="light"
+            toastOptions={{
+              style: {
+                background: 'white',
+                border: '1px solid #e2e8f0',
+              },
+              className: 'sonner-toast',
+            }}
+          />
         </Router>
       </QueryClientProvider>
     </ErrorBoundary>

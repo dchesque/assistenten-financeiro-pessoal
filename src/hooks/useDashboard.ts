@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
+import { showMessage } from '@/utils/messages';
 
 
 export interface DashboardSummary {
@@ -42,10 +43,17 @@ export function useDashboard(): UseDashboardReturn {
     if (!user) return;
     setLoading(true);
     setError(null);
+    
+    const loadingToast = showMessage.loading('Carregando dashboard...');
+    
     try {
-      const data = await withRetry(() => withTimeout(Promise.resolve(dataService.dashboard.getSummary()), 30000));
-      setSummary(await data);
+      const data = await withRetry(() => 
+        withTimeout(dataService.dashboard.getSummary(), 30000)
+      );
+      setSummary(data);
+      showMessage.dismiss();
     } catch (err) {
+      showMessage.dismiss();
       const appErr = handleError(err, 'carregar-dashboard');
       setError(appErr.message);
     } finally {
@@ -63,7 +71,11 @@ export function useDashboard(): UseDashboardReturn {
     } else {
       setSummary(null);
     }
-  }, [user]);
+
+    return () => {
+      cancelAll();
+    };
+  }, [user, cancelAll]);
 
   return {
     summary,

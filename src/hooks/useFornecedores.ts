@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useAuth } from './useAuth';
+import { useErrorHandler } from './useErrorHandler';
+import { showMessage } from '@/utils/messages';
 import { Fornecedor } from '@/types/fornecedor';
 
 export interface EstatisticasFornecedor {
@@ -56,6 +58,8 @@ export function useFornecedores() {
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { handleError, withRetry, withTimeout } = useErrorHandler('fornecedores');
 
   const calcularEstatisticas = (fornecedoresList: Fornecedor[]): EstatisticasFornecedor => {
     const ativos = fornecedoresList.filter(f => f.ativo);
@@ -71,60 +75,107 @@ export function useFornecedores() {
   };
 
   const carregarFornecedores = async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     
+    const loadingToast = showMessage.loading('Carregando fornecedores...');
+    
     try {
       // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await withRetry(() => 
+        withTimeout(new Promise(resolve => setTimeout(() => resolve(mockFornecedores), 500)), 10000)
+      );
       
       setFornecedores(mockFornecedores);
-    } catch (error) {
-      setError('Erro ao carregar fornecedores');
-      toast.error('Erro ao carregar fornecedores');
+      showMessage.dismiss();
+    } catch (err) {
+      showMessage.dismiss();
+      const appErr = handleError(err, 'carregar-fornecedores');
+      setError(appErr.message);
     } finally {
       setLoading(false);
     }
   };
 
   const criarFornecedor = async (fornecedor: Omit<Fornecedor, 'id' | 'dataCadastro'>): Promise<Fornecedor> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const novoFornecedor: Fornecedor = {
-      ...fornecedor,
-      id: Math.max(...fornecedores.map(f => f.id)) + 1,
-      dataCadastro: new Date().toISOString(),
-      totalCompras: 0,
-      valorTotal: 0
-    };
-    
-    setFornecedores(prev => [...prev, novoFornecedor]);
-    toast.success('Fornecedor criado com sucesso!');
-    
-    return novoFornecedor;
+    try {
+      const novoFornecedor: Fornecedor = {
+        ...fornecedor,
+        id: Math.max(...fornecedores.map(f => f.id)) + 1,
+        dataCadastro: new Date().toISOString(),
+        totalCompras: 0,
+        valorTotal: 0
+      };
+
+      await showMessage.promise(
+        withRetry(() => new Promise(resolve => setTimeout(() => resolve(novoFornecedor), 500))),
+        {
+          loading: 'Salvando fornecedor...',
+          success: 'Fornecedor criado com sucesso!',
+          error: 'Erro ao criar fornecedor'
+        }
+      );
+      
+      setFornecedores(prev => [...prev, novoFornecedor]);
+      return novoFornecedor;
+    } catch (err) {
+      handleError(err, 'criar-fornecedor');
+      throw err;
+    }
   };
 
   const atualizarFornecedor = async (id: number, dadosAtualizacao: Partial<Fornecedor>): Promise<Fornecedor> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const fornecedorAtualizado = fornecedores.find(f => f.id === id);
-    if (!fornecedorAtualizado) {
-      throw new Error('Fornecedor não encontrado');
+    try {
+      const fornecedorAtualizado = fornecedores.find(f => f.id === id);
+      if (!fornecedorAtualizado) {
+        throw new Error('Fornecedor não encontrado');
+      }
+      
+      const fornecedorNovo = { ...fornecedorAtualizado, ...dadosAtualizacao };
+
+      await showMessage.promise(
+        withRetry(() => new Promise(resolve => setTimeout(() => resolve(fornecedorNovo), 500))),
+        {
+          loading: 'Atualizando fornecedor...',
+          success: 'Fornecedor atualizado com sucesso!',
+          error: 'Erro ao atualizar fornecedor'
+        }
+      );
+      
+      setFornecedores(prev => prev.map(f => f.id === id ? fornecedorNovo : f));
+      return fornecedorNovo;
+    } catch (err) {
+      handleError(err, 'atualizar-fornecedor');
+      throw err;
     }
-    
-    const fornecedorNovo = { ...fornecedorAtualizado, ...dadosAtualizacao };
-    
-    setFornecedores(prev => prev.map(f => f.id === id ? fornecedorNovo : f));
-    toast.success('Fornecedor atualizado com sucesso!');
-    
-    return fornecedorNovo;
   };
 
   const excluirFornecedor = async (id: number): Promise<void> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const fornecedorAExcluir = fornecedores.find(f => f.id === id);
     
-    setFornecedores(prev => prev.filter(f => f.id !== id));
-    toast.success('Fornecedor excluído com sucesso!');
+    try {
+      await showMessage.promise(
+        withRetry(() => new Promise(resolve => setTimeout(resolve, 500))),
+        {
+          loading: 'Excluindo fornecedor...',
+          success: 'Fornecedor excluído com sucesso!',
+          error: 'Erro ao excluir fornecedor'
+        }
+      );
+      
+      setFornecedores(prev => prev.filter(f => f.id !== id));
+
+      // Oferecer ação de desfazer
+      if (fornecedorAExcluir) {
+        showMessage.withUndo('Fornecedor excluído', () => {
+          setFornecedores(prev => [...prev, fornecedorAExcluir]);
+        });
+      }
+    } catch (err) {
+      handleError(err, 'excluir-fornecedor');
+      throw err;
+    }
   };
 
   const buscarFornecedores = (termo: string): Fornecedor[] => {
@@ -139,8 +190,14 @@ export function useFornecedores() {
   };
 
   useEffect(() => {
-    carregarFornecedores();
-  }, []);
+    if (user) {
+      carregarFornecedores();
+    }
+
+    return () => {
+      cancelAll();
+    };
+  }, [user, cancelAll]);
 
   const buscarPorDocumento = (documento: string) => {
     return fornecedores.find(f => f.documento === documento);

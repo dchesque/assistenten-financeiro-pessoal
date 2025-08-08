@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
 import { dataService } from '@/services/DataServiceFactory';
+import { useAuth } from './useAuth';
+import { useErrorHandler } from './useErrorHandler';
+import { showMessage } from '@/utils/messages';
 import type { ContaPagar } from '@/types/contaPagar';
 
 // Re-export types for compatibility
@@ -11,18 +13,26 @@ export function useContasPagar() {
   const [contas, setContas] = useState<ContaPagar[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { handleError, withRetry, withTimeout, newAbortController, cancelAll } = useErrorHandler('contas-pagar');
 
   const carregarContas = async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     
+    const loadingToast = showMessage.loading('Carregando contas...');
+    
     try {
-      const contasCarregadas = await dataService.contasPagar.getAll();
+      const contasCarregadas = await withRetry(() => 
+        withTimeout(dataService.contasPagar.getAll(), 30000)
+      );
       setContas(contasCarregadas);
-    } catch (error) {
-      console.error('Erro ao carregar contas a pagar:', error);
-      setError('Erro ao carregar contas a pagar');
-      toast.error('Erro ao carregar contas a pagar');
+      showMessage.dismiss();
+    } catch (err) {
+      showMessage.dismiss();
+      const appErr = handleError(err, 'carregar-contas');
+      setError(appErr.message);
     } finally {
       setLoading(false);
     }
@@ -30,46 +40,79 @@ export function useContasPagar() {
 
   const criarConta = async (conta: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'>): Promise<ContaPagar> => {
     try {
-      const novaConta = await dataService.contasPagar.create(conta);
+      const novaConta = await showMessage.promise(
+        withRetry(() => dataService.contasPagar.create(conta)),
+        {
+          loading: 'Salvando conta...',
+          success: 'Conta criada com sucesso!',
+          error: 'Erro ao criar conta'
+        }
+      );
       setContas(prev => [...prev, novaConta]);
-      toast.success('Conta criada com sucesso!');
       return novaConta;
-    } catch (error) {
-      console.error('Erro ao criar conta:', error);
-      toast.error('Erro ao criar conta');
-      throw error;
+    } catch (err) {
+      handleError(err, 'criar-conta');
+      throw err;
     }
   };
 
   const atualizarConta = async (id: number, dadosAtualizacao: Partial<ContaPagar>): Promise<ContaPagar> => {
     try {
-      const contaAtualizada = await dataService.contasPagar.update(id, dadosAtualizacao);
+      const contaAtualizada = await showMessage.promise(
+        withRetry(() => dataService.contasPagar.update(id, dadosAtualizacao)),
+        {
+          loading: 'Atualizando conta...',
+          success: 'Conta atualizada com sucesso!',
+          error: 'Erro ao atualizar conta'
+        }
+      );
       setContas(prev => prev.map(c => c.id === id ? contaAtualizada : c));
-      toast.success('Conta atualizada com sucesso!');
       return contaAtualizada;
-    } catch (error) {
-      console.error('Erro ao atualizar conta:', error);
-      toast.error('Erro ao atualizar conta');
-      throw error;
+    } catch (err) {
+      handleError(err, 'atualizar-conta');
+      throw err;
     }
   };
 
   const excluirConta = async (id: number): Promise<void> => {
+    const contaAExcluir = contas.find(c => c.id === id);
+    
     try {
-      await dataService.contasPagar.delete(id);
+      await showMessage.promise(
+        withRetry(() => dataService.contasPagar.delete(id)),
+        {
+          loading: 'Excluindo conta...',
+          success: 'Conta excluída com sucesso!',
+          error: 'Erro ao excluir conta'
+        }
+      );
+      
       setContas(prev => prev.filter(c => c.id !== id));
-      toast.success('Conta excluída com sucesso!');
-    } catch (error) {
-      console.error('Erro ao excluir conta:', error);
-      toast.error('Erro ao excluir conta');
-      throw error;
+      
+      // Oferecer ação de desfazer
+      if (contaAExcluir) {
+        showMessage.withUndo('Conta excluída', () => {
+          setContas(prev => [...prev, contaAExcluir]);
+        });
+      }
+    } catch (err) {
+      handleError(err, 'excluir-conta');
+      throw err;
     }
   };
 
   const baixarConta = async (id: number, dadosPagamento: { data_pagamento: string; banco_id?: number; valor_pago?: number }): Promise<void> => {
+    const dataPagamento = new Date(dadosPagamento.data_pagamento);
+    
     try {
-      const dataPagamento = new Date(dadosPagamento.data_pagamento);
-      await dataService.contasPagar.marcarComoPaga(id, dataPagamento, dadosPagamento.valor_pago);
+      await showMessage.promise(
+        withRetry(() => dataService.contasPagar.marcarComoPaga(id, dataPagamento, dadosPagamento.valor_pago)),
+        {
+          loading: 'Baixando conta...',
+          success: 'Conta baixada com sucesso!',
+          error: 'Erro ao baixar conta'
+        }
+      );
       
       // Atualizar estado local
       setContas(prev => prev.map(c => 
@@ -83,12 +126,9 @@ export function useContasPagar() {
             }
           : c
       ));
-      
-      toast.success('Conta baixada com sucesso!');
-    } catch (error) {
-      console.error('Erro ao baixar conta:', error);
-      toast.error('Erro ao baixar conta');
-      throw error;
+    } catch (err) {
+      handleError(err, 'baixar-conta');
+      throw err;
     }
   };
 
@@ -103,8 +143,14 @@ export function useContasPagar() {
   };
 
   useEffect(() => {
-    carregarContas();
-  }, []);
+    if (user) {
+      carregarContas();
+    }
+
+    return () => {
+      cancelAll();
+    };
+  }, [user, cancelAll]);
 
   // Tipo ContaEnriquecida para compatibilidade
 
