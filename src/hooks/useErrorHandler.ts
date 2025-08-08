@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { logService } from '@/services/logService';
 import { createAppError, type AppError, type AppErrorType } from '@/types/appError';
 import { MESSAGES } from '@/constants/messages';
@@ -32,17 +32,15 @@ export function useErrorHandler(defaultContext?: string) {
 
     switch (type) {
       case 'validation':
-        toast.warning(m);
-        break;
       case 'permission':
-        toast.warning(m);
+        toast({ title: 'Atenção', description: m });
         break;
       case 'network':
       case 'timeout':
-        toast.error(m);
+        toast({ title: 'Erro', description: m, variant: 'destructive' });
         break;
       default:
-        toast.error(m);
+        toast({ title: 'Erro', description: m, variant: 'destructive' });
     }
   };
 

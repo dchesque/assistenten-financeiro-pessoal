@@ -15,7 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from '@/components/ui/badge';
 import { formatarMoeda, formatarData } from '@/utils/formatters';
 import { useLoadingStates } from '@/hooks/useLoadingStates';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 export default function ContasReceber() {
   const navigate = useNavigate();
@@ -167,7 +167,7 @@ export default function ContasReceber() {
       data_fim: ''
     });
     
-    toast.success(`${contadorFiltrosAtivos} filtro${contadorFiltrosAtivos > 1 ? 's' : ''} ${contadorFiltrosAtivos > 1 ? 'foram removidos' : 'foi removido'}`);
+    toast({ title: 'Sucesso', description: `${contadorFiltrosAtivos} filtro${contadorFiltrosAtivos > 1 ? 's' : ''} ${contadorFiltrosAtivos > 1 ? 'foram removidos' : 'foi removido'}` });
   };
 
   const handleFiltroRapido = (novoFiltro: string) => {
@@ -179,7 +179,7 @@ export default function ContasReceber() {
       'vencido': 'contas vencidas'
     };
     
-    toast.success(`Exibindo: ${labels[novoFiltro] || novoFiltro}`);
+    toast({ title: 'Sucesso', description: `Exibindo: ${labels[novoFiltro] || novoFiltro}` });
   };
 
   const handleCancelar = (conta: any) => {
@@ -195,9 +195,9 @@ export default function ContasReceber() {
     try {
       // Mock function para cancelar
       // TODO: Cancelar conta
-      toast.success('Conta cancelada com sucesso!');
+      toast({ title: 'Sucesso', description: 'Conta cancelada com sucesso!' });
     } catch (error) {
-      toast.error('Erro ao cancelar conta');
+      toast({ title: 'Erro', description: 'Erro ao cancelar conta', variant: 'destructive' });
     } finally {
       setLoading('deleting', false);
       setCancelDialogOpen(false);
@@ -284,9 +284,9 @@ export default function ContasReceber() {
     try {
       // Mock function para excluir
       // TODO: Excluir conta
-      toast.success('Conta excluída com sucesso!');
+      toast({ title: 'Sucesso', description: 'Conta excluída com sucesso!' });
     } catch (error) {
-      toast.error('Erro ao excluir conta');
+      toast({ title: 'Erro', description: 'Erro ao excluir conta', variant: 'destructive' });
     } finally {
       setLoading('deleting', false);
       setDeleteDialogOpen(false);
