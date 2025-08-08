@@ -60,7 +60,14 @@ export default function Plans() {
 
   return (
     <PageContainer>
-      <PageHeader title="Meu Plano" />
+      <PageHeader 
+        title="Meu Plano"
+        breadcrumb={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Planos', href: '/planos' }
+        ]}
+        subtitle="Gerencie sua assinatura e recursos"
+      />
 
       <div className="space-y-8">
         {/* Plano Atual */}

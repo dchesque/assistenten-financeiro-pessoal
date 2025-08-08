@@ -431,6 +431,37 @@ class MockDataService {
     return null;
   }
 
+  checkExistingWhatsAppUser(whatsapp: string): boolean {
+    const cleanPhone = whatsapp.replace(/\D/g, '');
+    // Mock: considerar alguns números como existentes
+    const existingNumbers = ['11999999999', '11888888888', '11777777777'];
+    return existingNumbers.includes(cleanPhone);
+  }
+
+  async signInWithWhatsApp(whatsapp: string): Promise<Sessao> {
+    await this.simulateLatency();
+    
+    const cleanPhone = whatsapp.replace(/\D/g, '');
+    
+    // Simular usuário existente ou criar novo
+    const user: Usuario = {
+      id: Date.now().toString(),
+      email: `user${cleanPhone}@whatsapp.mock`,
+      nome: `Usuário ${cleanPhone.slice(-4)}`,
+      created_at: new Date().toISOString()
+    };
+
+    this.currentUser = user;
+
+    const session: Sessao = {
+      user,
+      access_token: 'mock-token-' + Date.now()
+    };
+
+    localStorage.setItem(this.getStorageKey('session'), JSON.stringify(session));
+    return session;
+  }
+
   // CRUD Categorias
   async getCategorias(): Promise<Categoria[]> {
     await this.simulateLatency();

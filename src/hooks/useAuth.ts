@@ -85,7 +85,7 @@ export function useAuth() {
         toast.success('Login realizado com sucesso!');
         
         // Verificar se precisa do onboarding
-        const needsOnboarding = !sessionData.user.user_metadata?.onboarding_completed;
+        const needsOnboarding = !sessionData.user.nome; // Simplificado para mock
         
         return { 
           error: null, 

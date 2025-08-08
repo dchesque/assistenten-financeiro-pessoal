@@ -160,7 +160,14 @@ export default function AdminDashboard() {
 
   return (
     <PageContainer>
-      <PageHeader title="Painel Administrativo" />
+      <PageHeader 
+        title="Painel Administrativo"
+        breadcrumb={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Admin', href: '/admin' }
+        ]}
+        subtitle="Gerencie usuários, planos e sistema"
+      />
 
       <div className="space-y-8">
         {/* Estatísticas */}
