@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useValidacao } from './useValidacao';
 import type { EsquemaValidacao } from '@/utils/validacoes';
 
@@ -32,9 +32,19 @@ export function useFormulario<T extends Record<string, any>>(
     limparErros 
   } = useValidacao(validacao || {});
 
+  const timersRef = useRef<Record<string, number>>({});
+
   const alterarCampo = useCallback((campo: keyof T, valor: any) => {
     setDados(prev => ({ ...prev, [campo]: valor }));
-  }, []);
+    // validação com debounce 500ms
+    const key = String(campo);
+    if (timersRef.current[key]) {
+      window.clearTimeout(timersRef.current[key]);
+    }
+    timersRef.current[key] = window.setTimeout(() => {
+      validarCampoInterno(key, String(valor ?? ''));
+    }, 500);
+  }, [validarCampoInterno]);
 
   const alterarCampos = useCallback((novosValues: Partial<T>) => {
     setDados(prev => ({ ...prev, ...novosValues }));

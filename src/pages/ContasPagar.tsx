@@ -651,7 +651,7 @@ export default function ContasPagar() {
             </button>
           </div>
           
-          <button onClick={() => console.log('Exportar contas')} className="flex items-center space-x-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors">
+          <button onClick={() => { /* TODO: Implementar exportação de contas */ }} className="flex items-center space-x-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors">
             <Download className="w-4 h-4" />
             <span>Exportar CSV</span>
           </button>

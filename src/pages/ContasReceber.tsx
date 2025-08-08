@@ -283,7 +283,7 @@ export default function ContasReceber() {
     setLoading('deleting', true);
     try {
       // Mock function para excluir
-      console.log('Excluir conta:', itemToDelete);
+      // TODO: Excluir conta
       toast.success('Conta excluída com sucesso!');
     } catch (error) {
       toast.error('Erro ao excluir conta');

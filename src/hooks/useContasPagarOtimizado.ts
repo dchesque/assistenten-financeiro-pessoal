@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { ContaPagar } from './useContasPagar';
+import { useErrorHandler } from './useErrorHandler';
 
 export interface FiltrosContas {
   busca?: string;
@@ -98,6 +99,7 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
   const [contas, setContas] = useState<ContaPagar[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { handleError, withRetry, withTimeout, cancelAll } = useErrorHandler('contas-pagar');
 
   // Estados para filtros
   const [filtros, setFiltros] = useState<FiltrosContas>({});
@@ -160,23 +162,20 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
   const carregarContas = async () => {
     setLoading(true);
     setError(null);
-    
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Marcar como vencidas as contas com data de vencimento passada
+      await withRetry(() => withTimeout(new Promise(resolve => setTimeout(resolve, 500)), 30000));
+
       const contasComStatus = mockContasOtimizadas.map(conta => {
         if (conta.status === 'pendente' && new Date(conta.data_vencimento) < new Date()) {
           return { ...conta, status: 'vencido' as const };
         }
         return conta;
       });
-      
+
       setContas(contasComStatus);
-    } catch (error) {
-      setError('Erro ao carregar contas a pagar');
-      toast.error('Erro ao carregar contas a pagar');
+    } catch (err) {
+      const appErr = handleError(err, 'carregar-contas');
+      setError(appErr.message);
     } finally {
       setLoading(false);
     }
@@ -303,6 +302,9 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
 
   useEffect(() => {
     carregarContas();
+    return () => {
+      cancelAll();
+    };
   }, []);
 
   return {
