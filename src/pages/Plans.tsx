@@ -5,8 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { useSubscription } from '@/hooks/useSubscription';
-import { PLAN_CONFIGS, UserPlan } from '@/types/userProfile';
+import { useSubscription, PLAN_CONFIGS, UserPlan } from '@/hooks/useSubscription';
 import { Crown, Clock, CheckCircle, Zap, Shield, BarChart3, Download, Cloud, MessageCircle, Check, X } from 'lucide-react';
 import { GLASSMORPHISM, ANIMATIONS } from '@/constants/designSystem';
 import { motion } from 'framer-motion';

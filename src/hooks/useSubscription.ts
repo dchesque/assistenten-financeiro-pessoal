@@ -4,6 +4,64 @@ import { useAuth } from './useAuth';
 import { logService } from '@/services/logService';
 import { toast } from 'sonner';
 
+// Definir tipos de plano e limites
+export type UserPlan = 'free' | 'trial' | 'premium';
+
+export interface PlanLimits {
+  contas_pagar: number;
+  fornecedores: number;
+  categorias: number;
+  relatorios: boolean;
+  exportacao: boolean;
+  backup: boolean;
+}
+
+export interface PlanConfig {
+  name: string;
+  price: string;
+  limits: PlanLimits;
+}
+
+// Configurações dos planos
+export const PLAN_CONFIGS: Record<UserPlan, PlanConfig> = {
+  free: {
+    name: 'Grátis',
+    price: 'R$ 0',
+    limits: {
+      contas_pagar: 10,
+      fornecedores: 5,
+      categorias: 3,
+      relatorios: false,
+      exportacao: false,
+      backup: false
+    }
+  },
+  trial: {
+    name: 'Trial',
+    price: 'Gratuito por 7 dias',
+    limits: {
+      contas_pagar: 50,
+      fornecedores: 20,
+      categorias: 10,
+      relatorios: true,
+      exportacao: false,
+      backup: false
+    }
+  },
+  premium: {
+    name: 'Premium',
+    price: 'R$ 29,90/mês',
+    limits: {
+      contas_pagar: -1, // -1 = ilimitado
+      fornecedores: -1,
+      categorias: -1,
+      relatorios: true,
+      exportacao: true,
+      backup: true
+    }
+  }
+};
+
 export function useSubscription() {
   const { user, profile, isAuthenticated } = useAuth();
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
@@ -99,6 +157,61 @@ export function useSubscription() {
     ? SubscriptionService.calculateRemainingSubscriptionDays(subscriptionEndsAt)
     : 0;
 
+  // Determinar plano atual baseado no status da assinatura
+  const plan: UserPlan = (() => {
+    if (isTrialActive) return 'trial';
+    if (isPremiumActive) return 'premium';
+    return 'free';
+  })();
+
+  // Configuração do plano atual
+  const planConfig = PLAN_CONFIGS[plan];
+  const limits = planConfig.limits;
+
+  // Dias restantes (trial ou premium)
+  const daysRemaining = isTrialActive ? remainingTrialDays : remainingSubscriptionDays;
+
+  // Aliases para compatibilidade
+  const isPremium = isPremiumActive;
+  const isTrial = isTrialActive;
+
+  // Verificar se uma feature está bloqueada
+  const isFeatureBlocked = (feature: keyof PlanLimits, currentUsage: number = 0): boolean => {
+    const limit = limits[feature];
+    if (typeof limit === 'boolean') return !limit;
+    if (limit === -1) return false; // Ilimitado
+    return currentUsage >= limit;
+  };
+
+  // Calcular porcentagem de uso
+  const getUsagePercentage = (feature: keyof PlanLimits, currentUsage: number = 0): number => {
+    const limit = limits[feature];
+    if (typeof limit === 'boolean') return limit ? 0 : 100;
+    if (limit === -1) return 0; // Ilimitado
+    return Math.min((currentUsage / limit) * 100, 100);
+  };
+
+  // Obter itens restantes
+  const getRemainingItems = (feature: keyof PlanLimits, currentUsage: number = 0): string => {
+    const limit = limits[feature];
+    if (typeof limit === 'boolean') {
+      return limit ? 'Disponível' : 'Bloqueado';
+    }
+    if (limit === -1) return 'Ilimitado';
+    const remaining = Math.max(0, limit - currentUsage);
+    return `${remaining} de ${limit} restantes`;
+  };
+
+  // Verificar se pode usar uma feature
+  const canUseFeature = (feature: keyof PlanLimits, currentUsage: number = 0): boolean => {
+    return !isFeatureBlocked(feature, currentUsage);
+  };
+
+  // Verificar limite de uma feature
+  const checkLimit = (feature: keyof PlanLimits, currentUsage: number = 0): boolean => {
+    return canUseFeature(feature, currentUsage);
+  };
+
   // Ações
   const activateSubscription = async (months: number = 1) => {
     if (!user?.id) {
@@ -172,6 +285,26 @@ export function useSubscription() {
     };
   };
 
+  // Função para upgrade de plano
+  const upgradePlan = async () => {
+    if (plan === 'premium') {
+      toast.info('Você já possui o plano Premium');
+      return false;
+    }
+    
+    try {
+      const success = await activateSubscription(1);
+      if (success) {
+        toast.success('Plano Premium ativado com sucesso!');
+      }
+      return success;
+    } catch (error) {
+      logService.logError(error, 'useSubscription.upgradePlan');
+      toast.error('Erro ao fazer upgrade do plano');
+      return false;
+    }
+  };
+
   return {
     // Estados
     subscription,
@@ -190,12 +323,28 @@ export function useSubscription() {
     subscriptionEndsAt,
     remainingTrialDays,
     remainingSubscriptionDays,
+    daysRemaining,
+    
+    // Plano atual
+    plan,
+    planConfig,
+    limits,
+    isPremium,
+    isTrial,
+    
+    // Verificações de limites e features
+    isFeatureBlocked,
+    getUsagePercentage,
+    getRemainingItems,
+    canUseFeature,
+    checkLimit,
     
     // Ações
     refreshSubscription,
     activateSubscription,
     cancelSubscription,
     ensureTrialExists,
+    upgradePlan,
     
     // UI helpers
     getStatusBadge

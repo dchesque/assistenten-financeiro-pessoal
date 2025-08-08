@@ -35,12 +35,12 @@ export function usePlanIntegration() {
    * Verifica se o usuário pode usar uma funcionalidade
    */
   const checkFeatureAccess = (feature: keyof typeof subscription.limits, currentUsage: number = 0): boolean => {
-    if (!subscription.canUseFeature(feature)) {
-      showUpgradePrompt(feature, `O recurso ${feature} não está disponível no seu plano atual.`);
+    if (!subscription.canUseFeature(feature, currentUsage)) {
+      showUpgradePrompt(String(feature), `O recurso ${String(feature)} não está disponível no seu plano atual.`);
       
       // Log de auditoria
       if (user) {
-        auditHooks.logView('system', user.id, user.email || '', `blocked-feature-${feature}`);
+        auditHooks.logView('system', user.id, user.email || '', `blocked-feature-${String(feature)}`);
       }
       
       return false;
@@ -48,11 +48,11 @@ export function usePlanIntegration() {
 
     if (subscription.isFeatureBlocked(feature, currentUsage)) {
       const limit = subscription.limits[feature] as number;
-      showLimitReached(feature, currentUsage, limit);
+      showLimitReached(String(feature), currentUsage, limit);
       
       // Log de auditoria
       if (user) {
-        auditHooks.logView('system', user.id, user.email || '', `limit-reached-${feature}`);
+        auditHooks.logView('system', user.id, user.email || '', `limit-reached-${String(feature)}`);
       }
       
       return false;
