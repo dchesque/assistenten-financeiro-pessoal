@@ -1,256 +1,294 @@
-import { useState, useEffect } from 'react';
-import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { createBreadcrumb } from '@/utils/breadcrumbUtils';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
-import { CreditCard, CheckCircle, Star, Calendar, Zap, Home } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-
-interface SubscriptionStatus {
-  subscribed: boolean;
-  subscription_tier?: string;
-  subscription_end?: string;
-}
+import { useSubscription } from '@/hooks/useSubscription';
+import { Calendar, Crown, CreditCard, ExternalLink, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function Assinatura() {
-  const { user } = useAuth();
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({ subscribed: false });
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
+  const {
+    subscription,
+    loading,
+    refreshing,
+    status,
+    isActive,
+    isTrialActive,
+    isPremiumActive,
+    isExpired,
+    remainingTrialDays,
+    remainingSubscriptionDays,
+    trialEndsAt,
+    subscriptionEndsAt,
+    refreshSubscription,
+    activateSubscription,
+    cancelSubscription
+  } = useSubscription();
 
-  const checkSubscription = async () => {
-    if (!user) return;
+  const [activating, setActivating] = useState(false);
+
+  const handleActivateSubscription = async () => {
+    setActivating(true);
+    try {
+      const success = await activateSubscription(1); // 1 mês
+      if (success) {
+        await refreshSubscription();
+      }
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    const confirmed = confirm(
+      'Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos recursos premium.'
+    );
     
-    try {
-      setLoading(true);
-      // Simulação de verificação de assinatura
-      // Em produção, aqui faria a chamada para supabase.functions.invoke('check-subscription')
-      setTimeout(() => {
-        setSubscriptionStatus({ subscribed: false });
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error('Erro ao verificar assinatura:', error);
-      toast({ title: 'Erro', description: 'Erro ao verificar status da assinatura', variant: 'destructive' });
-      setLoading(false);
+    if (confirmed) {
+      await cancelSubscription();
     }
   };
 
-  const handleSubscribe = async () => {
-    if (!user) return;
-
-    try {
-      setActionLoading(true);
-      // Simulação de criação de checkout
-      // Em produção, aqui faria a chamada para supabase.functions.invoke('create-checkout')
-      setTimeout(() => {
-        toast({ title: 'Sucesso', description: 'Funcionalidade de pagamento será integrada com Stripe em produção' });
-        setActionLoading(false);
-      }, 2000);
-    } catch (error) {
-      console.error('Erro ao criar checkout:', error);
-      toast({ title: 'Erro', description: 'Erro ao processar pagamento', variant: 'destructive' });
-      setActionLoading(false);
-    }
+  const handleRefresh = async () => {
+    await refreshSubscription();
+    toast.success('Status da assinatura atualizado!');
   };
-
-  const handleManageSubscription = async () => {
-    if (!user) return;
-
-    try {
-      setActionLoading(true);
-      // Simulação de abertura do portal do cliente
-      // Em produção, aqui faria a chamada para supabase.functions.invoke('customer-portal')
-      setTimeout(() => {
-        toast({ title: 'Sucesso', description: 'Portal de gerenciamento será integrado com Stripe em produção' });
-        setActionLoading(false);
-      }, 2000);
-    } catch (error) {
-      console.error('Erro ao abrir portal do cliente:', error);
-      toast({ title: 'Erro', description: 'Erro ao abrir portal de gerenciamento', variant: 'destructive' });
-      setActionLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    checkSubscription();
-  }, [user]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
-  if (loading) {
-    return (
-      <PageContainer>
-        <div className="flex items-center justify-center min-h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </PageContainer>
-    );
-  }
+  const getStatusColor = () => {
+    if (isTrialActive) return 'bg-blue-100/80 text-blue-700 border-blue-200';
+    if (isPremiumActive) return 'bg-green-100/80 text-green-700 border-green-200';
+    return 'bg-red-100/80 text-red-700 border-red-200';
+  };
+
+  const getStatusIcon = () => {
+    if (isTrialActive) return <Calendar className="w-4 h-4" />;
+    if (isPremiumActive) return <Crown className="w-4 h-4" />;
+    return <CreditCard className="w-4 h-4" />;
+  };
 
   return (
-    <PageContainer>
-      <PageHeader
-        breadcrumb={[
-          { label: 'Início', href: '/dashboard', icon: <Home className="w-4 h-4" /> },
-          { label: 'Assinatura' }
-        ]}
-        title="Minha Assinatura"
-        subtitle="Gerencie sua assinatura e acesse recursos premium"
-        icon={<CreditCard className="w-7 h-7 text-primary" />}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Status Atual */}
-        <Card className="card-base">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <CreditCard className="w-5 h-5 text-primary" />
-              <span>Status da Assinatura</span>
-            </CardTitle>
-            <CardDescription>
-              Informações sobre sua assinatura atual
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Status:</span>
-              <Badge variant={subscriptionStatus.subscribed ? "default" : "secondary"}>
-                {subscriptionStatus.subscribed ? 'Ativa' : 'Inativa'}
-              </Badge>
-            </div>
-            
-            {subscriptionStatus.subscribed && (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Plano:</span>
-                  <span className="font-medium">Premium</span>
-                </div>
-                
-                {subscriptionStatus.subscription_end && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">Renovação:</span>
-                    <span className="font-medium">{formatDate(subscriptionStatus.subscription_end)}</span>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-          
-          <CardFooter>
-            <Button 
-              onClick={checkSubscription}
-              variant="outline" 
-              size="sm"
-              className="w-full"
-              disabled={loading}
-            >
-              Atualizar Status
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {/* Plano Premium */}
-        <Card className="card-base border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Star className="w-5 h-5 text-primary" />
-              <span>Plano Premium</span>
-            </CardTitle>
-            <CardDescription>
-              Acesso completo a todos os recursos do sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-3xl font-bold text-primary">
-              R$ 29,90<span className="text-lg font-normal text-muted-foreground">/mês</span>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-sm">Contas a pagar ilimitadas</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-sm">Contas a receber ilimitadas</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-sm">Relatórios avançados</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-sm">Integração bancária (OFX)</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-sm">Suporte prioritário</span>
-              </div>
-            </div>
-          </CardContent>
-          
-          <CardFooter>
-            {subscriptionStatus.subscribed ? (
-              <Button 
-                onClick={handleManageSubscription}
-                className="w-full btn-primary"
-                disabled={actionLoading}
-              >
-                {actionLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                    Carregando...
-                  </>
-                ) : (
-                  <>
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Gerenciar Assinatura
-                  </>
-                )}
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleSubscribe}
-                className="w-full btn-primary"
-                disabled={actionLoading}
-              >
-                {actionLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                    Processando...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 mr-2" />
-                    Assinar Agora
-                  </>
-                )}
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      {/* Background abstratos */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-orange-400/20 rounded-full blur-3xl"></div>
       </div>
 
-      {/* Informações Adicionais */}
-      <Card className="card-base mt-8">
-        <CardHeader>
-          <CardTitle>Informações Importantes</CardTitle>
-        </CardHeader>
-        <CardContent className="prose prose-sm max-w-none">
-          <ul className="space-y-2">
-            <li>• A assinatura é renovada automaticamente todo mês</li>
-            <li>• Você pode cancelar a qualquer momento sem multa</li>
-            <li>• O cancelamento será efetivo no final do período atual</li>
-            <li>• Todos os dados são mantidos mesmo após o cancelamento</li>
-            <li>• Pagamentos processados com segurança via Stripe</li>
-          </ul>
-        </CardContent>
-      </Card>
-    </PageContainer>
+      {/* Page Header */}
+      <PageHeader
+        breadcrumb={createBreadcrumb('/assinatura')}
+        title="Assinatura"
+        subtitle="Gerencie sua assinatura e planos"
+      />
+
+      <div className="p-4 lg:p-8 space-y-6">
+        {/* Status Atual */}
+        <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <CardTitle className="flex items-center space-x-2">
+                  {getStatusIcon()}
+                  <span>Status da Assinatura</span>
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex items-center space-x-1"
+                >
+                  <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
+                  <span>Atualizar</span>
+                </Button>
+              </div>
+              <Badge className={getStatusColor()}>
+                {isTrialActive && 'Trial Ativo'}
+                {isPremiumActive && 'Premium Ativo'}
+                {isExpired && 'Expirado'}
+              </Badge>
+            </div>
+            <CardDescription>
+              Informações sobre seu plano atual e próximas renovações
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <span className="ml-2 text-muted-foreground">Carregando informações...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Status detalhado */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900">Detalhes do Plano</h3>
+                  
+                  {isTrialActive && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Plano:</span>
+                        <span className="font-medium">Trial Gratuito</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Dias restantes:</span>
+                        <span className="font-medium text-blue-600">{remainingTrialDays} dias</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Expira em:</span>
+                        <span className="font-medium">{trialEndsAt ? formatDate(trialEndsAt) : 'N/A'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {isPremiumActive && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Plano:</span>
+                        <span className="font-medium">Premium</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Dias restantes:</span>
+                        <span className="font-medium text-green-600">{remainingSubscriptionDays} dias</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Próxima renovação:</span>
+                        <span className="font-medium">{subscriptionEndsAt ? formatDate(subscriptionEndsAt) : 'N/A'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {isExpired && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Status:</span>
+                        <span className="font-medium text-red-600">Expirado</span>
+                      </div>
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm text-red-700">
+                          Sua assinatura expirou. Renove para continuar usando todas as funcionalidades.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recursos do plano */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900">Recursos Inclusos</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm">Contas a pagar ilimitadas</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm">Fornecedores ilimitados</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm">Relatórios avançados</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm">Backup automático</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm">Suporte prioritário</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Ações */}
+        <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg">
+          <CardHeader>
+            <CardTitle>Ações da Assinatura</CardTitle>
+            <CardDescription>
+              Gerencie sua assinatura, upgrade ou cancele
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Ativar Premium */}
+              {(isTrialActive || isExpired) && (
+                <Button
+                  onClick={handleActivateSubscription}
+                  disabled={activating}
+                  className="btn-primary flex items-center space-x-2 h-auto p-4"
+                >
+                  <Crown className="w-5 h-5" />
+                  <div className="text-left">
+                    <p className="font-medium">
+                      {activating ? 'Ativando...' : 'Assinar Premium'}
+                    </p>
+                    <p className="text-xs opacity-90">
+                      R$ 29,90/mês • Acesso total
+                    </p>
+                  </div>
+                </Button>
+              )}
+
+              {/* Cancelar */}
+              {isPremiumActive && (
+                <Button
+                  variant="outline"
+                  onClick={handleCancelSubscription}
+                  className="flex items-center space-x-2 h-auto p-4"
+                >
+                  <CreditCard className="w-5 h-5" />
+                  <div className="text-left">
+                    <p className="font-medium">Cancelar Assinatura</p>
+                    <p className="text-xs text-muted-foreground">
+                      Cancele a renovação automática
+                    </p>
+                  </div>
+                </Button>
+              )}
+
+              {/* WhatsApp */}
+              <Button
+                variant="outline"
+                onClick={() => window.open('https://wa.me/5544999999999?text=Olá! Gostaria de informações sobre o plano Premium.', '_blank')}
+                className="flex items-center space-x-2 h-auto p-4"
+              >
+                <ExternalLink className="w-5 h-5" />
+                <div className="text-left">
+                  <p className="font-medium">Falar com Suporte</p>
+                  <p className="text-xs text-muted-foreground">
+                    WhatsApp para dúvidas
+                  </p>
+                </div>
+              </Button>
+            </div>
+
+            {/* Informações adicionais */}
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">💡 Informações Importantes</h4>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• O trial oferece acesso completo por 7 dias</li>
+                <li>• A assinatura Premium é de R$ 29,90 por mês</li>
+                <li>• Cancele a qualquer momento sem taxa</li>
+                <li>• Suporte via WhatsApp incluído</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

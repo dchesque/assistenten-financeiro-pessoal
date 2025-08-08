@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfileService, UserProfile } from '@/services/profileService';
+import { SubscriptionService } from '@/services/subscriptionService';
 import { logService } from '@/services/logService';
 import { toast } from 'sonner';
 
@@ -273,6 +274,9 @@ export function useSupabaseAuth() {
           formattedPhone,
           data.user.user_metadata?.name
         );
+
+        // Garantir que o trial existe (será criado se for primeiro login)
+        await SubscriptionService.createTrial(data.user.id);
 
         // Verificar se precisa do onboarding
         const userProfile = await loadUserProfile(data.user.id);

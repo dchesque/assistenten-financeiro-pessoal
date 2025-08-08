@@ -1,116 +1,203 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { SubscriptionService, UserSubscription } from '@/services/subscriptionService';
 import { useAuth } from './useAuth';
-import { UserPlan, SubscriptionStatus, FeatureLimits, PLAN_CONFIGS } from '@/types/userProfile';
-import { differenceInDays } from 'date-fns';
+import { logService } from '@/services/logService';
 import { toast } from 'sonner';
 
-export const useSubscription = () => {
-  const { user } = useAuth();
-  
-  // Estados mockados - em produção viria do perfil do usuário
-  const [plan, setPlan] = useState<UserPlan>('trial');
-  const [status, setStatus] = useState<SubscriptionStatus>('active');
-  const [limits, setLimits] = useState<FeatureLimits>(PLAN_CONFIGS.trial.limits);
-  const [trialEndsAt, setTrialEndsAt] = useState<Date>(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000));
-  const [daysRemaining, setDaysRemaining] = useState<number>(14);
-  
-  // Carregar dados do usuário
-  useEffect(() => {
-    if (user?.email) {
-      // Mock: determinar plano baseado no email para teste
-      if (user.email.includes('admin')) {
-        setPlan('premium');
-        setLimits(PLAN_CONFIGS.premium.limits);
-      } else if (user.email.includes('premium')) {
-        setPlan('premium');
-        setLimits(PLAN_CONFIGS.premium.limits);
-      } else if (user.email.includes('free')) {
-        setPlan('free');
-        setLimits(PLAN_CONFIGS.free.limits);
-      } else {
-        setPlan('trial');
-        setLimits(PLAN_CONFIGS.trial.limits);
+export function useSubscription() {
+  const { user, profile, isAuthenticated } = useAuth();
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Função para buscar e normalizar assinatura
+  const refreshSubscription = useCallback(async (userId?: string) => {
+    if (!userId && !user?.id) {
+      setLoading(false);
+      return null;
+    }
+
+    const targetUserId = userId || user!.id;
+
+    try {
+      setRefreshing(true);
+      
+      // Normalizar status primeiro (expira automaticamente se necessário)
+      const normalizedSubscription = await SubscriptionService.normalizeStatus(targetUserId);
+      
+      if (normalizedSubscription) {
+        setSubscription(normalizedSubscription);
+        return normalizedSubscription;
       }
-    }
-  }, [user]);
 
-  // Calcular dias restantes do trial
+      // Se não existe assinatura, buscar novamente
+      const currentSubscription = await SubscriptionService.getCurrentSubscription();
+      setSubscription(currentSubscription);
+      
+      return currentSubscription;
+    } catch (error) {
+      logService.logError(error, 'useSubscription.refreshSubscription');
+      return null;
+    } finally {
+      setRefreshing(false);
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  // Função para criar trial automático
+  const ensureTrialExists = useCallback(async () => {
+    if (!user?.id || !isAuthenticated) return;
+
+    try {
+      // Verificar se já existe assinatura
+      let currentSubscription = await SubscriptionService.getCurrentSubscription();
+      
+      if (!currentSubscription) {
+        // Criar trial automático
+        logService.logInfo('Criando trial automático para novo usuário', { userId: user.id });
+        
+        currentSubscription = await SubscriptionService.createTrial(user.id);
+        
+        if (currentSubscription) {
+          setSubscription(currentSubscription);
+          toast.success('Bem-vindo! Você tem 7 dias grátis para testar todas as funcionalidades.');
+        }
+      } else {
+        // Normalizar status da assinatura existente
+        await refreshSubscription(user.id);
+      }
+    } catch (error) {
+      logService.logError(error, 'useSubscription.ensureTrialExists');
+    }
+  }, [user?.id, isAuthenticated, refreshSubscription]);
+
+  // Carregar assinatura ao fazer login
   useEffect(() => {
-    if (plan === 'trial' && trialEndsAt) {
-      const days = differenceInDays(trialEndsAt, new Date());
-      setDaysRemaining(Math.max(0, days));
+    if (isAuthenticated && user?.id) {
+      ensureTrialExists();
+    } else {
+      setSubscription(null);
+      setLoading(false);
     }
-  }, [plan, trialEndsAt]);
-  
-  // Funções
-  const checkLimit = (feature: keyof FeatureLimits, current: number): boolean => {
-    if (typeof limits[feature] === 'boolean') {
-      return limits[feature] as boolean;
+  }, [isAuthenticated, user?.id, ensureTrialExists]);
+
+  // Helpers computados
+  const status = subscription?.status || 'expired';
+  const trialEndsAt = subscription?.trial_ends_at;
+  const subscriptionEndsAt = subscription?.subscription_ends_at;
+
+  const isActive = SubscriptionService.isActiveSubscription(subscription);
+  const isTrialActive = status === 'trial' && isActive;
+  const isPremiumActive = status === 'active' && isActive;
+  const isExpired = status === 'expired' || !isActive;
+
+  const remainingTrialDays = trialEndsAt 
+    ? SubscriptionService.calculateRemainingTrialDays(trialEndsAt)
+    : 0;
+
+  const remainingSubscriptionDays = subscriptionEndsAt 
+    ? SubscriptionService.calculateRemainingSubscriptionDays(subscriptionEndsAt)
+    : 0;
+
+  // Ações
+  const activateSubscription = async (months: number = 1) => {
+    if (!user?.id) {
+      toast.error('Usuário não autenticado');
+      return false;
     }
-    const limit = limits[feature] as number;
-    if (limit === -1) return true; // unlimited
-    return current < limit;
-  };
-  
-  const canUseFeature = (feature: keyof FeatureLimits): boolean => {
-    if (typeof limits[feature] === 'boolean') {
-      return limits[feature] as boolean;
+
+    try {
+      const activated = await SubscriptionService.activateSubscription(user.id, months);
+      
+      if (activated) {
+        setSubscription(activated);
+        toast.success(`Assinatura Premium ativada por ${months} mês(es)!`);
+        return true;
+      } else {
+        toast.error('Erro ao ativar assinatura');
+        return false;
+      }
+    } catch (error) {
+      logService.logError(error, 'useSubscription.activateSubscription');
+      toast.error('Erro ao ativar assinatura');
+      return false;
     }
-    return true; // Para features numéricas, verificar com checkLimit
-  };
-  
-  const upgradePlan = async () => {
-    toast.info("Redirecionando para WhatsApp...", {
-      description: "Entre em contato para fazer upgrade"
-    });
-    // Abrir WhatsApp com mensagem para upgrade
-    const message = encodeURIComponent("Olá! Gostaria de fazer upgrade para o plano Premium do JC Financeiro.");
-    window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
-  };
-  
-  const getRemainingItems = (feature: keyof FeatureLimits, used: number): string => {
-    if (typeof limits[feature] === 'boolean') {
-      return limits[feature] ? 'Disponível' : 'Indisponível';
-    }
-    const limit = limits[feature] as number;
-    if (limit === -1) return "Ilimitado";
-    return `${used}/${limit} utilizados`;
   };
 
-  const getUsagePercentage = (feature: keyof FeatureLimits, used: number): number => {
-    if (typeof limits[feature] === 'boolean') {
-      return limits[feature] ? 0 : 100;
+  const cancelSubscription = async () => {
+    if (!user?.id) {
+      toast.error('Usuário não autenticado');
+      return false;
     }
-    const limit = limits[feature] as number;
-    if (limit === -1) return 0;
-    return Math.min(100, (used / limit) * 100);
+
+    try {
+      const cancelled = await SubscriptionService.cancelSubscription(user.id);
+      
+      if (cancelled) {
+        await refreshSubscription();
+        toast.success('Assinatura cancelada com sucesso');
+        return true;
+      } else {
+        toast.error('Erro ao cancelar assinatura');
+        return false;
+      }
+    } catch (error) {
+      logService.logError(error, 'useSubscription.cancelSubscription');
+      toast.error('Erro ao cancelar assinatura');
+      return false;
+    }
   };
 
-  const isFeatureBlocked = (feature: keyof FeatureLimits, used: number = 0): boolean => {
-    if (typeof limits[feature] === 'boolean') {
-      return !(limits[feature] as boolean);
+  // Badge/Status para UI
+  const getStatusBadge = () => {
+    if (loading) return { text: 'Carregando...', variant: 'default' as const };
+
+    if (isTrialActive) {
+      return {
+        text: `Trial - ${remainingTrialDays} dias restantes`,
+        variant: 'default' as const
+      };
     }
-    const limit = limits[feature] as number;
-    if (limit === -1) return false;
-    return used >= limit;
+
+    if (isPremiumActive) {
+      return {
+        text: `Premium - ${remainingSubscriptionDays} dias restantes`,
+        variant: 'default' as const
+      };
+    }
+
+    return {
+      text: 'Assinatura Expirada',
+      variant: 'destructive' as const
+    };
   };
-  
+
   return {
-    plan,
+    // Estados
+    subscription,
+    loading,
+    refreshing,
+    
+    // Status computados
     status,
-    limits,
-    daysRemaining,
+    isActive,
+    isTrialActive,
+    isPremiumActive,
+    isExpired,
+    
+    // Datas e contadores
     trialEndsAt,
-    checkLimit,
-    canUseFeature,
-    upgradePlan,
-    getRemainingItems,
-    getUsagePercentage,
-    isFeatureBlocked,
-    isPremium: plan === 'premium',
-    isTrial: plan === 'trial',
-    isFree: plan === 'free',
-    isActive: status === 'active',
-    planConfig: PLAN_CONFIGS[plan]
+    subscriptionEndsAt,
+    remainingTrialDays,
+    remainingSubscriptionDays,
+    
+    // Ações
+    refreshSubscription,
+    activateSubscription,
+    cancelSubscription,
+    ensureTrialExists,
+    
+    // UI helpers
+    getStatusBadge
   };
-};
+}

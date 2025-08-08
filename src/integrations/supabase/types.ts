@@ -71,6 +71,44 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          subscription_ends_at: string | null
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          subscription_ends_at?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          subscription_ends_at?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -80,12 +118,36 @@ export type Database = {
         Args: { _user_id: string; _feature: string; _current_count: number }
         Returns: boolean
       }
+      create_trial_subscription: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          status: string
+          subscription_ends_at: string | null
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+      }
       has_role: {
         Args: {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      normalize_subscription_status: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          status: string
+          subscription_ends_at: string | null
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
       }
       upsert_profile: {
         Args: {

@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Wifi, WifiOff, Database, AlertTriangle, Info } from 'lucide-react';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
+import { SubscriptionBadge } from './SubscriptionBadge';
 
 export function StatusIndicators() {
   const { isOnline, isDemoMode, lastSync, appVersion } = useSystemStatus();
@@ -9,6 +10,9 @@ export function StatusIndicators() {
   return (
     <TooltipProvider>
       <div className="flex items-center space-x-2">
+        {/* Badge de Assinatura */}
+        <SubscriptionBadge />
+        
         {/* Status Online/Offline */}
         <Tooltip>
           <TooltipTrigger asChild>
