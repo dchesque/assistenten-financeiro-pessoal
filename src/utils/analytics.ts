@@ -153,7 +153,7 @@ export class Analytics {
       console.warn('Erro ao salvar perfil do usuário:', error);
     }
 
-    console.log(`👤 User Identified: ${user.name} (${user.email})`);
+    console.warn(`👤 User Identified: ${user.name} (${user.email})`);
   }
 
   // 🎯 EVENTOS DE NEGÓCIO ESPECÍFICOS

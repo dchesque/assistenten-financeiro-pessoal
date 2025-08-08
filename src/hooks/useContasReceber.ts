@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
 import type { 
   ContaReceber, 
   CriarContaReceber, 
@@ -9,6 +8,8 @@ import type {
   EstatisticasContaReceber,
   LancamentoLoteReceita 
 } from '@/types/contaReceber';
+import { useErrorHandler } from './useErrorHandler';
+import { toast } from '@/hooks/use-toast';
 
 export function useContasReceber() {
   const [contas, setContas] = useState<ContaReceber[]>([]);
