@@ -4,17 +4,27 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireAdmin?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, loading } = useAuth();
+export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+  const { isAuthenticated, loading, profile, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate('/auth');
+    if (!loading) {
+      if (!isAuthenticated) {
+        const currentPath = window.location.pathname;
+        navigate(`/auth?returnUrl=${encodeURIComponent(currentPath)}`);
+        return;
+      }
+
+      if (requireAdmin && !isAdmin) {
+        navigate('/dashboard');
+        return;
+      }
     }
-  }, [isAuthenticated, loading, navigate]);
+  }, [isAuthenticated, loading, navigate, requireAdmin, isAdmin]);
 
   if (loading) {
     return (
@@ -27,7 +37,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || (requireAdmin && !isAdmin)) {
     return null;
   }
 

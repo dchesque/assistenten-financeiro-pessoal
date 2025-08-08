@@ -52,7 +52,7 @@ export default function MeuPerfil() {
 
   // Dados iniciais do perfil
   const dadosIniciais: DadosPerfil = {
-    nome: user?.nome || user?.user_metadata?.nome || '',
+    nome: user?.user_metadata?.nome || '',
     email: user?.email || '',
     telefone: '',
     whatsapp: '',
