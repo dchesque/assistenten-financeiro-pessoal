@@ -3,6 +3,8 @@ import { Menu, X } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { useSidebar } from '@/hooks/useSidebar';
 import { BlurBackground } from '@/components/ui/BlurBackground';
+import { StatusIndicators } from './StatusIndicators';
+import { useSEO } from '@/hooks/useSEO';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,6 +12,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu, isMobile, isTablet, isDesktop } = useSidebar();
+  useSEO(); // Aplicar SEO dinâmico
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
@@ -65,6 +68,18 @@ export function Layout({ children }: LayoutProps) {
                 )}
               </button>
             </div>
+            
+            {/* Indicadores de status - apenas mobile */}
+            <div className="mt-2 flex justify-center">
+              <StatusIndicators />
+            </div>
+          </div>
+        )}
+        
+        {/* Indicadores desktop - posição fixa */}
+        {isDesktop && (
+          <div className="fixed top-4 right-4 z-50">
+            <StatusIndicators />
           </div>
         )}
         

@@ -1,0 +1,75 @@
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Wifi, WifiOff, Database, AlertTriangle, Info } from 'lucide-react';
+import { useSystemStatus } from '@/hooks/useSystemStatus';
+
+export function StatusIndicators() {
+  const { isOnline, isDemoMode, lastSync, appVersion } = useSystemStatus();
+
+  return (
+    <TooltipProvider>
+      <div className="flex items-center space-x-2">
+        {/* Status Online/Offline */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant={isOnline ? "default" : "destructive"} className="flex items-center space-x-1">
+              {isOnline ? (
+                <Wifi className="w-3 h-3" />
+              ) : (
+                <WifiOff className="w-3 h-3" />
+              )}
+              <span>{isOnline ? 'Online' : 'Offline'}</span>
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{isOnline ? 'Conectado à internet' : 'Sem conexão com a internet'}</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Modo Demo */}
+        {isDemoMode && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="flex items-center space-x-1 bg-orange-100 border-orange-300 text-orange-700">
+                <AlertTriangle className="w-3 h-3" />
+                <span>Demo</span>
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Modo demonstração ativo - dados simulados</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Última Sincronização */}
+        {lastSync && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="flex items-center space-x-1">
+                <Database className="w-3 h-3" />
+                <span className="hidden md:inline">Sync: {lastSync.split(' ')[1]}</span>
+                <span className="md:hidden">Sync</span>
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Última sincronização: {lastSync}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Versão do App */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="outline" className="flex items-center space-x-1">
+              <Info className="w-3 h-3" />
+              <span>v{appVersion}</span>
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Versão do sistema: {appVersion}</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
+  );
+}

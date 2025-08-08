@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { mockDataService } from '@/services/mockDataService';
 import { toast } from 'sonner';
 
@@ -19,19 +19,101 @@ export interface Session {
   access_token: string;
 }
 
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutos
+const WARNING_TIME = 5 * 60 * 1000; // 5 minutos antes do timeout
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutos
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockoutEndTime, setLockoutEndTime] = useState<number | null>(null);
+  
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const warningRef = useRef<NodeJS.Timeout | null>(null);
+  const lastActivityRef = useRef<number>(Date.now());
 
+  // Função para resetar timers de timeout
+  const resetSessionTimeout = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (warningRef.current) clearTimeout(warningRef.current);
+    
+    lastActivityRef.current = Date.now();
+    
+    // Timer para aviso de timeout (25 minutos)
+    warningRef.current = setTimeout(() => {
+      toast.warning('Sua sessão expirará em 5 minutos por inatividade', {
+        duration: 10000,
+        action: {
+          label: 'Continuar',
+          onClick: () => resetSessionTimeout()
+        }
+      });
+    }, SESSION_TIMEOUT - WARNING_TIME);
+    
+    // Timer para logout automático (30 minutos)
+    timeoutRef.current = setTimeout(() => {
+      signOut();
+      toast.error('Sessão expirada por inatividade');
+    }, SESSION_TIMEOUT);
+  }, []);
+
+  // Verificar lockout ao inicializar
   useEffect(() => {
+    const storedAttempts = parseInt(localStorage.getItem('loginAttempts') || '0');
+    const storedLockoutEnd = parseInt(localStorage.getItem('lockoutEndTime') || '0');
+    
+    setLoginAttempts(storedAttempts);
+    
+    if (storedLockoutEnd > Date.now()) {
+      setIsLocked(true);
+      setLockoutEndTime(storedLockoutEnd);
+      
+      // Timer para desbloquear automaticamente
+      setTimeout(() => {
+        setIsLocked(false);
+        setLockoutEndTime(null);
+        setLoginAttempts(0);
+        localStorage.removeItem('loginAttempts');
+        localStorage.removeItem('lockoutEndTime');
+      }, storedLockoutEnd - Date.now());
+    }
+    
     const existingSession = mockDataService.getSession();
     if (existingSession) {
       setUser(existingSession.user);
       setSession(existingSession);
+      resetSessionTimeout();
     }
     setLoading(false);
-  }, []);
+  }, [resetSessionTimeout]);
+
+  // Detectar atividade do usuário para resetar timeout
+  useEffect(() => {
+    if (!session) return;
+
+    const activities = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    const handleActivity = () => {
+      // Throttle para evitar muitos resets
+      if (Date.now() - lastActivityRef.current > 60000) { // 1 minuto
+        resetSessionTimeout();
+      }
+    };
+
+    activities.forEach(activity => {
+      document.addEventListener(activity, handleActivity, true);
+    });
+
+    return () => {
+      activities.forEach(activity => {
+        document.removeEventListener(activity, handleActivity, true);
+      });
+    };
+  }, [session, resetSessionTimeout]);
 
   const signInWithWhatsApp = async (whatsapp: string) => {
     setLoading(true);
@@ -73,14 +155,26 @@ export function useAuth() {
   };
 
   const verifyCode = async (whatsapp: string, code: string) => {
+    if (isLocked) {
+      const remainingTime = Math.ceil((lockoutEndTime! - Date.now()) / 60000);
+      toast.error(`Conta bloqueada. Tente novamente em ${remainingTime} minutos.`);
+      return { error: 'Conta bloqueada' };
+    }
+
     setLoading(true);
     try {
       // Aceitar qualquer código com 4+ dígitos para teste
       if (code.length >= 4) {
+        // Reset attempts on success
+        setLoginAttempts(0);
+        localStorage.removeItem('loginAttempts');
+        localStorage.removeItem('lockoutEndTime');
+        
         // Simular autenticação WhatsApp
         const sessionData = await mockDataService.signInWithWhatsApp(whatsapp);
         setUser(sessionData.user);
         setSession(sessionData);
+        resetSessionTimeout();
         
         toast.success('Login realizado com sucesso!');
         
@@ -96,7 +190,31 @@ export function useAuth() {
         throw new Error('Código inválido');
       }
     } catch (error) {
-      toast.error('Código inválido');
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      localStorage.setItem('loginAttempts', newAttempts.toString());
+      
+      if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+        const lockoutEnd = Date.now() + LOCKOUT_DURATION;
+        setIsLocked(true);
+        setLockoutEndTime(lockoutEnd);
+        localStorage.setItem('lockoutEndTime', lockoutEnd.toString());
+        
+        toast.error(`Muitas tentativas inválidas. Conta bloqueada por 15 minutos.`);
+        
+        // Timer para desbloquear automaticamente
+        setTimeout(() => {
+          setIsLocked(false);
+          setLockoutEndTime(null);
+          setLoginAttempts(0);
+          localStorage.removeItem('loginAttempts');
+          localStorage.removeItem('lockoutEndTime');
+        }, LOCKOUT_DURATION);
+      } else {
+        const remainingAttempts = MAX_LOGIN_ATTEMPTS - newAttempts;
+        toast.error(`Código inválido. Restam ${remainingAttempts} tentativas.`);
+      }
+      
       return { error };
     } finally {
       setLoading(false);
@@ -138,6 +256,10 @@ export function useAuth() {
   const signOut = async () => {
     setLoading(true);
     try {
+      // Limpar timers
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (warningRef.current) clearTimeout(warningRef.current);
+      
       await mockDataService.signOut();
       setUser(null);
       setSession(null);
@@ -172,6 +294,10 @@ export function useAuth() {
     signIn,
     signOut,
     resetPassword,
-    isAuthenticated: !!session
+    resetSessionTimeout,
+    isAuthenticated: !!session,
+    loginAttempts,
+    isLocked,
+    lockoutEndTime
   };
 }

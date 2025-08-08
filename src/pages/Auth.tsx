@@ -12,7 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { GRADIENTES, GLASSMORPHISM, ANIMATIONS } from '@/constants/designSystem';
 
 export default function Auth() {
-  const { signInWithWhatsApp, signUpWithWhatsApp, verifyCode, isAuthenticated, loading } = useAuth();
+  const { signInWithWhatsApp, signUpWithWhatsApp, verifyCode, isAuthenticated, loading, loginAttempts, isLocked, lockoutEndTime } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'login';
@@ -21,17 +21,44 @@ export default function Auth() {
   const [formData, setFormData] = useState({
     whatsapp: '',
     code: '',
-    nome: ''
+    nome: '',
+    password: '',
+    confirmPassword: ''
   });
   const [formLoading, setFormLoading] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
 
   // Redirecionar se já autenticado
   useEffect(() => {
     if (isAuthenticated && !loading) {
-      navigate('/dashboard');
+      // Verificar se há returnUrl
+      const returnUrl = localStorage.getItem('returnUrl');
+      if (returnUrl && returnUrl !== '/auth') {
+        localStorage.removeItem('returnUrl');
+        navigate(returnUrl);
+      } else {
+        navigate('/dashboard');
+      }
     }
   }, [isAuthenticated, loading, navigate]);
+
+  // Calcular força da senha
+  useEffect(() => {
+    if (formData.password) {
+      let strength = 0;
+      if (formData.password.length >= 8) strength += 25;
+      if (/[a-z]/.test(formData.password)) strength += 25;
+      if (/[A-Z]/.test(formData.password)) strength += 25;
+      if (/[0-9]/.test(formData.password)) strength += 25;
+      if (/[^A-Za-z0-9]/.test(formData.password)) strength += 25;
+      setPasswordStrength(Math.min(strength, 100));
+    } else {
+      setPasswordStrength(0);
+    }
+  }, [formData.password]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -54,6 +81,17 @@ export default function Auth() {
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.whatsapp) return;
+    
+    // Verificar se está bloqueado
+    if (isLocked && lockoutEndTime) {
+      const remainingTime = Math.ceil((lockoutEndTime - Date.now()) / 60000);
+      toast({ 
+        title: 'Conta bloqueada', 
+        description: `Muitas tentativas inválidas. Tente novamente em ${remainingTime} minutos.`,
+        variant: 'destructive'
+      });
+      return;
+    }
     
     // Validar formato do WhatsApp
     const numbers = formData.whatsapp.replace(/\D/g, '');
@@ -94,16 +132,42 @@ export default function Auth() {
     try {
       const result = await verifyCode(formData.whatsapp, formData.code);
       
+      if (result.error) {
+        // Erro já tratado no useAuth
+        return;
+      }
+      
       if (result.needsOnboarding) {
         navigate('/onboarding');
       } else {
-        navigate('/dashboard');
+        // Verificar returnUrl
+        const returnUrl = localStorage.getItem('returnUrl');
+        if (returnUrl && returnUrl !== '/auth') {
+          localStorage.removeItem('returnUrl');
+          navigate(returnUrl);
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (error) {
       toast({ title: 'Erro', description: 'Código inválido', variant: 'destructive' });
     } finally {
       setFormLoading(false);
     }
+  };
+
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength < 25) return 'bg-red-500';
+    if (passwordStrength < 50) return 'bg-orange-500';
+    if (passwordStrength < 75) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const getPasswordStrengthText = () => {
+    if (passwordStrength < 25) return 'Muito fraca';
+    if (passwordStrength < 50) return 'Fraca';
+    if (passwordStrength < 75) return 'Boa';
+    return 'Forte';
   };
 
   if (loading) {
@@ -357,23 +421,49 @@ export default function Auth() {
                             onChange={(e) => handleInputChange('whatsapp', e.target.value)}
                             className={GLASSMORPHISM.input}
                             placeholder="(11) 99999-9999"
+                            disabled={isLocked}
                             required
                           />
                           <p className="text-xs text-muted-foreground">
                             Digite seu número com DDD
                           </p>
+                          {loginAttempts > 0 && !isLocked && (
+                            <p className="text-xs text-orange-600">
+                              {5 - loginAttempts} tentativas restantes
+                            </p>
+                          )}
+                          {isLocked && lockoutEndTime && (
+                            <p className="text-xs text-red-600">
+                              Conta bloqueada. Tente em {Math.ceil((lockoutEndTime - Date.now()) / 60000)} minutos.
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="remember"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <Label htmlFor="remember" className="text-sm text-gray-700">
+                            Lembrar-me neste dispositivo
+                          </Label>
                         </div>
 
                         <Button
                           type="submit"
                           className={`w-full btn-primary ${ANIMATIONS.fast}`}
-                          disabled={formLoading}
+                          disabled={formLoading || isLocked}
                         >
                           {formLoading ? (
                             <>
                               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                               Enviando...
                             </>
+                          ) : isLocked ? (
+                            'Conta temporariamente bloqueada'
                           ) : (
                             <>
                               <Send className="w-4 h-4 mr-2" />
