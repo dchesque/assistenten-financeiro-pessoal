@@ -3,124 +3,101 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { BlurBackground } from '@/components/ui/BlurBackground';
-import { ArrowLeft, MessageCircle, Shield, Clock, Check, Users, TrendingUp, Award, CheckCircle2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MessageCircle, ArrowLeft, Send, Shield, TrendingUp, Users, DollarSign, BarChart3, Sparkles, CheckCircle, Zap, Globe } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
+import { GRADIENTES, GLASSMORPHISM, ANIMATIONS } from '@/constants/designSystem';
 
 export default function Auth() {
+  const { signInWithWhatsApp, signUpWithWhatsApp, verifyCode, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signInWithWhatsApp, verifyOtp, loading, isAuthenticated } = useAuth();
+  const mode = searchParams.get('mode') || 'login';
   
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [formData, setFormData] = useState({
-    phone: '',
-    otp: ['', '', '', '', '', ''],
-    acceptTerms: false,
-    rememberMe: false
+    whatsapp: '',
+    code: '',
+    nome: ''
   });
-  const [resendCountdown, setResendCountdown] = useState(0);
+  const [formLoading, setFormLoading] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
 
-  // Redirect se já autenticado
+  // Redirecionar se já autenticado
   useEffect(() => {
-    if (isAuthenticated) {
-      const returnUrl = searchParams.get('returnUrl') || '/dashboard';
-      navigate(returnUrl);
+    if (isAuthenticated && !loading) {
+      navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate, searchParams]);
+  }, [isAuthenticated, loading, navigate]);
 
-  // Countdown para reenvio
-  useEffect(() => {
-    if (resendCountdown > 0) {
-      const timer = setTimeout(() => setResendCountdown(prev => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [resendCountdown]);
-
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const formatPhoneNumber = (value: string) => {
+  const formatWhatsApp = (value: string) => {
+    // Remove tudo que não é número
     const numbers = value.replace(/\D/g, '');
+    
+    // Aplica máscara (xx) xxxxx-xxxx
     if (numbers.length <= 11) {
-      const formatted = numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-      return formatted;
+      return numbers
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d)/, '$1-$2')
+        .replace(/(-\d{4})\d+?$/, '$1');
     }
     return value;
   };
 
-  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value);
-    handleInputChange('phone', formatted);
-  };
-
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return;
+  const handleSendCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.whatsapp) return;
     
-    const newOtp = [...formData.otp];
-    newOtp[index] = value;
-    setFormData(prev => ({ ...prev, otp: newOtp }));
-    
-    // Auto-focus próximo campo
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`) as HTMLInputElement;
-      nextInput?.focus();
-    }
-    
-    // Auto-submit quando completar
-    if (newOtp.every(digit => digit) && newOtp.join('').length === 6) {
-      handleVerifyOtp(newOtp.join(''));
-    }
-  };
-
-  const handleSendCode = async () => {
-    if (!formData.acceptTerms) {
-      toast.error('Aceite os termos de uso para continuar');
+    // Validar formato do WhatsApp
+    const numbers = formData.whatsapp.replace(/\D/g, '');
+    if (numbers.length < 11) {
+      toast({ title: 'Atenção', description: 'Por favor, digite um número válido' });
       return;
     }
-
-    if (formData.phone.replace(/\D/g, '').length < 11) {
-      toast.error('Digite um número de WhatsApp válido');
-      return;
-    }
-
-    const cleanPhone = formData.phone.replace(/\D/g, '');
-    const { error } = await signInWithWhatsApp(`+55${cleanPhone}`);
     
-    if (!error) {
-      setStep('otp');
-      setResendCountdown(60);
-    }
-  };
-
-  const handleVerifyOtp = async (otpCode?: string) => {
-    const code = otpCode || formData.otp.join('');
-    if (code.length !== 6) {
-      toast.error('Digite o código completo');
-      return;
-    }
-
-    const cleanPhone = formData.phone.replace(/\D/g, '');
-    const { error } = await verifyOtp(`+55${cleanPhone}`, code);
+    setFormLoading(true);
     
-    if (!error) {
-      const returnUrl = searchParams.get('returnUrl') || '/dashboard';
-      navigate(returnUrl);
+    try {
+      if (mode === 'signup') {
+        if (!formData.nome.trim()) {
+          toast({ title: 'Atenção', description: 'Por favor, digite seu nome' });
+          setFormLoading(false);
+          return;
+        }
+        await signUpWithWhatsApp(formData.whatsapp, { nome: formData.nome });
+      } else {
+        await signInWithWhatsApp(formData.whatsapp);
+      }
+      
+      setCodeSent(true);
+      setStep('code');
+      toast({ title: 'Sucesso', description: 'Código enviado para seu WhatsApp!' });
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Erro ao enviar código', variant: 'destructive' });
+    } finally {
+      setFormLoading(false);
     }
   };
 
-  const handleResendCode = async () => {
-    if (resendCountdown > 0) return;
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.code) return;
     
-    const cleanPhone = formData.phone.replace(/\D/g, '');
-    const { error } = await signInWithWhatsApp(`+55${cleanPhone}`);
-    
-    if (!error) {
-      setResendCountdown(60);
-      setFormData(prev => ({ ...prev, otp: ['', '', '', '', '', ''] }));
+    setFormLoading(true);
+    try {
+      await verifyCode(formData.whatsapp, formData.code);
+      navigate('/dashboard');
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Código inválido', variant: 'destructive' });
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -129,256 +106,364 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Verificando autenticação...</p>
+          <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-      {/* Background abstratos com BlurBackground */}
-      <BlurBackground variant="page" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 relative overflow-hidden">
+      {/* Blur backgrounds abstratos do design system */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-20 left-1/2 w-96 h-96 bg-pink-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
 
-      <div className="relative min-h-screen flex flex-col lg:flex-row">
-        {/* Hero Section - Lado Esquerdo */}
-        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center p-12 relative">
-          <div className="max-w-lg mx-auto">
-            {/* Logo da Empresa */}
-            <div className="flex items-center justify-center mb-12">
-              <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-xl">
-                <MessageCircle className="w-12 h-12 text-white" />
-              </div>
-            </div>
+      <div className="relative z-10 min-h-screen lg:grid lg:grid-cols-2">
+        {/* HERO SECTION - Lado Esquerdo */}
+        <div className="relative hidden lg:flex lg:flex-col lg:justify-center lg:items-center p-12 text-white overflow-hidden">
+          {/* Background gradiente */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600"></div>
+          
+          {/* Elementos de decoração */}
+          <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-20 left-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-yellow-400/20 rounded-full blur-lg"></div>
 
-            {/* Título Principal */}
-            <div className="text-center mb-12">
-              <h1 className="text-5xl font-bold text-gray-900 mb-4 leading-tight">
-                JC Financeiro
-              </h1>
-              <p className="text-xl text-gray-600 leading-relaxed">
-                A maneira mais simples de gerenciar suas finanças
-              </p>
-            </div>
-
-            {/* Features */}
-            <div className="space-y-6 mb-12">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-green-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Login Instantâneo</h3>
-                  <p className="text-gray-600 text-sm">Acesse via WhatsApp em segundos</p>
-                </div>
+          <div className="relative z-10 max-w-lg text-center space-y-8 animate-fade-in">
+            {/* Logo principal */}
+            <div className="space-y-4">
+              <div className="mx-auto w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center border border-white/30 shadow-lg">
+                <DollarSign className="w-10 h-10 text-white" />
               </div>
               
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-blue-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-blue-600" />
+              <div>
+                <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                  JC Financeiro
+                </h1>
+                <p className="text-xl text-blue-100 font-medium">
+                  O futuro da gestão financeira
+                </p>
+              </div>
+            </div>
+
+            {/* Features em destaque */}
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-semibold mb-6 text-white">
+                  Transforme sua gestão financeira
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center space-y-2 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mx-auto">
+                    <BarChart3 className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-sm font-medium text-white">Dashboard Inteligente</p>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Segurança Total</h3>
-                  <p className="text-gray-600 text-sm">Seus dados protegidos e criptografados</p>
+                
+                <div className="text-center space-y-2 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mx-auto">
+                    <Zap className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-sm font-medium text-white">Automação Total</p>
+                </div>
+                
+                <div className="text-center space-y-2 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mx-auto">
+                    <Shield className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-sm font-medium text-white">100% Seguro</p>
+                </div>
+                
+                <div className="text-center space-y-2 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mx-auto">
+                    <Globe className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-sm font-medium text-white">Multi-empresa</p>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-purple-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-purple-600" />
+
+              {/* Stats impressionantes */}
+              <div className="flex justify-center space-x-8 pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">99.9%</div>
+                  <div className="text-xs text-blue-100">Uptime</div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Controle Inteligente</h3>
-                  <p className="text-gray-600 text-sm">Relatórios e análises automáticas</p>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">500+</div>
+                  <div className="text-xs text-blue-100">Empresas</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">24/7</div>
+                  <div className="text-xs text-blue-100">Suporte</div>
                 </div>
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 text-center">
-              <div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">1000+</div>
-                <div className="text-sm text-gray-600">Empresas</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">99.9%</div>
-                <div className="text-sm text-gray-600">Uptime</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">24/7</div>
-                <div className="text-sm text-gray-600">Suporte</div>
-              </div>
-            </div>
-
-            {/* CTA Footer */}
-            <div className="mt-12 text-center">
-              <p className="text-gray-500 text-sm">
-                Já possui uma conta? Faça login ao lado →
+            {/* Call to action secundário */}
+            <div className="pt-6">
+              <p className="text-blue-100 text-sm">
+                ✨ Junte-se a milhares de empresas que já transformaram sua gestão financeira
               </p>
             </div>
           </div>
         </div>
 
-        {/* Auth Section - Lado Direito */}
-        <div className="flex-1 lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
-          <div className="w-full max-w-md">
-            {/* Header Mobile */}
-            <div className="lg:hidden text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-xl">
-                <MessageCircle className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">JC Financeiro</h1>
-              <p className="text-gray-600">Gerencie suas finanças com simplicidade</p>
+        {/* FORMULÁRIO DE LOGIN - Lado Direito */}
+        <div className="flex items-center justify-center p-4 lg:p-12">
+          <div className="w-full max-w-md space-y-6">
+            {/* Link para voltar - apenas mobile */}
+            <div className="lg:hidden">
+              <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar ao início
+              </Link>
             </div>
 
-            <Card className="bg-white/90 backdrop-blur-xl border border-white/30 shadow-2xl hover:shadow-3xl transition-all duration-300">
-              <CardHeader className="text-center space-y-4 pb-6">
-                {step === 'phone' ? (
-                  <>
-                    <CardTitle className="text-2xl font-bold text-gray-900">
-                      Faça seu login
-                    </CardTitle>
-                    <CardDescription className="text-gray-600 text-base">
-                      Entre com seu WhatsApp de forma rápida e segura
-                    </CardDescription>
-                  </>
-                ) : (
-                  <>
-                    <CardTitle className="text-2xl font-bold text-gray-900">
-                      Confirme seu código
-                    </CardTitle>
-                    <CardDescription className="text-gray-600 text-base">
-                      Enviamos um código de verificação para<br />
-                      <span className="font-semibold text-gray-900">{formData.phone}</span>
-                    </CardDescription>
-                  </>
-                )}
+            {/* Header mobile */}
+            <div className="lg:hidden text-center space-y-4 mb-8">
+              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center">
+                <DollarSign className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  JC Financeiro
+                </h1>
+                <p className="text-muted-foreground">Sistema de gestão financeira</p>
+              </div>
+            </div>
+
+            {/* Card do formulário com glassmorphism */}
+            <Card className={`${GLASSMORPHISM.card} ${GLASSMORPHISM.cardHover} ${ANIMATIONS.smooth} animate-scale-in`}>
+              <CardHeader className="text-center space-y-2">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6 text-white" />
+                </div>
+                <CardTitle className="text-xl font-semibold">
+                  {step === 'phone' ? 'Acesse sua conta' : 'Verificação de segurança'}
+                </CardTitle>
+                <CardDescription>
+                  {step === 'phone' 
+                    ? 'Digite seu WhatsApp para continuar' 
+                    : 'Confirme o código enviado para seu WhatsApp'
+                  }
+                </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6">
-                {step === 'phone' ? (
-                  <>
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700 block">
-                        Número do WhatsApp *
-                      </label>
-                      <Input
-                        type="tel"
-                        placeholder="(11) 99999-9999"
-                        value={formData.phone}
-                        onChange={handlePhoneInput}
-                        maxLength={15}
-                        className="h-12 text-base bg-white/80 backdrop-blur-sm border-gray-300/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                      />
+                {step === 'code' ? (
+                  // Tela de verificação de código
+                  <form onSubmit={handleVerifyCode} className="space-y-6">
+                    <div className="text-center space-y-3">
+                      <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto">
+                        <Shield className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Código enviado!</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Enviamos um código para<br />
+                          <span className="font-medium text-green-600">{formData.whatsapp}</span>
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex items-start space-x-3">
-                      <Checkbox
-                        id="terms"
-                        checked={formData.acceptTerms}
-                        onCheckedChange={(checked) => handleInputChange('acceptTerms', !!checked)}
-                        className="mt-1"
+                    <div className="space-y-2">
+                      <Label htmlFor="code">Código de verificação</Label>
+                      <Input
+                        id="code"
+                        type="text"
+                        value={formData.code}
+                        onChange={(e) => handleInputChange('code', e.target.value)}
+                        className={`${GLASSMORPHISM.input} text-center text-lg tracking-widest font-mono`}
+                        placeholder="123456"
+                        maxLength={6}
+                        required
                       />
-                      <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
-                        Concordo com os{' '}
-                        <a href="#" className="text-blue-600 hover:underline font-medium">
-                          Termos de Uso
-                        </a>{' '}
-                        e{' '}
-                        <a href="#" className="text-blue-600 hover:underline font-medium">
-                          Política de Privacidade
-                        </a>
-                      </label>
                     </div>
 
                     <Button
-                      onClick={handleSendCode}
-                      disabled={loading || !formData.acceptTerms}
-                      className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                      type="submit"
+                      className={`w-full btn-primary ${ANIMATIONS.fast}`}
+                      disabled={formLoading}
                     >
-                      {loading ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          <span>Enviando código...</span>
-                        </div>
+                      {formLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                          Verificando...
+                        </>
                       ) : (
-                        <div className="flex items-center space-x-2">
-                          <MessageCircle className="w-5 h-5" />
-                          <span>Continuar com WhatsApp</span>
-                        </div>
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Confirmar código
+                        </>
                       )}
                     </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-6">
-                      <div className="flex justify-center space-x-3">
-                        {formData.otp.map((digit, index) => (
-                          <Input
-                            key={index}
-                            id={`otp-${index}`}
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            maxLength={1}
-                            value={digit}
-                            onChange={(e) => handleOtpChange(index, e.target.value)}
-                            className="w-14 h-14 text-center text-xl font-bold bg-white/90 backdrop-blur-sm border-gray-300/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
-                          />
-                        ))}
-                      </div>
 
-                      <div className="text-center space-y-3">
+                    <div className="text-center space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStep('phone');
+                          setCodeSent(false);
+                          setFormData(prev => ({ ...prev, code: '' }));
+                        }}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        ← Alterar número
+                      </button>
+                      <div>
                         <button
-                          onClick={handleResendCode}
-                          disabled={resendCountdown > 0}
-                          className={`text-sm font-medium transition-colors ${
-                            resendCountdown > 0
-                              ? 'text-gray-400 cursor-not-allowed'
-                              : 'text-blue-600 hover:text-blue-700 hover:underline'
-                          }`}
+                          type="button"
+                          onClick={handleSendCode}
+                          className="text-sm text-green-600 hover:text-green-700 font-medium transition-colors"
+                          disabled={formLoading}
                         >
-                          {resendCountdown > 0
-                            ? `Reenviar código em ${resendCountdown}s`
-                            : 'Não recebeu? Reenviar código'
-                          }
+                          Reenviar código
                         </button>
                       </div>
                     </div>
+                  </form>
+                ) : (
+                  // Tela de inserção do número
+                  <Tabs value={mode === 'signup' ? 'signup' : 'login'} className="space-y-6">
+                    <TabsList className="grid w-full grid-cols-2 bg-gray-100/80 backdrop-blur-sm">
+                      <TabsTrigger value="login" onClick={() => navigate('/auth')} className="data-[state=active]:bg-white">
+                        Entrar
+                      </TabsTrigger>
+                      <TabsTrigger value="signup" onClick={() => navigate('/auth?mode=signup')} className="data-[state=active]:bg-white">
+                        Criar conta
+                      </TabsTrigger>
+                    </TabsList>
 
-                    <div className="flex space-x-3">
-                      <Button
-                        variant="outline"
-                        onClick={() => setStep('phone')}
-                        className="flex-1 h-12 border-gray-300 hover:bg-gray-50"
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Voltar
-                      </Button>
-                      <Button
-                        onClick={() => handleVerifyOtp()}
-                        disabled={loading || formData.otp.join('').length !== 6}
-                        className="flex-2 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-                      >
-                        {loading ? (
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        ) : (
-                          'Verificar Código'
-                        )}
-                      </Button>
-                    </div>
-                  </>
+                    <TabsContent value="login" className="space-y-4">
+                      <form onSubmit={handleSendCode} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="whatsapp" className="text-sm font-medium text-gray-700">
+                            Número do WhatsApp
+                          </Label>
+                          <Input
+                            id="whatsapp"
+                            type="tel"
+                            value={formatWhatsApp(formData.whatsapp)}
+                            onChange={(e) => handleInputChange('whatsapp', e.target.value)}
+                            className={GLASSMORPHISM.input}
+                            placeholder="(11) 99999-9999"
+                            required
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Digite seu número com DDD
+                          </p>
+                        </div>
+
+                        <Button
+                          type="submit"
+                          className={`w-full btn-primary ${ANIMATIONS.fast}`}
+                          disabled={formLoading}
+                        >
+                          {formLoading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                              Enviando...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              Enviar código
+                            </>
+                          )}
+                        </Button>
+                      </form>
+                    </TabsContent>
+
+                    <TabsContent value="signup" className="space-y-4">
+                      <form onSubmit={handleSendCode} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="nome" className="text-sm font-medium text-gray-700">
+                            Nome completo
+                          </Label>
+                          <Input
+                            id="nome"
+                            type="text"
+                            value={formData.nome}
+                            onChange={(e) => handleInputChange('nome', e.target.value)}
+                            className={GLASSMORPHISM.input}
+                            placeholder="Seu nome completo"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="whatsapp-signup" className="text-sm font-medium text-gray-700">
+                            Número do WhatsApp
+                          </Label>
+                          <Input
+                            id="whatsapp-signup"
+                            type="tel"
+                            value={formatWhatsApp(formData.whatsapp)}
+                            onChange={(e) => handleInputChange('whatsapp', e.target.value)}
+                            className={GLASSMORPHISM.input}
+                            placeholder="(11) 99999-9999"
+                            required
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Digite seu número com DDD
+                          </p>
+                        </div>
+
+                        <Button
+                          type="submit"
+                          className={`w-full btn-primary ${ANIMATIONS.fast}`}
+                          disabled={formLoading}
+                        >
+                          {formLoading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                              Criando conta...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Criar conta grátis
+                            </>
+                          )}
+                        </Button>
+                      </form>
+                    </TabsContent>
+                  </Tabs>
                 )}
 
-                {/* Footer de Segurança */}
-                <div className="text-center pt-6 border-t border-gray-200/50">
-                  <div className="flex items-center justify-center space-x-2 text-gray-500">
-                    <Shield className="w-4 h-4" />
-                    <span className="text-sm">Conexão segura e dados criptografados</span>
+                {/* Footer informativo */}
+                <div className="text-center">
+                  <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground bg-blue-50/50 rounded-lg p-3">
+                    <Shield className="w-3 h-3 text-blue-600" />
+                    <span>Por enquanto, aceita qualquer número e código para teste</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Trust indicators */}
+            <div className="text-center space-y-3">
+              <p className="text-xs text-muted-foreground">Protegido por criptografia de ponta a ponta</p>
+              <div className="flex justify-center space-x-4 opacity-60">
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                  <CheckCircle className="w-3 h-3 text-green-600" />
+                  <span>SSL</span>
+                </div>
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                  <CheckCircle className="w-3 h-3 text-green-600" />
+                  <span>LGPD</span>
+                </div>
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                  <CheckCircle className="w-3 h-3 text-green-600" />
+                  <span>ISO 27001</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
