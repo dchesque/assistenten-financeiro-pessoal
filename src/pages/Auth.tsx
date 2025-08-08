@@ -92,8 +92,13 @@ export default function Auth() {
     
     setFormLoading(true);
     try {
-      await verifyCode(formData.whatsapp, formData.code);
-      navigate('/dashboard');
+      const result = await verifyCode(formData.whatsapp, formData.code);
+      
+      if (result.needsOnboarding) {
+        navigate('/onboarding');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       toast({ title: 'Erro', description: 'Código inválido', variant: 'destructive' });
     } finally {

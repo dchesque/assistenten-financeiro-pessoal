@@ -4,11 +4,13 @@ import { toast } from 'sonner';
 
 export interface User {
   id: string;
-  email: string;
+  email?: string;
+  phone?: string;
   nome?: string;
   user_metadata?: {
     nome?: string;
     avatar_url?: string;
+    phone?: string;
   };
 }
 
@@ -34,10 +36,19 @@ export function useAuth() {
   const signInWithWhatsApp = async (whatsapp: string) => {
     setLoading(true);
     try {
-      // Por enquanto, simular envio de código para qualquer número
+      // Simular envio de código para qualquer número
       await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Código enviado para seu WhatsApp!');
-      return { error: null };
+      
+      // Verificar se é um usuário existente (mock)
+      const isExistingUser = mockDataService.checkExistingWhatsAppUser(whatsapp);
+      
+      if (isExistingUser) {
+        toast.success('Código enviado para seu WhatsApp!');
+      } else {
+        toast.success('Código enviado! Como é seu primeiro acesso, você passará pelo onboarding.');
+      }
+      
+      return { error: null, isNewUser: !isExistingUser };
     } catch (error) {
       toast.error('Erro ao enviar código');
       return { error };
@@ -64,14 +75,23 @@ export function useAuth() {
   const verifyCode = async (whatsapp: string, code: string) => {
     setLoading(true);
     try {
-      // Por enquanto, aceitar qualquer código
+      // Aceitar qualquer código com 4+ dígitos para teste
       if (code.length >= 4) {
-        // Simular criação de sessão
-        const sessionData = await mockDataService.signIn('user@whatsapp.com', 'password');
+        // Simular autenticação WhatsApp
+        const sessionData = await mockDataService.signInWithWhatsApp(whatsapp);
         setUser(sessionData.user);
         setSession(sessionData);
+        
         toast.success('Login realizado com sucesso!');
-        return { error: null };
+        
+        // Verificar se precisa do onboarding
+        const needsOnboarding = !sessionData.user.user_metadata?.onboarding_completed;
+        
+        return { 
+          error: null, 
+          needsOnboarding,
+          user: sessionData.user 
+        };
       } else {
         throw new Error('Código inválido');
       }
