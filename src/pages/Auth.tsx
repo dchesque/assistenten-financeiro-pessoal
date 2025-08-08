@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageCircle, ArrowLeft, Send, Shield, TrendingUp, Users, DollarSign, BarChart3, Sparkles, CheckCircle, Zap, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { GRADIENTES, GLASSMORPHISM, ANIMATIONS } from '@/constants/designSystem';
 
 export default function Auth() {
@@ -58,7 +58,7 @@ export default function Auth() {
     // Validar formato do WhatsApp
     const numbers = formData.whatsapp.replace(/\D/g, '');
     if (numbers.length < 11) {
-      toast.error('Por favor, digite um número válido');
+      toast({ title: 'Atenção', description: 'Por favor, digite um número válido' });
       return;
     }
     
@@ -67,7 +67,7 @@ export default function Auth() {
     try {
       if (mode === 'signup') {
         if (!formData.nome.trim()) {
-          toast.error('Por favor, digite seu nome');
+          toast({ title: 'Atenção', description: 'Por favor, digite seu nome' });
           setFormLoading(false);
           return;
         }
@@ -78,9 +78,9 @@ export default function Auth() {
       
       setCodeSent(true);
       setStep('code');
-      toast.success('Código enviado para seu WhatsApp!');
+      toast({ title: 'Sucesso', description: 'Código enviado para seu WhatsApp!' });
     } catch (error) {
-      toast.error('Erro ao enviar código');
+      toast({ title: 'Erro', description: 'Erro ao enviar código', variant: 'destructive' });
     } finally {
       setFormLoading(false);
     }
@@ -95,7 +95,7 @@ export default function Auth() {
       await verifyCode(formData.whatsapp, formData.code);
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Código inválido');
+      toast({ title: 'Erro', description: 'Código inválido', variant: 'destructive' });
     } finally {
       setFormLoading(false);
     }

@@ -32,7 +32,7 @@ import { ValidationService } from '@/services/ValidationService';
 // Supabase removido - usando dados mock
 import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
 import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 export default function NovaConta() {
   const navigate = useNavigate();
   const { criarConta, loading } = useContasPagar();
@@ -344,7 +344,7 @@ export default function NovaConta() {
     // Mostrar erros se houver
     if (errors.length > 0) {
       errors.forEach(error => {
-        toast.error(error);
+        toast({ title: 'Atenção', description: error });
       });
       return false;
     }
@@ -362,7 +362,7 @@ export default function NovaConta() {
       setFormaPagamento(dados.formaPagamento);
       setTemRascunho(false);
       
-      toast.success("Rascunho aplicado - dados restaurados com sucesso");
+      toast({ title: 'Sucesso', description: 'Rascunho aplicado - dados restaurados com sucesso' });
     }
   };
 
@@ -371,7 +371,7 @@ export default function NovaConta() {
     localStorage.removeItem('rascunho_conta_individual');
     setTemRascunho(false);
     
-    toast.success("Rascunho descartado");
+    toast({ title: 'Sucesso', description: 'Rascunho descartado' });
   };
 
   const salvarConta = async (marcarComoPago = false) => {
@@ -415,10 +415,10 @@ export default function NovaConta() {
       setRascunhoSalvo(false);
       
       // ✅ MELHORAR TOAST DE SUCESSO
-      toast.success(`Conta "${conta.descricao}" criada com sucesso!`);
+      toast({ title: 'Sucesso', description: `Conta "${conta.descricao}" criada com sucesso!` });
       navigate('/contas-pagar');
     } catch (error: any) {
-      toast.error(error.message || "Erro ao salvar conta. Tente novamente.");
+      toast({ title: 'Erro', description: error.message || 'Erro ao salvar conta. Tente novamente.', variant: 'destructive' });
     } finally {
       setLoading('saving', false);
     }

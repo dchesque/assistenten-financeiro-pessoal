@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { CreditCard, CheckCircle, Star, Calendar, Zap, Home } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface SubscriptionStatus {
   subscribed: boolean;
@@ -33,7 +33,7 @@ export default function Assinatura() {
       }, 1000);
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
-      toast.error('Erro ao verificar status da assinatura');
+      toast({ title: 'Erro', description: 'Erro ao verificar status da assinatura', variant: 'destructive' });
       setLoading(false);
     }
   };
@@ -46,12 +46,12 @@ export default function Assinatura() {
       // Simulação de criação de checkout
       // Em produção, aqui faria a chamada para supabase.functions.invoke('create-checkout')
       setTimeout(() => {
-        toast.success('Funcionalidade de pagamento será integrada com Stripe em produção');
+        toast({ title: 'Sucesso', description: 'Funcionalidade de pagamento será integrada com Stripe em produção' });
         setActionLoading(false);
       }, 2000);
     } catch (error) {
       console.error('Erro ao criar checkout:', error);
-      toast.error('Erro ao processar pagamento');
+      toast({ title: 'Erro', description: 'Erro ao processar pagamento', variant: 'destructive' });
       setActionLoading(false);
     }
   };
@@ -64,12 +64,12 @@ export default function Assinatura() {
       // Simulação de abertura do portal do cliente
       // Em produção, aqui faria a chamada para supabase.functions.invoke('customer-portal')
       setTimeout(() => {
-        toast.success('Portal de gerenciamento será integrado com Stripe em produção');
+        toast({ title: 'Sucesso', description: 'Portal de gerenciamento será integrado com Stripe em produção' });
         setActionLoading(false);
       }, 2000);
     } catch (error) {
       console.error('Erro ao abrir portal do cliente:', error);
-      toast.error('Erro ao abrir portal de gerenciamento');
+      toast({ title: 'Erro', description: 'Erro ao abrir portal de gerenciamento', variant: 'destructive' });
       setActionLoading(false);
     }
   };

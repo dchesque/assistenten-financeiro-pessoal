@@ -14,7 +14,7 @@ import { useFormulario } from '@/hooks/useFormulario';
 import { useMascaras } from '@/hooks/useMascaras';
 import { InputValidacao } from '@/components/ui/InputValidacao';
 import { VALIDACOES_COMUNS } from '@/utils/validacoes';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface DadosPerfil {
   nome: string;
@@ -104,7 +104,7 @@ export default function MeuPerfil() {
     async (dadosPerfil) => {
       // Salvando perfil
       await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Perfil atualizado com sucesso!');
+      toast({ title: 'Sucesso', description: 'Perfil atualizado com sucesso!' });
     },
     esquemaValidacao
   );
@@ -127,7 +127,7 @@ export default function MeuPerfil() {
   const salvarConfiguracoes = async () => {
     // Salvando configurações
     await new Promise(resolve => setTimeout(resolve, 500));
-    toast.success('Configurações salvas com sucesso!');
+    toast({ title: 'Sucesso', description: 'Configurações salvas com sucesso!' });
   };
 
   const breadcrumb = [

@@ -32,7 +32,7 @@ import { ValidationService } from '@/services/ValidationService';
 // Supabase removido - usando dados mock
 import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
 import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 export default function NovoRecebimento() {
   const navigate = useNavigate();
   const { criarConta, estados } = useContasPagar();
@@ -347,7 +347,7 @@ export default function NovoRecebimento() {
     // Mostrar erros se houver
     if (errors.length > 0) {
       errors.forEach(error => {
-        toast.error(error);
+        toast({ title: 'Atenção', description: error });
       });
       return false;
     }
@@ -365,7 +365,7 @@ export default function NovoRecebimento() {
       setFormaPagamento(dados.formaPagamento);
       setTemRascunho(false);
       
-      toast.success("Rascunho aplicado - dados restaurados com sucesso");
+      toast({ title: 'Sucesso', description: 'Rascunho aplicado - dados restaurados com sucesso' });
     }
   };
 
@@ -374,7 +374,7 @@ export default function NovoRecebimento() {
     localStorage.removeItem('rascunho_recebimento');
     setTemRascunho(false);
     
-    toast.success("Rascunho descartado");
+    toast({ title: 'Sucesso', description: 'Rascunho descartado' });
   };
 
   const salvarConta = async (marcarComoPago = false) => {
@@ -419,10 +419,10 @@ export default function NovoRecebimento() {
       setRascunhoSalvo(false);
       
       // ✅ MELHORAR TOAST DE SUCESSO
-      toast.success(`Recebimento "${conta.descricao}" criado com sucesso!`);
+      toast({ title: 'Sucesso', description: `Recebimento "${conta.descricao}" criado com sucesso!` });
       navigate('/contas-receber');
     } catch (error: any) {
-      toast.error(error.message || "Erro ao salvar recebimento. Tente novamente.");
+      toast({ title: 'Erro', description: error.message || 'Erro ao salvar recebimento. Tente novamente.', variant: 'destructive' });
     } finally {
       setLoading('saving', false);
     }
