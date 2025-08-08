@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, MessageCircle, Shield, Clock, Check } from 'lucide-react';
+import { BlurBackground } from '@/components/ui/BlurBackground';
+import { ArrowLeft, MessageCircle, Shield, Clock, Check, Users, TrendingUp, Award, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Auth() {
@@ -136,80 +137,119 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-      {/* Background abstratos */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-purple-400/20 to-pink-600/20 rounded-full blur-3xl"></div>
-      </div>
+      {/* Background abstratos com BlurBackground */}
+      <BlurBackground variant="page" />
 
-      <div className="relative min-h-screen flex">
-        {/* Seção Hero - Desktop */}
-        <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12">
-          <div className="max-w-md text-center">
-            <div className="mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                <MessageCircle className="w-8 h-8 text-white" />
+      <div className="relative min-h-screen flex flex-col lg:flex-row">
+        {/* Hero Section - Lado Esquerdo */}
+        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center p-12 relative">
+          <div className="max-w-lg mx-auto">
+            {/* Logo da Empresa */}
+            <div className="flex items-center justify-center mb-12">
+              <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-xl">
+                <MessageCircle className="w-12 h-12 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            </div>
+
+            {/* Título Principal */}
+            <div className="text-center mb-12">
+              <h1 className="text-5xl font-bold text-gray-900 mb-4 leading-tight">
                 JC Financeiro
               </h1>
-              <p className="text-xl text-gray-600 mb-8">
-                Gerencie suas finanças de forma simples e segura
+              <p className="text-xl text-gray-600 leading-relaxed">
+                A maneira mais simples de gerenciar suas finanças
               </p>
             </div>
 
-            <div className="space-y-4 text-left">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <Check className="w-4 h-4 text-green-600" />
+            {/* Features */}
+            <div className="space-y-6 mb-12">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-green-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-green-600" />
                 </div>
-                <span className="text-gray-700">Login rápido via WhatsApp</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-green-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Login Instantâneo</h3>
+                  <p className="text-gray-600 text-sm">Acesse via WhatsApp em segundos</p>
                 </div>
-                <span className="text-gray-700">Seus dados estão seguros</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-green-600" />
+              
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-blue-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-blue-600" />
                 </div>
-                <span className="text-gray-700">Acesso em segundos</span>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Segurança Total</h3>
+                  <p className="text-gray-600 text-sm">Seus dados protegidos e criptografados</p>
+                </div>
               </div>
+              
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-purple-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Controle Inteligente</h3>
+                  <p className="text-gray-600 text-sm">Relatórios e análises automáticas</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-6 text-center">
+              <div>
+                <div className="text-3xl font-bold text-gray-900 mb-1">1000+</div>
+                <div className="text-sm text-gray-600">Empresas</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-gray-900 mb-1">99.9%</div>
+                <div className="text-sm text-gray-600">Uptime</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-gray-900 mb-1">24/7</div>
+                <div className="text-sm text-gray-600">Suporte</div>
+              </div>
+            </div>
+
+            {/* CTA Footer */}
+            <div className="mt-12 text-center">
+              <p className="text-gray-500 text-sm">
+                Já possui uma conta? Faça login ao lado →
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Seção de Auth */}
-        <div className="flex-1 lg:w-1/2 flex items-center justify-center p-4 lg:p-12">
+        {/* Auth Section - Lado Direito */}
+        <div className="flex-1 lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
           <div className="w-full max-w-md">
             {/* Header Mobile */}
             <div className="lg:hidden text-center mb-8">
-              <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                <MessageCircle className="w-6 h-6 text-white" />
+              <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-xl">
+                <MessageCircle className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">JC Financeiro</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">JC Financeiro</h1>
+              <p className="text-gray-600">Gerencie suas finanças com simplicidade</p>
             </div>
 
-            <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-2xl">
-              <CardHeader className="text-center">
+            <Card className="bg-white/90 backdrop-blur-xl border border-white/30 shadow-2xl hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="text-center space-y-4 pb-6">
                 {step === 'phone' ? (
                   <>
                     <CardTitle className="text-2xl font-bold text-gray-900">
-                      Entre com WhatsApp
+                      Faça seu login
                     </CardTitle>
-                    <CardDescription className="text-gray-600">
-                      Rápido, seguro e sem senha
+                    <CardDescription className="text-gray-600 text-base">
+                      Entre com seu WhatsApp de forma rápida e segura
                     </CardDescription>
                   </>
                 ) : (
                   <>
                     <CardTitle className="text-2xl font-bold text-gray-900">
-                      Digite o código
+                      Confirme seu código
                     </CardTitle>
-                    <CardDescription className="text-gray-600">
-                      Enviamos um código para {formData.phone}
+                    <CardDescription className="text-gray-600 text-base">
+                      Enviamos um código de verificação para<br />
+                      <span className="font-semibold text-gray-900">{formData.phone}</span>
                     </CardDescription>
                   </>
                 )}
@@ -218,9 +258,9 @@ export default function Auth() {
               <CardContent className="space-y-6">
                 {step === 'phone' ? (
                   <>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Número do WhatsApp
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700 block">
+                        Número do WhatsApp *
                       </label>
                       <Input
                         type="tel"
@@ -228,20 +268,25 @@ export default function Auth() {
                         value={formData.phone}
                         onChange={handlePhoneInput}
                         maxLength={15}
-                        className="bg-white/80 backdrop-blur-sm border-gray-300/50"
+                        className="h-12 text-base bg-white/80 backdrop-blur-sm border-gray-300/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-start space-x-3">
                       <Checkbox
                         id="terms"
                         checked={formData.acceptTerms}
                         onCheckedChange={(checked) => handleInputChange('acceptTerms', !!checked)}
+                        className="mt-1"
                       />
-                      <label htmlFor="terms" className="text-sm text-gray-600">
-                        Li e aceito os{' '}
-                        <a href="#" className="text-blue-600 hover:underline">
-                          termos de uso
+                      <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
+                        Concordo com os{' '}
+                        <a href="#" className="text-blue-600 hover:underline font-medium">
+                          Termos de Uso
+                        </a>{' '}
+                        e{' '}
+                        <a href="#" className="text-blue-600 hover:underline font-medium">
+                          Política de Privacidade
                         </a>
                       </label>
                     </div>
@@ -249,16 +294,16 @@ export default function Auth() {
                     <Button
                       onClick={handleSendCode}
                       disabled={loading || !formData.acceptTerms}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium h-12"
+                      className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                     >
                       {loading ? (
                         <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          <span>Enviando...</span>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span>Enviando código...</span>
                         </div>
                       ) : (
                         <div className="flex items-center space-x-2">
-                          <MessageCircle className="w-4 h-4" />
+                          <MessageCircle className="w-5 h-5" />
                           <span>Continuar com WhatsApp</span>
                         </div>
                       )}
@@ -266,8 +311,8 @@ export default function Auth() {
                   </>
                 ) : (
                   <>
-                    <div className="space-y-4">
-                      <div className="flex justify-center space-x-2">
+                    <div className="space-y-6">
+                      <div className="flex justify-center space-x-3">
                         {formData.otp.map((digit, index) => (
                           <Input
                             key={index}
@@ -278,24 +323,24 @@ export default function Auth() {
                             maxLength={1}
                             value={digit}
                             onChange={(e) => handleOtpChange(index, e.target.value)}
-                            className="w-12 h-12 text-center text-lg font-semibold bg-white/80 backdrop-blur-sm border-gray-300/50"
+                            className="w-14 h-14 text-center text-xl font-bold bg-white/90 backdrop-blur-sm border-gray-300/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
                           />
                         ))}
                       </div>
 
-                      <div className="text-center">
+                      <div className="text-center space-y-3">
                         <button
                           onClick={handleResendCode}
                           disabled={resendCountdown > 0}
-                          className={`text-sm ${
+                          className={`text-sm font-medium transition-colors ${
                             resendCountdown > 0
                               ? 'text-gray-400 cursor-not-allowed'
-                              : 'text-blue-600 hover:underline'
+                              : 'text-blue-600 hover:text-blue-700 hover:underline'
                           }`}
                         >
                           {resendCountdown > 0
                             ? `Reenviar código em ${resendCountdown}s`
-                            : 'Reenviar código'
+                            : 'Não recebeu? Reenviar código'
                           }
                         </button>
                       </div>
@@ -305,7 +350,7 @@ export default function Auth() {
                       <Button
                         variant="outline"
                         onClick={() => setStep('phone')}
-                        className="flex-1"
+                        className="flex-1 h-12 border-gray-300 hover:bg-gray-50"
                       >
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Voltar
@@ -313,24 +358,24 @@ export default function Auth() {
                       <Button
                         onClick={() => handleVerifyOtp()}
                         disabled={loading || formData.otp.join('').length !== 6}
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                        className="flex-2 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                       >
                         {loading ? (
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         ) : (
-                          'Verificar'
+                          'Verificar Código'
                         )}
                       </Button>
                     </div>
                   </>
                 )}
 
-                {/* Footer de segurança */}
-                <div className="text-center pt-4 border-t border-gray-200/50">
-                  <p className="text-xs text-gray-500 flex items-center justify-center space-x-1">
-                    <Shield className="w-3 h-3" />
-                    <span>Seus dados estão seguros</span>
-                  </p>
+                {/* Footer de Segurança */}
+                <div className="text-center pt-6 border-t border-gray-200/50">
+                  <div className="flex items-center justify-center space-x-2 text-gray-500">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-sm">Conexão segura e dados criptografados</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
