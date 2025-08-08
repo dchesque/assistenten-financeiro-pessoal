@@ -1,6 +1,6 @@
 import { UserProfile } from '@/types/userProfile';
 import { differenceInDays } from 'date-fns';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 export const checkPlanNotifications = (userProfile?: UserProfile | null) => {
   if (!userProfile) return;
@@ -10,24 +10,18 @@ export const checkPlanNotifications = (userProfile?: UserProfile | null) => {
     const daysLeft = differenceInDays(new Date(userProfile.trial_ends_at), new Date());
     
     if (daysLeft <= 3 && daysLeft > 0) {
-      toast.warning(`Seu trial expira em ${daysLeft} dias`, {
+      toast({
+        title: `Seu trial expira em ${daysLeft} dias`,
         description: 'Considere fazer upgrade para continuar usando todos os recursos',
-        action: {
-          label: 'Ver planos',
-          onClick: () => window.location.href = '/planos'
-        },
-        duration: 8000
+        variant: 'destructive'
       });
     }
     
     if (daysLeft <= 0) {
-      toast.error('Seu trial expirou!', {
+      toast({
+        title: 'Seu trial expirou!',
         description: 'Faça upgrade para continuar usando todos os recursos',
-        action: {
-          label: 'Fazer upgrade',
-          onClick: () => window.location.href = '/planos'
-        },
-        duration: 10000
+        variant: 'destructive'
       });
     }
   }
@@ -39,13 +33,9 @@ export const checkPlanNotifications = (userProfile?: UserProfile | null) => {
     
     Object.entries(mockUsage).forEach(([feature, percentage]) => {
       if (percentage > 80) {
-        toast.info(`Você está próximo do limite de ${feature}`, {
-          description: `${percentage.toFixed(0)}% do limite utilizado. Considere fazer upgrade.`,
-          action: {
-            label: 'Ver planos',
-            onClick: () => window.location.href = '/planos'
-          },
-          duration: 6000
+        toast({
+          title: `Você está próximo do limite de ${feature}`,
+          description: `${percentage.toFixed(0)}% do limite utilizado. Considere fazer upgrade.`
         });
       }
     });
@@ -63,26 +53,17 @@ const calculateMockUsage = (userProfile: UserProfile): Record<string, number> =>
 };
 
 export const showUpgradePrompt = (feature: string, description?: string) => {
-  toast.error(`Recurso ${feature} indisponível`, {
+  toast({
+    title: `Recurso ${feature} indisponível`,
     description: description || 'Este recurso está disponível apenas para planos superiores',
-    action: {
-      label: 'Fazer upgrade',
-      onClick: () => {
-        const message = encodeURIComponent(`Olá! Gostaria de fazer upgrade para usar o recurso: ${feature}`);
-        window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
-      }
-    },
-    duration: 8000
+    variant: 'destructive'
   });
 };
 
 export const showLimitReached = (feature: string, current: number, limit: number) => {
-  toast.warning(`Limite atingido: ${feature}`, {
+  toast({
+    title: `Limite atingido: ${feature}`,
     description: `Você atingiu o limite de ${limit} ${feature}. Atual: ${current}/${limit}`,
-    action: {
-      label: 'Fazer upgrade',
-      onClick: () => window.location.href = '/planos'
-    },
-    duration: 8000
+    variant: 'destructive'
   });
 };

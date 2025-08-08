@@ -97,7 +97,7 @@ interface WebVitalsData {
  *     <div>
  *       <div>Render Time: {metrics.renderTime}ms</div>
  *       <div>Re-renders: {metrics.reRenders}</div>
- *       <button onClick={() => console.log(getReport())}>
+ *       <button onClick={() => alert(JSON.stringify(getReport(), null, 2))}>
  *         Ver Relatório
  *       </button>
  *     </div>

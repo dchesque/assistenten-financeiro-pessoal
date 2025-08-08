@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Layout } from '@/components/layout/Layout';
 import { Loader2 } from 'lucide-react';
+import { StartupInitializer } from '@/components/layout/StartupInitializer';
 
 // Páginas críticas (carregamento imediato)
 import Index from '@/pages/Index';
@@ -51,46 +52,48 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <Router>
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Layout><Index /></Layout></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-              <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
-              <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
-              <Route path="/bancos" element={<ProtectedRoute><Layout><Bancos /></Layout></ProtectedRoute>} />
-              <Route path="/nova-conta" element={<ProtectedRoute><Layout><NovaConta /></Layout></ProtectedRoute>} />
-              <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><NovoRecebimento /></Layout></ProtectedRoute>} />
-              <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
-              <Route path="/categorias" element={<ProtectedRoute><Layout><Categorias /></Layout></ProtectedRoute>} />
-              <Route path="/meu-perfil" element={<ProtectedRoute><Layout><MeuPerfil /></Layout></ProtectedRoute>} />
-              <Route path="/assinatura" element={<ProtectedRoute><Layout><Assinatura /></Layout></ProtectedRoute>} />
-              <Route path="/design-system" element={<ProtectedRoute><Layout><DesignSystemPreview /></Layout></ProtectedRoute>} />
-              
-              <Route path="/monitoramento-performance" element={<ProtectedRoute><Layout><MonitoramentoPerformance /></Layout></ProtectedRoute>} />
-              <Route path="/administrador" element={<ProtectedRoute><Layout><Administrador /></Layout></ProtectedRoute>} />
-              <Route path="/administrador/usuarios" element={<ProtectedRoute><Layout><UsuariosAdmin /></Layout></ProtectedRoute>} />
-              <Route path="/configuracoes" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          <Toaster 
-            position="top-right"
-            expand={false}
-            richColors
-            closeButton
-            duration={4000}
-            theme="light"
-            toastOptions={{
-              style: {
-                background: 'white',
-                border: '1px solid #e2e8f0',
-              },
-              className: 'sonner-toast',
-            }}
-          />
-        </Router>
+        <StartupInitializer>
+          <Router>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={<ProtectedRoute><Layout><Index /></Layout></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+                <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
+                <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
+                <Route path="/bancos" element={<ProtectedRoute><Layout><Bancos /></Layout></ProtectedRoute>} />
+                <Route path="/nova-conta" element={<ProtectedRoute><Layout><NovaConta /></Layout></ProtectedRoute>} />
+                <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><NovoRecebimento /></Layout></ProtectedRoute>} />
+                <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
+                <Route path="/categorias" element={<ProtectedRoute><Layout><Categorias /></Layout></ProtectedRoute>} />
+                <Route path="/meu-perfil" element={<ProtectedRoute><Layout><MeuPerfil /></Layout></ProtectedRoute>} />
+                <Route path="/assinatura" element={<ProtectedRoute><Layout><Assinatura /></Layout></ProtectedRoute>} />
+                <Route path="/design-system" element={<ProtectedRoute><Layout><DesignSystemPreview /></Layout></ProtectedRoute>} />
+                
+                <Route path="/monitoramento-performance" element={<ProtectedRoute><Layout><MonitoramentoPerformance /></Layout></ProtectedRoute>} />
+                <Route path="/administrador" element={<ProtectedRoute><Layout><Administrador /></Layout></ProtectedRoute>} />
+                <Route path="/administrador/usuarios" element={<ProtectedRoute><Layout><UsuariosAdmin /></Layout></ProtectedRoute>} />
+                <Route path="/configuracoes" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+            <Toaster 
+              position="top-right"
+              expand={false}
+              richColors
+              closeButton
+              duration={4000}
+              theme="light"
+              toastOptions={{
+                style: {
+                  background: 'white',
+                  border: '1px solid #e2e8f0',
+                },
+                className: 'sonner-toast',
+              }}
+            />
+          </Router>
+        </StartupInitializer>
       </QueryClientProvider>
     </ErrorBoundary>
   );
