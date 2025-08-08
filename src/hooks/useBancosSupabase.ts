@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { Banco } from '@/types/banco';
-
+import { useErrorHandler } from './useErrorHandler';
 export interface EstatisticasBanco {
   totalBancos: number;
   bancosAtivos: number;
@@ -64,7 +64,7 @@ export function useBancosSupabase(): UseBancosReturn {
   const [bancos, setBancos] = useState<Banco[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const { handleError, withRetry } = useErrorHandler();
   const calcularEstatisticas = (bancosList: Banco[]): EstatisticasBanco => {
     const bancosAtivos = bancosList.filter(b => b.ativo);
     const saldos = bancosAtivos.map(b => b.saldo_atual || 0);
@@ -89,57 +89,72 @@ export function useBancosSupabase(): UseBancosReturn {
       
       setBancos(mockBancos);
     } catch (error) {
-      setError('Erro ao carregar bancos');
-      toast.error('Erro ao carregar bancos');
+      const appError = handleError(error, 'useBancosSupabase.listarBancos');
+      setError(appError.message);
     } finally {
       setLoading(false);
     }
   };
 
   const criarBanco = async (banco: Omit<Banco, 'id' | 'created_at' | 'updated_at'>): Promise<Banco> => {
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const novoBanco: Banco = {
-      ...banco,
-      id: Math.max(...bancos.map(b => b.id)) + 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    setBancos(prev => [...prev, novoBanco]);
-    toast.success('Banco criado com sucesso!');
-    
-    return novoBanco;
+    try {
+      // Simular delay de API
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const novoBanco: Banco = {
+        ...banco,
+        id: Math.max(...bancos.map(b => b.id)) + 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      setBancos(prev => [...prev, novoBanco]);
+      toast({ title: 'Sucesso', description: 'Banco criado com sucesso!' });
+      
+      return novoBanco;
+    } catch (error) {
+      handleError(error, 'useBancosSupabase.criarBanco');
+      throw error;
+    }
   };
 
   const atualizarBanco = async (id: number, dadosAtualizacao: Partial<Banco>): Promise<Banco> => {
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const bancoAtualizado = bancos.find(b => b.id === id);
-    if (!bancoAtualizado) {
-      throw new Error('Banco não encontrado');
+    try {
+      // Simular delay de API
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const bancoAtualizado = bancos.find(b => b.id === id);
+      if (!bancoAtualizado) {
+        throw new Error('Banco não encontrado');
+      }
+      
+      const bancoNovo = { 
+        ...bancoAtualizado, 
+        ...dadosAtualizacao,
+        updated_at: new Date().toISOString()
+      };
+      
+      setBancos(prev => prev.map(b => b.id === id ? bancoNovo : b));
+      toast({ title: 'Sucesso', description: 'Banco atualizado com sucesso!' });
+      
+      return bancoNovo;
+    } catch (error) {
+      handleError(error, 'useBancosSupabase.atualizarBanco');
+      throw error;
     }
-    
-    const bancoNovo = { 
-      ...bancoAtualizado, 
-      ...dadosAtualizacao,
-      updated_at: new Date().toISOString()
-    };
-    
-    setBancos(prev => prev.map(b => b.id === id ? bancoNovo : b));
-    toast.success('Banco atualizado com sucesso!');
-    
-    return bancoNovo;
   };
 
   const excluirBanco = async (id: number): Promise<void> => {
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    setBancos(prev => prev.filter(b => b.id !== id));
-    toast.success('Banco excluído com sucesso!');
+    try {
+      // Simular delay de API
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setBancos(prev => prev.filter(b => b.id !== id));
+      toast({ title: 'Sucesso', description: 'Banco excluído com sucesso!' });
+    } catch (error) {
+      handleError(error, 'useBancosSupabase.excluirBanco');
+      throw error;
+    }
   };
 
   const recarregar = async (): Promise<void> => {

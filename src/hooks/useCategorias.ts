@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { mockDataService, type Categoria } from '@/services/mockDataService';
 import { useAuth } from './useAuth';
-import { toast } from 'sonner';
-
+import { useErrorHandler } from './useErrorHandler';
+import { toast } from '@/hooks/use-toast';
 export interface UseCategoriastReturn {
   categorias: Categoria[];
   loading: boolean;
@@ -18,7 +18,7 @@ export function useCategorias(): UseCategoriastReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-
+  const { handleError } = useErrorHandler();
   const carregarCategorias = async () => {
     if (!user) return;
     
@@ -28,9 +28,8 @@ export function useCategorias(): UseCategoriastReturn {
       const data = await mockDataService.getCategorias();
       setCategorias(data);
     } catch (error) {
-      console.error('Erro ao carregar categorias:', error);
-      setError('Erro ao carregar categorias');
-      toast.error('Erro ao carregar categorias');
+      const appError = handleError(error, 'useCategorias.carregarCategorias');
+      setError(appError.message);
     } finally {
       setLoading(false);
     }
@@ -53,13 +52,11 @@ export function useCategorias(): UseCategoriastReturn {
       const novaCategoria = await mockDataService.createCategoria(dadosCategoria);
       setCategorias(prev => [...prev, novaCategoria]);
       
-      toast.success('Categoria criada com sucesso!');
+      toast({ title: 'Sucesso', description: 'Categoria criado com sucesso!' });
       return novaCategoria;
     } catch (error) {
-      console.error('Erro ao criar categoria:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar categoria';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const appError = handleError(error, 'useCategorias.criarCategoria');
+      setError(appError.message);
       throw error;
     } finally {
       setLoading(false);
@@ -92,15 +89,13 @@ export function useCategorias(): UseCategoriastReturn {
         setCategorias(prev => 
           prev.map(cat => cat.id === id ? categoriaAtualizada : cat)
         );
-        toast.success('Categoria atualizada com sucesso!');
+        toast({ title: 'Sucesso', description: 'Categoria atualizada com sucesso!' });
       }
       
       return categoriaAtualizada;
     } catch (error) {
-      console.error('Erro ao atualizar categoria:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar categoria';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const appError = handleError(error, 'useCategorias.atualizarCategoria');
+      setError(appError.message);
       throw error;
     } finally {
       setLoading(false);
@@ -118,15 +113,13 @@ export function useCategorias(): UseCategoriastReturn {
       
       if (sucesso) {
         setCategorias(prev => prev.filter(cat => cat.id !== id));
-        toast.success('Categoria excluída com sucesso!');
+        toast({ title: 'Sucesso', description: 'Categoria excluída com sucesso!' });
       } else {
         throw new Error('Categoria não encontrada');
       }
     } catch (error) {
-      console.error('Erro ao excluir categoria:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir categoria';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const appError = handleError(error, 'useCategorias.excluirCategoria');
+      setError(appError.message);
       throw error;
     } finally {
       setLoading(false);

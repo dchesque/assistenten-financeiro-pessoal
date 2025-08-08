@@ -15,7 +15,7 @@ export function useContasReceber() {
   const [contas, setContas] = useState<ContaReceber[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-
+  const { handleError } = useErrorHandler();
   const calcularStatus = (dataVencimento: string, dataRecebimento?: string): 'pendente' | 'recebido' | 'vencido' => {
     if (dataRecebimento) return 'recebido';
     
@@ -91,12 +91,9 @@ export function useContasReceber() {
 
       setContas(contasComStatus);
     } catch (error) {
-      console.error('Erro ao carregar contas a receber:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar as contas a receber',
-        variant: 'destructive',
-      });
+      const appError = handleError(error, 'useContasReceber.carregarContas');
+      // Opcional: definir algum estado de erro se necessário
+      // setError(appError.message);
     } finally {
       setLoading(false);
     }
@@ -120,7 +117,7 @@ export function useContasReceber() {
       toast({ title: 'Sucesso', description: 'Conta a receber criada com sucesso' });
       return true;
     } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível criar a conta a receber', variant: 'destructive' });
+      handleError(error, 'useContasReceber.criarConta');
       return false;
     }
   };
@@ -143,7 +140,7 @@ export function useContasReceber() {
       toast({ title: 'Sucesso', description: 'Conta a receber atualizada com sucesso' });
       return true;
     } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível atualizar a conta a receber', variant: 'destructive' });
+      handleError(error, 'useContasReceber.atualizarConta');
       return false;
     }
   };
@@ -205,11 +202,7 @@ export function useContasReceber() {
 
       return true;
     } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível criar o lançamento em lote',
-        variant: 'destructive',
-      });
+      handleError(error, 'useContasReceber.lancamentoLote');
       return false;
     }
   };
@@ -220,7 +213,7 @@ export function useContasReceber() {
       toast({ title: 'Sucesso', description: 'Conta a receber excluída com sucesso' });
       return true;
     } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível excluir a conta a receber', variant: 'destructive' });
+      handleError(error, 'useContasReceber.excluirConta');
       return false;
     }
   };

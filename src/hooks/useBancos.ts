@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { mockDataService, type Banco } from '@/services/mockDataService';
 import { useAuth } from './useAuth';
-import { toast } from 'sonner';
-
+import { useErrorHandler } from './useErrorHandler';
+import { toast } from '@/hooks/use-toast';
 export interface UseBancosReturn {
   bancos: Banco[];
   loading: boolean;
@@ -24,7 +24,7 @@ export function useBancos(): UseBancosReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-
+  const { handleError, withRetry } = useErrorHandler();
   // Calcular estatísticas
   const estatisticas = {
     total_bancos: bancos.length,
@@ -39,12 +39,11 @@ export function useBancos(): UseBancosReturn {
     try {
       setLoading(true);
       setError(null);
-      const data = await mockDataService.getBancos();
+      const data = await withRetry(() => mockDataService.getBancos());
       setBancos(data);
     } catch (error) {
-      console.error('Erro ao carregar bancos:', error);
-      setError('Erro ao carregar bancos');
-      toast.error('Erro ao carregar bancos');
+      const appError = handleError(error, 'useBancos.carregarBancos');
+      setError(appError.message);
     } finally {
       setLoading(false);
     }
@@ -76,13 +75,11 @@ export function useBancos(): UseBancosReturn {
       const novoBanco = await mockDataService.createBanco(dadosCompletos);
       setBancos(prev => [...prev, novoBanco]);
       
-      toast.success('Banco criado com sucesso!');
+      toast({ title: 'Sucesso', description: 'Banco criado com sucesso!' });
       return novoBanco;
     } catch (error) {
-      console.error('Erro ao criar banco:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar banco';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const appError = handleError(error, 'useBancos.criarBanco');
+      setError(appError.message);
       throw error;
     } finally {
       setLoading(false);
@@ -122,15 +119,13 @@ export function useBancos(): UseBancosReturn {
         setBancos(prev => 
           prev.map(banco => banco.id === id ? bancoAtualizado : banco)
         );
-        toast.success('Banco atualizado com sucesso!');
+        toast({ title: 'Sucesso', description: 'Banco atualizado com sucesso!' });
       }
       
       return bancoAtualizado;
     } catch (error) {
-      console.error('Erro ao atualizar banco:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar banco';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const appError = handleError(error, 'useBancos.atualizarBanco');
+      setError(appError.message);
       throw error;
     } finally {
       setLoading(false);
@@ -148,15 +143,13 @@ export function useBancos(): UseBancosReturn {
       
       if (sucesso) {
         setBancos(prev => prev.filter(banco => banco.id !== id));
-        toast.success('Banco excluído com sucesso!');
+        toast({ title: 'Sucesso', description: 'Banco excluído com sucesso!' });
       } else {
         throw new Error('Banco não encontrado');
       }
     } catch (error) {
-      console.error('Erro ao excluir banco:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir banco';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const appError = handleError(error, 'useBancos.excluirBanco');
+      setError(appError.message);
       throw error;
     } finally {
       setLoading(false);

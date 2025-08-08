@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { PlanoContas } from '@/types/planoContas';
-
+import { useErrorHandler } from './useErrorHandler';
 // Dados mock para plano de contas
 const mockPlanoContas: PlanoContas[] = [
   {
@@ -78,7 +78,7 @@ export function usePlanoContas() {
   const [contas, setContas] = useState<PlanoContas[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const { handleError } = useErrorHandler();
   const carregarContas = async () => {
     setLoading(true);
     setError(null);
@@ -89,54 +89,69 @@ export function usePlanoContas() {
       
       setContas(mockPlanoContas);
     } catch (error) {
-      setError('Erro ao carregar plano de contas');
-      toast.error('Erro ao carregar plano de contas');
+      const appError = handleError(error, 'usePlanoContas.carregarContas');
+      setError(appError.message);
     } finally {
       setLoading(false);
     }
   };
 
   const criarConta = async (conta: Omit<PlanoContas, 'id' | 'created_at' | 'updated_at'>): Promise<PlanoContas> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const novaConta: PlanoContas = {
-      ...conta,
-      id: Math.max(...contas.map(c => c.id)) + 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    setContas(prev => [...prev, novaConta]);
-    toast.success('Conta criada com sucesso!');
-    
-    return novaConta;
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const novaConta: PlanoContas = {
+        ...conta,
+        id: Math.max(...contas.map(c => c.id)) + 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      setContas(prev => [...prev, novaConta]);
+      toast({ title: 'Sucesso', description: 'Conta criada com sucesso!' });
+      
+      return novaConta;
+    } catch (error) {
+      handleError(error, 'usePlanoContas.criarConta');
+      throw error;
+    }
   };
 
   const atualizarConta = async (id: number, dadosAtualizacao: Partial<PlanoContas>): Promise<PlanoContas> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const contaAtualizada = contas.find(c => c.id === id);
-    if (!contaAtualizada) {
-      throw new Error('Conta não encontrada');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const contaAtualizada = contas.find(c => c.id === id);
+      if (!contaAtualizada) {
+        throw new Error('Conta não encontrada');
+      }
+      
+      const contaNova = { 
+        ...contaAtualizada, 
+        ...dadosAtualizacao,
+        updated_at: new Date().toISOString()
+      };
+      
+      setContas(prev => prev.map(c => c.id === id ? contaNova : c));
+      toast({ title: 'Sucesso', description: 'Conta atualizada com sucesso!' });
+      
+      return contaNova;
+    } catch (error) {
+      handleError(error, 'usePlanoContas.atualizarConta');
+      throw error;
     }
-    
-    const contaNova = { 
-      ...contaAtualizada, 
-      ...dadosAtualizacao,
-      updated_at: new Date().toISOString()
-    };
-    
-    setContas(prev => prev.map(c => c.id === id ? contaNova : c));
-    toast.success('Conta atualizada com sucesso!');
-    
-    return contaNova;
   };
 
   const excluirConta = async (id: number): Promise<void> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    setContas(prev => prev.filter(c => c.id !== id));
-    toast.success('Conta excluída com sucesso!');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setContas(prev => prev.filter(c => c.id !== id));
+      toast({ title: 'Sucesso', description: 'Conta excluída com sucesso!' });
+    } catch (error) {
+      handleError(error, 'usePlanoContas.excluirConta');
+      throw error;
+    }
   };
 
   const buscarContasPorTipo = (tipo_dre: string): PlanoContas[] => {

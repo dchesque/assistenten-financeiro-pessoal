@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { mockDataService, type Contato } from '@/services/mockDataService';
 import { useAuth } from './useAuth';
-import { toast } from 'sonner';
-
+import { useErrorHandler } from './useErrorHandler';
+import { toast } from '@/hooks/use-toast';
 export interface UseContatosReturn {
   contatos: Contato[];
   credores: Contato[];
@@ -21,7 +21,7 @@ export function useContatos(): UseContatosReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-
+  const { handleError } = useErrorHandler();
   // Separar contatos por tipo
   const credores = contatos.filter(contato => contato.tipo === 'credor');
   const pagadores = contatos.filter(contato => contato.tipo === 'pagador');
@@ -35,9 +35,8 @@ export function useContatos(): UseContatosReturn {
       const data = await mockDataService.getContatos();
       setContatos(data);
     } catch (error) {
-      console.error('Erro ao carregar contatos:', error);
-      setError('Erro ao carregar contatos');
-      toast.error('Erro ao carregar contatos');
+      const appError = handleError(error, 'useContatos.carregarContatos');
+      setError(appError.message);
     } finally {
       setLoading(false);
     }
@@ -80,13 +79,11 @@ export function useContatos(): UseContatosReturn {
       setContatos(prev => [...prev, novoContato]);
       
       const tipoContato = dadosContato.tipo === 'credor' ? 'credor' : 'pagador';
-      toast.success(`${tipoContato === 'credor' ? 'Credor' : 'Pagador'} criado com sucesso!`);
+      toast({ title: 'Sucesso', description: `${tipoContato === 'credor' ? 'Credor' : 'Pagador'} criado com sucesso!` });
       return novoContato;
     } catch (error) {
-      console.error('Erro ao criar contato:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar contato';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const appError = handleError(error, 'useContatos.criarContato');
+      setError(appError.message);
       throw error;
     } finally {
       setLoading(false);
@@ -122,15 +119,13 @@ export function useContatos(): UseContatosReturn {
         setContatos(prev => 
           prev.map(contato => contato.id === id ? contatoAtualizado : contato)
         );
-        toast.success('Contato atualizado com sucesso!');
+        toast({ title: 'Sucesso', description: 'Contato atualizado com sucesso!' });
       }
       
       return contatoAtualizado;
     } catch (error) {
-      console.error('Erro ao atualizar contato:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar contato';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const appError = handleError(error, 'useContatos.atualizarContato');
+      setError(appError.message);
       throw error;
     } finally {
       setLoading(false);
@@ -148,15 +143,13 @@ export function useContatos(): UseContatosReturn {
       
       if (sucesso) {
         setContatos(prev => prev.filter(contato => contato.id !== id));
-        toast.success('Contato excluído com sucesso!');
+        toast({ title: 'Sucesso', description: 'Contato excluído com sucesso!' });
       } else {
         throw new Error('Contato não encontrado');
       }
     } catch (error) {
-      console.error('Erro ao excluir contato:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir contato';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const appError = handleError(error, 'useContatos.excluirContato');
+      setError(appError.message);
       throw error;
     } finally {
       setLoading(false);
