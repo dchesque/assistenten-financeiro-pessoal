@@ -27,10 +27,9 @@ import { TabelaContasVirtualizada } from '@/components/contasPagar/TabelaContasV
 import { useContatos } from '@/hooks/useContatos';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
 import { toast } from 'sonner';
-
 export default function ContasPagar() {
   const navigate = useNavigate();
-  
+
   // Hook otimizado que gerencia todas as contas a pagar
   const {
     contas,
@@ -49,9 +48,12 @@ export default function ContasPagar() {
   } = useContasPagarOtimizado();
 
   // Hooks para dados de filtros
-  const { credores } = useContatos();
-  const { planoContas } = usePlanoContas();
-
+  const {
+    credores
+  } = useContatos();
+  const {
+    planoContas
+  } = usePlanoContas();
   const [vistaAtual, setVistaAtual] = useState<'tabela' | 'cards'>('tabela');
 
   // Estados dos modais
@@ -73,8 +75,10 @@ export default function ContasPagar() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
   const [itemToCancel, setItemToCancel] = useState<any>(null);
-  
-  const { isDeleting, setLoading } = useLoadingStates();
+  const {
+    isDeleting,
+    setLoading
+  } = useLoadingStates();
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -82,7 +86,6 @@ export default function ContasPagar() {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
-
   const getStatusConfig = (status: string) => {
     const configs = {
       pendente: {
@@ -108,38 +111,29 @@ export default function ContasPagar() {
     };
     return configs[status as keyof typeof configs] || configs.pendente;
   };
-
   const getVencimentoIndicator = (conta: any) => {
     if (conta.status === 'pago') return null;
     if (conta.dias_em_atraso > 0) {
-      return (
-        <span className="text-xs bg-red-100/80 text-red-700 px-2 py-1 rounded-full ml-2">
+      return <span className="text-xs bg-red-100/80 text-red-700 px-2 py-1 rounded-full ml-2">
           {conta.dias_em_atraso} dias atraso
-        </span>
-      );
+        </span>;
     }
     if (conta.dias_para_vencimento === 0) {
-      return (
-        <span className="text-xs bg-yellow-100/80 text-yellow-700 px-2 py-1 rounded-full ml-2">
+      return <span className="text-xs bg-yellow-100/80 text-yellow-700 px-2 py-1 rounded-full ml-2">
           HOJE
-        </span>
-      );
+        </span>;
     }
     if (conta.dias_para_vencimento <= 7) {
-      return (
-        <span className="text-xs bg-blue-100/80 text-blue-700 px-2 py-1 rounded-full ml-2">
+      return <span className="text-xs bg-blue-100/80 text-blue-700 px-2 py-1 rounded-full ml-2">
           {conta.dias_para_vencimento} dias
-        </span>
-      );
+        </span>;
     }
     return null;
   };
-
   const handleVisualizar = (conta: any) => {
     setContaSelecionada(conta);
     setModalVisualizar(true);
   };
-
   const handleEditar = (conta: any) => {
     setContaParaEditar(conta);
     setModalEditarAberto(true);
@@ -156,7 +150,6 @@ export default function ContasPagar() {
     if (filtros.data_inicio || filtros.data_fim) contador++;
     return contador;
   }, [filtros]);
-
   const handleDuplicar = (conta: any) => {
     const novaConta = {
       ...conta,
@@ -178,28 +171,23 @@ export default function ContasPagar() {
     limparFiltros();
     toast.success(`${contadorFiltrosAtivos} filtro${contadorFiltrosAtivos > 1 ? 's' : ''} ${contadorFiltrosAtivos > 1 ? 'foram removidos' : 'foi removido'}`);
   };
-
   const handleFiltroRapido = (novoFiltro: string) => {
     setFiltroRapido(novoFiltro as any);
-    const labels = { 
-      'todos': 'todas as contas', 
+    const labels = {
+      'todos': 'todas as contas',
       'pendente': 'contas pendentes',
       'pago': 'contas pagas',
       'vencido': 'contas vencidas'
     };
-    
     toast.success(`Exibindo: ${labels[novoFiltro] || novoFiltro}`);
   };
-
   const handleCancelar = (conta: any) => {
     setItemToCancel(conta);
     setCancelDialogOpen(true);
     setMenuAbertoId(null);
   };
-
   const confirmCancel = async () => {
     if (!itemToCancel) return;
-    
     setLoading('deleting', true);
     try {
       await cancelarConta(itemToCancel.id);
@@ -212,7 +200,6 @@ export default function ContasPagar() {
       setItemToCancel(null);
     }
   };
-
   const handleVerHistorico = (conta: any) => {
     console.log('Ver histórico:', conta);
     // TODO: Implementar modal de histórico
@@ -229,7 +216,6 @@ export default function ContasPagar() {
     onCancelar
   }: any) => {
     if (!aberto) return null;
-    
     const configs = {
       excluir: {
         corBotao: 'bg-red-600 hover:bg-red-700',
@@ -243,9 +229,7 @@ export default function ContasPagar() {
       }
     };
     const config = configs[tipo as keyof typeof configs] || configs.excluir;
-    
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    return <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl max-w-md w-full">
           <div className="p-6">
             {/* Ícone */}
@@ -265,34 +249,24 @@ export default function ContasPagar() {
             
             {/* Botões */}
             <div className="flex space-x-3">
-              <button
-                onClick={onCancelar}
-                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
-              >
+              <button onClick={onCancelar} className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
                 Cancelar
               </button>
-              <button
-                onClick={onConfirmar}
-                className={`flex-1 px-4 py-2 text-white rounded-xl transition-colors ${config.corBotao}`}
-              >
+              <button onClick={onConfirmar} className={`flex-1 px-4 py-2 text-white rounded-xl transition-colors ${config.corBotao}`}>
                 {config.textoBotao}
               </button>
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   };
-
   const handleExcluir = (conta: any) => {
     setItemToDelete(conta);
     setDeleteDialogOpen(true);
     setMenuAbertoId(null);
   };
-
   const confirmDelete = async () => {
     if (!itemToDelete) return;
-    
     setLoading('deleting', true);
     try {
       await excluirConta(itemToDelete.id);
@@ -305,84 +279,61 @@ export default function ContasPagar() {
       setItemToDelete(null);
     }
   };
-
-  const DropdownMenuComponent = ({ conta }: { conta: any }) => {
+  const DropdownMenuComponent = ({
+    conta
+  }: {
+    conta: any;
+  }) => {
     const isOpen = menuAbertoId === conta.id;
     const menuRef = useRef<HTMLDivElement>(null);
-    
-    return (
-      <div className="relative" ref={menuRef}>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setMenuAbertoId(isOpen ? null : conta.id);
-          }}
-          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-          title="Mais ações"
-        >
+    return <div className="relative" ref={menuRef}>
+        <button onClick={e => {
+        e.stopPropagation();
+        setMenuAbertoId(isOpen ? null : conta.id);
+      }} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors" title="Mais ações">
           <MoreVertical className="w-4 h-4" />
         </button>
         
-        {isOpen && (
-          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl border border-gray-200 shadow-xl z-50">
+        {isOpen && <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl border border-gray-200 shadow-xl z-50">
             <div className="p-2">
               {/* Duplicar */}
-              <button
-                onClick={() => handleDuplicar(conta)}
-                className="w-full flex items-center space-x-3 px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-              >
+              <button onClick={() => handleDuplicar(conta)} className="w-full flex items-center space-x-3 px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
                 <Copy className="w-4 h-4" />
                 <span>Duplicar Conta</span>
               </button>
               
               {/* Histórico */}
-              <button
-                onClick={() => handleVerHistorico(conta)}
-                className="w-full flex items-center space-x-3 px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-              >
+              <button onClick={() => handleVerHistorico(conta)} className="w-full flex items-center space-x-3 px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
                 <History className="w-4 h-4" />
                 <span>Ver Histórico</span>
               </button>
               
               {/* Cancelar (só para pendentes/vencidos) */}
-              {(conta.status === 'pendente' || conta.status === 'vencido') && (
-                <button
-                  onClick={() => handleCancelar(conta)}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-left text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
-                >
+              {(conta.status === 'pendente' || conta.status === 'vencido') && <button onClick={() => handleCancelar(conta)} className="w-full flex items-center space-x-3 px-3 py-2 text-left text-orange-700 hover:bg-orange-50 rounded-lg transition-colors">
                   <Ban className="w-4 h-4" />
                   <span>Cancelar Conta</span>
-                </button>
-              )}
+                </button>}
               
               {/* Divisor */}
               <hr className="my-2 border-gray-200" />
               
               {/* Excluir */}
-              <button
-                onClick={() => handleExcluir(conta)}
-                className="w-full flex items-center space-x-3 px-3 py-2 text-left text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-              >
+              <button onClick={() => handleExcluir(conta)} className="w-full flex items-center space-x-3 px-3 py-2 text-left text-red-700 hover:bg-red-50 rounded-lg transition-colors">
                 <Trash2 className="w-4 h-4" />
                 <span>Excluir Conta</span>
               </button>
             </div>
-          </div>
-        )}
-      </div>
-    );
+          </div>}
+      </div>;
   };
-
   const handleBaixar = (conta: any) => {
     setContaSelecionada(conta);
     setModalBaixar(true);
   };
-
   const handleConfirmarBaixa = async (id: number) => {
     await confirmarBaixa(id, {});
     setMenuAbertoId(null);
   };
-
   const handleSalvarEdicao = async (id: number) => {
     await salvarEdicao(id, {});
   };
@@ -402,8 +353,7 @@ export default function ContasPagar() {
   };
 
   // Loading State aprimorado
-  const LoadingContasAprimorado = () => (
-    <div className="space-y-6">
+  const LoadingContasAprimorado = () => <div className="space-y-6">
       {/* Header com loading info */}
       <div className="flex items-center justify-center p-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border">
         <div className="text-center">
@@ -415,22 +365,22 @@ export default function ContasPagar() {
             </div>
           </div>
           <div className="w-64 bg-gray-200 rounded-full h-2">
-            <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: '75%'}}></div>
+            <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{
+            width: '75%'
+          }}></div>
           </div>
         </div>
       </div>
 
       {/* Skeleton das cards de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
+        {[...Array(4)].map((_, i) => <Card key={i} className="animate-pulse">
             <CardContent className="p-6">
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
               <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
               <div className="h-3 bg-gray-200 rounded w-2/3"></div>
             </CardContent>
-          </Card>
-        ))}
+          </Card>)}
       </div>
 
       {/* Skeleton da tabela */}
@@ -438,26 +388,22 @@ export default function ContasPagar() {
         <CardContent className="p-6">
           <div className="space-y-4">
             <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="grid grid-cols-6 gap-4">
+            {[...Array(5)].map((_, i) => <div key={i} className="grid grid-cols-6 gap-4">
                 <div className="h-4 bg-gray-200 rounded"></div>
                 <div className="h-4 bg-gray-200 rounded"></div>
                 <div className="h-4 bg-gray-200 rounded"></div>
                 <div className="h-4 bg-gray-200 rounded"></div>
                 <div className="h-4 bg-gray-200 rounded"></div>
                 <div className="h-4 bg-gray-200 rounded"></div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 
   // Estado vazio informativo
   const EstadoVazioContas = () => {
-    return (
-      <div className="text-center py-16">
+    return <div className="text-center py-16">
         <div className="max-w-md mx-auto">
           <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
             <FileText className="w-12 h-12 text-blue-600" />
@@ -473,19 +419,12 @@ export default function ContasPagar() {
           </p>
           
           <div className="space-y-3">
-            <Button 
-              onClick={() => navigate('/conta-individual')}
-              className="w-full sm:w-auto"
-            >
+            <Button onClick={() => navigate('/conta-individual')} className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Cadastrar primeira conta
             </Button>
             
-            <Button 
-              variant="outline"
-              onClick={() => navigate('/lancamento-lote')}
-              className="w-full sm:w-auto ml-0 sm:ml-3"
-            >
+            <Button variant="outline" onClick={() => navigate('/lancamento-lote')} className="w-full sm:w-auto ml-0 sm:ml-3">
               <Upload className="w-4 h-4 mr-2" />
               Importar em lote
             </Button>
@@ -501,14 +440,12 @@ export default function ContasPagar() {
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   };
 
   // Se está carregando, mostrar loading melhorado
   if (estados.carregandoContas) {
-    return (
-      <div className="p-4 lg:p-8">
+    return <div className="p-4 lg:p-8">
           {/* Header da página */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Contas a Pagar</h1>
@@ -516,47 +453,25 @@ export default function ContasPagar() {
           </div>
 
         <LoadingContasAprimorado />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="p-4 lg:p-8">
+  return <div className="p-4 lg:p-8">
       {/* Page Header */}
-      <PageHeader
-        breadcrumb={createBreadcrumb('/contas-pagar')}
-        title="Contas a Pagar"
-        subtitle="Gestão de obrigações financeiras • Controle de vencimentos"
-        actions={
-          <>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/lancamento-lote')}
-              className="bg-white/80 backdrop-blur-sm border-white/20"
-            >
-              <Package className="w-4 h-4 mr-2" />
-              Lote
-            </Button>
-            <Button 
-              onClick={() => navigate('/nova-conta')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
+      <PageHeader breadcrumb={createBreadcrumb('/contas-pagar')} title="Contas a Pagar" subtitle="Gestão de obrigações financeiras • Controle de vencimentos" actions={<>
+            
+            <Button onClick={() => navigate('/nova-conta')} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
               <Plus className="w-4 h-4 mr-2" />
               Nova Conta
             </Button>
-          </>
-        }
-      />
+          </>} />
       
       <div className="space-y-6">
         {/* Badge de filtros ativos */}
-        {contadorFiltrosAtivos > 0 && (
-          <div className="mb-6">
+        {contadorFiltrosAtivos > 0 && <div className="mb-6">
             <Badge variant="secondary" className="animate-pulse">
               {contadorFiltrosAtivos} filtro{contadorFiltrosAtivos > 1 ? 's' : ''} ativo{contadorFiltrosAtivos > 1 ? 's' : ''}
             </Badge>
-          </div>
-        )}
+          </div>}
 
         {/* Cards de Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
@@ -621,18 +536,16 @@ export default function ContasPagar() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Buscar por descrição, documento, fornecedor..."
-                    value={filtros.busca}
-                    onChange={(e) => setFiltros(prev => ({ ...prev, busca: e.target.value }))}
-                    className="pl-10 bg-white/80 backdrop-blur-sm"
-                  />
+                  <Input placeholder="Buscar por descrição, documento, fornecedor..." value={filtros.busca} onChange={e => setFiltros(prev => ({
+                  ...prev,
+                  busca: e.target.value
+                }))} className="pl-10 bg-white/80 backdrop-blur-sm" />
                 </div>
                 
-                <Select
-                  value={filtros.status}
-                  onValueChange={(value) => setFiltros(prev => ({ ...prev, status: value as any }))}
-                >
+                <Select value={filtros.status} onValueChange={value => setFiltros(prev => ({
+                ...prev,
+                status: value as any
+              }))}>
                   <SelectTrigger className="bg-white/80 backdrop-blur-sm">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -646,62 +559,46 @@ export default function ContasPagar() {
                 </Select>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    type="date"
-                    placeholder="Data início"
-                    value={filtros.data_inicio}
-                    onChange={(e) => setFiltros(prev => ({ ...prev, data_inicio: e.target.value }))}
-                    className="bg-white/80 backdrop-blur-sm"
-                  />
-                  <Input
-                    type="date"
-                    placeholder="Data fim"
-                    value={filtros.data_fim}
-                    onChange={(e) => setFiltros(prev => ({ ...prev, data_fim: e.target.value }))}
-                    className="bg-white/80 backdrop-blur-sm"
-                  />
+                  <Input type="date" placeholder="Data início" value={filtros.data_inicio} onChange={e => setFiltros(prev => ({
+                  ...prev,
+                  data_inicio: e.target.value
+                }))} className="bg-white/80 backdrop-blur-sm" />
+                  <Input type="date" placeholder="Data fim" value={filtros.data_fim} onChange={e => setFiltros(prev => ({
+                  ...prev,
+                  data_fim: e.target.value
+                }))} className="bg-white/80 backdrop-blur-sm" />
                 </div>
               </div>
 
               {/* Linha 2 - Filtros Específicos */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Select
-                  value={filtros.fornecedor_id?.toString() || 'todos'}
-                  onValueChange={(value) => setFiltros(prev => ({
-                    ...prev,
-                    fornecedor_id: value === 'todos' ? undefined : parseInt(value)
-                  }))}
-                >
+                <Select value={filtros.fornecedor_id?.toString() || 'todos'} onValueChange={value => setFiltros(prev => ({
+                ...prev,
+                fornecedor_id: value === 'todos' ? undefined : parseInt(value)
+              }))}>
                   <SelectTrigger className="bg-white/80 backdrop-blur-sm">
                     <SelectValue placeholder="Fornecedor" />
                   </SelectTrigger>
                   <SelectContent className="bg-white/95 backdrop-blur-xl">
                     <SelectItem value="todos">Todos os Fornecedores</SelectItem>
-                    {credores.filter(f => f.ativo).map(credor => (
-                      <SelectItem key={credor.id} value={credor.id.toString()}>
+                    {credores.filter(f => f.ativo).map(credor => <SelectItem key={credor.id} value={credor.id.toString()}>
                         {credor.nome}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
 
-                <Select
-                  value={filtros.plano_conta_id?.toString() || 'todos'}
-                  onValueChange={(value) => setFiltros(prev => ({
-                    ...prev,
-                    plano_conta_id: value === 'todos' ? undefined : parseInt(value)
-                  }))}
-                >
+                <Select value={filtros.plano_conta_id?.toString() || 'todos'} onValueChange={value => setFiltros(prev => ({
+                ...prev,
+                plano_conta_id: value === 'todos' ? undefined : parseInt(value)
+              }))}>
                   <SelectTrigger className="bg-white/80 backdrop-blur-sm">
                     <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
                   <SelectContent className="bg-white/95 backdrop-blur-xl">
                     <SelectItem value="todos">Todas as Categorias</SelectItem>
-                    {planoContas.filter(p => p.ativo).map(plano => (
-                      <SelectItem key={plano.id} value={plano.id.toString()}>
+                    {planoContas.filter(p => p.ativo).map(plano => <SelectItem key={plano.id} value={plano.id.toString()}>
                         {plano.codigo} - {plano.nome}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
 
@@ -723,20 +620,10 @@ export default function ContasPagar() {
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600">{contasFiltradas.length} contas</span>
                   <div className="flex border rounded-lg">
-                    <Button
-                      variant={vistaAtual === 'tabela' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setVistaAtual('tabela')}
-                      className="rounded-r-none"
-                    >
+                    <Button variant={vistaAtual === 'tabela' ? 'default' : 'ghost'} size="sm" onClick={() => setVistaAtual('tabela')} className="rounded-r-none">
                       <List className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant={vistaAtual === 'cards' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setVistaAtual('cards')}
-                      className="rounded-l-none"
-                    >
+                    <Button variant={vistaAtual === 'cards' ? 'default' : 'ghost'} size="sm" onClick={() => setVistaAtual('cards')} className="rounded-l-none">
                       <Grid className="w-4 h-4" />
                     </Button>
                   </div>
@@ -750,61 +637,28 @@ export default function ContasPagar() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
             <span className="text-sm font-medium text-gray-700">Filtro rápido:</span>
-            <button
-              onClick={() => setFiltroRapido('todos')}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filtroRapido === 'todos'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
+            <button onClick={() => setFiltroRapido('todos')} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${filtroRapido === 'todos' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
               Todos ({contas.length})
             </button>
-            <button
-              onClick={() => setFiltroRapido('pendente')}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filtroRapido === 'pendente'
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
-              }`}
-            >
+            <button onClick={() => setFiltroRapido('pendente')} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${filtroRapido === 'pendente' ? 'bg-yellow-600 text-white' : 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'}`}>
               Pendente ({contas.filter(c => c.status === 'pendente').length})
             </button>
-            <button
-              onClick={() => setFiltroRapido('vencido')}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filtroRapido === 'vencido'
-                  ? 'bg-red-600 text-white'
-                  : 'bg-red-100 text-red-600 hover:bg-red-200'
-              }`}
-            >
+            <button onClick={() => setFiltroRapido('vencido')} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${filtroRapido === 'vencido' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}>
               Vencidas ({contas.filter(c => c.status === 'vencido').length})
             </button>
-            <button
-              onClick={() => setFiltroRapido('vence_7_dias')}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filtroRapido === 'vence_7_dias'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-green-100 text-green-600 hover:bg-green-200'
-              }`}
-            >
+            <button onClick={() => setFiltroRapido('vence_7_dias')} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${filtroRapido === 'vence_7_dias' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}>
               A Vencer 7d ({contas.filter(c => c.status === 'pendente').length})
             </button>
           </div>
           
-          <button
-            onClick={() => console.log('Exportar contas')}
-            className="flex items-center space-x-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-          >
+          <button onClick={() => console.log('Exportar contas')} className="flex items-center space-x-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors">
             <Download className="w-4 h-4" />
             <span>Exportar CSV</span>
           </button>
         </div>
 
         {/* Conteúdo Principal */}
-        {contasFiltradas.length === 0 && !estados.carregandoContas ? (
-          filtros.busca || filtros.status !== 'todos' || filtroRapido !== 'todos' ? (
-            <div className="text-center p-12">
+        {contasFiltradas.length === 0 && !estados.carregandoContas ? filtros.busca || filtros.status !== 'todos' || filtroRapido !== 'todos' ? <div className="text-center p-12">
               {/* Estado filtrado sem resultados */}
               <div className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg rounded-2xl p-12">
                 <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -819,114 +673,49 @@ export default function ContasPagar() {
                   Limpar Filtros
                 </Button>
               </div>
-            </div>
-          ) : (
-            <EstadoVazioContas />
-          )
-        ) : (
-          /* Lista de Contas - Otimizada com Virtualization */
-          <TabelaContasResponsiva
-                  contas={contasFiltradas.map(conta => ({
-                    ...conta,
-                    fornecedor_nome: credores.find(f => f.id.toString() === conta.fornecedor_id.toString())?.nome || '',
-                    plano_conta_nome: planoContas.find(p => p.id === conta.plano_conta_id)?.nome || '',
-                    parcela_atual: 1,
-                    total_parcelas: 1,
-                    forma_pagamento: 'pix',
-                    dda: false,
-                    dias_para_vencimento: Math.ceil((new Date(conta.data_vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
-                    dias_em_atraso: conta.status === 'vencido' ? Math.ceil((new Date().getTime() - new Date(conta.data_vencimento).getTime()) / (1000 * 60 * 60 * 24)) : 0
-                  }))}
-            height={600}
-            onVisualizar={handleVisualizar}
-            onEditar={handleEditar}
-            onBaixar={handleBaixar}
-            onDuplicar={handleDuplicar}
-            onExcluir={handleExcluir}
-            onPagar={handlePagar}
-          />
-        )}
+            </div> : <EstadoVazioContas /> : (/* Lista de Contas - Otimizada com Virtualization */
+      <TabelaContasResponsiva contas={contasFiltradas.map(conta => ({
+        ...conta,
+        fornecedor_nome: credores.find(f => f.id.toString() === conta.fornecedor_id.toString())?.nome || '',
+        plano_conta_nome: planoContas.find(p => p.id === conta.plano_conta_id)?.nome || '',
+        parcela_atual: 1,
+        total_parcelas: 1,
+        forma_pagamento: 'pix',
+        dda: false,
+        dias_para_vencimento: Math.ceil((new Date(conta.data_vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+        dias_em_atraso: conta.status === 'vencido' ? Math.ceil((new Date().getTime() - new Date(conta.data_vencimento).getTime()) / (1000 * 60 * 60 * 24)) : 0
+      }))} height={600} onVisualizar={handleVisualizar} onEditar={handleEditar} onBaixar={handleBaixar} onDuplicar={handleDuplicar} onExcluir={handleExcluir} onPagar={handlePagar} />)}
 
         {/* Modals */}
-        <BaixarContaModal
-          isOpen={modalBaixar}
-          onClose={() => setModalBaixar(false)}
-          conta={contaSelecionada}
-          onConfirm={handleConfirmarBaixa}
-        />
+        <BaixarContaModal isOpen={modalBaixar} onClose={() => setModalBaixar(false)} conta={contaSelecionada} onConfirm={handleConfirmarBaixa} />
 
-        <ContaVisualizarModal
-          isOpen={modalVisualizar}
-          onClose={() => setModalVisualizar(false)}
-          conta={contaSelecionada}
-          onEditar={handleEditar}
-          onBaixar={handleBaixar}
-          onDuplicar={handleDuplicar}
-          onExcluir={handleExcluir}
-        />
+        <ContaVisualizarModal isOpen={modalVisualizar} onClose={() => setModalVisualizar(false)} conta={contaSelecionada} onEditar={handleEditar} onBaixar={handleBaixar} onDuplicar={handleDuplicar} onExcluir={handleExcluir} />
         
-        <ContaEditarModal
-          isOpen={modalEditarAberto}
-          onClose={() => {
-            setModalEditarAberto(false);
-            setContaParaEditar(null);
-          }}
-          conta={contaParaEditar}
-          onSalvar={handleSalvarEdicao}
-        />
+        <ContaEditarModal isOpen={modalEditarAberto} onClose={() => {
+        setModalEditarAberto(false);
+        setContaParaEditar(null);
+      }} conta={contaParaEditar} onSalvar={handleSalvarEdicao} />
         
-        <ModalConfirmacao
-          aberto={modalConfirmacaoAberto}
-          titulo={acaoConfirmacao?.titulo}
-          mensagem={acaoConfirmacao?.mensagem}
-          tipo={acaoConfirmacao?.tipo}
-          onConfirmar={acaoConfirmacao?.acao}
-          onCancelar={() => {
-            setModalConfirmacaoAberto(false);
-            setAcaoConfirmacao(null);
-          }}
-        />
+        <ModalConfirmacao aberto={modalConfirmacaoAberto} titulo={acaoConfirmacao?.titulo} mensagem={acaoConfirmacao?.mensagem} tipo={acaoConfirmacao?.tipo} onConfirmar={acaoConfirmacao?.acao} onCancelar={() => {
+        setModalConfirmacaoAberto(false);
+        setAcaoConfirmacao(null);
+      }} />
         
         {/* Estados de loading específicos visuais */}
-        {estados.salvandoEdicao && (
-          <div className="fixed top-4 right-4 bg-blue-100 border border-blue-200 rounded-lg px-4 py-2 flex items-center space-x-2 z-50">
+        {estados.salvandoEdicao && <div className="fixed top-4 right-4 bg-blue-100 border border-blue-200 rounded-lg px-4 py-2 flex items-center space-x-2 z-50">
             <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
             <span className="text-sm text-blue-800">Salvando conta...</span>
-          </div>
-        )}
+          </div>}
 
-        {estados.processandoBaixa && (
-          <div className="fixed top-4 right-4 bg-green-100 border border-green-200 rounded-lg px-4 py-2 flex items-center space-x-2 z-50">
+        {estados.processandoBaixa && <div className="fixed top-4 right-4 bg-green-100 border border-green-200 rounded-lg px-4 py-2 flex items-center space-x-2 z-50">
             <Loader2 className="w-4 h-4 text-green-600 animate-spin" />
             <span className="text-sm text-green-800">Processando baixa...</span>
-          </div>
-          )}
+          </div>}
         
         {/* Diálogos de Confirmação */}
-        <ConfirmDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          title="Confirmar exclusão"
-          description={`Tem certeza que deseja excluir "${itemToDelete?.descricao}"? Esta ação não pode ser desfeita.`}
-          onConfirm={confirmDelete}
-          confirmText="Excluir"
-          cancelText="Cancelar"
-          variant="destructive"
-          loading={isDeleting}
-        />
+        <ConfirmDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} title="Confirmar exclusão" description={`Tem certeza que deseja excluir "${itemToDelete?.descricao}"? Esta ação não pode ser desfeita.`} onConfirm={confirmDelete} confirmText="Excluir" cancelText="Cancelar" variant="destructive" loading={isDeleting} />
 
-        <ConfirmDialog
-          open={cancelDialogOpen}
-          onOpenChange={setCancelDialogOpen}
-          title="Cancelar conta"
-          description={`Tem certeza que deseja cancelar "${itemToCancel?.descricao}"? A conta será marcada como cancelada.`}
-          onConfirm={confirmCancel}
-          confirmText="Cancelar Conta"
-          cancelText="Manter Conta"
-          variant="destructive"
-          loading={isDeleting}
-        />
+        <ConfirmDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen} title="Cancelar conta" description={`Tem certeza que deseja cancelar "${itemToCancel?.descricao}"? A conta será marcada como cancelada.`} onConfirm={confirmCancel} confirmText="Cancelar Conta" cancelText="Manter Conta" variant="destructive" loading={isDeleting} />
       </div>
-    </div>
-  );
+    </div>;
 }
