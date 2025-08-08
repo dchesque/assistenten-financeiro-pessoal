@@ -102,7 +102,7 @@ export default function MeuPerfil() {
   } = useFormulario(
     dadosIniciais,
     async (dadosPerfil) => {
-      console.log('Salvando perfil:', dadosPerfil);
+      // Salvando perfil
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success('Perfil atualizado com sucesso!');
     },
@@ -125,7 +125,7 @@ export default function MeuPerfil() {
 
   // Salvar configurações
   const salvarConfiguracoes = async () => {
-    console.log('Salvando configurações:', { notificacoes, privacidade });
+    // Salvando configurações
     await new Promise(resolve => setTimeout(resolve, 500));
     toast.success('Configurações salvas com sucesso!');
   };

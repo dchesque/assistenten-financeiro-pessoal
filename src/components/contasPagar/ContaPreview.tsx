@@ -86,13 +86,6 @@ export function ContaPreview({ conta, formaPagamento, className = "" }: ContaPre
     const [ano, mes, dia] = dataVencimento.split('-').map(num => parseInt(num));
     const vencimento = new Date(ano, mes - 1, dia); // mes - 1 porque Date usa 0-11 para meses
     
-    // Debug temporário (remover depois)
-    console.log('ContaPreview - Debug isVencido:', {
-      dataVencimento,
-      hoje: hoje.toISOString().split('T')[0],
-      vencimento: vencimento.toISOString().split('T')[0],
-      isVencido: vencimento < hoje
-    });
     
     return vencimento < hoje;
   };

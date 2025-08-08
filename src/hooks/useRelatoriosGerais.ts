@@ -343,7 +343,7 @@ export const useRelatoriosGerais = () => {
     setLoading(true);
     try {
       // Implementar exportação PDF futuramente
-      console.log('Exportando PDF...', dados);
+      // exportação PDF em desenvolvimento
       // Simular export
       await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (err) {
@@ -360,7 +360,7 @@ export const useRelatoriosGerais = () => {
     setLoading(true);
     try {
       // Implementar exportação Excel futuramente
-      console.log('Exportando Excel...', dados);
+      // exportação Excel em desenvolvimento
       await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (err) {
       setError('Erro ao exportar Excel');

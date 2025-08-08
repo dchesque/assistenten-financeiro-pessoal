@@ -61,7 +61,7 @@ export default function UsuariosAdmin() {
 
   const handleExportarDados = () => {
     // Implementação futura para exportar dados dos usuários
-    console.log('Exportar dados dos usuários');
+    // TODO: Exportar dados dos usuários
   };
 
   return (

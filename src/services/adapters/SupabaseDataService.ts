@@ -14,7 +14,7 @@ export class SupabaseDataService implements IDataService {
     );
     
     if (DATABASE_CONFIG.ENABLE_LOGGING) {
-      console.log('🚀 SupabaseDataService inicializado');
+      console.warn('🚀 SupabaseDataService inicializado');
     }
   }
   

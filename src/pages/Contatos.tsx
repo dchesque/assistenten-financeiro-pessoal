@@ -32,10 +32,9 @@ export default function Contatos() {
   const { credores, loading: loadingCredores, criarCredor, atualizarCredor, excluirCredor } = useCredores();
   const { pagadores, loading: loadingPagadores } = usePagadores();
 
-  // Mock functions para pagadores (implementar depois)
-  const criarPagador = async (dados: any) => { console.log('Criar pagador:', dados); };
-  const atualizarPagador = async (id: number, dados: any) => { console.log('Atualizar pagador:', id, dados); };
-  const excluirPagador = async (id: number) => { console.log('Excluir pagador:', id); };
+  const criarPagador = async (dados: any) => { /* TODO: Implementar com Supabase */ };
+  const atualizarPagador = async (id: number, dados: any) => { /* TODO: Implementar com Supabase */ };
+  const excluirPagador = async (id: number) => { /* TODO: Implementar com Supabase */ };
 
   const breadcrumbItems = [
     { label: 'Início', href: '/dashboard' },

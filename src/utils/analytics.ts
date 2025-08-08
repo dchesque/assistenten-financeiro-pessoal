@@ -84,15 +84,7 @@ export class Analytics {
 
     // Log estruturado para desenvolvimento
     if (process.env.NODE_ENV === 'development') {
-      console.group(`📊 Analytics Event: ${event.action}`);
-      console.log('📂 Category:', event.category);
-      console.log('🏷️ Label:', event.label);
-      console.log('💰 Value:', event.value);
-      console.log('👤 User ID:', event.userId);
-      console.log('🔗 Session ID:', analytics.sessionId);
-      console.log('📊 Metadata:', event.metadata);
-      console.log('🕐 Timestamp:', enrichedEvent.timestamp);
-      console.groupEnd();
+      console.warn(`Analytics Event: ${event.action}`, enrichedEvent);
     }
 
     // Armazenar para processamento offline
@@ -132,7 +124,7 @@ export class Analytics {
     }
 
     // Log de page view
-    console.log(`📄 Page View: ${event.page} - ${event.title} (${loadTime.toFixed(2)}ms)`);
+    console.warn(`📄 Page View: ${event.page} - ${event.title} (${loadTime.toFixed(2)}ms)`);
     
     analytics.storePageView(enrichedPageView);
   }
@@ -284,12 +276,12 @@ export class Analytics {
   private processQueue() {
     if (this.queue.length === 0) return;
 
-    console.log(`📤 Processando ${this.queue.length} eventos em fila...`);
+    console.warn(`📤 Processando ${this.queue.length} eventos em fila...`);
     
     // Simular envio para servidor analytics
     this.queue.forEach(event => {
       // Aqui você enviaria para seu backend analytics
-      console.log('📤 Enviando evento:', event);
+      console.warn('📤 Enviando evento:', event);
     });
 
     this.queue = [];

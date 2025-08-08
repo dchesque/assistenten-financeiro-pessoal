@@ -201,7 +201,7 @@ export default function ContasPagar() {
     }
   };
   const handleVerHistorico = (conta: any) => {
-    console.log('Ver histórico:', conta);
+    // TODO: Implementar modal de histórico
     // TODO: Implementar modal de histórico
     setMenuAbertoId(null);
   };

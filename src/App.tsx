@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from "sonner";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Layout } from '@/components/layout/Layout';
+import { Loader2 } from 'lucide-react';
 
 // Páginas críticas (carregamento imediato)
 import Index from '@/pages/Index';
@@ -33,8 +34,8 @@ const UsuariosAdmin = lazy(() => import('@/pages/UsuariosAdmin'));
 
 // Componente de fallback para lazy loading
 const PageFallback = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  <div className="flex items-center justify-center h-screen">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
   </div>
 );
 

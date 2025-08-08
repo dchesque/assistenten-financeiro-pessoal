@@ -13,12 +13,12 @@ export class DataServiceFactory {
       
       if (DATABASE_CONFIG.USE_MOCK_DATA) {
         if (DATABASE_CONFIG.ENABLE_LOGGING) {
-          console.log('🔧 Inicializando MockDataService (desenvolvimento)');
+          console.warn('🔧 Inicializando MockDataService (desenvolvimento)');
         }
         serviceInstance = new MockDataServiceAdapter();
       } else {
         if (DATABASE_CONFIG.ENABLE_LOGGING) {
-          console.log('🚀 Inicializando SupabaseDataService (produção)');
+          console.warn('🚀 Inicializando SupabaseDataService (produção)');
         }
         serviceInstance = new SupabaseDataService();
       }
@@ -31,7 +31,7 @@ export class DataServiceFactory {
   static reset(): void {
     serviceInstance = null;
     if (DATABASE_CONFIG.ENABLE_LOGGING) {
-      console.log('🔄 Factory resetado - próxima chamada criará nova instância');
+      console.warn('🔄 Factory resetado - próxima chamada criará nova instância');
     }
   }
   
@@ -47,7 +47,7 @@ export class DataServiceFactory {
 
   // Método para logging de debug
   static logStatus(): void {
-    console.log('🔍 Status do DataServiceFactory:', {
+    console.warn('🔍 Status do DataServiceFactory:', {
       activeService: DataServiceFactory.getActiveService(),
       isDevelopment: DataServiceFactory.isDevelopment(),
       hasInstance: !!serviceInstance,

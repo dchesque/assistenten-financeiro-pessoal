@@ -29,10 +29,6 @@ export function FornecedorSelector({
   const { fornecedores, loading } = useFornecedores();
   const buscaDebounced = useDebounce(busca, 300);
   
-  // Log para debug
-  useEffect(() => {
-    console.log('FornecedorSelector - Fornecedores carregados:', fornecedores.length);
-  }, [fornecedores]);
   
   const fornecedoresFiltrados = fornecedores.filter(fornecedor =>
     fornecedor.ativo && (

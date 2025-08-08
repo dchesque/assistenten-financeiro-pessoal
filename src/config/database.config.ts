@@ -24,7 +24,7 @@ export function validateDatabaseConfig(): void {
   }
   
   if (DATABASE_CONFIG.ENABLE_LOGGING) {
-    console.log('🔧 Configuração do banco:', {
+    console.warn('🔧 Configuração do banco:', {
       useMock: DATABASE_CONFIG.USE_MOCK_DATA,
       hasSupabaseUrl: !!DATABASE_CONFIG.SUPABASE_URL,
       hasSupabaseKey: !!DATABASE_CONFIG.SUPABASE_ANON_KEY

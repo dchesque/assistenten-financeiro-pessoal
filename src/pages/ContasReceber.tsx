@@ -153,7 +153,7 @@ export default function ContasReceber() {
   }, [filtros]);
 
   const handleDuplicar = (conta: any) => {
-    console.log('Duplicar conta:', conta);
+    // TODO: Duplicar conta
     setMenuAbertoId(null);
   };
 
@@ -194,7 +194,7 @@ export default function ContasReceber() {
     setLoading('deleting', true);
     try {
       // Mock function para cancelar
-      console.log('Cancelar conta:', itemToCancel);
+      // TODO: Cancelar conta
       toast.success('Conta cancelada com sucesso!');
     } catch (error) {
       toast.error('Erro ao cancelar conta');
@@ -206,7 +206,7 @@ export default function ContasReceber() {
   };
 
   const handleVerHistorico = (conta: any) => {
-    console.log('Ver histórico:', conta);
+    // TODO: Ver histórico da conta
     setMenuAbertoId(null);
   };
 
@@ -357,15 +357,15 @@ export default function ContasReceber() {
   };
 
   const handleReceber = (conta: any) => {
-    console.log('Marcar como recebida:', conta);
+    // TODO: Marcar como recebida
   };
 
   const handleConfirmarRecebimento = async (dadosRecebimento: any) => {
-    console.log('Confirmar recebimento:', dadosRecebimento);
+    // TODO: Confirmar recebimento
   };
 
   const handleSalvarEdicao = async (dadosEdicao: any) => {
-    console.log('Salvar edição:', dadosEdicao);
+    // TODO: Salvar edição
   };
 
   // Loading State
