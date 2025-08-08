@@ -59,7 +59,7 @@ export function useFornecedores() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const { handleError, withRetry, withTimeout } = useErrorHandler('fornecedores');
+  const { handleError, withRetry, withTimeout, cancelAll } = useErrorHandler('fornecedores');
 
   const calcularEstatisticas = (fornecedoresList: Fornecedor[]): EstatisticasFornecedor => {
     const ativos = fornecedoresList.filter(f => f.ativo);

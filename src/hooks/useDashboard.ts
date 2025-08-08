@@ -37,7 +37,7 @@ export function useDashboard(): UseDashboardReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const { handleError, withRetry, withTimeout } = useErrorHandler('dashboard');
+  const { handleError, withRetry, withTimeout, cancelAll } = useErrorHandler('dashboard');
 
   const carregarDashboard = async () => {
     if (!user) return;

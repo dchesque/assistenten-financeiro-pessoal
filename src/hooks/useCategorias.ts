@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { mockDataService, type Categoria } from '@/services/mockDataService';
 import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
-import { toast } from '@/hooks/use-toast';
+import { showMessage } from '@/utils/messages';
+import { validacoesCategorias } from '@/utils/validacoesModulos';
+
 export interface UseCategoriastReturn {
   categorias: Categoria[];
   loading: boolean;
@@ -18,111 +20,142 @@ export function useCategorias(): UseCategoriastReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const { handleError } = useErrorHandler();
+  const { handleError, withRetry, withTimeout, cancelAll } = useErrorHandler('categorias');
+
   const carregarCategorias = async () => {
     if (!user) return;
+    setLoading(true);
+    setError(null);
+    
+    const loadingToast = showMessage.loading('Carregando categorias...');
     
     try {
-      setLoading(true);
-      setError(null);
-      const data = await mockDataService.getCategorias();
+      const data = await withRetry(() => 
+        withTimeout(mockDataService.getCategorias(), 15000)
+      );
       setCategorias(data);
-    } catch (error) {
-      const appError = handleError(error, 'useCategorias.carregarCategorias');
-      setError(appError.message);
+      showMessage.dismiss();
+    } catch (err) {
+      showMessage.dismiss();
+      const appErr = handleError(err, 'carregar-categorias');
+      setError(appErr.message);
     } finally {
       setLoading(false);
     }
   };
 
   const criarCategoria = async (dadosCategoria: Omit<Categoria, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Categoria> => {
+    // Validar nome único antes de tentar criar
+    const nomeValido = await validacoesCategorias.validarNomeUnico(dadosCategoria.nome);
+    if (!nomeValido) {
+      throw new Error('Nome da categoria inválido');
+    }
+
+    // Verificar se já existe categoria com o mesmo nome
+    const existente = categorias.find(cat => 
+      cat.nome.toLowerCase() === dadosCategoria.nome.toLowerCase() &&
+      cat.tipo === dadosCategoria.tipo
+    );
+    
+    if (existente) {
+      showMessage.saveError('Já existe uma categoria com este nome para este tipo');
+      throw new Error('Categoria duplicada');
+    }
+
     try {
-      setLoading(true);
-      
-      // Verificar se já existe categoria com o mesmo nome
-      const existente = categorias.find(cat => 
-        cat.nome.toLowerCase() === dadosCategoria.nome.toLowerCase() &&
-        cat.tipo === dadosCategoria.tipo
+      const novaCategoria = await showMessage.promise(
+        withRetry(() => mockDataService.criarCategoria(dadosCategoria)),
+        {
+          loading: 'Salvando categoria...',
+          success: 'Categoria criada com sucesso!',
+          error: 'Erro ao criar categoria'
+        }
       );
       
-      if (existente) {
-        throw new Error('Já existe uma categoria com este nome para este tipo');
-      }
-
-      const novaCategoria = await mockDataService.createCategoria(dadosCategoria);
       setCategorias(prev => [...prev, novaCategoria]);
-      
-      toast({ title: 'Sucesso', description: 'Categoria criado com sucesso!' });
       return novaCategoria;
-    } catch (error) {
-      const appError = handleError(error, 'useCategorias.criarCategoria');
-      setError(appError.message);
-      throw error;
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      handleError(err, 'criar-categoria');
+      throw err;
     }
   };
 
   const atualizarCategoria = async (id: string, dadosAtualizacao: Partial<Categoria>): Promise<Categoria | null> => {
-    try {
-      setLoading(true);
-      
-      // Verificar se novo nome já existe (se nome estiver sendo alterado)
-      if (dadosAtualizacao.nome) {
-        const categoriaAtual = categorias.find(cat => cat.id === id);
-        if (categoriaAtual) {
-          const existente = categorias.find(cat => 
-            cat.id !== id &&
-            cat.nome.toLowerCase() === dadosAtualizacao.nome!.toLowerCase() &&
-            cat.tipo === (dadosAtualizacao.tipo || categoriaAtual.tipo)
-          );
-          
-          if (existente) {
-            throw new Error('Já existe uma categoria com este nome para este tipo');
-          }
-        }
+    // Verificar se novo nome já existe (se nome estiver sendo alterado)
+    if (dadosAtualizacao.nome) {
+      const nomeValido = await validacoesCategorias.validarNomeUnico(dadosAtualizacao.nome, id);
+      if (!nomeValido) {
+        throw new Error('Nome da categoria inválido');
       }
 
-      const categoriaAtualizada = await mockDataService.updateCategoria(id, dadosAtualizacao);
+      const categoriaAtual = categorias.find(cat => cat.id === id);
+      if (categoriaAtual) {
+        const existente = categorias.find(cat => 
+          cat.id !== id &&
+          cat.nome.toLowerCase() === dadosAtualizacao.nome!.toLowerCase() &&
+          cat.tipo === (dadosAtualizacao.tipo || categoriaAtual.tipo)
+        );
+        
+        if (existente) {
+          showMessage.saveError('Já existe uma categoria com este nome para este tipo');
+          throw new Error('Categoria duplicada');
+        }
+      }
+    }
+
+    try {
+      const categoriaAtualizada = await showMessage.promise(
+        withRetry(() => mockDataService.updateCategoria(id, dadosAtualizacao)),
+        {
+          loading: 'Atualizando categoria...',
+          success: 'Categoria atualizada com sucesso!',
+          error: 'Erro ao atualizar categoria'
+        }
+      );
       
       if (categoriaAtualizada) {
         setCategorias(prev => 
           prev.map(cat => cat.id === id ? categoriaAtualizada : cat)
         );
-        toast({ title: 'Sucesso', description: 'Categoria atualizada com sucesso!' });
       }
       
       return categoriaAtualizada;
-    } catch (error) {
-      const appError = handleError(error, 'useCategorias.atualizarCategoria');
-      setError(appError.message);
-      throw error;
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      handleError(err, 'atualizar-categoria');
+      throw err;
     }
   };
 
   const excluirCategoria = async (id: string): Promise<void> => {
+    // Verificar se categoria pode ser excluída
+    const podeExcluir = await validacoesCategorias.validarExclusao(parseInt(id));
+    if (!podeExcluir) {
+      throw new Error('Categoria não pode ser excluída');
+    }
+
+    const categoriaAExcluir = categorias.find(cat => cat.id === id);
+    
     try {
-      setLoading(true);
+      await showMessage.promise(
+        withRetry(() => mockDataService.deleteCategoria(id)),
+        {
+          loading: 'Excluindo categoria...',
+          success: 'Categoria excluída com sucesso!',
+          error: 'Erro ao excluir categoria'
+        }
+      );
       
-      // Verificar se categoria está sendo usada (implementar quando houver contas)
-      // Por enquanto, permitir exclusão
-      
-      const sucesso = await mockDataService.deleteCategoria(id);
-      
-      if (sucesso) {
-        setCategorias(prev => prev.filter(cat => cat.id !== id));
-        toast({ title: 'Sucesso', description: 'Categoria excluída com sucesso!' });
-      } else {
-        throw new Error('Categoria não encontrada');
+      setCategorias(prev => prev.filter(cat => cat.id !== id));
+
+      // Oferecer ação de desfazer
+      if (categoriaAExcluir) {
+        showMessage.withUndo('Categoria excluída', () => {
+          setCategorias(prev => [...prev, categoriaAExcluir]);
+        });
       }
-    } catch (error) {
-      const appError = handleError(error, 'useCategorias.excluirCategoria');
-      setError(appError.message);
-      throw error;
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      handleError(err, 'excluir-categoria');
+      throw err;
     }
   };
 
@@ -136,7 +169,11 @@ export function useCategorias(): UseCategoriastReturn {
     } else {
       setCategorias([]);
     }
-  }, [user]);
+
+    return () => {
+      cancelAll();
+    };
+  }, [user, cancelAll]);
 
   return {
     categorias,
