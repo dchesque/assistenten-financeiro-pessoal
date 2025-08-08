@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
-import { toast } from 'sonner';
+import { useErrorHandler } from './useErrorHandler';
+
 
 export interface DashboardSummary {
   saldo_total: number;
@@ -35,19 +36,18 @@ export function useDashboard(): UseDashboardReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const { handleError, withRetry, withTimeout } = useErrorHandler('dashboard');
 
   const carregarDashboard = async () => {
     if (!user) return;
-    
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const data = await dataService.dashboard.getSummary();
-      setSummary(data);
-    } catch (error) {
-      console.error('Erro ao carregar dashboard:', error);
-      setError('Erro ao carregar dashboard');
-      toast.error('Erro ao carregar dados do dashboard');
+      const data = await withRetry(() => withTimeout(Promise.resolve(dataService.dashboard.getSummary()), 30000));
+      setSummary(await data);
+    } catch (err) {
+      const appErr = handleError(err, 'carregar-dashboard');
+      setError(appErr.message);
     } finally {
       setLoading(false);
     }

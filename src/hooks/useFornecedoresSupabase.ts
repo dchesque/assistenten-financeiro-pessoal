@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Fornecedor } from '@/types/fornecedor';
+import { useErrorHandler } from './useErrorHandler';
 
 export interface EstatisticasFornecedor {
   total: number;
@@ -68,6 +69,7 @@ export function useFornecedoresSupabase(): UseFornecedoresSupabaseReturn {
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { handleError, withRetry, withTimeout } = useErrorHandler('fornecedores');
 
   const calcularEstatisticas = (fornecedoresList: Fornecedor[]): EstatisticasFornecedor => {
     const ativos = fornecedoresList.filter(f => f.ativo);
@@ -87,13 +89,11 @@ export function useFornecedoresSupabase(): UseFornecedoresSupabaseReturn {
     setError(null);
     
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await withRetry(() => withTimeout(new Promise(resolve => setTimeout(resolve, 500)), 30000));
       setFornecedores(mockFornecedores);
-    } catch (error) {
-      setError('Erro ao carregar fornecedores');
-      toast.error('Erro ao carregar fornecedores');
+    } catch (err) {
+      const appErr = handleError(err, 'listar-fornecedores');
+      setError(appErr.message);
     } finally {
       setLoading(false);
     }
