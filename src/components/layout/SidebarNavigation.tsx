@@ -79,18 +79,6 @@ const menuStructure = [
     ]
   },
 
-  // Grupo: Sistema
-  { 
-    type: 'group', 
-    name: 'SISTEMA', 
-    icon: Settings,
-    color: 'text-purple-500',
-    key: 'sistema',
-    items: [
-      { name: 'Monitoramento', path: '/monitoramento-performance', icon: BarChart3, color: 'text-purple-500' },
-      { name: 'Meu Perfil', path: '/meu-perfil', icon: User, color: 'text-purple-500' }
-    ]
-  },
 
 ];
 
@@ -107,8 +95,7 @@ export function SidebarNavigation({ expanded, mobile = false, onItemClick }: Sid
   const [expandedGroups, setExpandedGroups] = useState({
     'contas-pagar': true,
     'recebimentos': true,
-    'cadastros': false,
-    'sistema': false
+    'cadastros': false
   });
 
   const isActive = (path: string) => {
