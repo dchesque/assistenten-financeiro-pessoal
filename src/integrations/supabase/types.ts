@@ -87,6 +87,32 @@ export type Database = {
         }
         Returns: boolean
       }
+      upsert_profile: {
+        Args: {
+          p_user_id: string
+          p_phone: string
+          p_name?: string
+          p_email?: string
+        }
+        Returns: {
+          ativo: boolean
+          created_at: string
+          features_limit: Json
+          id: string
+          last_login: string | null
+          name: string | null
+          onboarding_completed: boolean | null
+          phone: string
+          phone_verified: boolean | null
+          plan: Database["public"]["Enums"]["user_plan"]
+          role: Database["public"]["Enums"]["app_role"]
+          subscription_ends_at: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+      }
     }
     Enums: {
       app_role: "admin" | "user"

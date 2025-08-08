@@ -35,14 +35,14 @@ import {
 import { toast } from 'sonner';
 
 export default function Settings() {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { isDemoMode, toggleDemoMode } = useSystemStatus();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [profileData, setProfileData] = useState({
-    nome: user?.nome || user?.user_metadata?.nome || '',
+    nome: profile?.name || user?.user_metadata?.name || '',
     email: user?.email || '',
-    telefone: user?.phone || user?.user_metadata?.phone || '',
+    telefone: profile?.phone || user?.phone || user?.user_metadata?.phone || '',
     avatar: user?.user_metadata?.avatar_url || ''
   });
 

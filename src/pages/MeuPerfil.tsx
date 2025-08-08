@@ -46,13 +46,13 @@ interface ConfiguracoesPrivacidade {
 }
 
 export default function MeuPerfil() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { aplicarMascaraTelefone, aplicarMascaraCEP } = useMascaras();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   // Dados iniciais do perfil
   const dadosIniciais: DadosPerfil = {
-    nome: user?.nome || user?.user_metadata?.nome || '',
+    nome: profile?.name || user?.user_metadata?.name || '',
     email: user?.email || '',
     telefone: '',
     whatsapp: '',
