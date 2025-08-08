@@ -16,7 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
 import { useLoadingStates } from '@/hooks/useLoadingStates';
 import { PlanoContas } from '@/types/planoContas';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 // Supabase removido - usando dados mock
 import * as LucideIcons from 'lucide-react';
 
@@ -119,12 +119,12 @@ export default function Categorias() {
   // Salvar categoria
   const salvarCategoria = async () => {
     if (!formData.nome.trim()) {
-      toast.error("Nome da categoria é obrigatório");
+      toast({ title: 'Atenção', description: 'Nome da categoria é obrigatório' });
       return;
     }
 
     if (!formData.codigo.trim()) {
-      toast.error("Código da categoria é obrigatório");
+      toast({ title: 'Atenção', description: 'Código da categoria é obrigatório' });
       return;
     }
 
@@ -150,17 +150,17 @@ export default function Categorias() {
 
       if (categoriaEdicao) {
         await atualizarPlanoContas(categoriaEdicao.id, dadosCategoria);
-        toast.success(`"${formData.nome}" foi atualizada com sucesso`);
+        toast({ title: 'Sucesso', description: `"${formData.nome}" foi atualizada com sucesso` });
       } else {
         await criarPlanoContas(dadosCategoria);
-        toast.success(`"${formData.nome}" foi criada com sucesso`);
+        toast({ title: 'Sucesso', description: `"${formData.nome}" foi criada com sucesso` });
       }
 
       setModalAberto(false);
       // Recarregar lista
       await listarPlanoContas();
     } catch (error: any) {
-      toast.error(error.message || "Erro interno do servidor");
+      toast({ title: 'Erro', description: error.message || 'Erro interno do servidor', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -180,13 +180,13 @@ export default function Categorias() {
       setLoading(true);
       await excluirPlanoContas(categoriaExclusao.id);
       
-      toast.success(`"${categoriaExclusao.nome}" foi excluída com sucesso`);
+      toast({ title: 'Sucesso', description: `"${categoriaExclusao.nome}" foi excluída com sucesso` });
       
       setModalExclusao(false);
       setCategoriaExclusao(null);
       await listarPlanoContas();
     } catch (error: any) {
-      toast.error(error.message || "Erro interno do servidor");
+      toast({ title: 'Erro', description: error.message || 'Erro interno do servidor', variant: 'destructive' });
     } finally {
       setLoading(false);
     }

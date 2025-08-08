@@ -13,7 +13,7 @@ import { useCredores } from '@/hooks/useCredores';
 import { usePagadores } from '@/hooks/usePagadores';
 import { useLoadingStates } from '@/hooks/useLoadingStates';
 import { ContatoModal } from '@/components/ui/ContatoModal';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 type ContatoTipo = 'credor' | 'pagador';
 
@@ -83,9 +83,9 @@ export default function Contatos() {
       } else {
         await excluirPagador(itemToDelete.id);
       }
-      toast.success('Contato excluído com sucesso!');
+      toast({ title: 'Sucesso', description: 'Contato excluído com sucesso!' });
     } catch (error) {
-      toast.error('Erro ao excluir contato');
+      toast({ title: 'Erro', description: 'Erro ao excluir contato', variant: 'destructive' });
     } finally {
       setLoading('deleting', false);
       setDeleteDialogOpen(false);
@@ -103,18 +103,18 @@ export default function Contatos() {
         } else {
           await atualizarPagador(itemSelecionado.id, dadosComTipo);
         }
-        toast.success('Contato atualizado com sucesso!');
+        toast({ title: 'Sucesso', description: 'Contato atualizado com sucesso!' });
       } else {
         if (tipoModal === 'credor') {
           await criarCredor(dadosComTipo);
         } else {
           await criarPagador(dadosComTipo);
         }
-        toast.success('Contato criado com sucesso!');
+        toast({ title: 'Sucesso', description: 'Contato criado com sucesso!' });
       }
       setModalAberto(false);
     } catch (error) {
-      toast.error('Erro ao salvar contato');
+      toast({ title: 'Erro', description: 'Erro ao salvar contato', variant: 'destructive' });
     }
   };
 

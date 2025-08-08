@@ -18,7 +18,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { useLoadingStates } from '../hooks/useLoadingStates';
 import { useBancosSupabase } from '../hooks/useBancosSupabase';
 import { DadosOFX } from '../utils/ofxParser';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 export default function Bancos() {
   const { bancos, loading, criarBanco, atualizarBanco, excluirBanco, estatisticas } = useBancosSupabase();
@@ -68,22 +68,22 @@ export default function Bancos() {
   const handleSalvarBanco = async (dadosBanco: Omit<Banco, 'id' | 'created_at' | 'updated_at'>) => {
     // Validações antes de salvar
     if (!dadosBanco.nome.trim()) {
-      toast.error("Nome do banco é obrigatório");
+      toast({ title: 'Atenção', description: 'Nome do banco é obrigatório' });
       return;
     }
 
     if (!dadosBanco.codigo_banco.trim()) {
-      toast.error("Código do banco é obrigatório");
+      toast({ title: 'Atenção', description: 'Código do banco é obrigatório' });
       return;
     }
 
     if (!dadosBanco.agencia.trim()) {
-      toast.error("Agência é obrigatória");
+      toast({ title: 'Atenção', description: 'Agência é obrigatória' });
       return;
     }
 
     if (!dadosBanco.conta.trim()) {
-      toast.error("Conta é obrigatória");
+      toast({ title: 'Atenção', description: 'Conta é obrigatória' });
       return;
     }
 
@@ -91,16 +91,16 @@ export default function Bancos() {
     try {
       if (bancoSelecionado) {
         await atualizarBanco(bancoSelecionado.id, dadosBanco);
-        toast.success("Banco atualizado com sucesso");
+        toast({ title: 'Sucesso', description: 'Banco atualizado com sucesso' });
       } else {
         await criarBanco(dadosBanco);
-        toast.success("Banco criado com sucesso");
+        toast({ title: 'Sucesso', description: 'Banco criado com sucesso' });
       }
       
       setBancoModalAberto(false);
       setBancoSelecionado(null);
     } catch (error) {
-      toast.error("Erro ao salvar banco. Tente novamente.");
+      toast({ title: 'Erro', description: 'Erro ao salvar banco. Tente novamente.', variant: 'destructive' });
     } finally {
       setLoading('saving', false);
     }
@@ -282,9 +282,9 @@ export default function Bancos() {
                 data_ultima_sincronizacao: new Date().toISOString()
               });
               
-              toast.success("Extrato OFX importado com sucesso");
+              toast({ title: 'Sucesso', description: 'Extrato OFX importado com sucesso' });
             } catch (error) {
-              toast.error("Erro na importação do extrato OFX");
+              toast({ title: 'Erro', description: 'Erro na importação do extrato OFX', variant: 'destructive' });
             }
         }}
       />
@@ -297,14 +297,14 @@ export default function Bancos() {
             setBancoSelecionado(null);
           }}
           banco={bancoSelecionado}
-          onCriarConta={(movimentacao: MovimentacaoOFX) => {
-            toast.success("Nova conta a pagar criada!");
+            onCriarConta={(movimentacao: MovimentacaoOFX) => {
+            toast({ title: 'Sucesso', description: 'Nova conta a pagar criada!' });
           }}
           onVincularConta={(movimentacao: MovimentacaoOFX) => {
-            toast.success("Movimentação vinculada com sucesso!");
+            toast({ title: 'Sucesso', description: 'Movimentação vinculada com sucesso!' });
           }}
           onIgnorar={(movimentacao: MovimentacaoOFX) => {
-            toast.success("Movimentação marcada como ignorada.");
+            toast({ title: 'Sucesso', description: 'Movimentação marcada como ignorada.' });
           }}
         />
       )}
