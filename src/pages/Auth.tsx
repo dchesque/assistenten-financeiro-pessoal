@@ -207,71 +207,72 @@ export default function Auth() {
       {/* Blur backgrounds abstratos da página */}
       <BlurBackground variant="page" />
       
-      {/* Seção Esquerda - Apresentação */}
+      {/* Seção Esquerda - Hero Section */}
       <div className={`hidden lg:flex lg:w-1/2 bg-gradient-to-br ${GRADIENTES.primary} relative overflow-hidden`}>
         {/* Blur backgrounds abstratos */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-80 h-80 bg-white/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
+        <BlurBackground variant="page" />
         
-        <div className="relative z-10 flex flex-col justify-center items-center px-12 py-20 text-white text-center">
-          {/* Logo e Título */}
-          <div className="mb-12 animate-fade-in">
-            <div className="flex flex-col items-center mb-8">
-              <div className={`w-20 h-20 ${GLASSMORPHISM.card} rounded-3xl flex items-center justify-center mb-6`}>
-                <DollarSign className="w-10 h-10 text-white" />
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold text-white mb-2">ChatConta</h1>
-                <p className="text-white/90 text-xl">Seu financeiro, mais inteligente</p>
-              </div>
+        <div className="relative z-10 flex flex-col justify-center items-center px-16 py-20 text-white w-full">
+          {/* Logo */}
+          <div className="mb-8 animate-fade-in">
+            <div className={`w-24 h-24 ${GLASSMORPHISM.card} rounded-3xl flex items-center justify-center`}>
+              <DollarSign className="w-12 h-12 text-white" />
             </div>
           </div>
 
-          {/* Features */}
-          <div className="mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <h2 className="text-3xl font-semibold mb-8 text-white">Finanças pessoais inteligentes</h2>
-            <div className="grid grid-cols-2 gap-6 max-w-lg">
-              <div className={`${GLASSMORPHISM.card} p-6 ${ANIMATIONS.hoverCard} text-center`}>
-                <BarChart3 className="w-8 h-8 text-white mb-3 mx-auto" />
-                <h3 className="font-semibold text-white">Análises com IA</h3>
-              </div>
-              <div className={`${GLASSMORPHISM.card} p-6 ${ANIMATIONS.hoverCard} text-center`}>
-                <Zap className="w-8 h-8 text-white mb-3 mx-auto" />
-                <h3 className="font-semibold text-white">Categorização Automática</h3>
-              </div>
-              <div className={`${GLASSMORPHISM.card} p-6 ${ANIMATIONS.hoverCard} text-center`}>
-                <Shield className="w-8 h-8 text-white mb-3 mx-auto" />
-                <h3 className="font-semibold text-white">100% Seguro</h3>
-              </div>
-              <div className={`${GLASSMORPHISM.card} p-6 ${ANIMATIONS.hoverCard} text-center`}>
-                <Smile className="w-8 h-8 text-white mb-3 mx-auto" />
-                <h3 className="font-semibold text-white">Insights Personalizados</h3>
-              </div>
+          {/* Título Principal */}
+          <div className="text-center mb-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <h1 className="text-6xl font-bold text-white mb-4">ChatConta</h1>
+            <p className="text-white/90 text-xl font-medium">Seu financeiro, mais inteligente</p>
+          </div>
+
+          {/* Subtítulo Features */}
+          <div className="text-center mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <h2 className="text-2xl font-semibold text-white">Finanças pessoais inteligentes</h2>
+          </div>
+
+          {/* Grid de Features 2x2 */}
+          <div className="grid grid-cols-2 gap-4 w-full max-w-md mb-16 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+            <div className={`${GLASSMORPHISM.card} p-6 text-center ${ANIMATIONS.hoverCard}`}>
+              <BarChart3 className="w-8 h-8 text-white mb-3 mx-auto" />
+              <h3 className="text-white font-medium text-sm">Análises com IA</h3>
+            </div>
+            <div className={`${GLASSMORPHISM.card} p-6 text-center ${ANIMATIONS.hoverCard}`}>
+              <Zap className="w-8 h-8 text-white mb-3 mx-auto" />
+              <h3 className="text-white font-medium text-sm">Categorização Automática</h3>
+            </div>
+            <div className={`${GLASSMORPHISM.card} p-6 text-center ${ANIMATIONS.hoverCard}`}>
+              <Shield className="w-8 h-8 text-white mb-3 mx-auto" />
+              <h3 className="text-white font-medium text-sm">100% Seguro</h3>
+            </div>
+            <div className={`${GLASSMORPHISM.card} p-6 text-center ${ANIMATIONS.hoverCard}`}>
+              <Smile className="w-8 h-8 text-white mb-3 mx-auto" />
+              <h3 className="text-white font-medium text-sm">Insights Personalizados</h3>
             </div>
           </div>
 
           {/* Estatísticas */}
-          <div className="flex justify-between gap-8 mb-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="flex justify-center gap-12 mb-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <div className="text-center">
               <div className="text-4xl font-bold text-white">10K+</div>
-              <div className="text-white/80 text-lg">Usuários</div>
+              <div className="text-white/80 text-base">Usuários</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-white">100K+</div>
-              <div className="text-white/80 text-lg">Transações</div>
+              <div className="text-white/80 text-base">Transações</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-white">95%</div>
-              <div className="text-white/80 text-lg">Satisfação</div>
+              <div className="text-white/80 text-base">Satisfação</div>
             </div>
           </div>
 
-          {/* Texto rodapé */}
-          <p className="text-white/90 text-lg animate-fade-in" style={{ animationDelay: '0.6s' }}>
-            ✨ Junte-se a milhares de pessoas que já transformaram suas finanças com IA
-          </p>
+          {/* Texto Final */}
+          <div className="text-center animate-fade-in" style={{ animationDelay: '0.5s' }}>
+            <p className="text-white/90 text-base font-medium">
+              ✨ Junte-se a milhares de pessoas que já transformaram suas finanças com IA
+            </p>
+          </div>
         </div>
       </div>
 
