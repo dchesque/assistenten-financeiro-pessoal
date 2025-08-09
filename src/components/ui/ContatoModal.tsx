@@ -38,13 +38,9 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
     active: true
   });
 
-  // Categorias filtradas por tipo
-  const categoriasFiltradas = categories.filter(cat => 
-    cat.type === formData.category_type
-  );
-
-  // Grupos disponíveis para o tipo selecionado
-  const gruposDisponiveis = getGroupsByType(formData.category_type as 'income' | 'expense');
+  // Categorias filtradas automaticamente por tipo baseado no modal
+  const tipoCategoria = tipo === 'credor' ? 'expense' : 'income';
+  const categoriasFiltradas = categories.filter(cat => cat.type === tipoCategoria);
 
   // Atualizar formulário quando contato mudar
   useEffect(() => {
@@ -165,58 +161,31 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
           </div>
 
           {/* Categoria - Campo obrigatório */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="category_type">
-                Tipo <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.category_type}
-                onValueChange={(value) => {
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    category_type: value,
-                    category_id: '', // Reset categoria quando tipo muda
-                    type: value === 'expense' ? 'supplier' : 'customer'
-                  }));
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="expense">Despesa (Credor)</SelectItem>
-                  <SelectItem value="income">Receita (Pagador)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="category_id">
-                Categoria <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.category_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoriasFiltradas.map((categoria) => (
-                    <SelectItem key={categoria.id} value={categoria.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: categoria.color }}
-                        />
-                        {categoria.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="category_id">
+              Categoria <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={formData.category_id}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={`Selecionar categoria de ${tipo === 'credor' ? 'despesa' : 'receita'}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {categoriasFiltradas.map((categoria) => (
+                  <SelectItem key={categoria.id} value={categoria.id}>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: categoria.color }}
+                      />
+                      {categoria.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
