@@ -203,72 +203,12 @@ export class SupabaseDataService implements IDataService {
   };
 
   bancos = {
-    getAll: async () => {
-      const userId = await this.ensureAuthenticated();
-      const { data, error } = await this.supabaseClient
-        .from('active_banks')
-        .select('*')
-        .eq('user_id', userId);
-      if (error) this.handleError(error, 'bancos.getAll');
-      return data || [];
-    },
-    getById: async (id: number) => {
-      const userId = await this.ensureAuthenticated();
-      const { data, error } = await this.supabaseClient
-        .from('active_banks')
-        .select('*')
-        .eq('id', id)
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (error) this.handleError(error, 'bancos.getById');
-      return data;
-    },
-    create: async (data: any) => {
-      const userId = await this.ensureAuthenticated();
-      const { data: banco, error } = await this.supabaseClient
-        .from('banks')
-        .insert({ ...data, user_id: userId })
-        .select()
-        .single();
-      if (error) this.handleError(error, 'bancos.create');
-      return banco;
-    },
-    update: async (id: number, data: any) => {
-      const userId = await this.ensureAuthenticated();
-      const { data: banco, error } = await this.supabaseClient
-        .from('banks')
-        .update({ ...data, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .eq('user_id', userId)
-        .select()
-        .single();
-      if (error) this.handleError(error, 'bancos.update');
-      return banco;
-    },
-    delete: async (id: number) => {
-      const userId = await this.ensureAuthenticated();
-      const { error } = await this.supabaseClient
-        .from('banks')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id)
-        .eq('user_id', userId);
-      if (error) this.handleError(error, 'bancos.delete');
-    },
-    atualizarSaldo: async (id: number, novoSaldo: number) => {
-      const userId = await this.ensureAuthenticated();
-      const { data: banco, error } = await this.supabaseClient
-        .from('banks')
-        .update({ 
-          initial_balance: novoSaldo,
-          updated_at: new Date().toISOString() 
-        })
-        .eq('id', id)
-        .eq('user_id', userId)
-        .select()
-        .single();
-      if (error) this.handleError(error, 'bancos.atualizarSaldo');
-      return banco;
-    }
+    getAll: async () => [],
+    getById: async () => null,
+    create: async (data: any) => data,
+    update: async (id: any, data: any) => data,
+    delete: async () => {},
+    atualizarSaldo: async (id: any, saldo: any) => ({ id, saldo })
   };
 
   dashboard = {

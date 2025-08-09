@@ -133,16 +133,69 @@ export function useSupabaseAuth() {
     };
   }, []);
 
-  // Função para login via WhatsApp/OTP (DESABILITADO)
+  // Função para login via WhatsApp/OTP
   const signInWithWhatsApp = async (whatsapp: string) => {
-    toast.info('Login com WhatsApp em desenvolvimento. Use email por enquanto.');
-    return { error: { message: 'Método não disponível' } };
+    if (isLocked) {
+      const remainingTime = Math.ceil((lockoutEndTime! - Date.now()) / 60000);
+      toast.error(`Conta bloqueada. Tente novamente em ${remainingTime} minutos.`);
+      return { error: 'Conta bloqueada' };
+    }
+
+    try {
+      // Limpar e formatar número
+      const cleanPhone = whatsapp.replace(/\D/g, '');
+      const formattedPhone = `+55${cleanPhone}`;
+
+      // Enviar OTP via Supabase
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: formattedPhone,
+        options: {
+          channel: 'whatsapp'
+        }
+      });
+
+      if (error) {
+        logService.logError(error, 'useSupabaseAuth.signInWithWhatsApp');
+        throw error;
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      logService.logError(error, 'useSupabaseAuth.signInWithWhatsApp');
+      return { error };
+    }
   };
 
-  // Função para cadastro via WhatsApp/OTP (DESABILITADO)
+  // Função para cadastro via WhatsApp/OTP
   const signUpWithWhatsApp = async (whatsapp: string, userData?: { nome?: string }) => {
-    toast.info('Cadastro com WhatsApp em desenvolvimento. Use email por enquanto.');
-    return { error: { message: 'Método não disponível' } };
+    try {
+      // Limpar e formatar número
+      const cleanPhone = whatsapp.replace(/\D/g, '');
+      const formattedPhone = `+55${cleanPhone}`;
+
+      // Criar conta via Supabase
+      const { error } = await supabase.auth.signUp({
+        phone: formattedPhone,
+        password: Math.random().toString(36), // Password aleatório (não usado para OTP)
+        options: {
+          data: {
+            name: userData?.nome || '',
+            phone: formattedPhone
+          },
+          channel: 'whatsapp'
+        }
+      });
+
+      if (error) {
+        logService.logError(error, 'useSupabaseAuth.signUpWithWhatsApp');
+        throw error;
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      logService.logError(error, 'useSupabaseAuth.signUpWithWhatsApp');
+      return { error };
+    }
   };
 
   // Função para login via email/senha
@@ -252,10 +305,76 @@ export function useSupabaseAuth() {
     }
   };
 
-  // Função para verificar código OTP (DESABILITADO)
+  // Função para verificar código OTP
   const verifyCode = async (whatsapp: string, code: string) => {
-    toast.info('Verificação OTP em desenvolvimento. Use email por enquanto.');
-    return { error: { message: 'Método não disponível' } };
+    if (isLocked) {
+      const remainingTime = Math.ceil((lockoutEndTime! - Date.now()) / 60000);
+      toast.error(`Conta bloqueada. Tente novamente em ${remainingTime} minutos.`);
+      return { error: 'Conta bloqueada' };
+    }
+
+    try {
+      // Limpar e formatar número
+      const cleanPhone = whatsapp.replace(/\D/g, '');
+      const formattedPhone = `+55${cleanPhone}`;
+
+      // Verificar código OTP
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: formattedPhone,
+        token: code,
+        type: 'sms'
+      });
+
+      if (error) {
+        // Incrementar tentativas apenas para códigos inválidos
+        if (error.message?.includes('invalid') || error.message?.includes('expired')) {
+          incrementLoginAttempts();
+        }
+        
+        logService.logError(error, 'useSupabaseAuth.verifyCode');
+        throw error;
+      }
+
+      // Reset tentativas de login em caso de sucesso
+      setLoginAttempts(0);
+      localStorage.removeItem('login_attempts');
+      localStorage.removeItem('lockout_end_time');
+
+      // Se usuário foi criado, configurar perfil e trial
+      if (data.user && data.session) {
+        try {
+          // Buscar se perfil já existe
+          const existingProfile = await loadUserProfile(data.user.id);
+          
+          if (!existingProfile) {
+            // Criar perfil usando metadados do usuário
+            const userName = data.user.user_metadata?.name || '';
+            const userPhone = data.user.phone || formattedPhone;
+            
+            await supabase.rpc('upsert_profile', {
+              p_user_id: data.user.id,
+              p_phone: userPhone,
+              p_name: userName
+            });
+
+            // Criar trial subscription
+            await supabase.rpc('create_trial_subscription', {
+              p_user_id: data.user.id
+            });
+
+            return { error: null, needsOnboarding: true, user: data.user };
+          }
+        } catch (profileError) {
+          logService.logError(profileError, 'useSupabaseAuth.verifyCode.createProfile');
+          // Não falhar a verificação se o perfil falhar
+        }
+      }
+
+      return { error: null, needsOnboarding: false, user: data.user };
+    } catch (error: any) {
+      logService.logError(error, 'useSupabaseAuth.verifyCode');
+      return { error };
+    }
   };
 
   // Função para logout
