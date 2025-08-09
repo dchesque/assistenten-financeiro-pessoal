@@ -1,934 +1,682 @@
-// SupabaseDataService - Implementação real integrada ao Supabase
-import { IDataService, User, Session, DashboardSummary } from '../interfaces/IDataService';
 import { supabase } from '@/integrations/supabase/client';
-import { FEATURES } from '@/config/features';
+import type { IDataService, User, Session, DashboardSummary } from '@/services/interfaces/IDataService';
 
 export class SupabaseDataService implements IDataService {
-  private supabaseClient = supabase;
-
-  constructor() {
-    if (FEATURES.DEBUG_MODE) {
-      console.warn('🚀 SupabaseDataService inicializado com Supabase real');
-    }
-  }
-
-  // ============ MÉTODOS AUXILIARES PRIVADOS ============
-  private async getCurrentUserId(): Promise<string> {
-    const { data: { user }, error } = await this.supabaseClient.auth.getUser();
-    if (error || !user) {
-      throw new Error('Usuário não autenticado');
-    }
-    return user.id;
-  }
-
-  private handleError(error: any, context: string): never {
-    console.error(`[SupabaseDataService::${context}]`, error);
-    throw new Error(`Erro em ${context}: ${error.message || 'Erro desconhecido'}`);
-  }
-
-  private async ensureAuthenticated(): Promise<string> {
-    try {
-      return await this.getCurrentUserId();
-    } catch {
-      throw new Error('Acesso negado: usuário não autenticado');
-    }
-  }
-
-  // ============ AUTENTICAÇÃO ============
+  
+  // ============ AUTH ============
   auth = {
-    signInWithPhone: async (phone: string) => {
-      return { success: false, message: 'Login com WhatsApp em desenvolvimento. Use email por enquanto.' };
-    },
-
-    verifyOTP: async (phone: string, code: string): Promise<Session> => {
-      throw new Error('Verificação OTP em desenvolvimento. Use email por enquanto.');
-    },
-
     signIn: async (email: string, password: string): Promise<Session> => {
-      try {
-        const { data, error } = await this.supabaseClient.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) this.handleError(error, 'signIn');
-        if (!data.user || !data.session) {
-          throw new Error('Falha na autenticação');
-        }
-
-        const user: User = {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
+      return {
+        user: {
           id: data.user.id,
-          email: data.user.email,
-          nome: data.user.user_metadata?.name || '',
-          created_at: data.user.created_at,
-          updated_at: data.user.updated_at
-        };
-
-        return {
-          user,
-          access_token: data.session.access_token,
-          expires_at: data.session.expires_at
-        };
-      } catch (error) {
-        this.handleError(error, 'signIn');
-      }
+          email: data.user.email || '',
+          name: data.user.user_metadata?.name,
+          phone: data.user.phone,
+          created_at: data.user.created_at
+        },
+        access_token: data.session?.access_token || '',
+        refresh_token: data.session?.refresh_token || '',
+        expires_at: data.session?.expires_at || 0
+      };
     },
 
-    signUp: async (email: string, password: string, userData?: { nome?: string }): Promise<Session> => {
-      try {
-        const { data, error } = await this.supabaseClient.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name: userData?.nome || ''
-            }
-          }
-        });
-
-        if (error) this.handleError(error, 'signUp');
-        if (!data.user || !data.session) {
-          throw new Error('Falha no cadastro');
+    signUp: async (email: string, password: string, userData?: any): Promise<User> => {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData
         }
-
-        const user: User = {
-          id: data.user.id,
-          email: data.user.email,
-          nome: userData?.nome || '',
-          created_at: data.user.created_at,
-          updated_at: data.user.updated_at
-        };
-
-        return {
-          user,
-          access_token: data.session.access_token,
-          expires_at: data.session.expires_at
-        };
-      } catch (error) {
-        this.handleError(error, 'signUp');
-      }
+      });
+      
+      if (error) throw error;
+      
+      return {
+        id: data.user?.id || '',
+        email: data.user?.email || '',
+        name: userData?.name,
+        phone: userData?.phone,
+        created_at: data.user?.created_at
+      };
     },
 
     signOut: async (): Promise<void> => {
-      try {
-        const { error } = await this.supabaseClient.auth.signOut();
-        if (error) this.handleError(error, 'signOut');
-      } catch (error) {
-        this.handleError(error, 'signOut');
-      }
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    },
+
+    verifyOTP: async (email: string, token: string): Promise<Session> => {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'email'
+      });
+      
+      if (error) throw error;
+      
+      return {
+        user: {
+          id: data.user?.id || '',
+          email: data.user?.email || '',
+          name: data.user?.user_metadata?.name,
+          phone: data.user?.phone,
+          created_at: data.user?.created_at
+        },
+        access_token: data.session?.access_token || '',
+        refresh_token: data.session?.refresh_token || '',
+        expires_at: data.session?.expires_at || 0
+      };
+    },
+
+    resendOTP: async (email: string): Promise<void> => {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email
+      });
+      if (error) throw error;
+    },
+
+    updateProfile: async (data: Partial<User>): Promise<User> => {
+      const { data: updatedUser, error } = await supabase.auth.updateUser({
+        data: {
+          name: data.name,
+          phone: data.phone
+        }
+      });
+      
+      if (error) throw error;
+      
+      return {
+        id: updatedUser.user.id,
+        email: updatedUser.user.email || '',
+        name: data.name || updatedUser.user.user_metadata?.name,
+        phone: data.phone || updatedUser.user.phone,
+        created_at: updatedUser.user.created_at
+      };
     },
 
     getCurrentUser: async (): Promise<User | null> => {
-      try {
-        const { data: { user } } = await this.supabaseClient.auth.getUser();
-        if (!user) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          nome: user.user_metadata?.name || '',
-          created_at: user.created_at,
-          updated_at: user.updated_at
-        };
-      } catch (error) {
-        console.warn('getCurrentUser failed:', error);
-        return null;
-      }
-    },
-
-    getSession: (): Session | null => {
-      // Implementação simplificada
-      return null;
-    },
-
-    updateProfile: async (userId: string, data: Partial<User>): Promise<User> => {
-      try {
-        const currentUserId = await this.getCurrentUserId();
-        if (currentUserId !== userId) {
-          throw new Error('Acesso negado: só pode atualizar próprio perfil');
-        }
-
-        return {
-          id: userId,
-          email: data.email || '',
-          nome: data.nome || '',
-          updated_at: new Date().toISOString()
-        };
-      } catch (error) {
-        this.handleError(error, 'updateProfile');
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return null;
+      
+      return {
+        id: user.id,
+        email: user.email || '',
+        name: user.user_metadata?.name,
+        phone: user.phone,
+        created_at: user.created_at
+      };
     }
   };
 
   // ============ CONTAS A PAGAR ============
   contasPagar = {
-    getAll: async () => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('accounts_payable')
-          .select(`
-            *,
-            category:categories(id, name, color),
-            supplier:suppliers(id, name, document),
-            contact:contacts(id, name, type)
-          `)
-          .order('due_date', { ascending: true });
-
-        if (error) this.handleError(error, 'contasPagar.getAll');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'contasPagar.getAll');
-      }
+    getAll: async (filtros?: any): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('accounts_payable')
+        .select('*')
+        .is('deleted_at', null)
+        .order('due_date', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
     },
 
-    getById: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('accounts_payable')
-          .select(`
-            *,
-            category:categories(id, name, color),
-            supplier:suppliers(id, name, document),
-            contact:contacts(id, name, type)
-          `)
-          .eq('id', id)
-          .maybeSingle();
-
-        if (error) this.handleError(error, 'contasPagar.getById');
-        return data;
-      } catch (error) {
-        this.handleError(error, 'contasPagar.getById');
-      }
+    getById: async (id: string): Promise<any> => {
+      const { data, error } = await supabase
+        .from('accounts_payable')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data;
     },
 
-    create: async (data: any) => {
-      const userId = await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('accounts_payable')
-          .insert([{ ...data, user_id: userId }])
-          .select(`
-            *,
-            category:categories(id, name, color),
-            supplier:suppliers(id, name, document),
-            contact:contacts(id, name, type)
-          `)
-          .single();
-
-        if (error) this.handleError(error, 'contasPagar.create');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'contasPagar.create');
-      }
+    create: async (data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('accounts_payable')
+        .insert([data])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    update: async (id: string, data: any) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('accounts_payable')
-          .update(data)
-          .eq('id', id)
-          .select(`
-            *,
-            category:categories(id, name, color),
-            supplier:suppliers(id, name, document),
-            contact:contacts(id, name, type)
-          `)
-          .single();
-
-        if (error) this.handleError(error, 'contasPagar.update');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'contasPagar.update');
-      }
+    update: async (id: string, data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('accounts_payable')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    delete: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { error } = await this.supabaseClient
-          .from('accounts_payable')
-          .delete()
-          .eq('id', id);
-
-        if (error) this.handleError(error, 'contasPagar.delete');
-      } catch (error) {
-        this.handleError(error, 'contasPagar.delete');
-      }
+    delete: async (id: string): Promise<void> => {
+      const { error } = await supabase
+        .from('accounts_payable')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
     },
 
-    getByVencimento: async (dataInicio: string, dataFim: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('accounts_payable')
-          .select(`
-            *,
-            category:categories(id, name, color),
-            supplier:suppliers(id, name, document),
-            contact:contacts(id, name, type)
-          `)
-          .gte('due_date', dataInicio)
-          .lte('due_date', dataFim)
-          .order('due_date', { ascending: true });
-
-        if (error) this.handleError(error, 'contasPagar.getByVencimento');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'contasPagar.getByVencimento');
-      }
+    getByVencimento: async (dataInicio: string, dataFim: string): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('accounts_payable')
+        .select('*')
+        .gte('due_date', dataInicio)
+        .lte('due_date', dataFim)
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
     },
 
-    getByStatus: async (status: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('accounts_payable')
-          .select(`
-            *,
-            category:categories(id, name, color),
-            supplier:suppliers(id, name, document),
-            contact:contacts(id, name, type)
-          `)
-          .eq('status', status)
-          .order('due_date', { ascending: true });
-
-        if (error) this.handleError(error, 'contasPagar.getByStatus');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'contasPagar.getByStatus');
-      }
+    getByStatus: async (status: string): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('accounts_payable')
+        .select('*')
+        .eq('status', status)
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
     },
 
-    marcarComoPaga: async (id: string, paymentData: any) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('accounts_payable')
-          .update({
-            status: 'paid',
-            paid_at: paymentData.paid_at || new Date().toISOString().split('T')[0],
-            bank_account_id: paymentData.bank_account_id
-          })
-          .eq('id', id)
-          .select(`
-            *,
-            category:categories(id, name, color),
-            supplier:suppliers(id, name, document),
-            contact:contacts(id, name, type)
-          `)
-          .single();
-
-        if (error) this.handleError(error, 'contasPagar.marcarComoPaga');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'contasPagar.marcarComoPaga');
-      }
+    marcarComoPaga: async (id: string, dados: any): Promise<any> => {
+      const { data, error } = await supabase
+        .from('accounts_payable')
+        .update({
+          status: 'paid',
+          paid_at: dados.dataPagamento
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     }
   };
 
+  // ============ CONTAS A RECEBER ============
   contasReceber = {
-    getAll: async () => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('accounts_receivable')
-          .select(`
-            *,
-            category:categories(id, name, color),
-            contact:contacts(id, name, type)
-          `)
-          .order('due_date', { ascending: true });
-
-        if (error) this.handleError(error, 'contasReceber.getAll');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'contasReceber.getAll');
-      }
+    getAll: async (filtros?: any): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('accounts_receivable')
+        .select('*')
+        .is('deleted_at', null)
+        .order('due_date', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
     },
 
-    getById: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('accounts_receivable')
-          .select(`
-            *,
-            category:categories(id, name, color),
-            contact:contacts(id, name, type)
-          `)
-          .eq('id', id)
-          .maybeSingle();
-
-        if (error) this.handleError(error, 'contasReceber.getById');
-        return data;
-      } catch (error) {
-        this.handleError(error, 'contasReceber.getById');
-      }
+    getById: async (id: string): Promise<any | null> => {
+      const { data, error } = await supabase
+        .from('accounts_receivable')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
     },
 
-    create: async (data: any) => {
-      const userId = await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('accounts_receivable')
-          .insert([{ ...data, user_id: userId }])
-          .select(`
-            *,
-            category:categories(id, name, color),
-            contact:contacts(id, name, type)
-          `)
-          .single();
-
-        if (error) this.handleError(error, 'contasReceber.create');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'contasReceber.create');
-      }
+    create: async (data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('accounts_receivable')
+        .insert([data])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    update: async (id: string, data: any) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('accounts_receivable')
-          .update(data)
-          .eq('id', id)
-          .select(`
-            *,
-            category:categories(id, name, color),
-            contact:contacts(id, name, type)
-          `)
-          .single();
-
-        if (error) this.handleError(error, 'contasReceber.update');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'contasReceber.update');
-      }
+    update: async (id: string, data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('accounts_receivable')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    delete: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { error } = await this.supabaseClient
-          .from('accounts_receivable')
-          .delete()
-          .eq('id', id);
-
-        if (error) this.handleError(error, 'contasReceber.delete');
-      } catch (error) {
-        this.handleError(error, 'contasReceber.delete');
-      }
+    delete: async (id: string): Promise<void> => {
+      const { error } = await supabase
+        .from('accounts_receivable')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
     },
 
-    getByVencimento: async (dataInicio: string, dataFim: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('accounts_receivable')
-          .select(`
-            *,
-            category:categories(id, name, color),
-            contact:contacts(id, name, type)
-          `)
-          .gte('due_date', dataInicio)
-          .lte('due_date', dataFim)
-          .order('due_date', { ascending: true });
-
-        if (error) this.handleError(error, 'contasReceber.getByVencimento');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'contasReceber.getByVencimento');
-      }
+    getByVencimento: async (dataInicio: string, dataFim: string): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('accounts_receivable')
+        .select('*')
+        .gte('due_date', dataInicio)
+        .lte('due_date', dataFim)
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
     },
 
-    getByStatus: async (status: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('accounts_receivable')
-          .select(`
-            *,
-            category:categories(id, name, color),
-            contact:contacts(id, name, type)
-          `)
-          .eq('status', status)
-          .order('due_date', { ascending: true });
-
-        if (error) this.handleError(error, 'contasReceber.getByStatus');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'contasReceber.getByStatus');
-      }
+    getByStatus: async (status: string): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('accounts_receivable')
+        .select('*')
+        .eq('status', status)
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
     },
 
-    marcarComoRecebida: async (id: string, receiptData: any) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('accounts_receivable')
-          .update({
-            status: 'received',
-            received_at: receiptData.received_at || new Date().toISOString().split('T')[0],
-            bank_account_id: receiptData.bank_account_id
-          })
-          .eq('id', id)
-          .select(`
-            *,
-            category:categories(id, name, color),
-            contact:contacts(id, name, type)
-          `)
-          .single();
-
-        if (error) this.handleError(error, 'contasReceber.marcarComoRecebida');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'contasReceber.marcarComoRecebida');
-      }
+    marcarComoRecebida: async (id: string, dataRecebimento: string, valorRecebido?: number): Promise<any> => {
+      const { data, error } = await supabase
+        .from('accounts_receivable')
+        .update({
+          status: 'received',
+          received_at: dataRecebimento
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     }
   };
 
+  // ============ FORNECEDORES ============
   fornecedores = {
-    getAll: async () => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('contacts')
-          .select('*')
-          .order('name', { ascending: true });
-
-        if (error) this.handleError(error, 'fornecedores.getAll');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'fornecedores.getAll');
-      }
+    getAll: async (filtros?: any): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('type', 'supplier')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     },
 
-    getById: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('contacts')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
-
-        if (error) this.handleError(error, 'fornecedores.getById');
-        return data;
-      } catch (error) {
-        this.handleError(error, 'fornecedores.getById');
-      }
+    getById: async (id: string): Promise<any | null> => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('id', id)
+        .eq('type', 'supplier')
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
     },
 
-    create: async (data: any) => {
-      const userId = await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('contacts')
-          .insert([{ ...data, user_id: userId }])
-          .select('*')
-          .single();
-
-        if (error) this.handleError(error, 'fornecedores.create');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'fornecedores.create');
-      }
+    create: async (data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('contacts')
+        .insert([{ ...data, type: 'supplier' }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    update: async (id: string, data: any) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('contacts')
-          .update(data)
-          .eq('id', id)
-          .select('*')
-          .single();
-
-        if (error) this.handleError(error, 'fornecedores.update');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'fornecedores.update');
-      }
+    update: async (id: string, data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('contacts')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    delete: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { error } = await this.supabaseClient
-          .from('contacts')
-          .update({ deleted_at: new Date().toISOString() })
-          .eq('id', id);
-
-        if (error) this.handleError(error, 'fornecedores.delete');
-      } catch (error) {
-        this.handleError(error, 'fornecedores.delete');
-      }
-    },
-
-    getAtivos: async () => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('contacts')
-          .select('*')
-          .eq('active', true)
-          .is('deleted_at', null)
-          .order('name', { ascending: true });
-
-        if (error) this.handleError(error, 'fornecedores.getAtivos');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'fornecedores.getAtivos');
-      }
-    },
-
-    buscarPorDocumento: async (documento: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('contacts')
-          .select('*')
-          .eq('document', documento)
-          .maybeSingle();
-
-        if (error) this.handleError(error, 'fornecedores.buscarPorDocumento');
-        return data;
-      } catch (error) {
-        this.handleError(error, 'fornecedores.buscarPorDocumento');
-      }
+    delete: async (id: string): Promise<void> => {
+      const { error } = await supabase
+        .from('contacts')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
     }
   };
 
+  // ============ CONTATOS ============
+  contatos = {
+    getAll: async (filtros?: any): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+
+    getById: async (id: string): Promise<any | null> => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+
+    create: async (data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('contacts')
+        .insert([data])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
+    },
+
+    update: async (id: string, data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('contacts')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
+    },
+
+    delete: async (id: string): Promise<void> => {
+      const { error } = await supabase
+        .from('contacts')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    }
+  };
+
+  // ============ CATEGORIAS ============
   categorias = {
-    getAll: async () => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('categories')
-          .select('*')
-          .order('name', { ascending: true });
-
-        if (error) this.handleError(error, 'categorias.getAll');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'categorias.getAll');
-      }
+    getAll: async (filtros?: any): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     },
 
-    getById: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('categories')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
-
-        if (error) this.handleError(error, 'categorias.getById');
-        return data;
-      } catch (error) {
-        this.handleError(error, 'categorias.getById');
-      }
+    getById: async (id: string): Promise<any | null> => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
     },
 
-    create: async (data: any) => {
-      const userId = await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('categories')
-          .insert([{ ...data, user_id: userId }])
-          .select('*')
-          .single();
-
-        if (error) this.handleError(error, 'categorias.create');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'categorias.create');
-      }
+    create: async (data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('categories')
+        .insert([data])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    update: async (id: string, data: any) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('categories')
-          .update(data)
-          .eq('id', id)
-          .select('*')
-          .single();
-
-        if (error) this.handleError(error, 'categorias.update');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'categorias.update');
-      }
+    update: async (id: string, data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('categories')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    delete: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { error } = await this.supabaseClient
-          .from('categories')
-          .delete()
-          .eq('id', id);
-
-        if (error) this.handleError(error, 'categorias.delete');
-      } catch (error) {
-        this.handleError(error, 'categorias.delete');
-      }
-    },
-
-    getByTipo: async (tipo: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('categories')
-          .select('*')
-          .eq('type', tipo)
-          .order('name', { ascending: true });
-
-        if (error) this.handleError(error, 'categorias.getByTipo');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'categorias.getByTipo');
-      }
+    delete: async (id: string): Promise<void> => {
+      const { error } = await supabase
+        .from('categories')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
     }
   };
 
+  // ============ BANCOS ============
   bancos = {
-    getAll: async () => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('banks')
-          .select('*')
-          .order('name', { ascending: true });
-
-        if (error) this.handleError(error, 'bancos.getAll');
-        return data || [];
-      } catch (error) {
-        this.handleError(error, 'bancos.getAll');
-      }
+    getAll: async (filtros?: any): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('banks')
+        .select('*')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     },
 
-    getById: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data, error } = await this.supabaseClient
-          .from('banks')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
-
-        if (error) this.handleError(error, 'bancos.getById');
-        return data;
-      } catch (error) {
-        this.handleError(error, 'bancos.getById');
-      }
+    getById: async (id: string): Promise<any | null> => {
+      const { data, error } = await supabase
+        .from('banks')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
     },
 
-    create: async (data: any) => {
-      const userId = await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('banks')
-          .insert([{ ...data, user_id: userId }])
-          .select('*')
-          .single();
-
-        if (error) this.handleError(error, 'bancos.create');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'bancos.create');
-      }
+    create: async (data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('banks')
+        .insert([data])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    update: async (id: string, data: any) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('banks')
-          .update(data)
-          .eq('id', id)
-          .select('*')
-          .single();
-
-        if (error) this.handleError(error, 'bancos.update');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'bancos.update');
-      }
+    update: async (id: string, data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('banks')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
 
-    delete: async (id: string) => {
-      await this.ensureAuthenticated();
-      try {
-        const { error } = await this.supabaseClient
-          .from('banks')
-          .delete()
-          .eq('id', id);
-
-        if (error) this.handleError(error, 'bancos.delete');
-      } catch (error) {
-        this.handleError(error, 'bancos.delete');
-      }
-    },
-
-    atualizarSaldo: async (id: string, novoSaldo: number) => {
-      await this.ensureAuthenticated();
-      try {
-        const { data: result, error } = await this.supabaseClient
-          .from('banks')
-          .update({ initial_balance: novoSaldo })
-          .eq('id', id)
-          .select('*')
-          .single();
-
-        if (error) this.handleError(error, 'bancos.atualizarSaldo');
-        return result;
-      } catch (error) {
-        this.handleError(error, 'bancos.atualizarSaldo');
-      }
+    delete: async (id: string): Promise<void> => {
+      const { error } = await supabase
+        .from('banks')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
     }
-  };
-
-  dashboard = {
-    getSummary: async (): Promise<DashboardSummary> => {
-      await this.ensureAuthenticated();
-      try {
-        const hoje = new Date().toISOString().split('T')[0];
-        const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-        const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
-
-        // Buscar todas as contas a pagar
-        const { data: contasPagar, error: errorPagar } = await this.supabaseClient
-          .from('accounts_payable')
-          .select('amount, status, due_date, paid_at');
-
-        if (errorPagar) this.handleError(errorPagar, 'dashboard.getSummary.contasPagar');
-
-        // Buscar todas as contas a receber
-        const { data: contasReceber, error: errorReceber } = await this.supabaseClient
-          .from('accounts_receivable')
-          .select('amount, status, due_date, received_at');
-
-        if (errorReceber) this.handleError(errorReceber, 'dashboard.getSummary.contasReceber');
-
-        // Buscar saldo total dos bancos
-        const { data: bancos, error: errorBancos } = await this.supabaseClient
-          .from('banks')
-          .select('initial_balance');
-
-        if (errorBancos) this.handleError(errorBancos, 'dashboard.getSummary.bancos');
-
-        const saldo_total = bancos?.reduce((total, banco) => total + Number(banco.initial_balance || 0), 0) || 0;
-
-        // Calcular estatísticas das contas a pagar
-        const contasPagarData = contasPagar || [];
-        const pendentes = contasPagarData.filter(c => c.status === 'pending').length;
-        const valor_pendente = contasPagarData.filter(c => c.status === 'pending').reduce((total, c) => total + Number(c.amount), 0);
-        const vencidas = contasPagarData.filter(c => c.status === 'pending' && c.due_date < hoje).length;
-        const valor_vencido = contasPagarData.filter(c => c.status === 'pending' && c.due_date < hoje).reduce((total, c) => total + Number(c.amount), 0);
-        const pagas_mes = contasPagarData.filter(c => c.status === 'paid' && c.paid_at >= inicioMes && c.paid_at <= fimMes).length;
-        const valor_pago_mes = contasPagarData.filter(c => c.status === 'paid' && c.paid_at >= inicioMes && c.paid_at <= fimMes).reduce((total, c) => total + Number(c.amount), 0);
-
-        // Calcular estatísticas das contas a receber
-        const contasReceberData = contasReceber || [];
-        const pendentesReceber = contasReceberData.filter(c => c.status === 'pending').length;
-        const valor_pendente_receber = contasReceberData.filter(c => c.status === 'pending').reduce((total, c) => total + Number(c.amount), 0);
-        const vencidas_receber = contasReceberData.filter(c => c.status === 'pending' && c.due_date < hoje).length;
-        const valor_vencido_receber = contasReceberData.filter(c => c.status === 'pending' && c.due_date < hoje).reduce((total, c) => total + Number(c.amount), 0);
-        const recebidas_mes = contasReceberData.filter(c => c.status === 'received' && c.received_at >= inicioMes && c.received_at <= fimMes).length;
-        const valor_recebido_mes = contasReceberData.filter(c => c.status === 'received' && c.received_at >= inicioMes && c.received_at <= fimMes).reduce((total, c) => total + Number(c.amount), 0);
-
-        return {
-          saldo_total,
-          contas_pagar: {
-            pendentes,
-            valor_pendente,
-            vencidas,
-            valor_vencido,
-            pagas_mes,
-            valor_pago_mes
-          },
-          contas_receber: {
-            pendentes: pendentesReceber,
-            valor_pendente: valor_pendente_receber,
-            vencidas: vencidas_receber,
-            valor_vencido: valor_vencido_receber,
-            recebidas_mes,
-            valor_recebido_mes
-          }
-        };
-      } catch (error) {
-        this.handleError(error, 'dashboard.getSummary');
-      }
-    }
-  };
-
-  utils = {
-    exportarDados: async () => new Blob(),
-    importarDados: async () => ({ total: 0, sucesso: 0, erros: 0 }),
-    limparCache: async () => {},
-    verificarConexao: async () => true,
-    resetAllData: () => {}
   };
 
   // ============ BANK ACCOUNTS ============
   bankAccounts = {
-    getByBankId: async (bankId: number) => {
-      return [];
+    getAll: async (): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('bank_accounts')
+        .select('*')
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
     },
-    
-    create: async (data: any) => {
-      return { id: '1', ...data };
+
+    create: async (bankId: string, data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('bank_accounts')
+        .insert([{ ...data, bank_id: bankId }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
-    
-    transferBetweenAccounts: async (from: string, to: string, amount: number) => {
-      return Promise.resolve();
+
+    transfer: async (fromAccountId: string, toAccountId: string, amount: number, description: string): Promise<any> => {
+      // Implementar transferência entre contas
+      throw new Error('Transfer not implemented yet');
     }
   };
 
-  // ============ TRANSAÇÕES ============
+  // ============ TRANSACTIONS ============
   transactions = {
-    getAll: async (filtros?: any) => {
-      return [];
+    getAll: async (filters?: any): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .is('deleted_at', null)
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     },
-    
-    getById: async (id: string | number) => {
-      return null;
+
+    create: async (data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('transactions')
+        .insert([data])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
-    
-    create: async (data: any) => {
-      return { id: '1', ...data };
+
+    update: async (id: string, data: any): Promise<any> => {
+      const { data: result, error } = await supabase
+        .from('transactions')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
     },
-    
-    update: async (id: string | number, data: any) => {
-      return { id, ...data };
+
+    delete: async (id: string): Promise<void> => {
+      const { error } = await supabase
+        .from('transactions')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
     },
-    
-    delete: async (id: string | number) => {
-      return Promise.resolve();
-    },
-    
-    getExtrato: async (accountId: string, periodo: { inicio: Date; fim: Date }) => {
+
+    getStatement: async (accountId: string, startDate: Date, endDate: Date): Promise<any[]> => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('from_account_id', accountId)
+        .gte('date', startDate.toISOString())
+        .lte('date', endDate.toISOString())
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  };
+
+  // ============ DASHBOARD ============
+  dashboard = {
+    getSummary: async (): Promise<DashboardSummary> => {
+      // Buscar dados básicos
+      const [accountsPayable, accountsReceivable, banks] = await Promise.all([
+        this.contasPagar.getAll(),
+        this.contasReceber.getAll(),
+        this.bancos.getAll()
+      ]);
+
+      const totalBalance = banks.reduce((sum, bank) => sum + (bank.initial_balance || 0), 0);
+      
       return {
-        transacoes: [],
-        saldoInicial: 0,
-        saldoFinal: 0,
-        totalEntradas: 0,
-        totalSaidas: 0
+        totalBalance,
+        monthlyIncome: 0,
+        monthlyExpenses: 0,
+        totalAccountsPayable: accountsPayable.reduce((sum, acc) => sum + acc.amount, 0),
+        totalAccountsReceivable: accountsReceivable.reduce((sum, acc) => sum + acc.amount, 0),
+        overdueAccountsPayable: accountsPayable.filter(acc => acc.status === 'overdue').length,
+        overdueAccountsReceivable: accountsReceivable.filter(acc => acc.status === 'overdue').length,
+        accountsPayableCount: accountsPayable.length,
+        accountsReceivableCount: accountsReceivable.length,
+        recentActivity: []
       };
+    }
+  };
+
+  // ============ UTILS ============
+  utils = {
+    exportData: async (format: 'json' | 'csv'): Promise<Blob> => {
+      throw new Error('Export not implemented yet');
     },
-    
-    getByAccount: async (accountId: string, limit?: number) => {
-      return [];
+
+    importData: async (file: File): Promise<{ success: boolean; message: string }> => {
+      throw new Error('Import not implemented yet');
+    },
+
+    clearCache: async (): Promise<void> => {
+      // Implementar limpeza de cache
+    },
+
+    checkConnection: async (): Promise<boolean> => {
+      try {
+        const { error } = await supabase.from('profiles').select('id').limit(1);
+        return !error;
+      } catch {
+        return false;
+      }
+    },
+
+    resetData: async (): Promise<void> => {
+      throw new Error('Reset data not implemented yet');
     }
   };
 }

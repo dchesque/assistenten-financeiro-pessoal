@@ -63,13 +63,15 @@ export default function Dashboard() {
       </div>;
   }
   const {
-    saldo_total,
-    contas_pagar,
-    contas_receber
+    totalBalance,
+    totalAccountsPayable,
+    totalAccountsReceivable,
+    monthlyIncome,
+    monthlyExpenses
   } = summary;
 
   // Calcular fluxo líquido do mês
-  const fluxoLiquido = contas_receber.valor_recebido_mes - contas_pagar.valor_pago_mes;
+  const fluxoLiquido = monthlyIncome - monthlyExpenses;
   return <div className="p-4 lg:p-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -87,31 +89,31 @@ export default function Dashboard() {
 
       {/* KPIs Principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KPICard titulo="Saldo Total" valor={formatarMoeda(saldo_total)} icone={<DollarSign className="w-6 h-6" />} gradiente="from-blue-600 to-blue-700" status={saldo_total >= 0 ? 'saudavel' : 'critico'} subtitulo="Saldo atual em bancos" />
+        <KPICard titulo="Saldo Total" valor={formatarMoeda(totalBalance)} icone={<DollarSign className="w-6 h-6" />} gradiente="from-blue-600 to-blue-700" status={totalBalance >= 0 ? 'saudavel' : 'critico'} subtitulo="Saldo atual em bancos" />
 
-        <KPICard titulo="Contas a Pagar" valor={formatarMoeda(contas_pagar.valor_pendente)} icone={<AlertTriangle className="w-6 h-6" />} gradiente="from-orange-500 to-orange-600" status="atencao" subtitulo={`${contas_pagar.pendentes} conta${contas_pagar.pendentes !== 1 ? 's' : ''} pendente${contas_pagar.pendentes !== 1 ? 's' : ''}`} />
+        <KPICard titulo="Contas a Pagar" valor={formatarMoeda(totalAccountsPayable)} icone={<AlertTriangle className="w-6 h-6" />} gradiente="from-orange-500 to-orange-600" status="atencao" subtitulo={`Valor total a pagar`} />
 
-        <KPICard titulo="Contas a Receber" valor={formatarMoeda(contas_receber.valor_pendente)} icone={<CheckCircle className="w-6 h-6" />} gradiente="from-green-500 to-green-600" status="saudavel" subtitulo={`${contas_receber.pendentes} conta${contas_receber.pendentes !== 1 ? 's' : ''} pendente${contas_receber.pendentes !== 1 ? 's' : ''}`} />
+        <KPICard titulo="Contas a Receber" valor={formatarMoeda(totalAccountsReceivable)} icone={<CheckCircle className="w-6 h-6" />} gradiente="from-green-500 to-green-600" status="saudavel" subtitulo={`Valor total a receber`} />
 
-        <KPICard titulo="Fluxo do Mês" valor={formatarMoeda(fluxoLiquido)} icone={<TrendingUp className="w-6 h-6" />} gradiente={fluxoLiquido >= 0 ? "from-green-500 to-green-600" : "from-red-500 to-red-600"} status={fluxoLiquido >= 0 ? 'saudavel' : 'critico'} subtitulo="Receitas - Despesas" />
+        <KPICard titulo="Fluxo do Mês" valor={formatarMoeda(fluxoLiquido)} icone={<TrendingUp className="w-6 h-6" />} gradiente={fluxoLiquido >= 0 ? "from-green-600 to-green-600" : "from-red-500 to-red-600"} status={fluxoLiquido >= 0 ? 'saudavel' : 'critico'} subtitulo="Receitas - Despesas" />
       </div>
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Contas Pendentes */}
-        <MetricCard titulo="Contas Pendentes" valor={contas_pagar.pendentes} formato="numero" icone={<Calendar className="w-6 h-6 text-blue-600" />} cor="blue" />
+        <MetricCard titulo="Contas Pendentes" valor={summary.accountsPayableCount} formato="numero" icone={<Calendar className="w-6 h-6 text-blue-600" />} cor="blue" />
 
         {/* Contas Vencidas */}
-        <MetricCard titulo="Contas Vencidas" valor={contas_pagar.vencidas} formato="numero" icone={<AlertTriangle className="w-6 h-6 text-red-600" />} cor="red" />
+        <MetricCard titulo="Contas Vencidas" valor={summary.overdueAccountsPayable} formato="numero" icone={<AlertTriangle className="w-6 h-6 text-red-600" />} cor="red" />
 
         {/* Receitas Pendentes */}
-        <MetricCard titulo="Receitas Pendentes" valor={contas_receber.pendentes} formato="numero" icone={<CheckCircle className="w-6 h-6 text-green-600" />} cor="green" />
+        <MetricCard titulo="Receitas Pendentes" valor={summary.accountsReceivableCount} formato="numero" icone={<CheckCircle className="w-6 h-6 text-green-600" />} cor="green" />
 
         {/* Pagas no Mês */}
-        <MetricCard titulo="Pagas no Mês" valor={contas_pagar.pagas_mes} formato="numero" icone={<CheckCircle className="w-6 h-6 text-blue-600" />} cor="blue" />
+        <MetricCard titulo="Pagas no Mês" valor={0} formato="numero" icone={<CheckCircle className="w-6 h-6 text-blue-600" />} cor="blue" />
 
         {/* Gastos do Mês */}
-        <MetricCard titulo="Gastos do Mês" valor={contas_pagar.valor_pago_mes} formato="moeda" icone={<TrendingDown className="w-6 h-6 text-red-600" />} cor="red" />
+        <MetricCard titulo="Gastos do Mês" valor={monthlyExpenses} formato="moeda" icone={<TrendingDown className="w-6 h-6 text-red-600" />} cor="red" />
 
         {/* Saldo Líquido */}
         <MetricCard titulo="Saldo Líquido" valor={fluxoLiquido} formato="moeda" icone={<DollarSign className="w-6 h-6 text-purple-600" />} cor="purple" />

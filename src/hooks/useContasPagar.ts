@@ -59,7 +59,7 @@ export function useContasPagar() {
   const atualizarConta = async (id: number, dadosAtualizacao: Partial<ContaPagar>): Promise<ContaPagar> => {
     try {
       const contaAtualizada = await showMessage.promise(
-        withRetry(() => dataService.contasPagar.update(id, dadosAtualizacao)),
+        withRetry(() => dataService.contasPagar.update(String(id), dadosAtualizacao)),
         {
           loading: 'Atualizando conta...',
           success: 'Conta atualizada com sucesso!',
@@ -79,7 +79,7 @@ export function useContasPagar() {
     
     try {
       await showMessage.promise(
-        withRetry(() => dataService.contasPagar.delete(id)),
+        withRetry(() => dataService.contasPagar.delete(String(id))),
         {
           loading: 'Excluindo conta...',
           success: 'Conta excluída com sucesso!',
@@ -106,7 +106,7 @@ export function useContasPagar() {
     
     try {
       await showMessage.promise(
-        withRetry(() => dataService.contasPagar.marcarComoPaga(id, {
+        withRetry(() => dataService.contasPagar.marcarComoPaga(String(id), {
           dataPagamento,
           valorPago: dadosPagamento.valor_pago,
           bankAccountId: dadosPagamento.banco_id?.toString(),

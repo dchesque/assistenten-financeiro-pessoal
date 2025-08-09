@@ -3,27 +3,7 @@ import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
 import { showMessage } from '@/utils/messages';
-
-
-export interface DashboardSummary {
-  saldo_total: number;
-  contas_pagar: {
-    pendentes: number;
-    valor_pendente: number;
-    vencidas: number;
-    valor_vencido: number;
-    pagas_mes: number;
-    valor_pago_mes: number;
-  };
-  contas_receber: {
-    pendentes: number;
-    valor_pendente: number;
-    vencidas: number;
-    valor_vencido: number;
-    recebidas_mes: number;
-    valor_recebido_mes: number;
-  };
-}
+import type { DashboardSummary } from '@/services/interfaces/IDataService';
 
 export interface UseDashboardReturn {
   summary: DashboardSummary | null;

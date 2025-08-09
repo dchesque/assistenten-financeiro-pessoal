@@ -46,8 +46,8 @@ export function FluxoCaixa() {
       const fim = addDays(hoje, 30);
       
       const [contasPagar, contasReceber, bancos] = await Promise.all([
-        dataService.contasPagar.getByVencimento(hoje, fim),
-        dataService.contasReceber.getByVencimento(hoje, fim),
+        dataService.contasPagar.getByVencimento(hoje.toISOString(), fim.toISOString()),
+        dataService.contasReceber.getByVencimento(hoje.toISOString(), fim.toISOString()),
         dataService.bancos.getAll()
       ]);
 
