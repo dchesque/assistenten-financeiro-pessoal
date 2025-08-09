@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, User, Phone, Mail, MapPin, Save, Edit3, Shield, Bell } from 'lucide-react';
+import { Camera, User, Phone, Mail, MapPin, Save, Edit3, Shield } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,6 +15,7 @@ import { useMascaras } from '@/hooks/useMascaras';
 import { InputValidacao } from '@/components/ui/InputValidacao';
 import { VALIDACOES_COMUNS } from '@/utils/validacoes';
 import { toast } from '@/hooks/use-toast';
+import { SecurityTab } from '@/components/configuracoes/SecurityTab';
 
 interface DadosPerfil {
   nome: string;
@@ -27,15 +28,6 @@ interface DadosPerfil {
   cep: string;
   avatar_url?: string;
   bio?: string;
-}
-
-interface ConfiguracoesNotificacao {
-  whatsapp_conta_vencer: boolean;
-  whatsapp_conta_vencida: boolean;
-  whatsapp_resumo_diario: boolean;
-  whatsapp_resumo_semanal: boolean;
-  email_backup: boolean;
-  email_relatorios: boolean;
 }
 
 interface ConfiguracoesPrivacidade {
@@ -63,16 +55,6 @@ export default function MeuPerfil() {
     avatar_url: user?.user_metadata?.avatar_url || '',
     bio: ''
   };
-
-  // Configurações de notificação
-  const [notificacoes, setNotificacoes] = useState<ConfiguracoesNotificacao>({
-    whatsapp_conta_vencer: true,
-    whatsapp_conta_vencida: true,
-    whatsapp_resumo_diario: false,
-    whatsapp_resumo_semanal: true,
-    email_backup: true,
-    email_relatorios: false
-  });
 
   // Configurações de privacidade
   const [privacidade, setPrivacidade] = useState<ConfiguracoesPrivacidade>({
@@ -146,18 +128,14 @@ export default function MeuPerfil() {
 
       <div className="space-y-6">
         <Tabs defaultValue="dados-pessoais" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 glassmorphism-card p-1">
+          <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 glassmorphism-card p-1">
             <TabsTrigger value="dados-pessoais" className="flex items-center space-x-2">
               <User className="w-4 h-4" />
               <span>Dados Pessoais</span>
             </TabsTrigger>
-            <TabsTrigger value="notificacoes" className="flex items-center space-x-2">
-              <Bell className="w-4 h-4" />
-              <span>Notificações</span>
-            </TabsTrigger>
-            <TabsTrigger value="privacidade" className="flex items-center space-x-2">
+            <TabsTrigger value="seguranca" className="flex items-center space-x-2">
               <Shield className="w-4 h-4" />
-              <span>Privacidade</span>
+              <span>Segurança</span>
             </TabsTrigger>
           </TabsList>
 
@@ -321,251 +299,9 @@ export default function MeuPerfil() {
             </Card>
           </TabsContent>
 
-          {/* Aba: Notificações */}
-          <TabsContent value="notificacoes" className="space-y-6">
-            <Card className="glassmorphism-card">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Phone className="w-5 h-5" />
-                  <span>Notificações WhatsApp</span>
-                </CardTitle>
-                <CardDescription>
-                  Configure quando e como receber notificações via WhatsApp
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Contas próximas ao vencimento</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receba avisos 3 dias antes do vencimento
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificacoes.whatsapp_conta_vencer}
-                    onCheckedChange={(checked) => 
-                      setNotificacoes(prev => ({ ...prev, whatsapp_conta_vencer: checked }))
-                    }
-                  />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Contas vencidas</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receba avisos diários sobre contas em atraso
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificacoes.whatsapp_conta_vencida}
-                    onCheckedChange={(checked) => 
-                      setNotificacoes(prev => ({ ...prev, whatsapp_conta_vencida: checked }))
-                    }
-                  />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Resumo diário</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receba um resumo das movimentações do dia
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificacoes.whatsapp_resumo_diario}
-                    onCheckedChange={(checked) => 
-                      setNotificacoes(prev => ({ ...prev, whatsapp_resumo_diario: checked }))
-                    }
-                  />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Resumo semanal</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receba um resumo das movimentações da semana
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificacoes.whatsapp_resumo_semanal}
-                    onCheckedChange={(checked) => 
-                      setNotificacoes(prev => ({ ...prev, whatsapp_resumo_semanal: checked }))
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glassmorphism-card">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Mail className="w-5 h-5" />
-                  <span>Notificações Email</span>
-                </CardTitle>
-                <CardDescription>
-                  Configure as notificações que serão enviadas por email
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Backup de dados</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receba confirmações de backup dos seus dados
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificacoes.email_backup}
-                    onCheckedChange={(checked) => 
-                      setNotificacoes(prev => ({ ...prev, email_backup: checked }))
-                    }
-                  />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Relatórios mensais</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receba relatórios financeiros por email
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificacoes.email_relatorios}
-                    onCheckedChange={(checked) => 
-                      setNotificacoes(prev => ({ ...prev, email_relatorios: checked }))
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end">
-              <Button onClick={salvarConfiguracoes} className="btn-primary">
-                <Save className="w-4 h-4 mr-2" />
-                Salvar Configurações
-              </Button>
-            </div>
-          </TabsContent>
-
-          {/* Aba: Privacidade */}
-          <TabsContent value="privacidade" className="space-y-6">
-            <Card className="glassmorphism-card">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="w-5 h-5" />
-                  <span>Configurações de Privacidade</span>
-                </CardTitle>
-                <CardDescription>
-                  Controle quem pode ver suas informações e como você interage com outros usuários
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Perfil público</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Permitir que outros usuários vejam seu perfil
-                    </p>
-                  </div>
-                  <Switch
-                    checked={privacidade.perfil_publico}
-                    onCheckedChange={(checked) => 
-                      setPrivacidade(prev => ({ ...prev, perfil_publico: checked }))
-                    }
-                  />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Mostrar email</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Exibir seu email no perfil público
-                    </p>
-                  </div>
-                  <Switch
-                    checked={privacidade.mostrar_email}
-                    onCheckedChange={(checked) => 
-                      setPrivacidade(prev => ({ ...prev, mostrar_email: checked }))
-                    }
-                    disabled={!privacidade.perfil_publico}
-                  />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Mostrar telefone</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Exibir seu telefone no perfil público
-                    </p>
-                  </div>
-                  <Switch
-                    checked={privacidade.mostrar_telefone}
-                    onCheckedChange={(checked) => 
-                      setPrivacidade(prev => ({ ...prev, mostrar_telefone: checked }))
-                    }
-                    disabled={!privacidade.perfil_publico}
-                  />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Aceitar convites</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Permitir que outros usuários te enviem convites
-                    </p>
-                  </div>
-                  <Switch
-                    checked={privacidade.aceitar_convites}
-                    onCheckedChange={(checked) => 
-                      setPrivacidade(prev => ({ ...prev, aceitar_convites: checked }))
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glassmorphism-card border-destructive/20">
-              <CardHeader>
-                <CardTitle className="text-destructive">Zona de Perigo</CardTitle>
-                <CardDescription>
-                  Ações que podem afetar permanentemente sua conta
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-destructive/5 rounded-lg border border-destructive/20">
-                  <div className="space-y-0.5">
-                    <Label className="text-destructive">Excluir conta</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Esta ação não pode ser desfeita. Todos os seus dados serão removidos permanentemente.
-                    </p>
-                  </div>
-                  <Button variant="destructive" size="sm">
-                    Excluir Conta
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end">
-              <Button onClick={salvarConfiguracoes} className="btn-primary">
-                <Save className="w-4 h-4 mr-2" />
-                Salvar Configurações
-              </Button>
-            </div>
+          {/* Aba: Segurança */}
+          <TabsContent value="seguranca" className="space-y-6">
+            <SecurityTab />
           </TabsContent>
         </Tabs>
       </div>

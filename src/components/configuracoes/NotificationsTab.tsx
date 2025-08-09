@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Check, CheckCheck, X, Filter, RefreshCw } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Bell, Check, CheckCheck, X, Filter, RefreshCw, Phone, Mail, Save } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationFilters, NOTIFICATION_CONFIGS } from '@/types/notification';
 import { formatDistanceToNow } from 'date-fns';
@@ -12,8 +14,28 @@ import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from '@/hooks/use-toast';
+
+interface ConfiguracoesNotificacao {
+  whatsapp_conta_vencer: boolean;
+  whatsapp_conta_vencida: boolean;
+  whatsapp_resumo_diario: boolean;
+  whatsapp_resumo_semanal: boolean;
+  email_backup: boolean;
+  email_relatorios: boolean;
+}
 
 export function NotificationsTab() {
+  // Configurações de notificação
+  const [notificacoes, setNotificacoes] = useState<ConfiguracoesNotificacao>({
+    whatsapp_conta_vencer: true,
+    whatsapp_conta_vencida: true,
+    whatsapp_resumo_diario: false,
+    whatsapp_resumo_semanal: true,
+    email_backup: true,
+    email_relatorios: false
+  });
+
   const [filters, setFilters] = useState<NotificationFilters>({
     limit: 25,
     offset: 0
@@ -32,6 +54,17 @@ export function NotificationsTab() {
   } = useNotifications(filters);
   
   const navigate = useNavigate();
+
+  // Salvar configurações
+  const salvarConfiguracoes = async () => {
+    try {
+      // Aqui seria a chamada para salvar as configurações no backend
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast({ title: 'Sucesso', description: 'Configurações de notificação salvas com sucesso!' });
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Erro ao salvar configurações', variant: 'destructive' });
+    }
+  };
 
   const handleFilterChange = (key: keyof NotificationFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value, offset: 0 }));
@@ -78,7 +111,139 @@ export function NotificationsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header com ações */}
+      {/* Configurações de Notificação */}
+      <Card className="glassmorphism-card">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Phone className="w-5 h-5" />
+            <span>Notificações WhatsApp</span>
+          </CardTitle>
+          <CardDescription>
+            Configure quando e como receber notificações via WhatsApp
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Contas próximas ao vencimento</Label>
+              <p className="text-sm text-muted-foreground">
+                Receba avisos 3 dias antes do vencimento
+              </p>
+            </div>
+            <Switch
+              checked={notificacoes.whatsapp_conta_vencer}
+              onCheckedChange={(checked) => 
+                setNotificacoes(prev => ({ ...prev, whatsapp_conta_vencer: checked }))
+              }
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Contas vencidas</Label>
+              <p className="text-sm text-muted-foreground">
+                Receba avisos diários sobre contas em atraso
+              </p>
+            </div>
+            <Switch
+              checked={notificacoes.whatsapp_conta_vencida}
+              onCheckedChange={(checked) => 
+                setNotificacoes(prev => ({ ...prev, whatsapp_conta_vencida: checked }))
+              }
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Resumo diário</Label>
+              <p className="text-sm text-muted-foreground">
+                Receba um resumo das movimentações do dia
+              </p>
+            </div>
+            <Switch
+              checked={notificacoes.whatsapp_resumo_diario}
+              onCheckedChange={(checked) => 
+                setNotificacoes(prev => ({ ...prev, whatsapp_resumo_diario: checked }))
+              }
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Resumo semanal</Label>
+              <p className="text-sm text-muted-foreground">
+                Receba um resumo das movimentações da semana
+              </p>
+            </div>
+            <Switch
+              checked={notificacoes.whatsapp_resumo_semanal}
+              onCheckedChange={(checked) => 
+                setNotificacoes(prev => ({ ...prev, whatsapp_resumo_semanal: checked }))
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="glassmorphism-card">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Mail className="w-5 h-5" />
+            <span>Notificações Email</span>
+          </CardTitle>
+          <CardDescription>
+            Configure as notificações que serão enviadas por email
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Backup de dados</Label>
+              <p className="text-sm text-muted-foreground">
+                Receba confirmações de backup dos seus dados
+              </p>
+            </div>
+            <Switch
+              checked={notificacoes.email_backup}
+              onCheckedChange={(checked) => 
+                setNotificacoes(prev => ({ ...prev, email_backup: checked }))
+              }
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Relatórios mensais</Label>
+              <p className="text-sm text-muted-foreground">
+                Receba relatórios financeiros por email
+              </p>
+            </div>
+            <Switch
+              checked={notificacoes.email_relatorios}
+              onCheckedChange={(checked) => 
+                setNotificacoes(prev => ({ ...prev, email_relatorios: checked }))
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={salvarConfiguracoes} className="btn-primary">
+          <Save className="w-4 h-4 mr-2" />
+          Salvar Configurações
+        </Button>
+      </div>
+
+      {/* Header do histórico */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Bell className="h-5 w-5 text-primary" />
