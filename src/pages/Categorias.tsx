@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import EmptyState from '@/components/ui/EmptyState';
-import { CategoriaCard } from '@/components/categorias/CategoriaCard';
+import { CategoriasList } from '@/components/categorias/CategoriasList';
 import { Plus, Search, Filter, TrendingUp, TrendingDown } from 'lucide-react';
 import { Category, CreateCategory, CATEGORY_COLORS, getDefaultColorByType } from '@/types/category';
 import { toast } from '@/hooks/use-toast';
@@ -262,7 +262,7 @@ export default function Categorias() {
         </Select>
       </div>
 
-      {/* Categories Grid */}
+      {/* Categories List */}
       {filteredCategories.length === 0 ? (
         <EmptyState
           icon={Plus}
@@ -272,17 +272,11 @@ export default function Categorias() {
           onAction={() => handleOpenModal()}
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredCategories.map((category) => (
-            <CategoriaCard
-              key={category.id}
-              category={category}
-              onView={(cat) => {}}
-              onEdit={handleOpenModal}
-              onDelete={setDeletingCategory}
-            />
-          ))}
-        </div>
+        <CategoriasList
+          categories={filteredCategories}
+          onEdit={handleOpenModal}
+          onDelete={setDeletingCategory}
+        />
       )}
 
       {/* Modal */}
