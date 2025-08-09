@@ -206,8 +206,8 @@ export const useRelatoriosGerais = () => {
 
     const fornecedoresPorTipo = Object.entries(tiposCount).map(([tipo, dados]) => ({
       tipo,
-      quantidade: dados.quantidade as number,
-      valor_total: dados.valor_total as number
+      quantidade: (dados as any).quantidade as number,
+      valor_total: (dados as any).valor_total as number
     }));
 
     return {

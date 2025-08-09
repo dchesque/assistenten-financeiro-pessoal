@@ -7,10 +7,10 @@ export interface UseCredoresReturn {
   loading: boolean;
   error: string | null;
   criarCredor: (credor: Omit<Credor, 'id' | 'dataCadastro' | 'totalCompras' | 'valorTotal'>) => Promise<Credor>;
-  atualizarCredor: (id: number, credor: Partial<Credor>) => Promise<Credor>;
-  excluirCredor: (id: number) => Promise<void>;
+  atualizarCredor: (id: string, credor: Partial<Credor>) => Promise<Credor>;
+  excluirCredor: (id: string) => Promise<void>;
   buscarPorDocumento: (documento: string) => Credor | null;
-  atualizarEstatisticas: (credorId: number) => Promise<void>;
+  atualizarEstatisticas: (credorId: string) => Promise<void>;
   recarregar: () => Promise<void>;
 }
 
