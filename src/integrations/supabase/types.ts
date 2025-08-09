@@ -322,6 +322,57 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          channel: string
+          created_at: string
+          data: Json | null
+          delivered_at: string | null
+          id: string
+          message: string
+          read_at: string | null
+          scheduled_for: string | null
+          severity: Database["public"]["Enums"]["notification_severity"]
+          status: Database["public"]["Enums"]["notification_status"]
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          data?: Json | null
+          delivered_at?: string | null
+          id?: string
+          message: string
+          read_at?: string | null
+          scheduled_for?: string | null
+          severity?: Database["public"]["Enums"]["notification_severity"]
+          status?: Database["public"]["Enums"]["notification_status"]
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          data?: Json | null
+          delivered_at?: string | null
+          id?: string
+          message?: string
+          read_at?: string | null
+          scheduled_for?: string | null
+          severity?: Database["public"]["Enums"]["notification_severity"]
+          status?: Database["public"]["Enums"]["notification_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ativo: boolean
@@ -623,6 +674,33 @@ export type Database = {
         Args: { _user_id: string; _feature: string; _current_count: number }
         Returns: boolean
       }
+      create_notification: {
+        Args: {
+          p_user_id: string
+          p_type: string
+          p_title: string
+          p_message: string
+          p_data?: Json
+          p_scheduled_for?: string
+          p_severity?: string
+        }
+        Returns: {
+          channel: string
+          created_at: string
+          data: Json | null
+          delivered_at: string | null
+          id: string
+          message: string
+          read_at: string | null
+          scheduled_for: string | null
+          severity: Database["public"]["Enums"]["notification_severity"]
+          status: Database["public"]["Enums"]["notification_status"]
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at: string
+          user_id: string
+        }
+      }
       create_trial_subscription: {
         Args: { p_user_id: string }
         Returns: {
@@ -631,6 +709,25 @@ export type Database = {
           status: string
           subscription_ends_at: string | null
           trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+      }
+      dismiss_notification: {
+        Args: { p_notification_id: string }
+        Returns: {
+          channel: string
+          created_at: string
+          data: Json | null
+          delivered_at: string | null
+          id: string
+          message: string
+          read_at: string | null
+          scheduled_for: string | null
+          severity: Database["public"]["Enums"]["notification_severity"]
+          status: Database["public"]["Enums"]["notification_status"]
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
           updated_at: string
           user_id: string
         }
@@ -652,6 +749,29 @@ export type Database = {
           p_metadata?: Json
         }
         Returns: string
+      }
+      mark_all_notifications_read: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      mark_notification_read: {
+        Args: { p_notification_id: string }
+        Returns: {
+          channel: string
+          created_at: string
+          data: Json | null
+          delivered_at: string | null
+          id: string
+          message: string
+          read_at: string | null
+          scheduled_for: string | null
+          severity: Database["public"]["Enums"]["notification_severity"]
+          status: Database["public"]["Enums"]["notification_status"]
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at: string
+          user_id: string
+        }
       }
       normalize_subscription_status: {
         Args: { p_user_id: string }
@@ -724,6 +844,16 @@ export type Database = {
         | "error"
         | "other"
       bank_type: "banco" | "carteira" | "outro"
+      notification_severity: "info" | "success" | "warning" | "error"
+      notification_status: "pending" | "sent" | "read" | "dismissed" | "error"
+      notification_type:
+        | "bill_due_soon"
+        | "bill_overdue"
+        | "trial_expiring"
+        | "payment_failed"
+        | "subscription_expired"
+        | "info"
+        | "system"
       receivable_status: "pending" | "received" | "overdue" | "canceled"
       subscription_status: "active" | "inactive" | "cancelled" | "expired"
       theme_mode: "system" | "light" | "dark"
@@ -869,6 +999,17 @@ export const Constants = {
         "other",
       ],
       bank_type: ["banco", "carteira", "outro"],
+      notification_severity: ["info", "success", "warning", "error"],
+      notification_status: ["pending", "sent", "read", "dismissed", "error"],
+      notification_type: [
+        "bill_due_soon",
+        "bill_overdue",
+        "trial_expiring",
+        "payment_failed",
+        "subscription_expired",
+        "info",
+        "system",
+      ],
       receivable_status: ["pending", "received", "overdue", "canceled"],
       subscription_status: ["active", "inactive", "cancelled", "expired"],
       theme_mode: ["system", "light", "dark"],

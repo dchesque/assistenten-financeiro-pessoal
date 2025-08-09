@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { useSidebar } from '@/hooks/useSidebar';
 import { BlurBackground } from '@/components/ui/BlurBackground';
 import { StatusIndicators } from './StatusIndicators';
+import { NotificationBell } from './NotificationBell';
 import { useSEO } from '@/hooks/useSEO';
 
 interface LayoutProps {
@@ -55,18 +56,22 @@ export function Layout({ children }: LayoutProps) {
                 </div>
               </div>
               
-              {/* Botão hambúrguer */}
-              <button 
-                onClick={toggleMobileMenu}
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-                aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
-              >
-                {mobileMenuOpen ? (
-                  <X className="w-6 h-6 text-white" />
-                ) : (
-                  <Menu className="w-6 h-6 text-white" />
-                )}
-              </button>
+              {/* Notificações e Botão hambúrguer */}
+              <div className="flex items-center gap-2">
+                <NotificationBell />
+                
+                <button 
+                  onClick={toggleMobileMenu}
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+                >
+                  {mobileMenuOpen ? (
+                    <X className="w-6 h-6 text-white" />
+                  ) : (
+                    <Menu className="w-6 h-6 text-white" />
+                  )}
+                </button>
+              </div>
             </div>
             
             {/* Indicadores de status - apenas mobile */}
@@ -76,9 +81,10 @@ export function Layout({ children }: LayoutProps) {
           </div>
         )}
         
-        {/* Indicadores desktop - posição fixa */}
+        {/* Indicadores e notificações desktop - posição fixa */}
         {isDesktop && (
-          <div className="fixed top-4 right-4 z-50">
+          <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+            <NotificationBell />
             <StatusIndicators />
           </div>
         )}

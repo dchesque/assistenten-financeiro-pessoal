@@ -34,6 +34,7 @@ const Administrador = lazy(() => import('@/pages/Administrador'));
 const UsuariosAdmin = lazy(() => import('@/pages/UsuariosAdmin'));
 const Backup = lazy(() => import('@/pages/Backup'));
 const Configuracoes = lazy(() => import('@/pages/Configuracoes'));
+const Notificacoes = lazy(() => import('@/pages/Notificacoes'));
 // StatusSistema removido - Supabase não mais necessário
 
 // Componente de fallback para lazy loading
@@ -82,6 +83,7 @@ function App() {
                 <Route path="/configuracoes" element={<ProtectedRoute><Layout><Configuracoes /></Layout></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
                 <Route path="/backup" element={<ProtectedRoute><Layout><Backup /></Layout></ProtectedRoute>} />
+                <Route path="/notificacoes" element={<ProtectedRoute><Layout><Notificacoes /></Layout></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

@@ -18,11 +18,13 @@ import { MetricCard } from '@/components/dashboard/MetricCard';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { AcoesRapidas } from '@/components/dashboard/AcoesRapidas';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useNotificationTriggers } from '@/hooks/useNotificationTriggers';
 import { formatarMoeda } from '@/utils/formatters';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { summary, loading, error, recarregar } = useDashboard();
+  useNotificationTriggers(); // Executar verificações automáticas
 
   if (loading) {
     return (
