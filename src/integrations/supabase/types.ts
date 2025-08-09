@@ -379,6 +379,57 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          created_at: string
+          currency: string
+          date_format: string
+          extras: Json
+          id: string
+          items_per_page: number
+          locale: string
+          notifications: Json
+          number_format: string
+          start_page: string
+          theme: Database["public"]["Enums"]["theme_mode"]
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          date_format?: string
+          extras?: Json
+          id?: string
+          items_per_page?: number
+          locale?: string
+          notifications?: Json
+          number_format?: string
+          start_page?: string
+          theme?: Database["public"]["Enums"]["theme_mode"]
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          date_format?: string
+          extras?: Json
+          id?: string
+          items_per_page?: number
+          locale?: string
+          notifications?: Json
+          number_format?: string
+          start_page?: string
+          theme?: Database["public"]["Enums"]["theme_mode"]
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -640,6 +691,25 @@ export type Database = {
           user_id: string
         }
       }
+      upsert_settings: {
+        Args: { p_patch: Json }
+        Returns: {
+          created_at: string
+          currency: string
+          date_format: string
+          extras: Json
+          id: string
+          items_per_page: number
+          locale: string
+          notifications: Json
+          number_format: string
+          start_page: string
+          theme: Database["public"]["Enums"]["theme_mode"]
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+      }
     }
     Enums: {
       account_status: "pending" | "paid" | "overdue" | "canceled"
@@ -656,6 +726,7 @@ export type Database = {
       bank_type: "banco" | "carteira" | "outro"
       receivable_status: "pending" | "received" | "overdue" | "canceled"
       subscription_status: "active" | "inactive" | "cancelled" | "expired"
+      theme_mode: "system" | "light" | "dark"
       transaction_type: "income" | "expense" | "transfer"
       user_plan: "trial" | "free" | "premium"
     }
@@ -800,6 +871,7 @@ export const Constants = {
       bank_type: ["banco", "carteira", "outro"],
       receivable_status: ["pending", "received", "overdue", "canceled"],
       subscription_status: ["active", "inactive", "cancelled", "expired"],
+      theme_mode: ["system", "light", "dark"],
       transaction_type: ["income", "expense", "transfer"],
       user_plan: ["trial", "free", "premium"],
     },
