@@ -10,8 +10,9 @@ interface SystemStatus {
 }
 
 export function useSystemStatus() {
-  // Detecta se está em modo demo baseado na configuração real
-  const isDemoMode = DATABASE_CONFIG.USE_MOCK_DATA || !FEATURES.USE_SUPABASE;
+  // Detecta se está em modo demo baseado apenas na configuração de mock data
+  // Em produção, nunca deve estar em modo demo
+  const isDemoMode = !import.meta.env.PROD && DATABASE_CONFIG.USE_MOCK_DATA;
   
   const [status, setStatus] = useState<SystemStatus>({
     isOnline: navigator.onLine,
