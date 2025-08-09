@@ -496,31 +496,271 @@ export class SupabaseDataService implements IDataService {
   };
 
   bancos = {
-    getAll: async () => [],
-    getById: async () => null,
-    create: async (data: any) => data,
-    update: async (id: any, data: any) => data,
-    delete: async () => {},
+    getAll: async (): Promise<Banco[]> => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        const { data, error } = await this.supabaseClient
+          .from('banks')
+          .select(`
+            *,
+            bank_accounts(id, account_number, agency, pix_key)
+          `)
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .order('name');
+
+        if (error) this.handleError(error, 'bancos.getAll');
+        
+        return (data || []).map(this.mapBankFromSupabase);
+      } catch (error) {
+        this.handleError(error, 'bancos.getAll');
+      }
+    },
+
+    getById: async (id: number): Promise<Banco | null> => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        const { data, error } = await this.supabaseClient
+          .from('banks')
+          .select(`
+            *,
+            bank_accounts(*)
+          `)
+          .eq('id', id)
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .single();
+
+        if (error) {
+          if (error.code === 'PGRST116') return null;
+          this.handleError(error, 'bancos.getById');
+        }
+
+        return data ? this.mapBankFromSupabase(data) : null;
+      } catch (error) {
+        this.handleError(error, 'bancos.getById');
+      }
+    },
+
+    create: async (data: Omit<Banco, 'id' | 'created_at' | 'updated_at'>): Promise<Banco> => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        const insertData = {
+          user_id: userId,
+          name: data.nome,
+          type: data.tipo_conta || 'banco',
+          initial_balance: data.saldo_inicial || 0
+        };
+
+        const { data: newBank, error } = await this.supabaseClient
+          .from('banks')
+          .insert(insertData)
+          .select()
+          .single();
+
+        if (error) this.handleError(error, 'bancos.create');
+
+        // Se tiver dados de conta inicial, criar conta
+        if (data.agencia || data.conta) {
+          await this.supabaseClient
+            .from('bank_accounts')
+            .insert({
+              bank_id: newBank.id,
+              agency: data.agencia || '',
+              account_number: data.conta || '',
+              pix_key: data.observacoes || null
+            });
+        }
+
+        return this.mapBankFromSupabase(newBank);
+      } catch (error) {
+        this.handleError(error, 'bancos.create');
+      }
+    },
+
+    update: async (id: number, data: Partial<Banco>): Promise<Banco> => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        const updateData: any = {
+          updated_at: new Date().toISOString()
+        };
+
+        if (data.nome !== undefined) updateData.name = data.nome;
+        if (data.tipo_conta !== undefined) updateData.type = data.tipo_conta;
+
+        const { data: updatedBank, error } = await this.supabaseClient
+          .from('banks')
+          .update(updateData)
+          .eq('id', id)
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .select()
+          .single();
+
+        if (error) this.handleError(error, 'bancos.update');
+
+        return this.mapBankFromSupabase(updatedBank);
+      } catch (error) {
+        this.handleError(error, 'bancos.update');
+      }
+    },
+
+    delete: async (id: number): Promise<void> => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        // Verificar se tem contas vinculadas
+        const { data: accounts } = await this.supabaseClient
+          .from('bank_accounts')
+          .select('id')
+          .eq('bank_id', id);
+
+        if (accounts && accounts.length > 0) {
+          throw new Error('Não é possível excluir banco com contas vinculadas');
+        }
+
+        const { error } = await this.supabaseClient
+          .from('banks')
+          .update({ 
+            deleted_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .eq('user_id', userId);
+
+        if (error) this.handleError(error, 'bancos.delete');
+      } catch (error) {
+        this.handleError(error, 'bancos.delete');
+      }
+    },
+
     atualizarSaldo: async (id: number, novoSaldo: number): Promise<Banco> => {
-      // Implementação simplificada para corrigir tipos
-      return {
-        id,
-        nome: 'Banco Placeholder',
-        codigo_banco: '000',
-        agencia: '0000',
-        conta: '00000-0',
-        digito_verificador: '0',
-        tipo_conta: 'conta_corrente',
-        saldo_inicial: novoSaldo,
-        saldo_atual: novoSaldo,
-        limite_usado: 0,
-        suporta_ofx: false,
-        ativo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        const { data: updatedBank, error } = await this.supabaseClient
+          .from('banks')
+          .update({
+            initial_balance: novoSaldo,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .select()
+          .single();
+
+        if (error) this.handleError(error, 'bancos.atualizarSaldo');
+
+        // Registrar transação de ajuste
+        await this.supabaseClient
+          .from('transactions')
+          .insert({
+            user_id: userId,
+            type: 'adjustment',
+            amount: novoSaldo,
+            description: 'Ajuste de saldo manual',
+            date: new Date().toISOString().split('T')[0],
+            from_account_id: id
+          });
+
+        return this.mapBankFromSupabase(updatedBank);
+      } catch (error) {
+        this.handleError(error, 'bancos.atualizarSaldo');
+      }
     }
   };
+
+  // ============ BANK ACCOUNTS ============
+  bankAccounts = {
+    getByBankId: async (bankId: number) => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        const { data, error } = await this.supabaseClient
+          .from('bank_accounts')
+          .select('*')
+          .eq('bank_id', bankId)
+          .is('deleted_at', null);
+
+        if (error) this.handleError(error, 'bankAccounts.getByBankId');
+        
+        return data || [];
+      } catch (error) {
+        this.handleError(error, 'bankAccounts.getByBankId');
+      }
+    },
+
+    create: async (data: any) => {
+      try {
+        const { data: newAccount, error } = await this.supabaseClient
+          .from('bank_accounts')
+          .insert({
+            bank_id: data.bank_id,
+            agency: data.agency || '',
+            account_number: data.account_number || '',
+            pix_key: data.pix_key || null
+          })
+          .select()
+          .single();
+
+        if (error) this.handleError(error, 'bankAccounts.create');
+        
+        return newAccount;
+      } catch (error) {
+        this.handleError(error, 'bankAccounts.create');
+      }
+    },
+
+    transferBetweenAccounts: async (fromAccountId: number, toAccountId: number, amount: number) => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        // Criar transação de transferência
+        const { error } = await this.supabaseClient
+          .from('transactions')
+          .insert({
+            user_id: userId,
+            type: 'transfer',
+            amount: amount,
+            description: `Transferência entre contas`,
+            date: new Date().toISOString().split('T')[0],
+            from_account_id: fromAccountId,
+            to_account_id: toAccountId
+          });
+
+        if (error) this.handleError(error, 'bankAccounts.transferBetweenAccounts');
+        
+        return { success: true };
+      } catch (error) {
+        this.handleError(error, 'bankAccounts.transferBetweenAccounts');
+      }
+    }
+  };
+
+  // ============ MAPPERS ============
+  private mapBankFromSupabase(data: any): Banco {
+    return {
+      id: data.id,
+      nome: data.name || '',
+      codigo_banco: '000',
+      agencia: data.bank_accounts?.[0]?.agency || '',
+      conta: data.bank_accounts?.[0]?.account_number || '',
+      digito_verificador: '0',
+      tipo_conta: data.type || 'conta_corrente',
+      saldo_inicial: parseFloat(data.initial_balance) || 0,
+      saldo_atual: parseFloat(data.initial_balance) || 0,
+      limite_usado: 0,
+      suporta_ofx: false,
+      ativo: true,
+      created_at: data.created_at || '',
+      updated_at: data.updated_at || ''
+    };
+  }
 
   dashboard = {
     getSummary: async (): Promise<DashboardSummary> => ({
