@@ -49,8 +49,10 @@ export function PlanoContasSelector({
   };
 
   useEffect(() => {
-    carregarContas();
-  }, [open, buscaDebounced, buscarContasAnaliticas]);
+    if (open) {
+      carregarContas();
+    }
+  }, [open, buscaDebounced]);
 
   const handleSelect = (conta: PlanoContas) => {
     onSelect(conta);

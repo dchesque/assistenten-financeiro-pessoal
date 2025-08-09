@@ -17,6 +17,7 @@ import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelecto
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
 import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
 import { RecorrenciaSection, RecorrenciaData } from '@/components/contasPagar/RecorrenciaSection';
+import { BankAccountSelector } from '@/components/contasPagar/BankAccountSelector';
 import { Button } from '@/components/ui/button';
 import { LoadingButton } from '@/components/ui/LoadingButton';
 import { Input } from '@/components/ui/input';
@@ -75,6 +76,7 @@ export default function NovaConta() {
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
     tipo: 'dinheiro_pix'
   });
+  const [contaBancaria, setContaBancaria] = useState<{ banco_id?: string; conta_id?: string }>({});
   
   // Estados de validação em tempo real
   const [errosValidacao, setErrosValidacao] = useState<Record<string, string>>({});
@@ -808,22 +810,29 @@ export default function NovaConta() {
 
                 <Separator />
 
-                {/* Seção: Forma de Pagamento */}
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">6</span>
+                <FormaPagamentoSection 
+                  value={formaPagamento}
+                  onChange={setFormaPagamento}
+                  numeroParcelas={1}
+                  bancos={bancos as any}
+                />
+
+                {/* Seletor de Banco e Conta (apenas para DDA ou contas pagas) */}
+                {(conta.dda || conta.status === 'pago') && (
+                  <div className="space-y-4 p-4 bg-blue-50/80 border border-blue-200 rounded-xl">
+                    <div className="flex items-center space-x-2">
+                      <Building2 className="h-5 w-5 text-blue-600" />
+                      <span className="font-medium text-blue-900">
+                        {conta.dda ? 'Conta para Débito Automático (DDA)' : 'Conta de Pagamento'}
+                      </span>
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900">Forma de Pagamento</h2>
+                    
+                    <BankAccountSelector
+                      value={contaBancaria}
+                      onChange={setContaBancaria}
+                    />
                   </div>
-                  
-                  <FormaPagamentoSection 
-                    value={formaPagamento}
-                    onChange={setFormaPagamento}
-                    numeroParcelas={1}
-                    bancos={bancos as any}
-                  />
-                </div>
+                )}
 
                 <Separator />
 
