@@ -65,7 +65,7 @@ export function BankStatement() {
         account_number: account.account_number || '',
         agency: account.agency || '',
         bank: {
-          name: account.bank?.name || 'Banco não identificado'
+          name: 'Banco não identificado' // Temporário até termos dados relacionais
         }
       }));
       setAccounts(mappedAccounts);

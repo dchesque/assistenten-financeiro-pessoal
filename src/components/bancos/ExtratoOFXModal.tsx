@@ -26,7 +26,7 @@ export function ExtratoOFXModal({
   onVincularConta, 
   onIgnorar 
 }: ExtratoOFXModalProps) {
-  const { movimentacoes, loading, vincularContaPagar, marcarComoIgnorada } = useMovimentacaoOFX(banco.id);
+  const { movimentacoes, loading, vincularContaPagar, marcarComoIgnorada } = useMovimentacaoOFX(banco.id.toString());
   
   const [filtros, setFiltros] = useState({
     status: 'todos',
@@ -77,7 +77,7 @@ export function ExtratoOFXModal({
   };
 
   const handleIgnorar = async (movimentacao: MovimentacaoOFX) => {
-    await marcarComoIgnorada(movimentacao.id, 'Ignorada pelo usuário');
+    await marcarComoIgnorada(movimentacao.id.toString(), 'Ignorada pelo usuário');
     onIgnorar(movimentacao);
   };
 

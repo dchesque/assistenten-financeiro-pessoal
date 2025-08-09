@@ -19,7 +19,17 @@ export const useTransactions = () => {
     setError(null);
 
     try {
-      const data = await transactionsService.getAll(filters);
+      // Converter filtros para formato do service
+      const serviceFilters = filters ? {
+        account_id: filters.account_id === 'all' ? undefined : filters.account_id,
+        type: filters.type === 'all' ? undefined : filters.type as 'income' | 'expense' | 'transfer',
+        date_start: filters.date_start,
+        date_end: filters.date_end,
+        amount_min: filters.amount_min,
+        amount_max: filters.amount_max
+      } : undefined;
+
+      const data = await transactionsService.getAll(serviceFilters);
       setTransactions(data);
     } catch (err) {
       const appError = handleError(err);
