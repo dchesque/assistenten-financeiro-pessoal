@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { AlertTriangle, Monitor, Sun, Moon, Globe, Bell, Settings as SettingsIcon, RotateCcw, HardDrive, MessageSquare } from 'lucide-react';
 import { BackupTab } from '@/components/configuracoes/BackupTab';
-import { NotificationsTab } from '@/components/configuracoes/NotificationsTab';
+import { NotificationsTabEnhanced } from '@/components/configuracoes/NotificationsTabEnhanced';
 import { useSettings } from '@/hooks/useSettings';
 import { SettingsUpdateData, TIMEZONE_OPTIONS, LOCALE_OPTIONS, CURRENCY_OPTIONS, DATE_FORMAT_OPTIONS, START_PAGE_OPTIONS } from '@/types/settings';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
@@ -102,7 +102,7 @@ export default function Configuracoes() {
       </div>
 
       <Tabs defaultValue="aparencia" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="aparencia" className="flex items-center gap-2">
             <Monitor className="h-4 w-4" />
             Aparência
@@ -119,10 +119,6 @@ export default function Configuracoes() {
             <SettingsIcon className="h-4 w-4" />
             Preferências
           </TabsTrigger>
-          <TabsTrigger value="historico-notificacoes" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Histórico
-          </TabsTrigger>
           <TabsTrigger value="backup" className="flex items-center gap-2">
             <HardDrive className="h-4 w-4" />
             Backup
@@ -134,94 +130,30 @@ export default function Configuracoes() {
             <CardHeader>
               <CardTitle>Aparência</CardTitle>
               <CardDescription>
-                Personalize a aparência da interface
+                Configure a aparência da interface
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <Label>Tema</Label>
-                <Select 
-                  value={settings.theme} 
-                  onValueChange={(value) => handleFieldChange('theme', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="system">
-                      <div className="flex items-center gap-2">
-                        <Monitor className="h-4 w-4" />
-                        Sistema
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="light">
-                      <div className="flex items-center gap-2">
-                        <Sun className="h-4 w-4" />
-                        Claro
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="dark">
-                      <div className="flex items-center gap-2">
-                        <Moon className="h-4 w-4" />
-                        Escuro
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="p-4 bg-muted/50 rounded-lg border">
+                <div className="flex items-center gap-3 mb-3">
+                  <Sun className="h-5 w-5 text-primary" />
+                  <div>
+                    <h3 className="font-medium">Tema Claro Ativo</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Interface clara e moderna para melhor experiência
+                    </p>
+                  </div>
+                </div>
+                <div className="text-sm text-muted-foreground bg-background p-3 rounded border">
+                  💡 <strong>Em breve:</strong> Personalização completa de temas com modo escuro, cores personalizadas e muito mais!
+                </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="notificacoes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notificações</CardTitle>
-              <CardDescription>
-                Configure suas preferências de notificação
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label>Notificações no App</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receber notificações dentro do aplicativo
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.notifications.in_app}
-                  onCheckedChange={(checked) => handleNotificationChange('in_app', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label>Notificações por Email</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receber notificações por email
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.notifications.email}
-                  onCheckedChange={(checked) => handleNotificationChange('email', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label>Comunicações de Marketing</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receber novidades e promoções
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.notifications.marketing}
-                  onCheckedChange={(checked) => handleNotificationChange('marketing', checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <NotificationsTabEnhanced />
         </TabsContent>
 
         <TabsContent value="regiao">
@@ -361,19 +293,6 @@ export default function Configuracoes() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="historico-notificacoes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Histórico de Notificações</CardTitle>
-              <CardDescription>
-                Visualize e gerencie suas notificações
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <NotificationsTab />
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="backup">
           <Card>
