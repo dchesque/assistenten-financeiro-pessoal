@@ -86,7 +86,16 @@ export default function MeuPerfil() {
     
     // Se CEP está completo, buscar endereço
     if (cepFormatado.replace(/\D/g, '').length === 8) {
-      buscarEnderecoPorCEP(cepFormatado);
+      console.log('🔍 CEP completo, buscando endereço:', cepFormatado);
+      buscarEnderecoPorCEP(cepFormatado, (endereco) => {
+        // Callback para atualizar o formulário também
+        console.log('📝 Atualizando formulário com endereço:', endereco);
+        alterarCampos({
+          endereco: endereco.endereco,
+          cidade: endereco.cidade,
+          estado: endereco.estado
+        });
+      });
     }
   };
 
@@ -241,18 +250,19 @@ export default function MeuPerfil() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <InputValidacao
-                      id="cep"
-                      label="CEP"
-                      value={dados.cep}
-                      onChange={(e) => handleCEPChange(e.target.value)}
-                      placeholder="00000-000"
-                      validacao={VALIDACOES_COMUNS.CEP}
-                      erro={erros.cep}
-                      
-                    />
-                  </div>
+                   <div className="space-y-2">
+                     <InputValidacao
+                       id="cep"
+                       label="CEP"
+                       value={dados.cep}
+                       onChange={(e) => handleCEPChange(e.target.value)}
+                       placeholder="00000-000"
+                       validacao={VALIDACOES_COMUNS.CEP}
+                       erro={erros.cep}
+                       isLoading={carregandoCEP}
+                       loadingText="Buscando endereço..."
+                     />
+                   </div>
 
                   <div className="space-y-2">
                     <InputValidacao

@@ -67,13 +67,21 @@ export function useFormulario<T extends Record<string, any>>(
   const salvar = useCallback(async (dadosParaSalvar?: any) => {
     const dadosFinais = dadosParaSalvar || dados;
     
+    console.log('🔄 Iniciando salvamento do formulário');
+    console.log('📋 Dados finais para salvar:', dadosFinais);
+    
     if (validacao && !validarTodos()) {
+      console.log('❌ Validação falhou, não salvando');
       return;
     }
     
     setCarregando(true);
     try {
+      console.log('💾 Chamando função de salvamento...');
       await onSalvar(dadosFinais);
+      console.log('✅ Salvamento concluído com sucesso');
+    } catch (error) {
+      console.error('❌ Erro no salvamento:', error);
     } finally {
       setCarregando(false);
     }

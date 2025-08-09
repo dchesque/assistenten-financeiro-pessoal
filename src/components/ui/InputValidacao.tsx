@@ -1,5 +1,5 @@
 import React, { forwardRef, useState } from 'react';
-import { X, Check, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Check, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface InputValidacaoProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -17,6 +17,8 @@ interface InputValidacaoProps extends Omit<React.InputHTMLAttributes<HTMLInputEl
   maxLength?: number;
   className?: string;
   dica?: string;
+  isLoading?: boolean;
+  loadingText?: string;
 }
 
 export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(({
@@ -35,6 +37,8 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
   className,
   dica,
   disabled,
+  isLoading = false,
+  loadingText = 'Carregando...',
   ...props
 }, ref) => {
   const [localErro, setLocalErro] = useState('');
@@ -109,7 +113,7 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
           onBlur={handleBlur}
           onFocus={handleFocus}
           placeholder={placeholder}
-          disabled={disabled}
+          disabled={disabled || isLoading}
           className={cn(
             // Base styles
             "w-full px-4 py-3 bg-white/80 backdrop-blur-sm border rounded-xl",
@@ -124,16 +128,23 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
               : "border-gray-300/50 focus:ring-blue-500/20 focus:border-blue-500",
             
             // Estado desabilitado
-            disabled && "bg-gray-100/80 border-gray-200/50 text-gray-500 cursor-not-allowed",
+            (disabled || isLoading) && "bg-gray-100/80 border-gray-200/50 text-gray-500 cursor-not-allowed",
             
             // Estado de foco
-            focused && !temErro && !temSucesso && "border-blue-500 ring-2 ring-blue-500/20"
+            focused && !temErro && !temSucesso && "border-blue-500 ring-2 ring-blue-500/20",
+            
+            // Espaço para ícone de loading
+            isLoading && "pr-10"
           )}
           {...props}
         />
         
         {/* Ícone de Status */}
-        {(temErro || temSucesso) && !disabled && (
+        {isLoading ? (
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+            <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+          </div>
+        ) : (temErro || temSucesso) && !disabled && (
           <div className="absolute inset-y-0 right-0 flex items-center pr-3">
             {temErro ? (
               <X className="w-5 h-5 text-red-500" />
@@ -160,8 +171,16 @@ export const InputValidacao = forwardRef<HTMLInputElement, InputValidacaoProps>(
         </p>
       )}
       
+      {/* Mensagem de Loading */}
+      {isLoading && (
+        <p className="text-sm text-blue-600 flex items-center space-x-1">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>{loadingText}</span>
+        </p>
+      )}
+      
       {/* Dica */}
-      {dica && !temErro && !temSucesso && (
+      {dica && !temErro && !temSucesso && !isLoading && (
         <p className="text-sm text-gray-500">{dica}</p>
       )}
     </div>
