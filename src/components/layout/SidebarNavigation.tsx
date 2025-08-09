@@ -66,14 +66,6 @@ const menuStructure = [
   },
   
   
-  // Transações (sem grupo)
-  { 
-    type: 'item', 
-    name: 'Transações', 
-    path: '/transacoes', 
-    icon: ArrowRightLeft,
-    color: 'text-purple-500'
-  },
 
   // Grupo: Cadastros (simplificado)
   { 
@@ -84,7 +76,6 @@ const menuStructure = [
     key: 'cadastros',
     items: [
       { name: 'Categorias', path: '/categorias', icon: Tags, color: 'text-blue-500' },
-      { name: 'Fornecedores', path: '/fornecedores', icon: Users, color: 'text-blue-500' },
       { name: 'Contatos', path: '/contatos', icon: Users, color: 'text-blue-500' },
       { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' }
     ]
