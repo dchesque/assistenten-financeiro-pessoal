@@ -85,7 +85,7 @@ export function HeaderExecutivo() {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => navigate('/settings')}
+              onClick={() => navigate('/configuracoes')}
               className="bg-white/80 border-gray-300/50 text-gray-700 hover:bg-gray-50/50"
             >
               <Settings className="w-4 h-4" />

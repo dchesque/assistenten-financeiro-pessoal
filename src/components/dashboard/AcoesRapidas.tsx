@@ -59,7 +59,7 @@ export function AcoesRapidas() {
       descricao: 'Ajustes pessoais',
       cor: 'from-orange-500 to-orange-600',
       corHover: 'hover:from-orange-600 hover:to-orange-700',
-      link: '/settings'
+      link: '/configuracoes'
     }
   ];
 

@@ -22,7 +22,7 @@ const ContasPagar = lazy(() => import('@/pages/ContasPagar'));
 const ContasReceber = lazy(() => import('@/pages/ContasReceber'));
 const Categorias = lazy(() => import('@/pages/Categorias'));
 const Banks = lazy(() => import('@/pages/Banks'));
-const Settings = lazy(() => import('@/pages/Settings'));
+
 const NovaConta = lazy(() => import('@/pages/NovaConta'));
 const NovoRecebimento = lazy(() => import('@/pages/NovoRecebimento'));
 const Contatos = lazy(() => import('@/pages/Contatos'));
@@ -88,7 +88,7 @@ function App() {
                 <Route path="/administrador" element={<ProtectedRoute><Layout><Administrador /></Layout></ProtectedRoute>} />
                 <Route path="/administrador/usuarios" element={<ProtectedRoute><Layout><UsuariosAdmin /></Layout></ProtectedRoute>} />
                 <Route path="/configuracoes" element={<ProtectedRoute><Layout><Configuracoes /></Layout></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
+                
                 <Route path="/backup" element={<ProtectedRoute><Layout><Backup /></Layout></ProtectedRoute>} />
                 <Route path="/notificacoes" element={<ProtectedRoute><Layout><Notificacoes /></Layout></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />

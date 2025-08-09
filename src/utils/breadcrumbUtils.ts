@@ -50,10 +50,6 @@ export const createBreadcrumb = (path: string, customItems?: BreadcrumbItem[]): 
       { label: 'Início', href: '/dashboard' },
       { label: 'Contas a Receber' }
     ],
-    '/settings': [
-      { label: 'Início', href: '/dashboard' },
-      { label: 'Configurações' }
-    ],
     '/administrador': [
       { label: 'Início', href: '/dashboard' },
       { label: 'Administrador' }
