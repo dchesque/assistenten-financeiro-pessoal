@@ -94,12 +94,21 @@ export function SidebarFooter({ expanded, mobile = false }: SidebarFooterProps) 
                 <span className="text-sm">Assinatura</span>
               </button>
 
+              {/* Configurações */}
+              <button
+                onClick={() => handleMenuClick('/configuracoes')}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white hover:bg-white/10 transition-colors duration-200"
+              >
+                <Settings className="w-4 h-4 text-blue-500" />
+                <span className="text-sm">Configurações</span>
+              </button>
+
               {/* Administrador */}
               <button
                 onClick={() => handleMenuClick('/administrador')}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white hover:bg-white/10 transition-colors duration-200"
               >
-                <Settings className="w-4 h-4 text-gray-500" />
+                <Building2 className="w-4 h-4 text-gray-500" />
                 <span className="text-sm">Administrador</span>
               </button>
 
