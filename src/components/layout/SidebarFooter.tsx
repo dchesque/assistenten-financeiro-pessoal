@@ -33,9 +33,6 @@ export function SidebarFooter({ expanded, mobile = false }: SidebarFooterProps) 
   
   return (
     <div className={`border-t border-gray-700/50 ${expanded || mobile ? 'p-4' : 'p-2'}`}>
-      {/* Status da Assinatura */}
-      <SubscriptionStatus expanded={expanded} mobile={mobile} />
-      
       <div className="relative">
         <button 
           onClick={() => setUserDropdown(!userDropdown)}
@@ -122,6 +119,9 @@ export function SidebarFooter({ expanded, mobile = false }: SidebarFooterProps) 
           </div>
         )}
       </div>
+      
+      {/* Status da Assinatura - Abaixo do usuário */}
+      <SubscriptionStatus expanded={expanded} mobile={mobile} />
     </div>
   );
 }

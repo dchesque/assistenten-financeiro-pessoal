@@ -13,10 +13,10 @@ export function SubscriptionStatus({ expanded, mobile = false }: SubscriptionSta
 
   if (loading) {
     return (
-      <div className={`${expanded || mobile ? 'px-4 py-2' : 'px-2 py-2'}`}>
-        <div className={`w-full flex items-center ${expanded || mobile ? 'gap-3 p-3' : 'justify-center p-2'} rounded-lg bg-gray-800/30 animate-pulse`}>
-          <div className="w-4 h-4 bg-gray-600 rounded"></div>
-          {(expanded || mobile) && <div className="h-4 bg-gray-600 rounded flex-1"></div>}
+      <div className={`${expanded || mobile ? 'px-0 py-2' : 'px-0 py-1'}`}>
+        <div className={`w-full flex items-center ${expanded || mobile ? 'gap-2 p-2' : 'justify-center p-1'} rounded-lg bg-gray-800/30 animate-pulse`}>
+          <div className="w-3 h-3 bg-gray-600 rounded"></div>
+          {(expanded || mobile) && <div className="h-3 bg-gray-600 rounded flex-1"></div>}
         </div>
       </div>
     );
@@ -81,15 +81,15 @@ export function SubscriptionStatus({ expanded, mobile = false }: SubscriptionSta
 
   if (!expanded && !mobile) {
     return (
-      <div className="px-2 py-2">
+      <div className="px-0 py-1">
         <button
           onClick={handleStatusClick}
-          className={`w-full flex items-center justify-center p-2 rounded-lg border transition-all duration-200 hover:scale-105 ${config.bgColor} ${config.borderColor} hover:bg-opacity-20 group relative`}
+          className={`w-full flex items-center justify-center p-1.5 rounded-md border transition-all duration-200 hover:scale-105 ${config.bgColor} ${config.borderColor} hover:bg-opacity-20 group relative`}
         >
-          <IconComponent className={`w-4 h-4 ${config.color}`} />
+          <IconComponent className={`w-3 h-3 ${config.color}`} />
           
           {/* Tooltip para modo colapsado */}
-          <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 border border-gray-700 shadow-xl">
+          <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 border border-gray-700 shadow-xl">
             {config.label}
           </div>
         </button>
@@ -98,18 +98,18 @@ export function SubscriptionStatus({ expanded, mobile = false }: SubscriptionSta
   }
 
   return (
-    <div className="px-4 py-2">
+    <div className="px-0 py-2">
       <button
         onClick={handleStatusClick}
-        className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 hover:scale-[1.02] ${config.bgColor} ${config.borderColor} hover:bg-opacity-20`}
+        className={`w-full flex items-center gap-2 p-2 rounded-md border transition-all duration-200 hover:scale-[1.01] ${config.bgColor} ${config.borderColor} hover:bg-opacity-20`}
       >
-        <IconComponent className={`w-4 h-4 ${config.color} flex-shrink-0`} />
+        <IconComponent className={`w-3 h-3 ${config.color} flex-shrink-0`} />
         <div className="flex-1 text-left">
-          <span className={`text-sm font-medium ${config.color}`}>
+          <span className={`text-xs font-medium ${config.color}`}>
             {config.label}
           </span>
           {config.status === 'inactive' && (
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Clique para gerenciar
             </p>
           )}
