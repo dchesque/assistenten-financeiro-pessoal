@@ -17,6 +17,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const ContasPagar = lazy(() => import('@/pages/ContasPagar'));
 const ContasReceber = lazy(() => import('@/pages/ContasReceber'));
+const Transacoes = lazy(() => import('@/pages/Transacoes'));
 const Categorias = lazy(() => import('@/pages/Categorias'));
 const Fornecedores = lazy(() => import('@/pages/Fornecedores'));
 const Banks = lazy(() => import('@/pages/Banks'));
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
                 <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
                 <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
+                <Route path="/transacoes" element={<ProtectedRoute><Layout><Transacoes /></Layout></ProtectedRoute>} />
                 <Route path="/bancos" element={<ProtectedRoute><Layout><Banks /></Layout></ProtectedRoute>} />
                 <Route path="/nova-conta" element={<ProtectedRoute><Layout><NovaConta /></Layout></ProtectedRoute>} />
                 <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><NovoRecebimento /></Layout></ProtectedRoute>} />

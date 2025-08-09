@@ -24,7 +24,8 @@ import {
   Settings,
   Upload,
   Wallet,
-  User
+  User,
+  ArrowRightLeft
 } from 'lucide-react';
 
 // Estrutura do menu para Finanças Pessoais
@@ -65,6 +66,15 @@ const menuStructure = [
   },
   
   
+  // Transações (sem grupo)
+  { 
+    type: 'item', 
+    name: 'Transações', 
+    path: '/transacoes', 
+    icon: ArrowRightLeft,
+    color: 'text-purple-500'
+  },
+
   // Grupo: Cadastros (simplificado)
   { 
     type: 'group', 
