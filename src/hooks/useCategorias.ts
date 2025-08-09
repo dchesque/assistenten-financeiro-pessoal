@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react';
-import { mockDataService, type Categoria } from '@/services/mockDataService';
+import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
 import { showMessage } from '@/utils/messages';
-import { validacoesCategorias } from '@/utils/validacoesModulos';
+
+// Tipos para categorias do Supabase
+export interface Categoria {
+  id: string;
+  name: string;
+  color?: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+}
 
 export interface UseCategoriastReturn {
   categorias: Categoria[];
@@ -31,7 +41,7 @@ export function useCategorias(): UseCategoriastReturn {
     
     try {
       const data = await withRetry(() => 
-        withTimeout(mockDataService.getCategorias(), 15000)
+        withTimeout(dataService.categorias.getAll(), 15000)
       );
       setCategorias(data);
       showMessage.dismiss();
@@ -45,26 +55,19 @@ export function useCategorias(): UseCategoriastReturn {
   };
 
   const criarCategoria = async (dadosCategoria: Omit<Categoria, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Categoria> => {
-    // Validar nome único antes de tentar criar
-    const nomeValido = await validacoesCategorias.validarNomeUnico(dadosCategoria.nome);
-    if (!nomeValido) {
-      throw new Error('Nome da categoria inválido');
-    }
-
     // Verificar se já existe categoria com o mesmo nome
     const existente = categorias.find(cat => 
-      cat.nome.toLowerCase() === dadosCategoria.nome.toLowerCase() &&
-      cat.tipo === dadosCategoria.tipo
+      cat.name.toLowerCase() === dadosCategoria.name.toLowerCase()
     );
     
     if (existente) {
-      showMessage.saveError('Já existe uma categoria com este nome para este tipo');
+      showMessage.saveError('Já existe uma categoria com este nome');
       throw new Error('Categoria duplicada');
     }
 
     try {
       const novaCategoria = await showMessage.promise(
-        withRetry(() => mockDataService.createCategoria(dadosCategoria)),
+        withRetry(() => dataService.categorias.create(dadosCategoria)),
         {
           loading: 'Salvando categoria...',
           success: 'Categoria criada com sucesso!',
@@ -82,22 +85,16 @@ export function useCategorias(): UseCategoriastReturn {
 
   const atualizarCategoria = async (id: string, dadosAtualizacao: Partial<Categoria>): Promise<Categoria | null> => {
     // Verificar se novo nome já existe (se nome estiver sendo alterado)
-    if (dadosAtualizacao.nome) {
-      const nomeValido = await validacoesCategorias.validarNomeUnico(dadosAtualizacao.nome, parseInt(id));
-      if (!nomeValido) {
-        throw new Error('Nome da categoria inválido');
-      }
-
+    if (dadosAtualizacao.name) {
       const categoriaAtual = categorias.find(cat => cat.id === id);
       if (categoriaAtual) {
         const existente = categorias.find(cat => 
           cat.id !== id &&
-          cat.nome.toLowerCase() === dadosAtualizacao.nome!.toLowerCase() &&
-          cat.tipo === (dadosAtualizacao.tipo || categoriaAtual.tipo)
+          cat.name.toLowerCase() === dadosAtualizacao.name!.toLowerCase()
         );
         
         if (existente) {
-          showMessage.saveError('Já existe uma categoria com este nome para este tipo');
+          showMessage.saveError('Já existe uma categoria com este nome');
           throw new Error('Categoria duplicada');
         }
       }
@@ -105,7 +102,7 @@ export function useCategorias(): UseCategoriastReturn {
 
     try {
       const categoriaAtualizada = await showMessage.promise(
-        withRetry(() => mockDataService.updateCategoria(id, dadosAtualizacao)),
+        withRetry(() => dataService.categorias.update(id, dadosAtualizacao)),
         {
           loading: 'Atualizando categoria...',
           success: 'Categoria atualizada com sucesso!',
@@ -127,17 +124,11 @@ export function useCategorias(): UseCategoriastReturn {
   };
 
   const excluirCategoria = async (id: string): Promise<void> => {
-    // Verificar se categoria pode ser excluída
-    const podeExcluir = await validacoesCategorias.validarExclusao(parseInt(id));
-    if (!podeExcluir) {
-      throw new Error('Categoria não pode ser excluída');
-    }
-
     const categoriaAExcluir = categorias.find(cat => cat.id === id);
     
     try {
       await showMessage.promise(
-        withRetry(() => mockDataService.deleteCategoria(id)),
+        withRetry(() => dataService.categorias.delete(id)),
         {
           loading: 'Excluindo categoria...',
           success: 'Categoria excluída com sucesso!',

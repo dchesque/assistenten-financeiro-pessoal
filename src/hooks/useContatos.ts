@@ -1,8 +1,31 @@
 import { useState, useEffect } from 'react';
-import { mockDataService, type Contato } from '@/services/mockDataService';
+import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
 import { toast } from '@/hooks/use-toast';
+
+// Tipos para contatos do Supabase
+export interface Contato {
+  id: string;
+  name: string;
+  type: string;
+  document?: string;
+  document_type?: string;
+  email?: string;
+  phone?: string;
+  whatsapp?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  notes?: string;
+  active: boolean;
+  metadata: any;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+}
 export interface UseContatosReturn {
   contatos: Contato[];
   credores: Contato[];
@@ -23,8 +46,8 @@ export function useContatos(): UseContatosReturn {
   const { user } = useAuth();
   const { handleError } = useErrorHandler();
   // Separar contatos por tipo
-  const credores = contatos.filter(contato => contato.tipo === 'credor');
-  const pagadores = contatos.filter(contato => contato.tipo === 'pagador');
+  const credores = contatos.filter(contato => contato.type === 'supplier');
+  const pagadores = contatos.filter(contato => contato.type === 'customer');
 
   const carregarContatos = async () => {
     if (!user) return;
@@ -32,7 +55,7 @@ export function useContatos(): UseContatosReturn {
     try {
       setLoading(true);
       setError(null);
-      const data = await mockDataService.getContatos();
+      const data = await dataService.fornecedores.getAll(); // Usando fornecedores como contatos por enquanto
       setContatos(data);
     } catch (error) {
       const appError = handleError(error, 'useContatos.carregarContatos');
@@ -59,27 +82,28 @@ export function useContatos(): UseContatosReturn {
     try {
       setLoading(true);
       
-      // Verificar se documento já existe
-      const documentoLimpo = dadosContato.documento.replace(/\D/g, '');
-      const existente = contatos.find(contato => 
-        contato.documento.replace(/\D/g, '') === documentoLimpo
-      );
-      
-      if (existente) {
-        throw new Error('Já existe um contato com este documento');
+      // Verificar se documento já existe (se fornecido)
+      if (dadosContato.document) {
+        const documentoLimpo = dadosContato.document.replace(/\D/g, '');
+        const existente = contatos.find(contato => 
+          contato.document && contato.document.replace(/\D/g, '') === documentoLimpo
+        );
+        
+        if (existente) {
+          throw new Error('Já existe um contato com este documento');
+        }
+
+        // Validar documento (implementação básica)
+        const tipoDocumento = documentoLimpo.length === 11 ? 'pessoa_fisica' : 'pessoa_juridica';
+        if (!validarDocumento(dadosContato.document, tipoDocumento)) {
+          throw new Error('Documento inválido');
+        }
       }
 
-      // Validar documento (implementação básica)
-      const tipoDocumento = documentoLimpo.length === 11 ? 'pessoa_fisica' : 'pessoa_juridica';
-      if (!validarDocumento(dadosContato.documento, tipoDocumento)) {
-        throw new Error('Documento inválido');
-      }
-
-      const novoContato = await mockDataService.createContato(dadosContato);
+      const novoContato = await dataService.fornecedores.create(dadosContato);
       setContatos(prev => [...prev, novoContato]);
       
-      const tipoContato = dadosContato.tipo === 'credor' ? 'credor' : 'pagador';
-      toast({ title: 'Sucesso', description: `${tipoContato === 'credor' ? 'Credor' : 'Pagador'} criado com sucesso!` });
+      toast({ title: 'Sucesso', description: 'Contato criado com sucesso!' });
       return novoContato;
     } catch (error) {
       const appError = handleError(error, 'useContatos.criarContato');
@@ -95,11 +119,11 @@ export function useContatos(): UseContatosReturn {
       setLoading(true);
       
       // Verificar se novo documento já existe (se documento estiver sendo alterado)
-      if (dadosAtualizacao.documento) {
-        const documentoLimpo = dadosAtualizacao.documento.replace(/\D/g, '');
+      if (dadosAtualizacao.document) {
+        const documentoLimpo = dadosAtualizacao.document.replace(/\D/g, '');
         const existente = contatos.find(contato => 
           contato.id !== id &&
-          contato.documento.replace(/\D/g, '') === documentoLimpo
+          contato.document && contato.document.replace(/\D/g, '') === documentoLimpo
         );
         
         if (existente) {
@@ -108,12 +132,12 @@ export function useContatos(): UseContatosReturn {
 
         // Validar novo documento
         const tipoDocumento = documentoLimpo.length === 11 ? 'pessoa_fisica' : 'pessoa_juridica';
-        if (!validarDocumento(dadosAtualizacao.documento, tipoDocumento)) {
+        if (!validarDocumento(dadosAtualizacao.document, tipoDocumento)) {
           throw new Error('Documento inválido');
         }
       }
 
-      const contatoAtualizado = await mockDataService.updateContato(id, dadosAtualizacao);
+      const contatoAtualizado = await dataService.fornecedores.update(id, dadosAtualizacao);
       
       if (contatoAtualizado) {
         setContatos(prev => 
@@ -139,14 +163,9 @@ export function useContatos(): UseContatosReturn {
       // Verificar se contato está sendo usado (implementar quando houver contas)
       // Por enquanto, permitir exclusão
       
-      const sucesso = await mockDataService.deleteContato(id);
-      
-      if (sucesso) {
-        setContatos(prev => prev.filter(contato => contato.id !== id));
-        toast({ title: 'Sucesso', description: 'Contato excluído com sucesso!' });
-      } else {
-        throw new Error('Contato não encontrado');
-      }
+      await dataService.fornecedores.delete(id);
+      setContatos(prev => prev.filter(contato => contato.id !== id));
+      toast({ title: 'Sucesso', description: 'Contato excluído com sucesso!' });
     } catch (error) {
       const appError = handleError(error, 'useContatos.excluirContato');
       setError(appError.message);
@@ -159,7 +178,7 @@ export function useContatos(): UseContatosReturn {
   const buscarPorDocumento = (documento: string): Contato | null => {
     const documentoLimpo = documento.replace(/\D/g, '');
     return contatos.find(contato => 
-      contato.documento.replace(/\D/g, '') === documentoLimpo
+      contato.document && contato.document.replace(/\D/g, '') === documentoLimpo
     ) || null;
   };
 

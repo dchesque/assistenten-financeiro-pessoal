@@ -1,8 +1,20 @@
 import { useState, useEffect } from 'react';
-import { mockDataService, type Banco } from '@/services/mockDataService';
+import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
 import { toast } from '@/hooks/use-toast';
+
+// Tipos para bancos do Supabase
+export interface Banco {
+  id: string;
+  name: string;
+  type: 'banco' | 'cartao_credito' | 'conta_digital' | 'dinheiro';
+  initial_balance: number;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+}
 export interface UseBancosReturn {
   bancos: Banco[];
   loading: boolean;
@@ -28,9 +40,9 @@ export function useBancos(): UseBancosReturn {
   // Calcular estatísticas
   const estatisticas = {
     total_bancos: bancos.length,
-    saldo_total: bancos.reduce((total, banco) => total + banco.saldo_atual, 0),
-    contas_ativas: bancos.filter(banco => banco.ativo).length,
-    contas_inativas: bancos.filter(banco => !banco.ativo).length
+    saldo_total: bancos.reduce((total, banco) => total + banco.initial_balance, 0),
+    contas_ativas: bancos.filter(banco => !banco.deleted_at).length,
+    contas_inativas: bancos.filter(banco => banco.deleted_at).length
   };
 
   const carregarBancos = async () => {
@@ -39,7 +51,7 @@ export function useBancos(): UseBancosReturn {
     try {
       setLoading(true);
       setError(null);
-      const data = await withRetry(() => mockDataService.getBancos());
+      const data = await withRetry(() => dataService.bancos.getAll());
       setBancos(data);
     } catch (error) {
       const appError = handleError(error, 'useBancos.carregarBancos');
@@ -53,26 +65,16 @@ export function useBancos(): UseBancosReturn {
     try {
       setLoading(true);
       
-      // Verificar se já existe banco com mesmo nome e agencia/conta
-      if (dadosBanco.agencia && dadosBanco.conta) {
-        const existente = bancos.find(banco => 
-          banco.nome.toLowerCase() === dadosBanco.nome.toLowerCase() &&
-          banco.agencia === dadosBanco.agencia &&
-          banco.conta === dadosBanco.conta
-        );
-        
-        if (existente) {
-          throw new Error('Já existe um banco com este nome e conta/agência');
-        }
+      // Verificar se já existe banco com mesmo nome
+      const existente = bancos.find(banco => 
+        banco.name.toLowerCase() === dadosBanco.name.toLowerCase()
+      );
+      
+      if (existente) {
+        throw new Error('Já existe um banco com este nome');
       }
 
-      // Definir saldo_atual igual ao saldo_inicial se não informado
-      const dadosCompletos = {
-        ...dadosBanco,
-        saldo_atual: dadosBanco.saldo_atual ?? dadosBanco.saldo_inicial
-      };
-
-      const novoBanco = await mockDataService.createBanco(dadosCompletos);
+      const novoBanco = await dataService.bancos.create(dadosBanco);
       setBancos(prev => [...prev, novoBanco]);
       
       toast({ title: 'Sucesso', description: 'Banco criado com sucesso!' });
@@ -90,30 +92,24 @@ export function useBancos(): UseBancosReturn {
     try {
       setLoading(true);
       
-      // Verificar se novo nome/conta já existe (se estiver sendo alterado)
-      if (dadosAtualizacao.nome || dadosAtualizacao.agencia || dadosAtualizacao.conta) {
+      // Verificar se novo nome já existe (se estiver sendo alterado)
+      if (dadosAtualizacao.name) {
         const bancoAtual = bancos.find(banco => banco.id === id);
         if (bancoAtual) {
-          const nome = dadosAtualizacao.nome || bancoAtual.nome;
-          const agencia = dadosAtualizacao.agencia || bancoAtual.agencia;
-          const conta = dadosAtualizacao.conta || bancoAtual.conta;
+          const nome = dadosAtualizacao.name || bancoAtual.name;
           
-          if (agencia && conta) {
-            const existente = bancos.find(banco => 
-              banco.id !== id &&
-              banco.nome.toLowerCase() === nome.toLowerCase() &&
-              banco.agencia === agencia &&
-              banco.conta === conta
-            );
-            
-            if (existente) {
-              throw new Error('Já existe um banco com este nome e conta/agência');
-            }
+          const existente = bancos.find(banco => 
+            banco.id !== id &&
+            banco.name.toLowerCase() === nome.toLowerCase()
+          );
+          
+          if (existente) {
+            throw new Error('Já existe um banco com este nome');
           }
         }
       }
 
-      const bancoAtualizado = await mockDataService.updateBanco(id, dadosAtualizacao);
+      const bancoAtualizado = await dataService.bancos.update(id, dadosAtualizacao);
       
       if (bancoAtualizado) {
         setBancos(prev => 
@@ -139,14 +135,9 @@ export function useBancos(): UseBancosReturn {
       // Verificar se banco está sendo usado (implementar quando houver movimentações)
       // Por enquanto, permitir exclusão
       
-      const sucesso = await mockDataService.deleteBanco(id);
-      
-      if (sucesso) {
-        setBancos(prev => prev.filter(banco => banco.id !== id));
-        toast({ title: 'Sucesso', description: 'Banco excluído com sucesso!' });
-      } else {
-        throw new Error('Banco não encontrado');
-      }
+      await dataService.bancos.delete(id);
+      setBancos(prev => prev.filter(banco => banco.id !== id));
+      toast({ title: 'Sucesso', description: 'Banco excluído com sucesso!' });
     } catch (error) {
       const appError = handleError(error, 'useBancos.excluirBanco');
       setError(appError.message);
