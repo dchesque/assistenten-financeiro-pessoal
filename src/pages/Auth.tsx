@@ -325,73 +325,79 @@ export default function Auth() {
                   </Tabs>
 
                   {/* Step 1: Seleção do método */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {/* Email e senha - Ativo */}
                     <Button
                       variant="outline"
-                      className={`w-full h-14 justify-start text-left ${GLASSMORPHISM.input} ${ANIMATIONS.hoverButton} border border-gray-200/50`}
+                      className={`w-full h-12 justify-between text-left ${GLASSMORPHISM.input} ${ANIMATIONS.hoverButton} border border-gray-200/50`}
                       onClick={() => setSelectedMethod('email')}
                     >
-                      <Mail className="mr-3 h-5 w-5 text-blue-600" />
-                      <div>
-                        <div className={`font-medium ${TYPOGRAPHY.cardTitle}`}>Email e senha</div>
-                        <div className={`text-sm ${TYPOGRAPHY.bodySmall}`}>Acesso tradicional com email</div>
+                      <div className="flex items-center">
+                        <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
+                          <Mail className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className={`font-medium ${TYPOGRAPHY.cardTitle}`}>Email e senha</div>
+                        </div>
                       </div>
                     </Button>
 
                     {/* WhatsApp - Em breve */}
-                    <div className="relative">
-                      <Button
-                        variant="outline"
-                        className={`w-full h-14 justify-start text-left ${GLASSMORPHISM.input} opacity-50 cursor-not-allowed border border-gray-200/50`}
-                        disabled
-                      >
-                        <MessageCircle className="mr-3 h-5 w-5 text-green-600" />
+                    <Button
+                      variant="outline"
+                      className={`w-full h-12 justify-between text-left ${GLASSMORPHISM.input} opacity-50 cursor-not-allowed border border-gray-200/50`}
+                      disabled
+                    >
+                      <div className="flex items-center">
+                        <div className="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center mr-3">
+                          <MessageCircle className="h-4 w-4 text-green-600" />
+                        </div>
                         <div>
                           <div className={`font-medium ${TYPOGRAPHY.cardTitle}`}>WhatsApp</div>
-                          <div className={`text-sm ${TYPOGRAPHY.bodySmall}`}>Login rápido via WhatsApp</div>
                         </div>
-                      </Button>
-                      <Badge className={`absolute top-2 right-2 ${STATUS_BADGES.processando.container}`}>
+                      </div>
+                      <Badge className={`${STATUS_BADGES.processando.container} text-xs`}>
                         Em breve
                       </Badge>
-                    </div>
+                    </Button>
 
                     {/* Google - Em breve */}
-                    <div className="relative">
-                      <Button
-                        variant="outline"
-                        className={`w-full h-14 justify-start text-left ${GLASSMORPHISM.input} opacity-50 cursor-not-allowed border border-gray-200/50`}
-                        disabled
-                      >
-                        <Search className="mr-3 h-5 w-5 text-red-600" />
+                    <Button
+                      variant="outline"
+                      className={`w-full h-12 justify-between text-left ${GLASSMORPHISM.input} opacity-50 cursor-not-allowed border border-gray-200/50`}
+                      disabled
+                    >
+                      <div className="flex items-center">
+                        <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center mr-3">
+                          <div className="w-4 h-4 bg-red-500 rounded-sm"></div>
+                        </div>
                         <div>
                           <div className={`font-medium ${TYPOGRAPHY.cardTitle}`}>Google</div>
-                          <div className={`text-sm ${TYPOGRAPHY.bodySmall}`}>Entre com sua conta Google</div>
                         </div>
-                      </Button>
-                      <Badge className={`absolute top-2 right-2 ${STATUS_BADGES.processando.container}`}>
+                      </div>
+                      <Badge className={`${STATUS_BADGES.processando.container} text-xs`}>
                         Em breve
                       </Badge>
-                    </div>
+                    </Button>
 
                     {/* Apple - Em breve */}
-                    <div className="relative">
-                      <Button
-                        variant="outline"
-                        className={`w-full h-14 justify-start text-left ${GLASSMORPHISM.input} opacity-50 cursor-not-allowed border border-gray-200/50`}
-                        disabled
-                      >
-                        <Apple className="mr-3 h-5 w-5 text-black" />
+                    <Button
+                      variant="outline"
+                      className={`w-full h-12 justify-between text-left ${GLASSMORPHISM.input} opacity-50 cursor-not-allowed border border-gray-200/50`}
+                      disabled
+                    >
+                      <div className="flex items-center">
+                        <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                          <Apple className="h-4 w-4 text-gray-800" />
+                        </div>
                         <div>
                           <div className={`font-medium ${TYPOGRAPHY.cardTitle}`}>Apple</div>
-                          <div className={`text-sm ${TYPOGRAPHY.bodySmall}`}>Entre com sua conta Apple</div>
                         </div>
-                      </Button>
-                      <Badge className={`absolute top-2 right-2 ${STATUS_BADGES.processando.container}`}>
+                      </div>
+                      <Badge className={`${STATUS_BADGES.processando.container} text-xs`}>
                         Em breve
                       </Badge>
-                    </div>
+                    </Button>
                   </div>
                 </>
               ) : (
@@ -601,17 +607,23 @@ export default function Auth() {
             </CardContent>
           </Card>
 
-          {/* Footer */}
-          <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '0.8s' }}>
-            <p className={`mb-2 ${TYPOGRAPHY.caption}`}>
-              Por enquanto, aceita qualquer número e código para teste
-            </p>
-            <div className={`flex justify-center space-x-4 ${GLASSMORPHISM.card} p-3 rounded-full mx-auto w-fit`}>
-              <span className="text-green-600">🔒 SSL</span>
-              <span className="text-blue-600">🛡️ LGPD</span>
-              <span className="text-purple-600">📋 ISO 27001</span>
+          {/* Footer de Segurança */}
+          <div className="mt-6 text-center animate-fade-in" style={{ animationDelay: '0.8s' }}>
+            <div className={`flex justify-center space-x-6 ${GLASSMORPHISM.card} p-3 rounded-2xl mx-auto w-fit`}>
+              <div className="flex items-center space-x-1">
+                <Shield className="w-4 h-4 text-green-600" />
+                <span className={`${TYPOGRAPHY.caption} text-green-700 font-medium`}>SSL</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Shield className="w-4 h-4 text-blue-600" />
+                <span className={`${TYPOGRAPHY.caption} text-blue-700 font-medium`}>LGPD</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Shield className="w-4 h-4 text-purple-600" />
+                <span className={`${TYPOGRAPHY.caption} text-purple-700 font-medium`}>ISO 27001</span>
+              </div>
             </div>
-            <p className={`mt-2 ${TYPOGRAPHY.caption}`}>Protegido por criptografia de ponta a ponta</p>
+            <p className={`mt-3 ${TYPOGRAPHY.caption}`}>Protegido por criptografia de ponta a ponta</p>
           </div>
         </div>
       </div>
