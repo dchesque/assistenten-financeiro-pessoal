@@ -18,6 +18,8 @@ export default function Auth() {
     signInWithEmail,
     signUpWithEmail,
     verifyCode,
+    resendEmailConfirmation,
+    resetPassword,
     loginAttempts,
     isLocked,
     lockoutEndTime
@@ -35,12 +37,13 @@ export default function Auth() {
     senha: '',
     confirmarSenha: ''
   });
-  const [step, setStep] = useState<'phone' | 'code'>('phone');
+  const [step, setStep] = useState<'phone' | 'code' | 'email-sent' | 'forgot-password'>('phone');
   const [authMethod, setAuthMethod] = useState<'whatsapp' | 'email'>('whatsapp');
   const [formLoading, setFormLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [rememberMe, setRememberMe] = useState(false);
+  const [emailSent, setEmailSent] = useState('');
 
   // Calcular força da senha
   useEffect(() => {
@@ -149,14 +152,19 @@ export default function Auth() {
         });
         
         if (result.error) {
-          if (result.error.message?.includes('already registered')) {
+          if (result.error.message?.includes('already registered') || result.error.message?.includes('already been registered')) {
             toast.error('Este email já está cadastrado. Tente fazer login.');
+          } else if (result.error.message?.includes('weak_password')) {
+            toast.error('Senha muito fraca. Use pelo menos 8 caracteres com maiúsculas e números.');
           } else {
+            console.error('Erro no signup:', result.error);
             toast.error('Erro ao criar conta. Tente novamente.');
           }
         } else {
           if (result.needsEmailConfirmation) {
             toast.success('Conta criada! Verifique seu email para confirmar.');
+            setEmailSent(formData.email);
+            setStep('email-sent');
           } else {
             toast.success('Conta criada com sucesso!');
             navigate(returnUrl || '/dashboard');
@@ -168,6 +176,10 @@ export default function Auth() {
         if (result.error) {
           if (result.error.message?.includes('Invalid login credentials')) {
             toast.error('Email ou senha incorretos');
+          } else if (result.error.message?.includes('Email not confirmed')) {
+            toast.error('Email não confirmado. Verifique sua caixa de entrada.');
+            setEmailSent(formData.email);
+            setStep('email-sent');
           } else if (result.error.message?.includes('locked')) {
             toast.error('Muitas tentativas incorretas. Conta temporariamente bloqueada.');
           } else {
@@ -214,6 +226,57 @@ export default function Auth() {
         } else {
           navigate(returnUrl || '/dashboard');
         }
+      }
+    } catch (error) {
+      toast.error('Erro inesperado. Tente novamente.');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  // Função para esqueci a senha
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.email.trim()) {
+      toast.error('Por favor, digite seu email');
+      return;
+    }
+
+    setFormLoading(true);
+    
+    try {
+      const result = await resetPassword(formData.email);
+      
+      if (result.error) {
+        toast.error('Erro ao enviar email de recuperação. Tente novamente.');
+      } else {
+        toast.success('Email de recuperação enviado! Verifique sua caixa de entrada.');
+        setStep('phone'); // Voltar para o formulário principal
+      }
+    } catch (error) {
+      toast.error('Erro inesperado. Tente novamente.');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  // Função para reenviar confirmação de email
+  const handleResendConfirmation = async () => {
+    if (!emailSent) {
+      toast.error('Email não encontrado');
+      return;
+    }
+
+    setFormLoading(true);
+    
+    try {
+      const result = await resendEmailConfirmation(emailSent);
+      
+      if (result.error) {
+        toast.error('Erro ao reenviar email. Tente novamente.');
+      } else {
+        toast.success('Email reenviado! Verifique sua caixa de entrada.');
       }
     } catch (error) {
       toast.error('Erro inesperado. Tente novamente.');
@@ -368,18 +431,134 @@ export default function Auth() {
                   <MessageCircle className="w-6 h-6 text-white" />
                 </div>
                 <CardTitle className="text-xl font-semibold">
-                  {step === 'phone' ? 'Acesse sua conta' : 'Verificação de segurança'}
+                  {step === 'phone' ? 'Acesse sua conta' : 
+                   step === 'code' ? 'Verificação de segurança' : 
+                   step === 'email-sent' ? 'Email enviado!' :
+                   step === 'forgot-password' ? 'Recuperar senha' : 'Acesse sua conta'}
                 </CardTitle>
                 <CardDescription>
                   {step === 'phone' 
                     ? (authMethod === 'whatsapp' ? 'Digite seu WhatsApp para continuar' : 'Entre com seu email e senha')
-                    : 'Confirme o código enviado para seu WhatsApp'
+                    : step === 'code' ? 'Confirme o código enviado para seu WhatsApp'
+                    : step === 'email-sent' ? 'Enviamos um email de confirmação'
+                    : step === 'forgot-password' ? 'Digite seu email para recuperar a senha'
+                    : 'Digite suas credenciais'
                   }
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6">
-                {step === 'code' ? (
+                {step === 'email-sent' ? (
+                  // Tela de email enviado
+                  <div className="space-y-6">
+                    <div className="text-center space-y-4">
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto">
+                        <Mail className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Verifique seu email</h3>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Enviamos um link de confirmação para<br />
+                          <span className="font-medium text-blue-600">{emailSent}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Button
+                        onClick={handleResendConfirmation}
+                        className="w-full btn-primary"
+                        disabled={formLoading}
+                      >
+                        {formLoading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                            Reenviando...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Reenviar email
+                          </>
+                        )}
+                      </Button>
+
+                      <Button
+                        onClick={() => {
+                          setStep('phone');
+                          setEmailSent('');
+                        }}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Voltar ao login
+                      </Button>
+                    </div>
+
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground">
+                        Não recebeu o email? Verifique sua pasta de spam ou lixo eletrônico.
+                      </p>
+                    </div>
+                  </div>
+                ) : step === 'forgot-password' ? (
+                  // Tela de esqueci a senha
+                  <form onSubmit={handleForgotPassword} className="space-y-6">
+                    <div className="text-center space-y-3">
+                      <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto">
+                        <Lock className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Esqueceu sua senha?</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Digite seu email e enviaremos um link para redefinir sua senha
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email-forgot">Email</Label>
+                      <Input
+                        id="email-forgot"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        className={GLASSMORPHISM.input}
+                        placeholder="seu@email.com"
+                        required
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full btn-primary"
+                      disabled={formLoading}
+                    >
+                      {formLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Enviar link de recuperação
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      onClick={() => setStep('phone')}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Voltar ao login
+                    </Button>
+                  </form>
+                ) : step === 'code' ? (
                   // Tela de verificação de código
                   <form onSubmit={handleVerifyCode} className="space-y-6">
                     <div className="text-center space-y-3">
@@ -587,13 +766,13 @@ export default function Auth() {
                                 Lembrar-me
                               </Label>
                             </div>
-                            <button
-                              type="button"
-                              className="text-sm text-blue-600 hover:text-blue-800"
-                              onClick={() => toast.info('Função em desenvolvimento')}
-                            >
-                              Esqueci a senha
-                            </button>
+                          <button
+                            type="button"
+                            className="text-sm text-blue-600 hover:text-blue-800"
+                            onClick={() => setStep('forgot-password')}
+                          >
+                            Esqueci a senha
+                          </button>
                           </div>
 
                           <Button

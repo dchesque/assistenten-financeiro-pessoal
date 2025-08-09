@@ -10,6 +10,8 @@ import { StartupInitializer } from '@/components/layout/StartupInitializer';
 // Páginas críticas (carregamento imediato)
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
+import AuthConfirm from '@/pages/AuthConfirm';
+import AuthResetPassword from '@/pages/AuthResetPassword';
 import NotFound from '@/pages/NotFound';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
@@ -62,6 +64,8 @@ function App() {
             <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/confirm" element={<AuthConfirm />} />
+                <Route path="/auth/reset-password" element={<AuthResetPassword />} />
                 <Route path="/" element={<ProtectedRoute><Layout><Index /></Layout></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
                 <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />

@@ -237,7 +237,7 @@ export function useSupabaseAuth() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
           data: {
             name: userData?.nome || '',
             email
@@ -278,6 +278,29 @@ export function useSupabaseAuth() {
       };
     } catch (error: any) {
       logService.logError(error, 'useSupabaseAuth.signUpWithEmail');
+      return { error };
+    }
+  };
+
+  // Função para reenviar email de confirmação
+  const resendEmailConfirmation = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm`
+        }
+      });
+
+      if (error) {
+        logService.logError(error, 'useSupabaseAuth.resendEmailConfirmation');
+        throw error;
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      logService.logError(error, 'useSupabaseAuth.resendEmailConfirmation');
       return { error };
     }
   };
@@ -416,6 +439,7 @@ export function useSupabaseAuth() {
     verifyCode,
     signOut,
     resetPassword,
+    resendEmailConfirmation,
 
     // Funções de sessão
     resetSessionTimeout,
