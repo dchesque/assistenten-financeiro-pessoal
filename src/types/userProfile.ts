@@ -30,6 +30,13 @@ export interface UserProfile {
   created_at: Date;
   updated_at: Date;
   ativo: boolean;
+  avatar_url?: string;
+  bio?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
+  whatsapp?: string;
 }
 
 export interface PlanInfo {
