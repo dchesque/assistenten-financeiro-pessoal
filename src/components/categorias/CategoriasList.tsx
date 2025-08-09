@@ -52,7 +52,7 @@ export function CategoriasList({ categories, onEdit, onDelete }: CategoriasListP
                 <TableCell className="font-medium">{category.name}</TableCell>
                 <TableCell>
                   <Badge 
-                    className={`${
+                    className={`px-3 py-1 text-xs ${
                       category.type === 'income' 
                         ? 'bg-green-100/80 text-green-700 border-green-200' 
                         : 'bg-red-100/80 text-red-700 border-red-200'
@@ -63,11 +63,11 @@ export function CategoriasList({ categories, onEdit, onDelete }: CategoriasListP
                 </TableCell>
                 <TableCell>
                   {isSystemCategory(category) ? (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="px-3 py-1 text-xs">
                       Sistema
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="px-3 py-1 text-xs">
                       Pessoal
                     </Badge>
                   )}
@@ -125,7 +125,7 @@ export function CategoriasList({ categories, onEdit, onDelete }: CategoriasListP
                 <div>
                   <h3 className="text-lg font-semibold">{viewingCategory.name}</h3>
                   <Badge 
-                    className={`${
+                    className={`px-3 py-1 ${
                       viewingCategory.type === 'income' 
                         ? 'bg-green-100/80 text-green-700 border-green-200' 
                         : 'bg-red-100/80 text-red-700 border-red-200'
