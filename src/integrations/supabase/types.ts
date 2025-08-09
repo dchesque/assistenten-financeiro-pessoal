@@ -14,6 +14,153 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts_payable: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          category_id: string | null
+          created_at: string
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          status: Database["public"]["Enums"]["account_status"]
+          supplier_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bank_account_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["account_status"]
+          supplier_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["account_status"]
+          supplier_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_payable_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      accounts_receivable: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          category_id: string | null
+          created_at: string
+          customer_name: string | null
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          received_at: string | null
+          status: Database["public"]["Enums"]["receivable_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bank_account_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          status?: Database["public"]["Enums"]["receivable_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          status?: Database["public"]["Enums"]["receivable_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_receivable_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           account_number: string | null
@@ -347,8 +494,10 @@ export type Database = {
       }
     }
     Enums: {
+      account_status: "pending" | "paid" | "overdue" | "canceled"
       app_role: "admin" | "user"
       bank_type: "banco" | "carteira" | "outro"
+      receivable_status: "pending" | "received" | "overdue" | "canceled"
       subscription_status: "active" | "inactive" | "cancelled" | "expired"
       user_plan: "trial" | "free" | "premium"
     }
@@ -478,8 +627,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: ["pending", "paid", "overdue", "canceled"],
       app_role: ["admin", "user"],
       bank_type: ["banco", "carteira", "outro"],
+      receivable_status: ["pending", "received", "overdue", "canceled"],
       subscription_status: ["active", "inactive", "cancelled", "expired"],
       user_plan: ["trial", "free", "premium"],
     },
