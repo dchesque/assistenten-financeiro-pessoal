@@ -265,10 +265,10 @@ export default function Auth() {
               
               <div>
                 <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                  JC Financeiro
+                  ChatConta
                 </h1>
                 <p className="text-xl text-blue-100 font-medium">
-                  O futuro da gestão financeira
+                  Seu financeiro, mais inteligente
                 </p>
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function Auth() {
             <div className="space-y-6">
               <div className="text-center">
                 <h2 className="text-2xl font-semibold mb-6 text-white">
-                  Transforme sua gestão financeira
+                  Finanças pessoais inteligentes
                 </h2>
               </div>
 
@@ -286,14 +286,14 @@ export default function Auth() {
                   <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mx-auto">
                     <BarChart3 className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-sm font-medium text-white">Dashboard Inteligente</p>
+                  <p className="text-sm font-medium text-white">Análises com IA</p>
                 </div>
                 
                 <div className="text-center space-y-2 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
                   <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mx-auto">
                     <Zap className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-sm font-medium text-white">Automação Total</p>
+                  <p className="text-sm font-medium text-white">Categorização Automática</p>
                 </div>
                 
                 <div className="text-center space-y-2 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
@@ -307,23 +307,23 @@ export default function Auth() {
                   <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mx-auto">
                     <Globe className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-sm font-medium text-white">Multi-empresa</p>
+                  <p className="text-sm font-medium text-white">Insights Personalizados</p>
                 </div>
               </div>
 
               {/* Stats impressionantes */}
               <div className="flex justify-center space-x-8 pt-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">99.9%</div>
-                  <div className="text-xs text-blue-100">Uptime</div>
+                  <div className="text-2xl font-bold text-white">10K+</div>
+                  <div className="text-xs text-blue-100">Usuários</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">500+</div>
-                  <div className="text-xs text-blue-100">Empresas</div>
+                  <div className="text-2xl font-bold text-white">100K+</div>
+                  <div className="text-xs text-blue-100">Transações</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">24/7</div>
-                  <div className="text-xs text-blue-100">Suporte</div>
+                  <div className="text-2xl font-bold text-white">95%</div>
+                  <div className="text-xs text-blue-100">Satisfação</div>
                 </div>
               </div>
             </div>
@@ -331,7 +331,7 @@ export default function Auth() {
             {/* Call to action secundário */}
             <div className="pt-6">
               <p className="text-blue-100 text-sm">
-                ✨ Junte-se a milhares de empresas que já transformaram sua gestão financeira
+                ✨ Junte-se a milhares de pessoas que já transformaram suas finanças com IA
               </p>
             </div>
           </div>
@@ -355,9 +355,9 @@ export default function Auth() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  JC Financeiro
+                  ChatConta
                 </h1>
-                <p className="text-muted-foreground">Sistema de gestão financeira</p>
+                <p className="text-muted-foreground">Seu financeiro, mais inteligente</p>
               </div>
             </div>
 

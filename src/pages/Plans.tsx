@@ -262,7 +262,7 @@ export default function Plans() {
 
                 <Button
                   onClick={() => {
-                    const message = encodeURIComponent('Olá! Tenho dúvidas sobre os planos do JC Financeiro.');
+                    const message = encodeURIComponent('Olá! Tenho dúvidas sobre os planos do ChatConta.');
                     window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
                   }}
                   variant="outline"

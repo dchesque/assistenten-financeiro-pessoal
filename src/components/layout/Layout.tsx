@@ -48,11 +48,11 @@ export function Layout({ children }: LayoutProps) {
               {/* Logo mobile */}
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">JC</span>
+                  <span className="text-white font-bold text-sm">CC</span>
                 </div>
                 <div>
-                  <h1 className="font-bold text-base text-white">JC Financeiro</h1>
-                  <p className="text-xs text-gray-300">Plus Size</p>
+                  <h1 className="font-bold text-base text-white">ChatConta</h1>
+                  <p className="text-xs text-gray-300">Seu financeiro, mais inteligente</p>
                 </div>
               </div>
               

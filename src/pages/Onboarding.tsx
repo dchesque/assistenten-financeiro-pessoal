@@ -106,9 +106,9 @@ export default function Onboarding() {
               <DollarSign className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Bem-vindo ao JC Financeiro! 🎉
-              </h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Bem-vindo ao ChatConta! 🎉
+            </h1>
               <p className="text-muted-foreground mt-2">
                 Vamos configurar sua conta em 30 segundos
               </p>
