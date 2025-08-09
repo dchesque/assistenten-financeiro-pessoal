@@ -19,7 +19,7 @@ export function BankModal({ isOpen, onClose, onSave, bank, loading = false }: Ba
   const [formData, setFormData] = useState({
     name: '',
     type: 'banco' as BankType,
-    initial_balance: 0
+    initial_balance: 0 // Mantido para compatibilidade, sempre será 0
   });
 
   const [accountData, setAccountData] = useState({
@@ -35,13 +35,13 @@ export function BankModal({ isOpen, onClose, onSave, bank, loading = false }: Ba
       setFormData({
         name: bank.name,
         type: bank.type,
-        initial_balance: bank.initial_balance
+        initial_balance: 0 // Sempre 0, não editável
       });
     } else {
       setFormData({
         name: '',
         type: 'banco',
-        initial_balance: 0
+        initial_balance: 0 // Sempre 0
       });
       setAccountData({
         agency: '',
@@ -59,9 +59,7 @@ export function BankModal({ isOpen, onClose, onSave, bank, loading = false }: Ba
       newErrors.name = 'Nome é obrigatório';
     }
 
-    if (formData.initial_balance < 0) {
-      newErrors.initial_balance = 'Saldo inicial não pode ser negativo';
-    }
+    // Removida validação de saldo - não é mais usado
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -82,13 +80,7 @@ export function BankModal({ isOpen, onClose, onSave, bank, loading = false }: Ba
     }
   };
 
-  const handleBalanceChange = (value: string) => {
-    // Remove caracteres não numéricos exceto vírgula e ponto
-    const cleanValue = value.replace(/[^\d,.-]/g, '');
-    // Converte vírgula para ponto para parseFloat
-    const numericValue = parseFloat(cleanValue.replace(',', '.')) || 0;
-    setFormData(prev => ({ ...prev, initial_balance: numericValue }));
-  };
+  // Função removida - não é mais necessária para saldo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -126,18 +118,6 @@ export function BankModal({ isOpen, onClose, onSave, bank, loading = false }: Ba
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="initial_balance">Saldo Inicial</Label>
-            <Input
-              id="initial_balance"
-              value={formatCurrency(formData.initial_balance)}
-              onChange={(e) => handleBalanceChange(e.target.value)}
-              placeholder="R$ 0,00"
-              className={errors.initial_balance ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
-            />
-            {errors.initial_balance && <p className="text-sm text-red-600">{errors.initial_balance}</p>}
           </div>
 
           {/* Campos opcionais da conta */}

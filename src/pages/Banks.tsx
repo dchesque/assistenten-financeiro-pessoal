@@ -14,8 +14,7 @@ import { BankAccountModal } from '@/components/banks/BankAccountModal';
 import { useBanks } from '@/hooks/useBanks';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { useLoadingState } from '@/hooks/useLoadingStates';
-import { Bank, BankWithAccounts, BankType, BANK_TYPE_OPTIONS } from '@/types/bank';
-import { formatCurrency } from '@/lib/formatacaoBrasileira';
+import { Bank, BankWithAccounts, BankType, BANK_TYPE_OPTIONS, BANK_TYPE_LABELS } from '@/types/bank';
 
 export default function Banks() {
   const { banks, loading, createBank, updateBank, deleteBank } = useBanks();
@@ -42,11 +41,14 @@ export default function Banks() {
     return matchesSearch && matchesType;
   });
 
-  // Calcular estatísticas
+  // Calcular estatísticas (sem saldos)
   const totalBanks = banks.length;
-  const totalBalance = banks.reduce((sum, bank) => sum + bank.initial_balance, 0);
   const totalAccounts = banks.reduce((sum, bank) => sum + bank.accounts.length, 0);
-  const averageBalance = totalBanks > 0 ? totalBalance / totalBanks : 0;
+  const bancosPorTipo = banks.reduce((acc, bank) => {
+    acc[bank.type] = (acc[bank.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const tipoMaisUsado = Object.entries(bancosPorTipo).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
 
   const handleCreateBank = async (bankData: Omit<Bank, 'id' | 'created_at' | 'updated_at' | 'user_id'>, accountData?: { agency?: string; account_number?: string; pix_key?: string }) => {
     setLoading('saving', true);
@@ -160,16 +162,16 @@ export default function Banks() {
             <p className="text-2xl font-bold text-gray-900">{totalBanks}</p>
           </div>
           <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-lg">
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Saldo Total</h3>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalBalance)}</p>
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-lg">
             <h3 className="text-sm font-medium text-gray-600 mb-1">Total de Contas</h3>
             <p className="text-2xl font-bold text-gray-900">{totalAccounts}</p>
           </div>
           <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-lg">
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Saldo Médio</h3>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(averageBalance)}</p>
+            <h3 className="text-sm font-medium text-gray-600 mb-1">Tipo Mais Usado</h3>
+            <p className="text-2xl font-bold text-gray-900">{BANK_TYPE_LABELS[tipoMaisUsado as BankType] || 'N/A'}</p>
+          </div>
+          <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-lg">
+            <h3 className="text-sm font-medium text-gray-600 mb-1">Bancos Ativos</h3>
+            <p className="text-2xl font-bold text-gray-900">{totalBanks}</p>
           </div>
         </div>
       )}

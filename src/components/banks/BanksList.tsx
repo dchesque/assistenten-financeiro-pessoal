@@ -47,7 +47,6 @@ export function BanksList({ banks, onEdit, onDelete, onAddAccount, onViewAccount
           <TableRow className="bg-gray-50/50">
             <TableHead className="font-semibold">Nome</TableHead>
             <TableHead className="font-semibold">Tipo</TableHead>
-            <TableHead className="font-semibold text-right">Saldo Inicial</TableHead>
             <TableHead className="font-semibold text-center">Contas</TableHead>
             <TableHead className="font-semibold">Contas Vinculadas</TableHead>
             <TableHead className="font-semibold w-[50px]"></TableHead>
@@ -69,12 +68,6 @@ export function BanksList({ banks, onEdit, onDelete, onAddAccount, onViewAccount
                 <Badge className={`px-3 py-1 text-xs ${getTypeColor(bank.type)}`}>
                   {BANK_TYPE_LABELS[bank.type]}
                 </Badge>
-              </TableCell>
-              
-              <TableCell className="text-right font-mono">
-                <span className={bank.initial_balance >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {formatCurrency(bank.initial_balance)}
-                </span>
               </TableCell>
               
               <TableCell className="text-center">
