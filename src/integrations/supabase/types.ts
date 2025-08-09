@@ -161,6 +161,56 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: Database["public"]["Enums"]["audit_action"]
+          created_at: string
+          id: string
+          ip: string | null
+          metadata: Json | null
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["audit_action"]
+          created_at?: string
+          id?: string
+          ip?: string | null
+          metadata?: Json | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["audit_action"]
+          created_at?: string
+          id?: string
+          ip?: string | null
+          metadata?: Json | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           account_number: string | null
@@ -541,6 +591,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_audit: {
+        Args: {
+          p_action: Database["public"]["Enums"]["audit_action"]
+          p_table_name?: string
+          p_record_id?: string
+          p_old_data?: Json
+          p_new_data?: Json
+          p_metadata?: Json
+        }
+        Returns: string
+      }
       normalize_subscription_status: {
         Args: { p_user_id: string }
         Returns: {
@@ -583,6 +644,15 @@ export type Database = {
     Enums: {
       account_status: "pending" | "paid" | "overdue" | "canceled"
       app_role: "admin" | "user"
+      audit_action:
+        | "login"
+        | "logout"
+        | "create"
+        | "update"
+        | "delete"
+        | "read"
+        | "error"
+        | "other"
       bank_type: "banco" | "carteira" | "outro"
       receivable_status: "pending" | "received" | "overdue" | "canceled"
       subscription_status: "active" | "inactive" | "cancelled" | "expired"
@@ -717,6 +787,16 @@ export const Constants = {
     Enums: {
       account_status: ["pending", "paid", "overdue", "canceled"],
       app_role: ["admin", "user"],
+      audit_action: [
+        "login",
+        "logout",
+        "create",
+        "update",
+        "delete",
+        "read",
+        "error",
+        "other",
+      ],
       bank_type: ["banco", "carteira", "outro"],
       receivable_status: ["pending", "received", "overdue", "canceled"],
       subscription_status: ["active", "inactive", "cancelled", "expired"],
