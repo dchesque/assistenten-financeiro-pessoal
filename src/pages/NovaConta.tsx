@@ -795,8 +795,8 @@ export default function NovaConta() {
                             <SelectValue placeholder="Selecionar banco" />
                           </SelectTrigger>
                           <SelectContent>
-                            {bancos.filter(b => b.ativo).map(banco => <SelectItem key={banco.id} value={banco.id.toString()}>
-                                {banco.nome} - {banco.conta}
+                            {bancos.filter(b => !b.deleted_at).map(banco => <SelectItem key={banco.id} value={banco.id}>
+                                {banco.name} - {banco.type}
                               </SelectItem>)}
                           </SelectContent>
                         </Select>

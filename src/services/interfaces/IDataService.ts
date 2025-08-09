@@ -1,134 +1,132 @@
-// Interface unificada para abstração de dados
 import type { ContaPagar } from '@/types/contaPagar';
 import type { ContaReceber } from '@/types/contaReceber';
+import type { Fornecedor } from '@/types/fornecedor';
 import type { Categoria } from '@/types/categoria';
 import type { Banco } from '@/types/banco';
-import type { Fornecedor } from '@/types/fornecedor';
 
+// User interfaces for auth
 export interface User {
   id: string;
-  email?: string;
-  nome?: string;
-  telefone?: string;
-  documento?: string;
-  endereco?: string;
-  cidade?: string;
-  estado?: string;
-  cep?: string;
+  email: string;
+  name?: string;
+  phone?: string;
   created_at?: string;
-  updated_at?: string;
 }
 
 export interface Session {
   user: User;
   access_token: string;
-  expires_at?: number;
+  refresh_token: string;
+  expires_at: number;
 }
 
+// Dashboard summary interface
 export interface DashboardSummary {
-  saldo_total: number;
-  contas_pagar: {
-    pendentes: number;
-    valor_pendente: number;
-    vencidas: number;
-    valor_vencido: number;
-    pagas_mes: number;
-    valor_pago_mes: number;
-  };
-  contas_receber: {
-    pendentes: number;
-    valor_pendente: number;
-    vencidas: number;
-    valor_vencido: number;
-    recebidas_mes: number;
-    valor_recebido_mes: number;
-  };
+  totalBalance: number;
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  totalAccountsPayable: number;
+  totalAccountsReceivable: number;
+  overdueAccountsPayable: number;
+  overdueAccountsReceivable: number;
+  accountsPayableCount: number;
+  accountsReceivableCount: number;
+  recentActivity: Array<{
+    id: string;
+    type: 'income' | 'expense';
+    description: string;
+    amount: number;
+    date: string;
+  }>;
 }
 
+// Main service interface - simplified for Supabase migration
 export interface IDataService {
-  // ============ AUTENTICAÇÃO ============
+  // ============ AUTH ============
   auth: {
-    signInWithPhone(phone: string): Promise<{ success: boolean; message?: string }>;
-    verifyOTP(phone: string, code: string): Promise<Session>;
     signIn(email: string, password: string): Promise<Session>;
-    signUp(email: string, password: string, userData?: { nome?: string }): Promise<Session>;
+    signUp(email: string, password: string, userData?: any): Promise<User>;
     signOut(): Promise<void>;
+    verifyOTP(email: string, token: string): Promise<Session>;
+    resendOTP(email: string): Promise<void>;
+    updateProfile(data: Partial<User>): Promise<User>;
     getCurrentUser(): Promise<User | null>;
-    getSession(): Session | null;
-    updateProfile(userId: string, data: Partial<User>): Promise<User>;
   };
 
   // ============ CONTAS A PAGAR ============
   contasPagar: {
-    getAll(filtros?: any): Promise<ContaPagar[]>;
-    getById(id: string | number): Promise<ContaPagar | null>;
-    create(data: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'>): Promise<ContaPagar>;
-    update(id: string | number, data: Partial<ContaPagar>): Promise<ContaPagar>;
-    delete(id: string | number): Promise<void>;
-    getByVencimento(dataInicio: Date, dataFim: Date): Promise<ContaPagar[]>;
-    getByStatus(status: string): Promise<ContaPagar[]>;
-    marcarComoPaga(id: string | number, dados: { dataPagamento: Date; valorPago?: number; bankAccountId?: string; observacoes?: string }): Promise<ContaPagar>;
+    getAll(filtros?: any): Promise<any[]>;
+    getById(id: string): Promise<any>;
+    create(data: any): Promise<any>;
+    update(id: string, data: any): Promise<any>;
+    delete(id: string): Promise<void>;
+    getByVencimento(dataInicio: string, dataFim: string): Promise<any[]>;
+    getByStatus(status: string): Promise<any[]>;
+    marcarComoPaga(id: string, dados: any): Promise<any>;
   };
 
   // ============ CONTAS A RECEBER ============
   contasReceber: {
-    getAll(filtros?: any): Promise<ContaReceber[]>;
-    getById(id: string | number): Promise<ContaReceber | null>;
-    create(data: Omit<ContaReceber, 'id' | 'created_at' | 'updated_at'>): Promise<ContaReceber>;
-    update(id: string | number, data: Partial<ContaReceber>): Promise<ContaReceber>;
-    delete(id: string | number): Promise<void>;
-    getByVencimento(dataInicio: Date, dataFim: Date): Promise<ContaReceber[]>;
-    getByStatus(status: string): Promise<ContaReceber[]>;
-    marcarComoRecebida(id: string | number, dataRecebimento: Date, valorRecebido?: number): Promise<ContaReceber>;
+    getAll(filtros?: any): Promise<any[]>;
+    getById(id: string): Promise<any | null>;
+    create(data: any): Promise<any>;
+    update(id: string, data: any): Promise<any>;
+    delete(id: string): Promise<void>;
+    getByVencimento(dataInicio: string, dataFim: string): Promise<any[]>;
+    getByStatus(status: string): Promise<any[]>;
+    marcarComoRecebida(id: string, dataRecebimento: string, valorRecebido?: number): Promise<any>;
   };
 
   // ============ FORNECEDORES/CONTATOS ============
   fornecedores: {
-    getAll(filtros?: any): Promise<Fornecedor[]>;
-    getById(id: number): Promise<Fornecedor | null>;
-    create(data: Omit<Fornecedor, 'id' | 'dataCadastro' | 'totalCompras' | 'valorTotal'>): Promise<Fornecedor>;
-    update(id: number, data: Partial<Fornecedor>): Promise<Fornecedor>;
-    delete(id: number): Promise<void>;
-    getAtivos(): Promise<Fornecedor[]>;
-    buscarPorDocumento(documento: string): Promise<Fornecedor | null>;
+    getAll(filtros?: any): Promise<any[]>;
+    getById(id: string): Promise<any | null>;
+    create(data: any): Promise<any>;
+    update(id: string, data: any): Promise<any>;
+    delete(id: string): Promise<void>;
+  };
+
+  // ============ CONTATOS ============
+  contatos: {
+    getAll(filtros?: any): Promise<any[]>;
+    getById(id: string): Promise<any | null>;
+    create(data: any): Promise<any>;
+    update(id: string, data: any): Promise<any>;
+    delete(id: string): Promise<void>;
   };
 
   // ============ CATEGORIAS ============
   categorias: {
-    getAll(filtros?: any): Promise<Categoria[]>;
-    getById(id: string | number): Promise<Categoria | null>;
-    create(data: Omit<Categoria, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Categoria>;
-    update(id: string | number, data: Partial<Categoria>): Promise<Categoria>;
-    delete(id: string | number): Promise<void>;
-    getByTipo(tipo: 'receita' | 'despesa'): Promise<Categoria[]>;
+    getAll(filtros?: any): Promise<any[]>;
+    getById(id: string): Promise<any | null>;
+    create(data: any): Promise<any>;
+    update(id: string, data: any): Promise<any>;
+    delete(id: string): Promise<void>;
   };
 
   // ============ BANCOS ============
   bancos: {
-    getAll(): Promise<Banco[]>;
-    getById(id: number): Promise<Banco | null>;
-    create(data: Omit<Banco, 'id' | 'created_at' | 'updated_at'>): Promise<Banco>;
-    update(id: number, data: Partial<Banco>): Promise<Banco>;
-    delete(id: number): Promise<void>;
-    atualizarSaldo(id: number, novoSaldo: number): Promise<Banco>;
+    getAll(filtros?: any): Promise<any[]>;
+    getById(id: string): Promise<any | null>;
+    create(data: any): Promise<any>;
+    update(id: string, data: any): Promise<any>;
+    delete(id: string): Promise<void>;
   };
 
   // ============ BANK ACCOUNTS ============
   bankAccounts: {
-    getByBankId(bankId: number): Promise<any[]>;
-    create(data: any): Promise<any>;
-    transferBetweenAccounts(from: string, to: string, amount: number): Promise<void>;
+    getAll(): Promise<any[]>;
+    create(bankId: string, data: any): Promise<any>;
+    transfer(fromAccountId: string, toAccountId: string, amount: number, description: string): Promise<any>;
   };
 
-  // ============ TRANSAÇÕES ============
+  // ============ TRANSACTIONS ============
   transactions: {
-    getAll(filtros?: any): Promise<any[]>;
-    getById(id: string | number): Promise<any | null>;
+    getAll(filters?: any): Promise<any[]>;
     create(data: any): Promise<any>;
-    update(id: string | number, data: any): Promise<any>;
-    delete(id: string | number): Promise<void>;
-    getExtrato(accountId: string, periodo: { inicio: Date; fim: Date }): Promise<any>;
-    getByAccount(accountId: string, limit?: number): Promise<any[]>;
+    update(id: string, data: any): Promise<any>;
+    delete(id: string): Promise<void>;
+    getStatement(accountId: string, startDate: Date, endDate: Date): Promise<any[]>;
   };
 
   // ============ DASHBOARD ============
@@ -136,12 +134,12 @@ export interface IDataService {
     getSummary(): Promise<DashboardSummary>;
   };
 
-  // ============ UTILITÁRIOS ============
+  // ============ UTILS ============
   utils: {
-    exportarDados(tabela: string, formato: 'json' | 'csv'): Promise<Blob>;
-    importarDados(tabela: string, arquivo: File): Promise<{ total: number; sucesso: number; erros: number }>;
-    limparCache(): Promise<void>;
-    verificarConexao(): Promise<boolean>;
-    resetAllData(): void;
+    exportData(format: 'json' | 'csv'): Promise<Blob>;
+    importData(file: File): Promise<{ success: boolean; message: string }>;
+    clearCache(): Promise<void>;
+    checkConnection(): Promise<boolean>;
+    resetData(): Promise<void>;
   };
 }

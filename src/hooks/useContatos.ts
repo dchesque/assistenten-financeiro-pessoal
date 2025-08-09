@@ -4,36 +4,21 @@ import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
 import { toast } from '@/hooks/use-toast';
 
-// Tipos para contatos do Supabase
-export interface Contato {
-  id: string;
-  name: string;
-  type: string;
-  document?: string;
-  document_type?: string;
-  email?: string;
-  phone?: string;
-  whatsapp?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  notes?: string;
-  active: boolean;
-  metadata: any;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at?: string;
-}
+// Usando tipos do Supabase diretamente
+import type { Database } from '@/integrations/supabase/types';
+
+type Contato = Database['public']['Tables']['contacts']['Row'];
+type ContatoInsert = Database['public']['Tables']['contacts']['Insert'];
+type ContatoUpdate = Database['public']['Tables']['contacts']['Update'];
+
 export interface UseContatosReturn {
   contatos: Contato[];
   credores: Contato[];
   pagadores: Contato[];
   loading: boolean;
   error: string | null;
-  criarContato: (contato: Omit<Contato, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => Promise<Contato>;
-  atualizarContato: (id: string, contato: Partial<Contato>) => Promise<Contato | null>;
+  criarContato: (contato: Omit<ContatoInsert, 'user_id'>) => Promise<Contato>;
+  atualizarContato: (id: string, contato: ContatoUpdate) => Promise<Contato | null>;
   excluirContato: (id: string) => Promise<void>;
   buscarPorDocumento: (documento: string) => Contato | null;
   recarregar: () => Promise<void>;
@@ -45,6 +30,7 @@ export function useContatos(): UseContatosReturn {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { handleError } = useErrorHandler();
+
   // Separar contatos por tipo
   const credores = contatos.filter(contato => contato.type === 'supplier');
   const pagadores = contatos.filter(contato => contato.type === 'customer');
@@ -55,7 +41,7 @@ export function useContatos(): UseContatosReturn {
     try {
       setLoading(true);
       setError(null);
-      const data = await dataService.fornecedores.getAll(); // Usando fornecedores como contatos por enquanto
+      const data = await dataService.contatos.getAll();
       setContatos(data);
     } catch (error) {
       const appError = handleError(error, 'useContatos.carregarContatos');
@@ -78,7 +64,7 @@ export function useContatos(): UseContatosReturn {
     }
   };
 
-  const criarContato = async (dadosContato: Omit<Contato, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Contato> => {
+  const criarContato = async (dadosContato: Omit<ContatoInsert, 'user_id'>): Promise<Contato> => {
     try {
       setLoading(true);
       
@@ -100,7 +86,7 @@ export function useContatos(): UseContatosReturn {
         }
       }
 
-      const novoContato = await dataService.fornecedores.create(dadosContato);
+      const novoContato = await dataService.contatos.create(dadosContato);
       setContatos(prev => [...prev, novoContato]);
       
       toast({ title: 'Sucesso', description: 'Contato criado com sucesso!' });
@@ -114,7 +100,7 @@ export function useContatos(): UseContatosReturn {
     }
   };
 
-  const atualizarContato = async (id: string, dadosAtualizacao: Partial<Contato>): Promise<Contato | null> => {
+  const atualizarContato = async (id: string, dadosAtualizacao: ContatoUpdate): Promise<Contato | null> => {
     try {
       setLoading(true);
       
@@ -137,7 +123,7 @@ export function useContatos(): UseContatosReturn {
         }
       }
 
-      const contatoAtualizado = await dataService.fornecedores.update(id, dadosAtualizacao);
+      const contatoAtualizado = await dataService.contatos.update(id, dadosAtualizacao);
       
       if (contatoAtualizado) {
         setContatos(prev => 
@@ -163,7 +149,7 @@ export function useContatos(): UseContatosReturn {
       // Verificar se contato está sendo usado (implementar quando houver contas)
       // Por enquanto, permitir exclusão
       
-      await dataService.fornecedores.delete(id);
+      await dataService.contatos.delete(id);
       setContatos(prev => prev.filter(contato => contato.id !== id));
       toast({ title: 'Sucesso', description: 'Contato excluído com sucesso!' });
     } catch (error) {

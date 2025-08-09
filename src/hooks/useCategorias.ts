@@ -4,23 +4,19 @@ import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
 import { showMessage } from '@/utils/messages';
 
-// Tipos para categorias do Supabase
-export interface Categoria {
-  id: string;
-  name: string;
-  color?: string;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at?: string;
-}
+// Usando tipos do Supabase diretamente
+import type { Database } from '@/integrations/supabase/types';
+
+type Categoria = Database['public']['Tables']['categories']['Row'];
+type CategoriaInsert = Database['public']['Tables']['categories']['Insert'];
+type CategoriaUpdate = Database['public']['Tables']['categories']['Update'];
 
 export interface UseCategoriastReturn {
   categorias: Categoria[];
   loading: boolean;
   error: string | null;
-  criarCategoria: (categoria: Omit<Categoria, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => Promise<Categoria>;
-  atualizarCategoria: (id: string, categoria: Partial<Categoria>) => Promise<Categoria | null>;
+  criarCategoria: (categoria: Omit<CategoriaInsert, 'user_id'>) => Promise<Categoria>;
+  atualizarCategoria: (id: string, categoria: CategoriaUpdate) => Promise<Categoria | null>;
   excluirCategoria: (id: string) => Promise<void>;
   recarregar: () => Promise<void>;
 }
@@ -54,7 +50,7 @@ export function useCategorias(): UseCategoriastReturn {
     }
   };
 
-  const criarCategoria = async (dadosCategoria: Omit<Categoria, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Categoria> => {
+  const criarCategoria = async (dadosCategoria: Omit<CategoriaInsert, 'user_id'>): Promise<Categoria> => {
     // Verificar se já existe categoria com o mesmo nome
     const existente = categorias.find(cat => 
       cat.name.toLowerCase() === dadosCategoria.name.toLowerCase()
@@ -83,7 +79,7 @@ export function useCategorias(): UseCategoriastReturn {
     }
   };
 
-  const atualizarCategoria = async (id: string, dadosAtualizacao: Partial<Categoria>): Promise<Categoria | null> => {
+  const atualizarCategoria = async (id: string, dadosAtualizacao: CategoriaUpdate): Promise<Categoria | null> => {
     // Verificar se novo nome já existe (se nome estiver sendo alterado)
     if (dadosAtualizacao.name) {
       const categoriaAtual = categorias.find(cat => cat.id === id);

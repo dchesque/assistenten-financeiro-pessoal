@@ -4,23 +4,19 @@ import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
 import { toast } from '@/hooks/use-toast';
 
-// Tipos para bancos do Supabase
-export interface Banco {
-  id: string;
-  name: string;
-  type: 'banco' | 'cartao_credito' | 'conta_digital' | 'dinheiro';
-  initial_balance: number;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at?: string;
-}
+// Usando tipos do Supabase diretamente
+import type { Database } from '@/integrations/supabase/types';
+
+type Banco = Database['public']['Tables']['banks']['Row'];
+type BancoInsert = Database['public']['Tables']['banks']['Insert'];
+type BancoUpdate = Database['public']['Tables']['banks']['Update'];
+
 export interface UseBancosReturn {
   bancos: Banco[];
   loading: boolean;
   error: string | null;
-  criarBanco: (banco: Omit<Banco, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => Promise<Banco>;
-  atualizarBanco: (id: string, banco: Partial<Banco>) => Promise<Banco | null>;
+  criarBanco: (banco: Omit<BancoInsert, 'user_id'>) => Promise<Banco>;
+  atualizarBanco: (id: string, banco: BancoUpdate) => Promise<Banco | null>;
   excluirBanco: (id: string) => Promise<void>;
   recarregar: () => Promise<void>;
   estatisticas: {
@@ -37,10 +33,11 @@ export function useBancos(): UseBancosReturn {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { handleError, withRetry } = useErrorHandler();
+
   // Calcular estatísticas
   const estatisticas = {
     total_bancos: bancos.length,
-    saldo_total: bancos.reduce((total, banco) => total + banco.initial_balance, 0),
+    saldo_total: bancos.reduce((total, banco) => total + (banco.initial_balance || 0), 0),
     contas_ativas: bancos.filter(banco => !banco.deleted_at).length,
     contas_inativas: bancos.filter(banco => banco.deleted_at).length
   };
@@ -61,7 +58,7 @@ export function useBancos(): UseBancosReturn {
     }
   };
 
-  const criarBanco = async (dadosBanco: Omit<Banco, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Banco> => {
+  const criarBanco = async (dadosBanco: Omit<BancoInsert, 'user_id'>): Promise<Banco> => {
     try {
       setLoading(true);
       
@@ -88,7 +85,7 @@ export function useBancos(): UseBancosReturn {
     }
   };
 
-  const atualizarBanco = async (id: string, dadosAtualizacao: Partial<Banco>): Promise<Banco | null> => {
+  const atualizarBanco = async (id: string, dadosAtualizacao: BancoUpdate): Promise<Banco | null> => {
     try {
       setLoading(true);
       
