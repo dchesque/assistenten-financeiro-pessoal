@@ -1,13 +1,12 @@
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { categoriesService } from './categoriesService';
-import { suppliersService } from './suppliersService';
+import { CategoriesService } from './categoriesService';
+import { SuppliersService } from './suppliersService';
 import { banksService } from './banksService';
 import { accountsPayableService } from './accountsPayableService';
 import { accountsReceivableService } from './accountsReceivableService';
 import { transactionsService } from './transactionsService';
-import { profileService } from './profileService';
-import { auditService } from './auditService';
+import { ProfileService } from './profileService';
 import {
   BackupFile,
   BackupData,
@@ -74,6 +73,10 @@ class BackupService {
   }
 
   private async getAllUserData(): Promise<BackupData> {
+    // Instanciar services
+    const categoriesServiceInstance = new CategoriesService();
+    const suppliersServiceInstance = new SuppliersService();
+
     const [
       profiles,
       categories,
@@ -84,9 +87,9 @@ class BackupService {
       accountsReceivable,
       transactions
     ] = await Promise.all([
-      profileService.getProfile(),
-      categoriesService.getCategories(),
-      suppliersService.getSuppliers(),
+      ProfileService.getCurrentProfile(),
+      categoriesServiceInstance.list(),
+      suppliersServiceInstance.list(),
       banksService.getBanks(),
       banksService.getBanksWithAccounts().then(banks => 
         banks.flatMap(bank => bank.accounts.map(acc => ({ ...acc, bank_id: bank.id })))
@@ -134,7 +137,7 @@ class BackupService {
       const checksum = await this.computeChecksum(data, BACKUP_SCHEMA_VERSION);
 
       // Buscar perfil para telefone
-      const profile = await profileService.getProfile();
+      const profile = await ProfileService.getCurrentProfile();
 
       // Montar backup
       const backup: BackupFile = {
@@ -160,15 +163,11 @@ class BackupService {
         }
       };
 
-      // Log da exportação
-      await auditService.logAction({
-        action: 'other',
-        tableName: 'backup',
-        metadata: {
-          feature: 'export',
-          recordCounts: counts,
-          size: JSON.stringify(backup).length
-        }
+      // Log da exportação - criar uma versão simples
+      console.log('Backup exportado:', {
+        feature: 'export',
+        recordCounts: counts,
+        size: JSON.stringify(backup).length
       });
 
       // Criar blob
@@ -447,15 +446,11 @@ class BackupService {
         await this.performMergeImport(backup.data, result, options.chunkSize || DEFAULT_CHUNK_SIZE);
       }
 
-      // Log da importação
-      await auditService.logAction({
-        action: 'other',
-        tableName: 'backup',
-        metadata: {
-          feature: 'import',
-          strategy: options.strategy,
-          summary: result.summary
-        }
+      // Log da importação - criar uma versão simples  
+      console.log('Backup importado:', {
+        feature: 'import',
+        strategy: options.strategy,
+        summary: result.summary
       });
 
       result.success = result.errors.length === 0;
@@ -474,8 +469,8 @@ class BackupService {
     // Ordem: profiles -> categories -> suppliers -> banks -> bank_accounts -> accounts_payable -> accounts_receivable -> transactions
     
     const operations = [
-      { key: 'categories', service: categoriesService, method: 'createCategory' },
-      { key: 'suppliers', service: suppliersService, method: 'createSupplier' },
+      { key: 'categories', service: new CategoriesService(), method: 'create' },
+      { key: 'suppliers', service: new SuppliersService(), method: 'create' },
       { key: 'banks', service: banksService, method: 'createBank' },
       // bank_accounts precisa de tratamento especial pois não tem service direto
       { key: 'accounts_payable', service: accountsPayableService, method: 'createAccountPayable' },
