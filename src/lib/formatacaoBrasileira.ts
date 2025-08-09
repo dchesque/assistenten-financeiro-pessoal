@@ -235,3 +235,6 @@ export const formatarPorcentagem = (valor: number): string => {
     maximumFractionDigits: 2
   }).format(valor / 100);
 };
+
+// Alias para compatibilidade
+export const formatCurrency = formatarMoeda;

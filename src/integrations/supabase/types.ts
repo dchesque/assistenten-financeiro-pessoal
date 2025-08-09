@@ -14,6 +14,82 @@ export type Database = {
   }
   public: {
     Tables: {
+      bank_accounts: {
+        Row: {
+          account_number: string | null
+          agency: string | null
+          bank_id: string
+          created_at: string
+          id: string
+          pix_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          agency?: string | null
+          bank_id: string
+          created_at?: string
+          id?: string
+          pix_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          agency?: string | null
+          bank_id?: string
+          created_at?: string
+          id?: string
+          pix_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banks: {
+        Row: {
+          created_at: string
+          id: string
+          initial_balance: number
+          name: string
+          type: Database["public"]["Enums"]["bank_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          initial_balance?: number
+          name: string
+          type?: Database["public"]["Enums"]["bank_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          initial_balance?: number
+          name?: string
+          type?: Database["public"]["Enums"]["bank_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string | null
@@ -272,6 +348,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      bank_type: "banco" | "carteira" | "outro"
       subscription_status: "active" | "inactive" | "cancelled" | "expired"
       user_plan: "trial" | "free" | "premium"
     }
@@ -402,6 +479,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      bank_type: ["banco", "carteira", "outro"],
       subscription_status: ["active", "inactive", "cancelled", "expired"],
       user_plan: ["trial", "free", "premium"],
     },

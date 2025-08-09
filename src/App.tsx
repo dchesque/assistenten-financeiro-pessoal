@@ -19,7 +19,7 @@ const ContasPagar = lazy(() => import('@/pages/ContasPagar'));
 const ContasReceber = lazy(() => import('@/pages/ContasReceber'));
 const Categorias = lazy(() => import('@/pages/Categorias'));
 const Fornecedores = lazy(() => import('@/pages/Fornecedores'));
-const Bancos = lazy(() => import('@/pages/Bancos'));
+const Banks = lazy(() => import('@/pages/Banks'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const NovaConta = lazy(() => import('@/pages/NovaConta'));
 const NovoRecebimento = lazy(() => import('@/pages/NovoRecebimento'));
@@ -62,7 +62,7 @@ function App() {
                 <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
                 <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
                 <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
-                <Route path="/bancos" element={<ProtectedRoute><Layout><Bancos /></Layout></ProtectedRoute>} />
+                <Route path="/bancos" element={<ProtectedRoute><Layout><Banks /></Layout></ProtectedRoute>} />
                 <Route path="/nova-conta" element={<ProtectedRoute><Layout><NovaConta /></Layout></ProtectedRoute>} />
                 <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><NovoRecebimento /></Layout></ProtectedRoute>} />
                 <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
