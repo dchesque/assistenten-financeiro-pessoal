@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Settings, SettingsUpdateData, DEFAULT_SETTINGS } from '@/types/settings';
+import { auditService } from './auditService';
 
 class SettingsService {
   private static CACHE_KEY = 'user_settings';
@@ -83,12 +84,29 @@ class SettingsService {
       this.cache = data;
       localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
 
-      // Log da alteração
-      console.log('Configurações atualizadas:', {
-        feature: 'settings_update',
-        changes: Object.keys(patch),
-        user_id: data.user_id
-      });
+      // Log da alteração para auditoria
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (user.user) {
+          await auditService.log(
+            'update',
+            'system',
+            user.user.id,
+            user.user.email || '',
+            {
+              entityId: data.id,
+              description: 'Configurações atualizadas',
+              newValues: patch,
+              metadata: {
+                changes: Object.keys(patch),
+                feature: 'settings_update'
+              }
+            }
+          );
+        }
+      } catch (auditError) {
+        console.warn('Erro ao registrar auditoria:', auditError);
+      }
 
       return data;
     } catch (error) {
