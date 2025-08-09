@@ -1,68 +1,39 @@
-import { useState } from 'react';
-import { Camera, User, Phone, Mail, MapPin, Save, Edit3, Shield } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Camera, User, Save, Shield, Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormulario } from '@/hooks/useFormulario';
 import { useMascaras } from '@/hooks/useMascaras';
+import { useProfileData } from '@/hooks/useProfileData';
 import { InputValidacao } from '@/components/ui/InputValidacao';
 import { VALIDACOES_COMUNS } from '@/utils/validacoes';
-import { toast } from '@/hooks/use-toast';
 import { SecurityTab } from '@/components/configuracoes/SecurityTab';
-
-interface DadosPerfil {
-  nome: string;
-  email: string;
-  telefone: string;
-  whatsapp: string;
-  endereco: string;
-  cidade: string;
-  estado: string;
-  cep: string;
-  avatar_url?: string;
-  bio?: string;
-}
-
-interface ConfiguracoesPrivacidade {
-  perfil_publico: boolean;
-  mostrar_email: boolean;
-  mostrar_telefone: boolean;
-  aceitar_convites: boolean;
-}
+import { ProfileHeader } from '@/components/configuracoes/ProfileHeader';
 
 export default function MeuPerfil() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { aplicarMascaraTelefone, aplicarMascaraCEP } = useMascaras();
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-
-  // Dados iniciais do perfil
-  const dadosIniciais: DadosPerfil = {
-    nome: profile?.name || user?.user_metadata?.name || '',
-    email: user?.email || '',
-    telefone: '',
-    whatsapp: '',
-    endereco: '',
-    cidade: '',
-    estado: '',
-    cep: '',
-    avatar_url: user?.user_metadata?.avatar_url || '',
-    bio: ''
-  };
-
-  // Configurações de privacidade
-  const [privacidade, setPrivacidade] = useState<ConfiguracoesPrivacidade>({
-    perfil_publico: false,
-    mostrar_email: false,
-    mostrar_telefone: false,
-    aceitar_convites: true
-  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const {
+    dadosPerfil,
+    setDadosPerfil,
+    carregando,
+    salvando,
+    uploadingAvatar,
+    carregandoCEP,
+    buscarEnderecoPorCEP,
+    uploadAvatar,
+    salvarPerfil
+  } = useProfileData();
 
   // Esquema de validação
   const esquemaValidacao = {
@@ -79,43 +50,54 @@ export default function MeuPerfil() {
     alterarCampo,
     estaCarregando,
     salvar,
-    erros,
-    validarCampo
+    erros
   } = useFormulario(
-    dadosIniciais,
-    async (dadosPerfil) => {
-      // Salvando perfil
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast({ title: 'Sucesso', description: 'Perfil atualizado com sucesso!' });
+    dadosPerfil,
+    async (dadosForm) => {
+      await salvarPerfil(dadosForm);
     },
     esquemaValidacao
   );
 
   // Upload de avatar
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setAvatarPreview(result);
-        alterarCampo('avatar_url', result);
-      };
-      reader.readAsDataURL(file);
+      const avatarUrl = await uploadAvatar(file);
+      if (avatarUrl) {
+        alterarCampo('avatar_url', avatarUrl);
+      }
     }
   };
 
-  // Salvar configurações
-  const salvarConfiguracoes = async () => {
-    // Salvando configurações
-    await new Promise(resolve => setTimeout(resolve, 500));
-    toast({ title: 'Sucesso', description: 'Configurações salvas com sucesso!' });
+  // Busca automática de endereço por CEP
+  const handleCEPChange = (value: string) => {
+    const cepFormatado = aplicarMascaraCEP(value);
+    alterarCampo('cep', cepFormatado);
+    
+    // Se CEP está completo, buscar endereço
+    if (cepFormatado.replace(/\D/g, '').length === 8) {
+      buscarEnderecoPorCEP(cepFormatado);
+    }
   };
 
   const breadcrumb = [
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Meu Perfil', icon: <User className="w-4 h-4" /> }
   ];
+
+  if (carregando) {
+    return (
+      <PageContainer>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+            <p className="text-muted-foreground">Carregando dados do perfil...</p>
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -125,6 +107,8 @@ export default function MeuPerfil() {
         subtitle="Gerencie suas informações pessoais e configurações"
         icon={<User className="w-6 h-6" />}
       />
+
+      <ProfileHeader />
 
       <div className="space-y-6">
         <Tabs defaultValue="dados-pessoais" className="space-y-6">
@@ -157,7 +141,7 @@ export default function MeuPerfil() {
                   <div className="relative">
                     <Avatar className="w-24 h-24">
                       <AvatarImage 
-                        src={avatarPreview || dados.avatar_url} 
+                        src={dados.avatar_url} 
                         alt="Avatar do usuário" 
                       />
                       <AvatarFallback className="text-2xl font-semibold bg-gradient-to-br from-blue-400 to-purple-500 text-white">
@@ -168,21 +152,27 @@ export default function MeuPerfil() {
                       htmlFor="avatar-upload" 
                       className="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-200 border border-gray-200"
                     >
-                      <Camera className="w-4 h-4 text-gray-600" />
+                      {uploadingAvatar ? (
+                        <Loader2 className="w-4 h-4 text-gray-600 animate-spin" />
+                      ) : (
+                        <Camera className="w-4 h-4 text-gray-600" />
+                      )}
                     </Label>
                     <input
+                      ref={fileInputRef}
                       id="avatar-upload"
                       type="file"
                       accept="image/*"
                       className="hidden"
                       onChange={handleAvatarUpload}
+                      disabled={uploadingAvatar}
                     />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">{dados.nome || 'Nome não informado'}</h3>
                     <p className="text-muted-foreground">{dados.email}</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Clique na câmera para alterar sua foto
+                      {uploadingAvatar ? 'Enviando imagem...' : 'Clique na câmera para alterar sua foto'}
                     </p>
                   </div>
                 </div>
@@ -214,6 +204,7 @@ export default function MeuPerfil() {
                       placeholder="seu@email.com"
                       validacao={VALIDACOES_COMUNS.EMAIL}
                       erro={erros.email}
+                      disabled
                     />
                   </div>
 
@@ -241,7 +232,20 @@ export default function MeuPerfil() {
                     />
                   </div>
 
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2">
+                    <InputValidacao
+                      id="cep"
+                      label="CEP"
+                      value={dados.cep}
+                      onChange={(e) => handleCEPChange(e.target.value)}
+                      placeholder="00000-000"
+                      validacao={VALIDACOES_COMUNS.CEP}
+                      erro={erros.cep}
+                      
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <InputValidacao
                       id="endereco"
                       label="Endereço"
@@ -268,31 +272,36 @@ export default function MeuPerfil() {
                       value={dados.estado}
                       onChange={(e) => alterarCampo('estado', e.target.value)}
                       placeholder="SP"
+                      maxLength={2}
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <InputValidacao
-                      id="cep"
-                      label="CEP"
-                      value={dados.cep}
-                      onChange={(e) => alterarCampo('cep', aplicarMascaraCEP(e.target.value))}
-                      placeholder="00000-000"
-                      validacao={VALIDACOES_COMUNS.CEP}
-                      erro={erros.cep}
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="bio">Biografia</Label>
+                    <Textarea
+                      id="bio"
+                      value={dados.bio || ''}
+                      onChange={(e) => alterarCampo('bio', e.target.value)}
+                      placeholder="Conte um pouco sobre você..."
+                      rows={3}
+                      maxLength={500}
+                      className="bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      {(dados.bio || '').length}/500 caracteres
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex justify-end">
                   <Button 
                     onClick={salvar}
-                    disabled={estaCarregando}
+                    disabled={estaCarregando || salvando || uploadingAvatar}
                     className="btn-primary"
                   >
-                    {estaCarregando && <div className="loading-spinner mr-2" />}
+                    {(estaCarregando || salvando) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     <Save className="w-4 h-4 mr-2" />
-                    Salvar Alterações
+                    {salvando ? 'Salvando...' : 'Salvar Alterações'}
                   </Button>
                 </div>
               </CardContent>
