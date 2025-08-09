@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingButton } from '@/components/ui/LoadingButton';
 import { Button } from '@/components/ui/button';
@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MaskedInput, masks } from '@/components/ui/MaskedInput';
-import { formatDocument, validateCPF, validateCNPJ } from '@/utils/validators';
-import { validateForm, validationRules, showValidationErrors } from '@/utils/validacoesBrasil';
-import { toast } from 'sonner';
+import { useCategories } from '@/hooks/useCategories';
+import { getGroupsByType, getDefaultIconByGroup } from '@/types/category';
+import { toast } from '@/hooks/use-toast';
 
 interface ContatoModalProps {
   isOpen: boolean;
@@ -21,50 +21,95 @@ interface ContatoModalProps {
 
 export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor' }: ContatoModalProps) {
   const [loading, setLoading] = useState(false);
+  const { categories } = useCategories();
+  
   const [formData, setFormData] = useState({
-    nome: contato?.nome || '',
-    tipo_pessoa: contato?.tipo_pessoa || 'pessoa_fisica',
-    documento: contato?.documento || '',
+    name: contato?.name || contato?.nome || '',
+    document_type: contato?.document_type || 'cpf',
+    document: contato?.document || contato?.documento || '',
     email: contato?.email || '',
-    telefone: contato?.telefone || '',
-    endereco: contato?.endereco || '',
-    observacoes: contato?.observacoes || ''
+    phone: contato?.phone || contato?.telefone || '',
+    address: contato?.address || contato?.endereco || '',
+    notes: contato?.notes || contato?.observacoes || '',
+    type: contato?.type || (tipo === 'credor' ? 'supplier' : 'customer'),
+    category_id: contato?.category_id || '',
+    category_type: tipo === 'credor' ? 'expense' : 'income',
+    category_group: ''
   });
 
-  // Schema de validação
-  const validationSchema = {
-    nome: [
-      validationRules.required('Nome'),
-    ],
-    documento: [
-      validationRules.required('Documento'),
-      formData.tipo_pessoa === 'pessoa_fisica' 
-        ? validationRules.cpf()
-        : validationRules.cnpj()
-    ],
-    email: formData.email ? [validationRules.email()] : [],
-    telefone: formData.telefone ? [validationRules.phone()] : []
-  };
+  // Categorias filtradas por tipo
+  const categoriasFiltradas = categories.filter(cat => 
+    cat.type === formData.category_type
+  );
+
+  // Grupos disponíveis para o tipo selecionado
+  const gruposDisponiveis = getGroupsByType(formData.category_type as 'income' | 'expense');
+
+  // Atualizar formulário quando contato mudar
+  useEffect(() => {
+    if (contato) {
+      setFormData({
+        name: contato.name || contato.nome || '',
+        document_type: contato.document_type || 'cpf',
+        document: contato.document || contato.documento || '',
+        email: contato.email || '',
+        phone: contato.phone || contato.telefone || '',
+        address: contato.address || contato.endereco || '',
+        notes: contato.notes || contato.observacoes || '',
+        type: contato.type || (tipo === 'credor' ? 'supplier' : 'customer'),
+        category_id: contato.category_id || '',
+        category_type: tipo === 'credor' ? 'expense' : 'income',
+        category_group: ''
+      });
+    } else {
+      setFormData({
+        name: '',
+        document_type: 'cpf',
+        document: '',
+        email: '',
+        phone: '',
+        address: '',
+        notes: '',
+        type: tipo === 'credor' ? 'supplier' : 'customer',
+        category_id: '',
+        category_type: tipo === 'credor' ? 'expense' : 'income',
+        category_group: ''
+      });
+    }
+  }, [contato, tipo, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar formulário
-    const { isValid, errors } = validateForm(formData, validationSchema);
+    // Validações obrigatórias
+    if (!formData.name.trim()) {
+      toast({ title: 'Erro', description: 'Nome é obrigatório', variant: 'destructive' });
+      return;
+    }
     
-    if (!isValid) {
-      showValidationErrors(errors);
+    if (!formData.category_id) {
+      toast({ title: 'Erro', description: 'Categoria é obrigatória', variant: 'destructive' });
       return;
     }
     
     setLoading(true);
     
     try {
-      await onSave(formData);
-      toast.success(contato ? "Contato atualizado!" : "Contato criado!");
+      const dadosParaSalvar = {
+        ...formData,
+        // Garantir que campos opcionais vazios sejam null
+        document: formData.document?.trim() || null,
+        email: formData.email?.trim() || null,
+        phone: formData.phone?.trim() || null,
+        address: formData.address?.trim() || null,
+        notes: formData.notes?.trim() || null
+      };
+      
+      await onSave(dadosParaSalvar);
+      toast({ title: 'Sucesso', description: contato ? 'Contato atualizado!' : 'Contato criado!' });
       onClose();
     } catch (error) {
-      toast.error("Erro ao salvar contato");
+      toast({ title: 'Erro', description: 'Erro ao salvar contato', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -82,27 +127,86 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="nome">Nome</Label>
+              <Label htmlFor="name">
+                Nome <span className="text-red-500">*</span>
+              </Label>
               <Input
-                id="nome"
-                value={formData.nome}
-                onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 required
+                placeholder="Nome do contato"
               />
             </div>
             
             <div>
-              <Label htmlFor="tipo_pessoa">Tipo de Pessoa</Label>
+              <Label htmlFor="document_type">Tipo de Documento</Label>
               <Select
-                value={formData.tipo_pessoa}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_pessoa: value }))}
+                value={formData.document_type}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, document_type: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pessoa_fisica">Pessoa Física</SelectItem>
-                  <SelectItem value="pessoa_juridica">Pessoa Jurídica</SelectItem>
+                  <SelectItem value="cpf">CPF</SelectItem>
+                  <SelectItem value="cnpj">CNPJ</SelectItem>
+                  <SelectItem value="other">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Categoria - Campo obrigatório */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="category_type">
+                Tipo <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.category_type}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    category_type: value,
+                    category_id: '', // Reset categoria quando tipo muda
+                    type: value === 'expense' ? 'supplier' : 'customer'
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="expense">Despesa (Credor)</SelectItem>
+                  <SelectItem value="income">Receita (Pagador)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="category_id">
+                Categoria <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.category_id}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoriasFiltradas.map((categoria) => (
+                    <SelectItem key={categoria.id} value={categoria.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: categoria.color }}
+                        />
+                        {categoria.name}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -110,23 +214,25 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="documento">
-                Documento <span className="text-red-500">*</span>
-              </Label>
+              <Label htmlFor="document">Documento</Label>
               <MaskedInput
-                mask={formData.tipo_pessoa === 'pessoa_fisica' ? masks.cpf : masks.cnpj}
-                value={formData.documento}
-                onChange={(value) => setFormData(prev => ({ ...prev, documento: value }))}
-                placeholder={formData.tipo_pessoa === 'pessoa_fisica' ? 'CPF' : 'CNPJ'}
+                mask={formData.document_type === 'cpf' ? masks.cpf : formData.document_type === 'cnpj' ? masks.cnpj : null}
+                value={formData.document}
+                onChange={(value) => setFormData(prev => ({ ...prev, document: value }))}
+                placeholder={
+                  formData.document_type === 'cpf' ? 'CPF (opcional)' : 
+                  formData.document_type === 'cnpj' ? 'CNPJ (opcional)' : 
+                  'Documento (opcional)'
+                }
               />
             </div>
             
             <div>
-              <Label htmlFor="telefone">Telefone</Label>
+              <Label htmlFor="phone">Telefone</Label>
               <MaskedInput
                 mask={masks.phone}
-                value={formData.telefone}
-                onChange={(value) => setFormData(prev => ({ ...prev, telefone: value }))}
+                value={formData.phone}
+                onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
                 placeholder="(11) 99999-9999"
               />
             </div>
@@ -139,24 +245,27 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
               type="email"
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              placeholder="email@exemplo.com"
             />
           </div>
           
           <div>
-            <Label htmlFor="endereco">Endereço</Label>
+            <Label htmlFor="address">Endereço</Label>
             <Input
-              id="endereco"
-              value={formData.endereco}
-              onChange={(e) => setFormData(prev => ({ ...prev, endereco: e.target.value }))}
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              placeholder="Endereço completo"
             />
           </div>
           
           <div>
-            <Label htmlFor="observacoes">Observações</Label>
+            <Label htmlFor="notes">Observações</Label>
             <Textarea
-              id="observacoes"
-              value={formData.observacoes}
-              onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Observações adicionais..."
             />
           </div>
           

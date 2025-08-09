@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { dataService } from '@/services/DataServiceFactory';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
 import { toast } from '@/hooks/use-toast';
@@ -41,8 +41,24 @@ export function useContatos(): UseContatosReturn {
     try {
       setLoading(true);
       setError(null);
-      const data = await dataService.contatos.getAll();
-      setContatos(data);
+      
+      // Buscar contatos com dados de categoria
+      const { data, error } = await supabase
+        .from('contacts')
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            color,
+            type
+          )
+        `)
+        .eq('deleted_at', null)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      setContatos(data || []);
     } catch (error) {
       const appError = handleError(error, 'useContatos.carregarContatos');
       setError(appError.message);
@@ -78,19 +94,31 @@ export function useContatos(): UseContatosReturn {
         if (existente) {
           throw new Error('Já existe um contato com este documento');
         }
-
-        // Validar documento (implementação básica)
-        const tipoDocumento = documentoLimpo.length === 11 ? 'pessoa_fisica' : 'pessoa_juridica';
-        if (!validarDocumento(dadosContato.document, tipoDocumento)) {
-          throw new Error('Documento inválido');
-        }
       }
 
-      const novoContato = await dataService.contatos.create(dadosContato);
-      setContatos(prev => [...prev, novoContato]);
+      // Inserir contato no Supabase
+      const { data, error } = await supabase
+        .from('contacts')
+        .insert({
+          ...dadosContato,
+          user_id: user.id
+        })
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            color,
+            type
+          )
+        `)
+        .single();
+        
+      if (error) throw error;
       
+      setContatos(prev => [...prev, data]);
       toast({ title: 'Sucesso', description: 'Contato criado com sucesso!' });
-      return novoContato;
+      return data;
     } catch (error) {
       const appError = handleError(error, 'useContatos.criarContato');
       setError(appError.message);
@@ -115,24 +143,34 @@ export function useContatos(): UseContatosReturn {
         if (existente) {
           throw new Error('Já existe um contato com este documento');
         }
-
-        // Validar novo documento
-        const tipoDocumento = documentoLimpo.length === 11 ? 'pessoa_fisica' : 'pessoa_juridica';
-        if (!validarDocumento(dadosAtualizacao.document, tipoDocumento)) {
-          throw new Error('Documento inválido');
-        }
       }
 
-      const contatoAtualizado = await dataService.contatos.update(id, dadosAtualizacao);
+      // Atualizar contato no Supabase
+      const { data, error } = await supabase
+        .from('contacts')
+        .update(dadosAtualizacao)
+        .eq('id', id)
+        .select(`
+          *,
+          category:categories(
+            id,
+            name,
+            color,
+            type
+          )
+        `)
+        .single();
+        
+      if (error) throw error;
       
-      if (contatoAtualizado) {
+      if (data) {
         setContatos(prev => 
-          prev.map(contato => contato.id === id ? contatoAtualizado : contato)
+          prev.map(contato => contato.id === id ? data : contato)
         );
         toast({ title: 'Sucesso', description: 'Contato atualizado com sucesso!' });
       }
       
-      return contatoAtualizado;
+      return data;
     } catch (error) {
       const appError = handleError(error, 'useContatos.atualizarContato');
       setError(appError.message);
@@ -146,10 +184,14 @@ export function useContatos(): UseContatosReturn {
     try {
       setLoading(true);
       
-      // Verificar se contato está sendo usado (implementar quando houver contas)
-      // Por enquanto, permitir exclusão
+      // Soft delete - marcar como excluído
+      const { error } = await supabase
+        .from('contacts')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+        
+      if (error) throw error;
       
-      await dataService.contatos.delete(id);
       setContatos(prev => prev.filter(contato => contato.id !== id));
       toast({ title: 'Sucesso', description: 'Contato excluído com sucesso!' });
     } catch (error) {

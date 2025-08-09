@@ -432,6 +432,7 @@ export type Database = {
         Row: {
           active: boolean
           address: string | null
+          category_id: string | null
           city: string | null
           created_at: string
           deleted_at: string | null
@@ -453,6 +454,7 @@ export type Database = {
         Insert: {
           active?: boolean
           address?: string | null
+          category_id?: string | null
           city?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -474,6 +476,7 @@ export type Database = {
         Update: {
           active?: boolean
           address?: string | null
+          category_id?: string | null
           city?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -493,6 +496,20 @@ export type Database = {
           zip?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "contacts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "active_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contacts_user_id_fkey"
             columns: ["user_id"]

@@ -1,40 +1,37 @@
-import { useState } from 'react';
-import { Building2, Users, Plus, Search, Filter, MoreVertical, Edit, Trash } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { createBreadcrumb } from '@/utils/breadcrumbUtils';
-import { useCredores } from '@/hooks/useCredores';
-import { usePagadores } from '@/hooks/usePagadores';
-import { useLoadingStates } from '@/hooks/useLoadingStates';
 import { ContatoModal } from '@/components/ui/ContatoModal';
+import { ContatosList } from '@/components/contatos/ContatosList';
+import { useContatos } from '@/hooks/useContatos';
 import { toast } from '@/hooks/use-toast';
 
 type ContatoTipo = 'credor' | 'pagador';
 
 export default function Contatos() {
-  const [filtroTipo, setFiltroTipo] = useState<ContatoTipo | 'todos'>('todos');
+  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'supplier' | 'customer'>('todos');
   const [busca, setBusca] = useState('');
   const [modalAberto, setModalAberto] = useState(false);
-  const [tipoModal, setTipoModal] = useState<ContatoTipo>('credor');
+  const [tipoModal, setTipoModal] = useState<'credor' | 'pagador'>('credor');
   const [itemSelecionado, setItemSelecionado] = useState<any>(null);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
   
-  const { isDeleting, setLoading } = useLoadingStates();
-
-  const { credores, loading: loadingCredores, criarCredor, atualizarCredor, excluirCredor } = useCredores();
-  const { pagadores, loading: loadingPagadores } = usePagadores();
-
-  const criarPagador = async (dados: any) => { /* TODO: Implementar com Supabase */ };
-  const atualizarPagador = async (id: number, dados: any) => { /* TODO: Implementar com Supabase */ };
-  const excluirPagador = async (id: number) => { /* TODO: Implementar com Supabase */ };
+  const {
+    contatos,
+    loading,
+    error,
+    criarContato,
+    atualizarContato,
+    excluirContato,
+    recarregar
+  } = useContatos();
 
   const breadcrumbItems = [
     { label: 'Início', href: '/dashboard' },
@@ -42,19 +39,14 @@ export default function Contatos() {
     { label: 'Pessoas e Empresas' }
   ];
 
-  // Combinar credores e pagadores com tipo
-  const contatos = [
-    ...credores.map(c => ({ ...c, tipo: 'credor' as ContatoTipo })),
-    ...pagadores.map(p => ({ ...p, tipo: 'pagador' as ContatoTipo }))
-  ];
-
+  // Filtrar contatos
   const contatosFiltrados = contatos.filter(contato => {
-    const matchTipo = filtroTipo === 'todos' || contato.tipo === filtroTipo;
-    const matchBusca = !busca || contato.nome.toLowerCase().includes(busca.toLowerCase());
+    const matchTipo = filtroTipo === 'todos' || contato.type === filtroTipo;
+    const matchBusca = !busca || contato.name.toLowerCase().includes(busca.toLowerCase());
     return matchTipo && matchBusca;
   });
 
-  const handleNovoContato = (tipo: ContatoTipo) => {
+  const handleNovoContato = (tipo: 'credor' | 'pagador') => {
     setTipoModal(tipo);
     setItemSelecionado(null);
     setModoEdicao(false);
@@ -62,7 +54,7 @@ export default function Contatos() {
   };
 
   const handleEditarContato = (contato: any) => {
-    setTipoModal(contato.tipo);
+    setTipoModal(contato.type === 'supplier' ? 'credor' : 'pagador');
     setItemSelecionado(contato);
     setModoEdicao(true);
     setModalAberto(true);
@@ -76,18 +68,12 @@ export default function Contatos() {
   const confirmDelete = async () => {
     if (!itemToDelete) return;
     
-    setLoading('deleting', true);
     try {
-      if (itemToDelete.tipo === 'credor') {
-        await excluirCredor(itemToDelete.id);
-      } else {
-        await excluirPagador(itemToDelete.id);
-      }
+      await excluirContato(itemToDelete.id);
       toast({ title: 'Sucesso', description: 'Contato excluído com sucesso!' });
     } catch (error) {
       toast({ title: 'Erro', description: 'Erro ao excluir contato', variant: 'destructive' });
     } finally {
-      setLoading('deleting', false);
       setDeleteDialogOpen(false);
       setItemToDelete(null);
     }
@@ -95,21 +81,11 @@ export default function Contatos() {
 
   const handleSalvarContato = async (dados: any) => {
     try {
-      const dadosComTipo = { ...dados, tipo: tipoModal };
-      
       if (modoEdicao && itemSelecionado) {
-        if (tipoModal === 'credor') {
-          await atualizarCredor(itemSelecionado.id, dadosComTipo);
-        } else {
-          await atualizarPagador(itemSelecionado.id, dadosComTipo);
-        }
+        await atualizarContato(itemSelecionado.id, dados);
         toast({ title: 'Sucesso', description: 'Contato atualizado com sucesso!' });
       } else {
-        if (tipoModal === 'credor') {
-          await criarCredor(dadosComTipo);
-        } else {
-          await criarPagador(dadosComTipo);
-        }
+        await criarContato(dados);
         toast({ title: 'Sucesso', description: 'Contato criado com sucesso!' });
       }
       setModalAberto(false);
@@ -118,11 +94,18 @@ export default function Contatos() {
     }
   };
 
-  const getStatusBadge = (tipo: ContatoTipo) => {
-    return tipo === 'credor' 
-      ? <Badge variant="destructive" className="bg-red-100/80 text-red-700">Credor</Badge>
-      : <Badge variant="default" className="bg-green-100/80 text-green-700">Pagador</Badge>;
-  };
+  // Recarregar dados quando houver erro
+  useEffect(() => {
+    if (error) {
+      console.error('Erro ao carregar contatos:', error);
+      toast({ 
+        title: 'Erro', 
+        description: 'Erro ao carregar contatos. Tentando novamente...', 
+        variant: 'destructive' 
+      });
+      setTimeout(() => recarregar(), 2000);
+    }
+  }, [error]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
@@ -191,8 +174,8 @@ export default function Contatos() {
                 <Tabs value={filtroTipo} onValueChange={(value) => setFiltroTipo(value as any)}>
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="todos">Todos</TabsTrigger>
-                    <TabsTrigger value="credor">Credores</TabsTrigger>
-                    <TabsTrigger value="pagador">Pagadores</TabsTrigger>
+                    <TabsTrigger value="supplier">Credores</TabsTrigger>
+                    <TabsTrigger value="customer">Pagadores</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -201,84 +184,12 @@ export default function Contatos() {
         </Card>
 
         {/* Lista de Contatos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {contatosFiltrados.map((contato) => (
-            <Card key={`${contato.tipo}-${contato.id}`} className="card-base hover:scale-105 transition-all duration-200">
-              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                <div className="flex items-center gap-2">
-                  {contato.tipo === 'credor' ? (
-                    <Building2 className="w-5 h-5 text-red-500" />
-                  ) : (
-                    <Users className="w-5 h-5 text-green-500" />
-                  )}
-                  {getStatusBadge(contato.tipo)}
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEditarContato(contato)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleExcluirContato(contato)}
-                      className="text-red-600"
-                    >
-                      <Trash className="w-4 h-4 mr-2" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg text-gray-900">{contato.nome}</h3>
-                  {contato.documento && (
-                    <p className="text-sm text-gray-600">
-                      Doc: {contato.documento}
-                    </p>
-                  )}
-                  {contato.email && (
-                    <p className="text-sm text-gray-600">
-                      Email: {contato.email}
-                    </p>
-                  )}
-                  {contato.telefone && (
-                    <p className="text-sm text-gray-600">
-                      Tel: {contato.telefone}
-                    </p>
-                  )}
-                  <div className="pt-2 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">
-                      Cadastrado em: {new Date((contato as any).dataCadastro || (contato as any).created_at || '').toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {contatosFiltrados.length === 0 && (
-          <Card className="card-base">
-            <CardContent className="text-center py-8">
-              <div className="text-gray-500">
-                <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">Nenhum contato encontrado</p>
-                <p className="text-sm">
-                  {filtroTipo === 'todos' 
-                    ? 'Comece criando seu primeiro contato.'
-                    : `Nenhum ${filtroTipo} encontrado com os filtros aplicados.`
-                  }
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <ContatosList
+          contatos={contatosFiltrados}
+          loading={loading}
+          onEdit={handleEditarContato}
+          onDelete={handleExcluirContato}
+        />
       </div>
 
       {/* Modal de Contato */}
@@ -295,12 +206,12 @@ export default function Contatos() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="Confirmar exclusão"
-        description={`Tem certeza que deseja excluir "${itemToDelete?.nome}"? Esta ação não pode ser desfeita.`}
+        description={`Tem certeza que deseja excluir "${itemToDelete?.name || itemToDelete?.nome}"? Esta ação não pode ser desfeita.`}
         onConfirm={confirmDelete}
         confirmText="Excluir"
         cancelText="Cancelar"
         variant="destructive"
-        loading={isDeleting}
+        loading={loading}
       />
       </div>
     </div>
