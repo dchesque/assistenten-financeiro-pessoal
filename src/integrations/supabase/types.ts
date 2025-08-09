@@ -19,7 +19,9 @@ export type Database = {
           amount: number
           bank_account_id: string | null
           category_id: string | null
+          contact_id: string | null
           created_at: string
+          deleted_at: string | null
           description: string
           due_date: string
           id: string
@@ -34,7 +36,9 @@ export type Database = {
           amount: number
           bank_account_id?: string | null
           category_id?: string | null
+          contact_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           description: string
           due_date: string
           id?: string
@@ -49,7 +53,9 @@ export type Database = {
           amount?: number
           bank_account_id?: string | null
           category_id?: string | null
+          contact_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string
           due_date?: string
           id?: string
@@ -72,7 +78,35 @@ export type Database = {
             foreignKeyName: "accounts_payable_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
+            referencedRelation: "active_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "active_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "active_suppliers"
             referencedColumns: ["id"]
           },
           {
@@ -96,8 +130,10 @@ export type Database = {
           amount: number
           bank_account_id: string | null
           category_id: string | null
+          contact_id: string | null
           created_at: string
           customer_name: string | null
+          deleted_at: string | null
           description: string
           due_date: string
           id: string
@@ -111,8 +147,10 @@ export type Database = {
           amount: number
           bank_account_id?: string | null
           category_id?: string | null
+          contact_id?: string | null
           created_at?: string
           customer_name?: string | null
+          deleted_at?: string | null
           description: string
           due_date: string
           id?: string
@@ -126,8 +164,10 @@ export type Database = {
           amount?: number
           bank_account_id?: string | null
           category_id?: string | null
+          contact_id?: string | null
           created_at?: string
           customer_name?: string | null
+          deleted_at?: string | null
           description?: string
           due_date?: string
           id?: string
@@ -149,7 +189,28 @@ export type Database = {
             foreignKeyName: "accounts_receivable_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
+            referencedRelation: "active_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "active_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
           {
@@ -165,6 +226,7 @@ export type Database = {
         Row: {
           action: Database["public"]["Enums"]["audit_action"]
           created_at: string
+          deleted_at: string | null
           id: string
           ip: string | null
           metadata: Json | null
@@ -178,6 +240,7 @@ export type Database = {
         Insert: {
           action: Database["public"]["Enums"]["audit_action"]
           created_at?: string
+          deleted_at?: string | null
           id?: string
           ip?: string | null
           metadata?: Json | null
@@ -191,6 +254,7 @@ export type Database = {
         Update: {
           action?: Database["public"]["Enums"]["audit_action"]
           created_at?: string
+          deleted_at?: string | null
           id?: string
           ip?: string | null
           metadata?: Json | null
@@ -217,6 +281,7 @@ export type Database = {
           agency: string | null
           bank_id: string
           created_at: string
+          deleted_at: string | null
           id: string
           pix_key: string | null
           updated_at: string
@@ -226,6 +291,7 @@ export type Database = {
           agency?: string | null
           bank_id: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           pix_key?: string | null
           updated_at?: string
@@ -235,11 +301,19 @@ export type Database = {
           agency?: string | null
           bank_id?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           pix_key?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bank_accounts_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "active_banks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bank_accounts_bank_id_fkey"
             columns: ["bank_id"]
@@ -252,6 +326,7 @@ export type Database = {
       banks: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: string
           initial_balance: number
           name: string
@@ -261,6 +336,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           initial_balance?: number
           name: string
@@ -270,6 +346,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           initial_balance?: number
           name?: string
@@ -291,6 +368,7 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
+          deleted_at: string | null
           id: string
           name: string
           updated_at: string
@@ -299,6 +377,7 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           name: string
           updated_at?: string
@@ -307,6 +386,7 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           name?: string
           updated_at?: string
@@ -322,11 +402,86 @@ export type Database = {
           },
         ]
       }
+      contacts: {
+        Row: {
+          active: boolean
+          address: string | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          document: string | null
+          document_type: string | null
+          email: string | null
+          id: string
+          metadata: Json
+          name: string
+          notes: string | null
+          phone: string | null
+          state: string | null
+          type: string
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+          zip: string | null
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string
+          metadata?: Json
+          name: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string
+          metadata?: Json
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           channel: string
           created_at: string
           data: Json | null
+          deleted_at: string | null
           delivered_at: string | null
           id: string
           message: string
@@ -343,6 +498,7 @@ export type Database = {
           channel?: string
           created_at?: string
           data?: Json | null
+          deleted_at?: string | null
           delivered_at?: string | null
           id?: string
           message: string
@@ -359,6 +515,7 @@ export type Database = {
           channel?: string
           created_at?: string
           data?: Json | null
+          deleted_at?: string | null
           delivered_at?: string | null
           id?: string
           message?: string
@@ -377,6 +534,7 @@ export type Database = {
         Row: {
           ativo: boolean
           created_at: string
+          deleted_at: string | null
           features_limit: Json
           id: string
           last_login: string | null
@@ -395,6 +553,7 @@ export type Database = {
         Insert: {
           ativo?: boolean
           created_at?: string
+          deleted_at?: string | null
           features_limit?: Json
           id?: string
           last_login?: string | null
@@ -413,6 +572,7 @@ export type Database = {
         Update: {
           ativo?: boolean
           created_at?: string
+          deleted_at?: string | null
           features_limit?: Json
           id?: string
           last_login?: string | null
@@ -435,6 +595,7 @@ export type Database = {
           created_at: string
           currency: string
           date_format: string
+          deleted_at: string | null
           extras: Json
           id: string
           items_per_page: number
@@ -451,6 +612,7 @@ export type Database = {
           created_at?: string
           currency?: string
           date_format?: string
+          deleted_at?: string | null
           extras?: Json
           id?: string
           items_per_page?: number
@@ -467,6 +629,7 @@ export type Database = {
           created_at?: string
           currency?: string
           date_format?: string
+          deleted_at?: string | null
           extras?: Json
           id?: string
           items_per_page?: number
@@ -484,6 +647,7 @@ export type Database = {
       subscriptions: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: string
           status: string
           subscription_ends_at: string | null
@@ -493,6 +657,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           status?: string
           subscription_ends_at?: string | null
@@ -502,6 +667,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           status?: string
           subscription_ends_at?: string | null
@@ -525,6 +691,7 @@ export type Database = {
           address: string | null
           city: string | null
           created_at: string
+          deleted_at: string | null
           document: string | null
           email: string | null
           id: string
@@ -541,6 +708,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string
+          deleted_at?: string | null
           document?: string | null
           email?: string | null
           id?: string
@@ -557,6 +725,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string
+          deleted_at?: string | null
           document?: string | null
           email?: string | null
           id?: string
@@ -585,6 +754,7 @@ export type Database = {
           amount: number
           created_at: string
           date: string
+          deleted_at: string | null
           description: string | null
           from_account_id: string | null
           id: string
@@ -601,6 +771,7 @@ export type Database = {
           amount: number
           created_at?: string
           date: string
+          deleted_at?: string | null
           description?: string | null
           from_account_id?: string | null
           id?: string
@@ -617,6 +788,7 @@ export type Database = {
           amount?: number
           created_at?: string
           date?: string
+          deleted_at?: string | null
           description?: string | null
           from_account_id?: string | null
           id?: string
@@ -636,10 +808,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "transactions_accounts_payable_id_fkey"
+            columns: ["accounts_payable_id"]
+            isOneToOne: false
+            referencedRelation: "active_accounts_payable"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transactions_accounts_receivable_id_fkey"
             columns: ["accounts_receivable_id"]
             isOneToOne: false
             referencedRelation: "accounts_receivable"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_accounts_receivable_id_fkey"
+            columns: ["accounts_receivable_id"]
+            isOneToOne: false
+            referencedRelation: "active_accounts_receivable"
             referencedColumns: ["id"]
           },
           {
@@ -667,7 +853,429 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      active_accounts_payable: {
+        Row: {
+          amount: number | null
+          bank_account_id: string | null
+          category_id: string | null
+          contact_id: string | null
+          created_at: string | null
+          deleted_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string | null
+          notes: string | null
+          paid_at: string | null
+          status: Database["public"]["Enums"]["account_status"] | null
+          supplier_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          bank_account_id?: string | null
+          category_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["account_status"] | null
+          supplier_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          bank_account_id?: string | null
+          category_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["account_status"] | null
+          supplier_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_payable_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "active_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "active_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "active_suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      active_accounts_receivable: {
+        Row: {
+          amount: number | null
+          bank_account_id: string | null
+          category_id: string | null
+          contact_id: string | null
+          created_at: string | null
+          customer_name: string | null
+          deleted_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string | null
+          notes: string | null
+          received_at: string | null
+          status: Database["public"]["Enums"]["receivable_status"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          bank_account_id?: string | null
+          category_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string | null
+          notes?: string | null
+          received_at?: string | null
+          status?: Database["public"]["Enums"]["receivable_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          bank_account_id?: string | null
+          category_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string | null
+          notes?: string | null
+          received_at?: string | null
+          status?: Database["public"]["Enums"]["receivable_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_receivable_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "active_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "active_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      active_banks: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          id: string | null
+          initial_balance: number | null
+          name: string | null
+          type: Database["public"]["Enums"]["bank_type"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          initial_balance?: number | null
+          name?: string | null
+          type?: Database["public"]["Enums"]["bank_type"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          initial_balance?: number | null
+          name?: string | null
+          type?: Database["public"]["Enums"]["bank_type"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      active_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string | null
+          name: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      active_contacts: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          city: string | null
+          created_at: string | null
+          deleted_at: string | null
+          document: string | null
+          document_type: string | null
+          email: string | null
+          id: string | null
+          metadata: Json | null
+          name: string | null
+          notes: string | null
+          phone: string | null
+          state: string | null
+          type: string | null
+          updated_at: string | null
+          user_id: string | null
+          whatsapp: string | null
+          zip: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string | null
+          metadata?: Json | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string | null
+          metadata?: Json | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      active_suppliers: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          city: string | null
+          created_at: string | null
+          deleted_at: string | null
+          document: string | null
+          email: string | null
+          id: string | null
+          name: string | null
+          notes: string | null
+          phone: string | null
+          state: string | null
+          updated_at: string | null
+          user_id: string | null
+          zip: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          document?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          document?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_feature_limit: {
@@ -688,6 +1296,7 @@ export type Database = {
           channel: string
           created_at: string
           data: Json | null
+          deleted_at: string | null
           delivered_at: string | null
           id: string
           message: string
@@ -705,6 +1314,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: {
           created_at: string
+          deleted_at: string | null
           id: string
           status: string
           subscription_ends_at: string | null
@@ -719,6 +1329,7 @@ export type Database = {
           channel: string
           created_at: string
           data: Json | null
+          deleted_at: string | null
           delivered_at: string | null
           id: string
           message: string
@@ -760,6 +1371,7 @@ export type Database = {
           channel: string
           created_at: string
           data: Json | null
+          deleted_at: string | null
           delivered_at: string | null
           id: string
           message: string
@@ -777,6 +1389,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: {
           created_at: string
+          deleted_at: string | null
           id: string
           status: string
           subscription_ends_at: string | null
@@ -784,6 +1397,14 @@ export type Database = {
           updated_at: string
           user_id: string
         }
+      }
+      restore_deleted_record: {
+        Args: { p_table_name: string; p_record_id: string; p_user_id?: string }
+        Returns: boolean
+      }
+      soft_delete_record: {
+        Args: { p_table_name: string; p_record_id: string; p_user_id?: string }
+        Returns: boolean
       }
       upsert_profile: {
         Args: {
@@ -795,6 +1416,7 @@ export type Database = {
         Returns: {
           ativo: boolean
           created_at: string
+          deleted_at: string | null
           features_limit: Json
           id: string
           last_login: string | null
@@ -817,6 +1439,7 @@ export type Database = {
           created_at: string
           currency: string
           date_format: string
+          deleted_at: string | null
           extras: Json
           id: string
           items_per_page: number
