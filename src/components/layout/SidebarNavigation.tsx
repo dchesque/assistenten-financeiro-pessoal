@@ -76,7 +76,7 @@ const menuStructure = [
     key: 'cadastros',
     items: [
       { name: 'Categorias', path: '/categorias', icon: Tags, color: 'text-blue-500' },
-      { name: 'Contatos', path: '/contatos', icon: Users, color: 'text-blue-500' },
+      { name: 'Pessoas e Empresas', path: '/contatos', icon: Users, color: 'text-blue-500' },
       { name: 'Bancos', path: '/bancos', icon: Building, color: 'text-blue-500' }
     ]
   },
