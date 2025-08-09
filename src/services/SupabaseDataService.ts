@@ -1094,25 +1094,120 @@ export class SupabaseDataService implements IDataService {
   }
 
   dashboard = {
-    getSummary: async (): Promise<DashboardSummary> => ({
-      saldo_total: 0,
-      contas_pagar: {
-        pendentes: 0,
-        valor_pendente: 0,
-        vencidas: 0,
-        valor_vencido: 0,
-        pagas_mes: 0,
-        valor_pago_mes: 0
-      },
-      contas_receber: {
-        pendentes: 0,
-        valor_pendente: 0,
-        vencidas: 0,
-        valor_vencido: 0,
-        recebidas_mes: 0,
-        valor_recebido_mes: 0
+    getSummary: async (): Promise<DashboardSummary> => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        // Buscar saldo total dos bancos
+        const { data: banks } = await this.supabaseClient
+          .from('banks')
+          .select('initial_balance')
+          .eq('user_id', userId)
+          .is('deleted_at', null);
+        
+        const saldo_total = (banks || []).reduce((total, bank) => total + (parseFloat(bank.initial_balance) || 0), 0);
+        
+        // Buscar estatísticas de contas a pagar
+        const hoje = new Date().toISOString().split('T')[0];
+        const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
+        
+        const { data: contasPagar } = await this.supabaseClient
+          .from('accounts_payable')
+          .select('amount, status, due_date, paid_date')
+          .eq('user_id', userId)
+          .is('deleted_at', null);
+        
+        const { data: contasReceber } = await this.supabaseClient
+          .from('accounts_receivable')
+          .select('amount, status, due_date, received_date')
+          .eq('user_id', userId)
+          .is('deleted_at', null);
+        
+        // Processar contas a pagar
+        const contasPagarStats = (contasPagar || []).reduce((acc, conta) => {
+          const valor = parseFloat(conta.amount) || 0;
+          
+          if (conta.status === 'pending') {
+            acc.pendentes++;
+            acc.valor_pendente += valor;
+            
+            if (conta.due_date < hoje) {
+              acc.vencidas++;
+              acc.valor_vencido += valor;
+            }
+          } else if (conta.status === 'paid' && conta.paid_date >= inicioMes && conta.paid_date <= fimMes) {
+            acc.pagas_mes++;
+            acc.valor_pago_mes += valor;
+          }
+          
+          return acc;
+        }, {
+          pendentes: 0,
+          valor_pendente: 0,
+          vencidas: 0,
+          valor_vencido: 0,
+          pagas_mes: 0,
+          valor_pago_mes: 0
+        });
+        
+        // Processar contas a receber
+        const contasReceberStats = (contasReceber || []).reduce((acc, conta) => {
+          const valor = parseFloat(conta.amount) || 0;
+          
+          if (conta.status === 'pending') {
+            acc.pendentes++;
+            acc.valor_pendente += valor;
+            
+            if (conta.due_date < hoje) {
+              acc.vencidas++;
+              acc.valor_vencido += valor;
+            }
+          } else if (conta.status === 'received' && conta.received_date >= inicioMes && conta.received_date <= fimMes) {
+            acc.recebidas_mes++;
+            acc.valor_recebido_mes += valor;
+          }
+          
+          return acc;
+        }, {
+          pendentes: 0,
+          valor_pendente: 0,
+          vencidas: 0,
+          valor_vencido: 0,
+          recebidas_mes: 0,
+          valor_recebido_mes: 0
+        });
+        
+        return {
+          saldo_total,
+          contas_pagar: contasPagarStats,
+          contas_receber: contasReceberStats
+        };
+        
+      } catch (error) {
+        console.warn('Erro ao buscar dados do dashboard:', error);
+        // Retornar dados padrão em caso de erro
+        return {
+          saldo_total: 0,
+          contas_pagar: {
+            pendentes: 0,
+            valor_pendente: 0,
+            vencidas: 0,
+            valor_vencido: 0,
+            pagas_mes: 0,
+            valor_pago_mes: 0
+          },
+          contas_receber: {
+            pendentes: 0,
+            valor_pendente: 0,
+            vencidas: 0,
+            valor_vencido: 0,
+            recebidas_mes: 0,
+            valor_recebido_mes: 0
+          }
+        };
       }
-    })
+    }
   };
 
   utils = {

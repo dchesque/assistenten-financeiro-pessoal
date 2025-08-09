@@ -44,16 +44,12 @@ export function useDashboard(): UseDashboardReturn {
     setLoading(true);
     setError(null);
     
-    const loadingToast = showMessage.loading('Carregando dashboard...');
-    
     try {
       const data = await withRetry(() => 
         withTimeout(dataService.dashboard.getSummary(), 30000)
       );
       setSummary(data);
-      showMessage.dismiss();
     } catch (err) {
-      showMessage.dismiss();
       const appErr = handleError(err, 'carregar-dashboard');
       setError(appErr.message);
     } finally {
