@@ -100,11 +100,11 @@ function App() {
               richColors
               closeButton
               duration={4000}
-              theme="light"
               toastOptions={{
                 style: {
-                  background: 'white',
-                  border: '1px solid #e2e8f0',
+                  background: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  color: 'hsl(var(--foreground))'
                 },
                 className: 'sonner-toast',
               }}
