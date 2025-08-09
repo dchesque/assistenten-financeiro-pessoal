@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { dataService } from '@/services/DataServiceFactory';
+import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useErrorHandler } from './useErrorHandler';
 
 export interface ChartDataCategoria {
   categoria: string;
@@ -36,6 +37,7 @@ export const useDashboardCharts = () => {
     statusContas: []
   });
   const { user } = useAuth();
+  const { handleError } = useErrorHandler();
 
   const carregarDadosGraficos = async () => {
     if (!user) return;
@@ -43,77 +45,132 @@ export const useDashboardCharts = () => {
     try {
       setLoading(true);
       
-      // Buscar contas a pagar e receber para gerar dados dos gráficos
-      const [contasPagar, contasReceber, categorias] = await Promise.all([
-        dataService.contasPagar.getAll(),
-        dataService.contasReceber.getAll(),
-        dataService.categorias.getAll()
+      // Buscar dados reais do Supabase
+      const [{ data: contasPagar }, { data: contasReceber }, { data: categorias }] = await Promise.all([
+        supabase.from('accounts_payable').select('amount, status, due_date, category_id, category:categories(name, color)'),
+        supabase.from('accounts_receivable').select('amount, status, due_date, category_id, category:categories(name, color)'),
+        supabase.from('categories').select('id, name, color')
       ]);
 
-      // Dados por categoria (contas a pagar)
-      const categoriaMap = new Map();
-      contasPagar.forEach((conta: any) => {
-        if (conta.category) {
-          const existing = categoriaMap.get(conta.category.name) || 0;
-          categoriaMap.set(conta.category.name, existing + Number(conta.amount));
+      // Processar dados por categoria
+      const categoriaMap = new Map<string, number>();
+      const categoriaColors = new Map<string, string>();
+
+      // Processar contas a pagar
+      contasPagar?.forEach(conta => {
+        const categoriaNome = (conta as any).category?.name || 'Sem categoria';
+        const valor = Number(conta.amount) || 0;
+        categoriaMap.set(categoriaNome, (categoriaMap.get(categoriaNome) || 0) + valor);
+        if ((conta as any).category?.color) {
+          categoriaColors.set(categoriaNome, (conta as any).category.color);
         }
       });
 
-      const dadosCategorias = Array.from(categoriaMap.entries())
+      // Processar contas a receber
+      contasReceber?.forEach(conta => {
+        const categoriaNome = (conta as any).category?.name || 'Sem categoria';
+        const valor = Number(conta.amount) || 0;
+        categoriaMap.set(categoriaNome, (categoriaMap.get(categoriaNome) || 0) + valor);
+        if ((conta as any).category?.color) {
+          categoriaColors.set(categoriaNome, (conta as any).category.color);
+        }
+      });
+
+      const categoriasChart: ChartDataCategoria[] = Array.from(categoriaMap.entries())
         .map(([categoria, valor], index) => ({
           categoria,
           valor,
-          cor: cores[index % cores.length]
+          cor: categoriaColors.get(categoria) || cores[index % cores.length]
         }))
-        .slice(0, 5); // Top 5 categorias
+        .sort((a, b) => b.valor - a.valor)
+        .slice(0, 8);
 
-      // Dados de status das contas
-      const statusMap = {
-        pending: { status: 'Pendente', quantidade: 0, cor: '#f59e0b' },
-        paid: { status: 'Pago', quantidade: 0, cor: '#10b981' },
-        overdue: { status: 'Vencido', quantidade: 0, cor: '#ef4444' }
-      };
-
-      contasPagar.forEach((conta: any) => {
-        if (statusMap[conta.status as keyof typeof statusMap]) {
-          statusMap[conta.status as keyof typeof statusMap].quantidade++;
-        }
-      });
-
-      // Fluxo mensal (últimos 3 meses)
+      // Processar fluxo mensal (últimos 6 meses)
       const hoje = new Date();
-      const fluxoMensal = [];
-      for (let i = 2; i >= 0; i--) {
+      const fluxoMensal: ChartDataFluxoMensal[] = [];
+      
+      for (let i = 5; i >= 0; i--) {
         const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-        const mes = data.toLocaleDateString('pt-BR', { month: 'short' });
-        const valor = Math.random() * 30000 + 20000; // Mock data por enquanto
-        fluxoMensal.push({ mes, valor, meta: 30000 });
+        const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+        const mesNome = data.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        
+        // Calcular total do mês (receitas - despesas)
+        const receitasMes = contasReceber?.filter(conta => {
+          const contaData = new Date(conta.due_date);
+          return contaData.getFullYear() === data.getFullYear() && 
+                 contaData.getMonth() === data.getMonth() &&
+                 conta.status === 'received';
+        }).reduce((acc, conta) => acc + Number(conta.amount), 0) || 0;
+
+        const despesasMes = contasPagar?.filter(conta => {
+          const contaData = new Date(conta.due_date);
+          return contaData.getFullYear() === data.getFullYear() && 
+                 contaData.getMonth() === data.getMonth() &&
+                 conta.status === 'paid';
+        }).reduce((acc, conta) => acc + Number(conta.amount), 0) || 0;
+
+        fluxoMensal.push({
+          mes: mesNome,
+          valor: receitasMes - despesasMes
+        });
       }
 
-      setChartData({
-        categorias: dadosCategorias,
-        fluxoMensal,
-        statusContas: Object.values(statusMap)
+      // Processar status das contas
+      const statusMap = new Map<string, number>();
+      const statusColors = {
+        'pending': '#3b82f6',
+        'paid': '#10b981',
+        'received': '#10b981',
+        'overdue': '#ef4444'
+      };
+
+      // Contar status das contas a pagar
+      contasPagar?.forEach(conta => {
+        statusMap.set(conta.status, (statusMap.get(conta.status) || 0) + 1);
       });
+
+      // Contar status das contas a receber
+      contasReceber?.forEach(conta => {
+        statusMap.set(conta.status, (statusMap.get(conta.status) || 0) + 1);
+      });
+
+      const statusLabels = {
+        'pending': 'Pendentes',
+        'paid': 'Pagas',
+        'received': 'Recebidas',
+        'overdue': 'Vencidas'
+      };
+
+      const statusContas: ChartDataStatus[] = Array.from(statusMap.entries())
+        .map(([status, quantidade]) => ({
+          status: statusLabels[status as keyof typeof statusLabels] || status,
+          quantidade,
+          cor: statusColors[status as keyof typeof statusColors] || cores[0]
+        }));
+
+      setChartData({
+        categorias: categoriasChart,
+        fluxoMensal,
+        statusContas
+      });
+
     } catch (error) {
+      handleError(error, 'useDashboardCharts.carregarDadosGraficos');
       console.error('Erro ao carregar dados dos gráficos:', error);
-      // Manter dados vazios em caso de erro
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    carregarDadosGraficos();
+    if (user) {
+      carregarDadosGraficos();
+    }
   }, [user]);
-
-  const recarregar = async () => {
-    await carregarDadosGraficos();
-  };
 
   return {
     chartData,
     loading,
-    recarregar
+    recarregar: carregarDadosGraficos
   };
 };

@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useAuth } from './useAuth';
+import { customersService, Customer, CreateCustomerData, UpdateCustomerData, CustomerFilters } from '@/services/customersService';
+import { showMessage } from '@/utils/messages';
+import { useErrorHandler } from './useErrorHandler';
 
 export interface Pagador {
-  id: number;
+  id: string;
   nome: string;
-  documento: string;
-  tipo: 'pessoa_fisica' | 'pessoa_juridica';
+  documento?: string;
+  tipo: 'pessoa_fisica' | 'pessoa_juridica' | 'other';
   email?: string;
   telefone?: string;
   endereco?: string;
@@ -27,10 +30,22 @@ export interface FiltrosPagador {
   ativo?: boolean;
 }
 
-export interface CriarPagador extends Omit<Pagador, 'id' | 'created_at' | 'updated_at' | 'total_recebimentos' | 'valor_total'> {}
+export interface CriarPagador {
+  nome: string;
+  documento?: string;
+  tipo: 'pessoa_fisica' | 'pessoa_juridica' | 'other';
+  email?: string;
+  telefone?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
+  observacoes?: string;
+  ativo?: boolean;
+}
 
-export interface AtualizarPagador extends Partial<Omit<Pagador, 'id' | 'created_at' | 'updated_at'>> {
-  id: number;
+export interface AtualizarPagador extends Partial<CriarPagador> {
+  id: string;
 }
 
 export interface EstatisticasPagador {
@@ -41,82 +56,94 @@ export interface EstatisticasPagador {
   valorTotal: number;
 }
 
-// Dados mock para pagadores
-const mockPagadores: Pagador[] = [
-  {
-    id: 1,
-    nome: 'Cliente ABC Ltda',
-    documento: '12.345.678/0001-90',
-    tipo: 'pessoa_juridica',
-    email: 'financeiro@clienteabc.com',
-    telefone: '(11) 99999-9999',
-    endereco: 'Rua Comercial, 123',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '01234-567',
-    observacoes: 'Cliente principal',
-    ativo: true,
-    total_recebimentos: 12,
-    valor_total: 45000.00,
-    ultimo_recebimento: '2024-12-20',
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-12-23T15:30:00Z'
-  },
-  {
-    id: 2,
-    nome: 'Maria Silva',
-    documento: '123.456.789-01',
-    tipo: 'pessoa_fisica',
-    email: 'maria@email.com',
-    telefone: '(11) 88888-8888',
-    endereco: 'Av. Principal, 456',
-    cidade: 'Rio de Janeiro',
-    estado: 'RJ',
-    cep: '20000-000',
-    observacoes: '',
-    ativo: true,
-    total_recebimentos: 5,
-    valor_total: 15000.00,
-    ultimo_recebimento: '2024-12-18',
-    created_at: '2024-02-10T14:20:00Z',
-    updated_at: '2024-12-23T15:30:00Z'
-  }
-];
+// Converter Customer para Pagador
+const customerToPagador = (customer: Customer): Pagador => ({
+  id: customer.id,
+  nome: customer.name,
+  documento: customer.document,
+  tipo: customer.type,
+  email: customer.email,
+  telefone: customer.phone,
+  endereco: customer.address,
+  cidade: customer.city,
+  estado: customer.state,
+  cep: customer.zip,
+  observacoes: customer.notes,
+  ativo: customer.active,
+  total_recebimentos: customer.metadata?.total_recebimentos || 0,
+  valor_total: customer.metadata?.valor_total || 0,
+  ultimo_recebimento: customer.metadata?.ultimo_recebimento,
+  created_at: customer.created_at,
+  updated_at: customer.updated_at
+});
+
+// Converter Pagador para Customer (Create)
+const pagadorToCreateCustomer = (pagador: CriarPagador): CreateCustomerData => ({
+  name: pagador.nome,
+  document: pagador.documento,
+  document_type: pagador.tipo === 'pessoa_fisica' ? 'cpf' : pagador.tipo === 'pessoa_juridica' ? 'cnpj' : 'other',
+  type: pagador.tipo,
+  email: pagador.email,
+  phone: pagador.telefone,
+  address: pagador.endereco,
+  city: pagador.cidade,
+  state: pagador.estado,
+  zip: pagador.cep,
+  notes: pagador.observacoes,
+  active: pagador.ativo ?? true
+});
+
+// Converter Pagador para Customer (Update)
+const pagadorToUpdateCustomer = (pagador: Omit<AtualizarPagador, 'id'>): UpdateCustomerData => ({
+  name: pagador.nome,
+  document: pagador.documento,
+  document_type: pagador.tipo === 'pessoa_fisica' ? 'cpf' : pagador.tipo === 'pessoa_juridica' ? 'cnpj' : 'other',
+  type: pagador.tipo,
+  email: pagador.email,
+  phone: pagador.telefone,
+  address: pagador.endereco,
+  city: pagador.cidade,
+  state: pagador.estado,
+  zip: pagador.cep,
+  notes: pagador.observacoes,
+  active: pagador.ativo
+});
 
 export function usePagadores() {
   const [pagadores, setPagadores] = useState<Pagador[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { handleError } = useErrorHandler();
 
   const carregarPagadores = async (filtros?: FiltrosPagador) => {
+    if (!user) return;
+    
     setLoading(true);
+    setError(null);
     
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      let pagadoresFiltrados = [...mockPagadores];
+      const customerFilters: CustomerFilters = {};
       
       if (filtros?.busca) {
-        const busca = filtros.busca.toLowerCase();
-        pagadoresFiltrados = pagadoresFiltrados.filter(p => 
-          p.nome.toLowerCase().includes(busca) ||
-          p.documento.includes(busca) ||
-          p.email?.toLowerCase().includes(busca)
-        );
+        customerFilters.search = filtros.busca;
       }
       
       if (filtros?.tipo && filtros.tipo !== 'todos') {
-        pagadoresFiltrados = pagadoresFiltrados.filter(p => p.tipo === filtros.tipo);
+        customerFilters.type = filtros.tipo;
       }
       
       if (filtros?.ativo !== undefined) {
-        pagadoresFiltrados = pagadoresFiltrados.filter(p => p.ativo === filtros.ativo);
+        customerFilters.active = filtros.ativo;
       }
       
-      setPagadores(pagadoresFiltrados);
-    } catch (error) {
-      console.error('Erro ao carregar pagadores:', error);
-      toast.error('Erro ao carregar pagadores');
+      const customers = await customersService.getCustomers(customerFilters);
+      const pagadoresData = customers.map(customerToPagador);
+      setPagadores(pagadoresData);
+    } catch (err) {
+      const appError = handleError(err, 'usePagadores.carregarPagadores');
+      setError(appError.message);
+      showMessage.saveError('Erro ao carregar pagadores');
     } finally {
       setLoading(false);
     }
@@ -124,61 +151,42 @@ export function usePagadores() {
 
   const criarPagador = async (dados: CriarPagador): Promise<boolean> => {
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const novoPagador: Pagador = {
-        ...dados,
-        id: Math.max(...pagadores.map(p => p.id)) + 1,
-        total_recebimentos: 0,
-        valor_total: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      setPagadores(prev => [...prev, novoPagador]);
-      toast.success('Pagador criado com sucesso!');
-      
+      const customerData = pagadorToCreateCustomer(dados);
+      await customersService.createCustomer(customerData);
+      await carregarPagadores(); // Refresh the list
+      showMessage.saveSuccess('Pagador criado com sucesso!');
       return true;
-    } catch (error) {
-      console.error('Erro ao criar pagador:', error);
-      toast.error('Erro ao criar pagador');
+    } catch (err) {
+      handleError(err, 'usePagadores.criarPagador');
+      showMessage.saveError('Erro ao criar pagador');
       return false;
     }
   };
 
   const atualizarPagador = async (dados: AtualizarPagador): Promise<boolean> => {
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setPagadores(prev => prev.map(p => 
-        p.id === dados.id 
-          ? { ...p, ...dados, updated_at: new Date().toISOString() }
-          : p
-      ));
-      
-      toast.success('Pagador atualizado com sucesso!');
+      const { id, ...updateData } = dados;
+      const customerData = pagadorToUpdateCustomer(updateData);
+      await customersService.updateCustomer(id, customerData);
+      await carregarPagadores(); // Refresh the list
+      showMessage.saveSuccess('Pagador atualizado com sucesso!');
       return true;
-    } catch (error) {
-      console.error('Erro ao atualizar pagador:', error);
-      toast.error('Erro ao atualizar pagador');
+    } catch (err) {
+      handleError(err, 'usePagadores.atualizarPagador');
+      showMessage.saveError('Erro ao atualizar pagador');
       return false;
     }
   };
 
-  const excluirPagador = async (id: number): Promise<boolean> => {
+  const excluirPagador = async (id: string): Promise<boolean> => {
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setPagadores(prev => prev.filter(p => p.id !== id));
-      toast.success('Pagador excluído com sucesso!');
-      
+      await customersService.deleteCustomer(id);
+      await carregarPagadores(); // Refresh the list
+      showMessage.deleteSuccess('Pagador excluído com sucesso!');
       return true;
-    } catch (error) {
-      console.error('Erro ao excluir pagador:', error);
-      toast.error('Erro ao excluir pagador');
+    } catch (err) {
+      handleError(err, 'usePagadores.excluirPagador');
+      showMessage.deleteError('Erro ao excluir pagador');
       return false;
     }
   };
@@ -197,12 +205,17 @@ export function usePagadores() {
   };
 
   useEffect(() => {
-    carregarPagadores();
-  }, []);
+    if (user) {
+      carregarPagadores();
+    } else {
+      setPagadores([]);
+    }
+  }, [user]);
 
   return {
     pagadores,
     loading,
+    error,
     carregarPagadores,
     criarPagador,
     atualizarPagador,

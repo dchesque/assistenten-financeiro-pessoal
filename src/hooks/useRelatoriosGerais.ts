@@ -1,399 +1,287 @@
-import { useState, useEffect, useMemo } from 'react';
-import { addDays, format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { showMessage } from '@/utils/messages';
+import { useErrorHandler } from './useErrorHandler';
 
-// Hooks do Supabase
-import { useFornecedores } from '@/hooks/useFornecedores';
-import { useContasPagar } from '@/hooks/useContasPagar';
-import { usePlanoContas } from '@/hooks/usePlanoContas';
-
-export interface FiltrosRelatorio {
-  periodo_inicio: Date;
-  periodo_fim: Date;
-  tipo_relatorio: 'resumo' | 'fornecedores' | 'contas' | 'fluxo' | 'categorias';
-  agrupamento: 'categoria' | 'fornecedor' | 'status' | 'vencimento';
-  formato_saida: 'visualizar' | 'pdf' | 'excel' | 'csv';
+export interface RelatorioFiltros {
+  dataInicio: string;
+  dataFim: string;
+  incluirPagos?: boolean;
+  incluirPendentes?: boolean;
+  incluirVencidos?: boolean;
 }
 
-export interface ResumoExecutivo {
-  total_fornecedores_ativos: number;
-  contas_pendentes: {
-    valor: number;
-    quantidade: number;
-  };
-  proximos_vencimentos: {
-    valor: number;
-    quantidade: number;
-  };
-  ticket_medio_fornecedor: number;
-  status_liquidez: 'alto' | 'medio' | 'baixo';
-}
-
-export interface RelatorioFornecedores {
-  top_fornecedores: Array<{
-    id: number;
-    nome: string;
-    valor_total: number;
-    percentual: number;
-  }>;
-  fornecedores_por_tipo: Array<{
-    tipo: string;
-    quantidade: number;
+export interface DadosRelatorio {
+  totalContas: number;
+  valorTotal: number;
+  contasPagas: number;
+  valorPago: number;
+  contasPendentes: number;
+  valorPendente: number;
+  contasVencidas: number;
+  valorVencido: number;
+  resumoPorCategoria: Array<{
+    categoria_nome: string;
+    total_contas: number;
     valor_total: number;
   }>;
-  status_atividade: {
-    ativos: number;
-    inativos: number;
-  };
-}
-
-export interface AnaliseContasPagar {
-  contas_por_status: Array<{
-    status: string;
-    quantidade: number;
-    valor: number;
-    cor: string;
+  resumoPorFornecedor: Array<{
+    fornecedor_nome: string;
+    total_contas: number;
+    valor_total: number;
   }>;
-  aging_contas: Array<{
-    faixa: string;
-    quantidade: number;
-    valor: number;
-    percentual: number;
-  }>;
-  valor_medio_conta: number;
-  evolucao_temporal: Array<{
+  contasPorMes: Array<{
     mes: string;
-    pagas: number;
-    pendentes: number;
-    vencidas: number;
+    total_contas: number;
+    valor_total: number;
   }>;
 }
 
-export interface DadosGrafico {
-  periodo: string;
-  entradas: number;
-  saidas: number;
-  saldo: number;
-}
-
-const PERIODOS_RAPIDOS = [
-  { label: 'Este mês', valor: 'mes_atual' },
-  { label: 'Mês anterior', valor: 'mes_anterior' },
-  { label: 'Trimestre', valor: 'trimestre' },
-  { label: 'Ano', valor: 'ano' }
-];
-
-export const useRelatoriosGerais = () => {
-  const { fornecedores } = useFornecedores();
-  const { contas } = useContasPagar();
-  const { planoContas: planos } = usePlanoContas();
-  
-  // Estados principais
-  const [filtros, setFiltros] = useState<FiltrosRelatorio>({
-    periodo_inicio: startOfMonth(new Date()),
-    periodo_fim: endOfMonth(new Date()),
-    tipo_relatorio: 'resumo',
-    agrupamento: 'categoria',
-    formato_saida: 'visualizar'
-  });
-
+export function useRelatoriosGerais() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dados, setDados] = useState<any>(null);
+  const { user } = useAuth();
+  const { handleError } = useErrorHandler();
 
-  // Função para aplicar período rápido
-  const aplicarPeriodoRapido = (periodo: string) => {
-    const hoje = new Date();
-    let inicio: Date;
-    let fim: Date;
-
-    switch (periodo) {
-      case 'mes_atual':
-        inicio = startOfMonth(hoje);
-        fim = endOfMonth(hoje);
-        break;
-      case 'mes_anterior':
-        const mesAnterior = subMonths(hoje, 1);
-        inicio = startOfMonth(mesAnterior);
-        fim = endOfMonth(mesAnterior);
-        break;
-      case 'trimestre':
-        inicio = startOfMonth(subMonths(hoje, 2));
-        fim = endOfMonth(hoje);
-        break;
-      case 'ano':
-        inicio = new Date(hoje.getFullYear(), 0, 1);
-        fim = new Date(hoje.getFullYear(), 11, 31);
-        break;
-      default:
-        inicio = startOfMonth(hoje);
-        fim = endOfMonth(hoje);
-    }
-
-    setFiltros(prev => ({
-      ...prev,
-      periodo_inicio: inicio,
-      periodo_fim: fim
-    }));
-  };
-
-  // Cálculo do resumo executivo
-  const resumoExecutivo = useMemo((): ResumoExecutivo => {
-    const fornecedoresAtivos = fornecedores.filter(f => f.ativo).length;
+  const gerarRelatorioContas = async (filtros: RelatorioFiltros): Promise<DadosRelatorio> => {
+    if (!user) throw new Error('Usuário não autenticado');
     
-    const contasPendentes = contas.filter(c => 
-      c.status === 'pendente' && 
-      new Date(c.data_vencimento) >= filtros.periodo_inicio &&
-      new Date(c.data_vencimento) <= filtros.periodo_fim
-    );
-
-    const proximosVencimentos = contas.filter(c =>
-      c.status === 'pendente' &&
-      new Date(c.data_vencimento) <= addDays(new Date(), 7)
-    );
-
-    const totalGasto = contas
-      .filter(c => c.status === 'pago')
-      .reduce((acc, c) => acc + c.valor_final, 0);
-
-    const ticketMedio = fornecedoresAtivos > 0 ? totalGasto / fornecedoresAtivos : 0;
-
-    return {
-      total_fornecedores_ativos: fornecedoresAtivos,
-      contas_pendentes: {
-        valor: contasPendentes.reduce((acc, c) => acc + c.valor_final, 0),
-        quantidade: contasPendentes.length
-      },
-      proximos_vencimentos: {
-        valor: proximosVencimentos.reduce((acc, c) => acc + c.valor_final, 0),
-        quantidade: proximosVencimentos.length
-      },
-      ticket_medio_fornecedor: ticketMedio,
-      status_liquidez: ticketMedio > 50000 ? 'alto' : ticketMedio > 20000 ? 'medio' : 'baixo'
-    };
-  }, [filtros, fornecedores, contas]);
-
-  // Relatório de fornecedores
-  const relatorioFornecedores = useMemo((): RelatorioFornecedores => {
-    const fornecedoresComValor = fornecedores.map(f => ({
-      ...f,
-      valor_calculado: contas
-        .filter(c => c.fornecedor_id === f.id)
-        .reduce((acc, c) => acc + c.valor_final, 0)
-    }));
-
-    const topFornecedores = fornecedoresComValor
-      .sort((a, b) => b.valor_calculado - a.valor_calculado)
-      .slice(0, 10)
-      .map(f => {
-        const valorTotal = fornecedoresComValor.reduce((acc, item) => acc + item.valor_calculado, 0);
-        return {
-          id: f.id,
-          nome: f.nome,
-          valor_total: f.valor_calculado,
-          percentual: valorTotal > 0 ? (f.valor_calculado / valorTotal) * 100 : 0
-        };
-      });
-
-    const tiposCount = fornecedores.reduce((acc, f) => {
-      const tipo = f.tipo === 'pessoa_fisica' ? 'Pessoa Física' : 'Pessoa Jurídica';
-      if (!acc[tipo]) {
-        acc[tipo] = { quantidade: 0, valor_total: 0 };
-      }
-      acc[tipo].quantidade++;
-      acc[tipo].valor_total += fornecedoresComValor.find(fv => fv.id === f.id)?.valor_calculado || 0;
-      return acc;
-    }, {} as Record<string, any>);
-
-    const fornecedoresPorTipo = Object.entries(tiposCount).map(([tipo, dados]) => ({
-      tipo,
-      quantidade: (dados as any).quantidade as number,
-      valor_total: (dados as any).valor_total as number
-    }));
-
-    return {
-      top_fornecedores: topFornecedores,
-      fornecedores_por_tipo: fornecedoresPorTipo,
-      status_atividade: {
-        ativos: fornecedores.filter(f => f.ativo).length,
-        inativos: fornecedores.filter(f => !f.ativo).length
-      }
-    };
-  }, [fornecedores, contas]);
-
-  // Análise de contas a pagar
-  const analiseContasPagar = useMemo((): AnaliseContasPagar => {
-    const statusColors = {
-      pendente: '#3B82F6',
-      pago: '#10B981',
-      vencido: '#EF4444',
-      cancelado: '#6B7280'
-    };
-
-    const contasPorStatus = Object.entries(
-      contas.reduce((acc, conta) => {
-        if (!acc[conta.status]) {
-          acc[conta.status] = { quantidade: 0, valor: 0 };
-        }
-        acc[conta.status].quantidade++;
-        acc[conta.status].valor += conta.valor_final;
-        return acc;
-      }, {} as Record<string, any>)
-    ).map(([status, dados]) => ({
-      status: status.charAt(0).toUpperCase() + status.slice(1),
-      quantidade: (dados as any).quantidade,
-      valor: (dados as any).valor,
-      cor: statusColors[status as keyof typeof statusColors] || '#6B7280'
-    }));
-
-    // Aging de contas
-    const hoje = new Date();
-    const agingBuckets = {
-      '0-30 dias': { min: 0, max: 30 },
-      '31-60 dias': { min: 31, max: 60 },
-      '61-90 dias': { min: 61, max: 90 },
-      '+90 dias': { min: 91, max: Infinity }
-    };
-
-    const agingContas = Object.entries(agingBuckets).map(([faixa, range]) => {
-      const contasNaFaixa = contas.filter(conta => {
-        if (conta.status !== 'vencido') return false;
-        const diasVencido = Math.floor(
-          (hoje.getTime() - new Date(conta.data_vencimento).getTime()) / (1000 * 60 * 60 * 24)
-        );
-        return diasVencido >= range.min && diasVencido <= range.max;
-      });
-
-      const valor = contasNaFaixa.reduce((acc, c) => acc + c.valor_final, 0);
-      const totalVencidas = contas
-        .filter(c => c.status === 'vencido')
-        .reduce((acc, c) => acc + c.valor_final, 0);
-
-      return {
-        faixa,
-        quantidade: contasNaFaixa.length,
-        valor,
-        percentual: totalVencidas > 0 ? (valor / totalVencidas) * 100 : 0
-      };
-    });
-
-    const valorMedio = contas.length > 0 
-      ? contas.reduce((acc, c) => acc + c.valor_final, 0) / contas.length 
-      : 0;
-
-    // Evolução temporal (últimos 6 meses)
-    const evolucaoTemporal = Array.from({ length: 6 }, (_, i) => {
-      const mes = subMonths(new Date(), 5 - i);
-      const inicioMes = startOfMonth(mes);
-      const fimMes = endOfMonth(mes);
-
-      const contasDoMes = contas.filter(c => {
-        const dataVenc = new Date(c.data_vencimento);
-        return dataVenc >= inicioMes && dataVenc <= fimMes;
-      });
-
-      return {
-        mes: format(mes, 'MMM/yy'),
-        pagas: contasDoMes.filter(c => c.status === 'pago').reduce((acc, c) => acc + c.valor_final, 0),
-        pendentes: contasDoMes.filter(c => c.status === 'pendente').reduce((acc, c) => acc + c.valor_final, 0),
-        vencidas: contasDoMes.filter(c => c.status === 'vencido').reduce((acc, c) => acc + c.valor_final, 0)
-      };
-    });
-
-    return {
-      contas_por_status: contasPorStatus,
-      aging_contas: agingContas,
-      valor_medio_conta: valorMedio,
-      evolucao_temporal: evolucaoTemporal
-    };
-  }, [contas]);
-
-  // Gerar relatório
-  const gerarRelatorio = async () => {
     setLoading(true);
     setError(null);
-
+    
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Query principal para contas a pagar
+      let query = supabase
+        .from('accounts_payable')
+        .select(`
+          *,
+          category:categories(name),
+          supplier:suppliers(name)
+        `)
+        .gte('due_date', filtros.dataInicio)
+        .lte('due_date', filtros.dataFim);
 
-      const dadosConsolidados = {
-        resumo_executivo: resumoExecutivo,
-        relatorio_fornecedores: relatorioFornecedores,
-        analise_contas_pagar: analiseContasPagar,
-        periodo: {
-          inicio: format(filtros.periodo_inicio, 'dd/MM/yyyy'),
-          fim: format(filtros.periodo_fim, 'dd/MM/yyyy')
-        },
-        gerado_em: new Date().toISOString()
+      // Aplicar filtros de status
+      const statusFiltros = [];
+      if (filtros.incluirPagos) statusFiltros.push('paid');
+      if (filtros.incluirPendentes) statusFiltros.push('pending');
+      if (filtros.incluirVencidos) statusFiltros.push('overdue');
+      
+      if (statusFiltros.length > 0) {
+        query = query.in('status', statusFiltros);
+      }
+
+      const { data: contas, error: contasError } = await query;
+      if (contasError) throw contasError;
+
+      // Calcular estatísticas principais
+      const totalContas = contas?.length || 0;
+      const valorTotal = contas?.reduce((acc, conta) => acc + Number(conta.amount), 0) || 0;
+      
+      const contasPagas = contas?.filter(c => c.status === 'paid') || [];
+      const contasPendentes = contas?.filter(c => c.status === 'pending') || [];
+      const contasVencidas = contas?.filter(c => c.status === 'overdue') || [];
+
+      // Resumo por categoria
+      const categoriaMap = new Map();
+      contas?.forEach(conta => {
+        const categoriaNome = conta.category?.name || 'Sem categoria';
+        if (!categoriaMap.has(categoriaNome)) {
+          categoriaMap.set(categoriaNome, { total_contas: 0, valor_total: 0 });
+        }
+        const categoria = categoriaMap.get(categoriaNome);
+        categoria.total_contas++;
+        categoria.valor_total += Number(conta.amount);
+      });
+
+      const resumoPorCategoria = Array.from(categoriaMap.entries()).map(([nome, dados]) => ({
+        categoria_nome: nome,
+        ...dados
+      }));
+
+      // Resumo por fornecedor
+      const fornecedorMap = new Map();
+      contas?.forEach(conta => {
+        const fornecedorNome = conta.supplier?.name || 'Sem fornecedor';
+        if (!fornecedorMap.has(fornecedorNome)) {
+          fornecedorMap.set(fornecedorNome, { total_contas: 0, valor_total: 0 });
+        }
+        const fornecedor = fornecedorMap.get(fornecedorNome);
+        fornecedor.total_contas++;
+        fornecedor.valor_total += Number(conta.amount);
+      });
+
+      const resumoPorFornecedor = Array.from(fornecedorMap.entries()).map(([nome, dados]) => ({
+        fornecedor_nome: nome,
+        ...dados
+      }));
+
+      // Contas por mês
+      const mesMap = new Map();
+      contas?.forEach(conta => {
+        const data = new Date(conta.due_date);
+        const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+        if (!mesMap.has(mesAno)) {
+          mesMap.set(mesAno, { total_contas: 0, valor_total: 0 });
+        }
+        const mes = mesMap.get(mesAno);
+        mes.total_contas++;
+        mes.valor_total += Number(conta.amount);
+      });
+
+      const contasPorMes = Array.from(mesMap.entries())
+        .map(([mesAno, dados]) => ({
+          mes: mesAno,
+          ...dados
+        }))
+        .sort((a, b) => a.mes.localeCompare(b.mes));
+
+      return {
+        totalContas,
+        valorTotal,
+        contasPagas: contasPagas.length,
+        valorPago: contasPagas.reduce((acc, c) => acc + Number(c.amount), 0),
+        contasPendentes: contasPendentes.length,
+        valorPendente: contasPendentes.reduce((acc, c) => acc + Number(c.amount), 0),
+        contasVencidas: contasVencidas.length,
+        valorVencido: contasVencidas.reduce((acc, c) => acc + Number(c.amount), 0),
+        resumoPorCategoria,
+        resumoPorFornecedor,
+        contasPorMes
       };
 
-      setDados(dadosConsolidados);
     } catch (err) {
-      setError('Erro ao gerar relatório. Tente novamente.');
-      console.error('Erro ao gerar relatório:', err);
+      const appError = handleError(err, 'useRelatoriosGerais.gerarRelatorioContas');
+      setError(appError.message);
+      showMessage.saveError('Erro ao gerar relatório');
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // Exportar PDF
-  const exportarPDF = async () => {
-    if (!dados) return;
+  const gerarRelatorioReceitas = async (filtros: RelatorioFiltros): Promise<DadosRelatorio> => {
+    if (!user) throw new Error('Usuário não autenticado');
     
     setLoading(true);
-    try {
-      // Implementar exportação PDF futuramente
-      // exportação PDF em desenvolvimento
-      // Simular export
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    } catch (err) {
-      setError('Erro ao exportar PDF');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Exportar Excel
-  const exportarExcel = async () => {
-    if (!dados) return;
+    setError(null);
     
-    setLoading(true);
     try {
-      // Implementar exportação Excel futuramente
-      // exportação Excel em desenvolvimento
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Query para contas a receber
+      let query = supabase
+        .from('accounts_receivable')
+        .select(`
+          *,
+          category:categories(name),
+          customer:customers(name)
+        `)
+        .gte('due_date', filtros.dataInicio)
+        .lte('due_date', filtros.dataFim);
+
+      // Aplicar filtros de status (converter para inglês)
+      const statusFiltros = [];
+      if (filtros.incluirPagos) statusFiltros.push('received');
+      if (filtros.incluirPendentes) statusFiltros.push('pending');
+      if (filtros.incluirVencidos) statusFiltros.push('overdue');
+      
+      if (statusFiltros.length > 0) {
+        query = query.in('status', statusFiltros);
+      }
+
+      const { data: contas, error: contasError } = await query;
+      if (contasError) throw contasError;
+
+      // Calcular estatísticas (adaptadas para receitas)
+      const totalContas = contas?.length || 0;
+      const valorTotal = contas?.reduce((acc, conta) => acc + Number(conta.amount), 0) || 0;
+      
+      const contasRecebidas = contas?.filter(c => c.status === 'received') || [];
+      const contasPendentes = contas?.filter(c => c.status === 'pending') || [];
+      const contasVencidas = contas?.filter(c => c.status === 'overdue') || [];
+
+      // Resumo por categoria
+      const categoriaMap = new Map();
+      contas?.forEach(conta => {
+        const categoriaNome = conta.category?.name || 'Sem categoria';
+        if (!categoriaMap.has(categoriaNome)) {
+          categoriaMap.set(categoriaNome, { total_contas: 0, valor_total: 0 });
+        }
+        const categoria = categoriaMap.get(categoriaNome);
+        categoria.total_contas++;
+        categoria.valor_total += Number(conta.amount);
+      });
+
+      const resumoPorCategoria = Array.from(categoriaMap.entries()).map(([nome, dados]) => ({
+        categoria_nome: nome,
+        ...dados
+      }));
+
+      // Resumo por cliente
+      const clienteMap = new Map();
+      contas?.forEach(conta => {
+        const clienteNome = conta.customer?.name || conta.customer_name || 'Sem cliente';
+        if (!clienteMap.has(clienteNome)) {
+          clienteMap.set(clienteNome, { total_contas: 0, valor_total: 0 });
+        }
+        const cliente = clienteMap.get(clienteNome);
+        cliente.total_contas++;
+        cliente.valor_total += Number(conta.amount);
+      });
+
+      const resumoPorFornecedor = Array.from(clienteMap.entries()).map(([nome, dados]) => ({
+        fornecedor_nome: nome, // Mantém a interface compatível
+        ...dados
+      }));
+
+      // Contas por mês
+      const mesMap = new Map();
+      contas?.forEach(conta => {
+        const data = new Date(conta.due_date);
+        const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+        if (!mesMap.has(mesAno)) {
+          mesMap.set(mesAno, { total_contas: 0, valor_total: 0 });
+        }
+        const mes = mesMap.get(mesAno);
+        mes.total_contas++;
+        mes.valor_total += Number(conta.amount);
+      });
+
+      const contasPorMes = Array.from(mesMap.entries())
+        .map(([mesAno, dados]) => ({
+          mes: mesAno,
+          ...dados
+        }))
+        .sort((a, b) => a.mes.localeCompare(b.mes));
+
+      return {
+        totalContas,
+        valorTotal,
+        contasPagas: contasRecebidas.length,
+        valorPago: contasRecebidas.reduce((acc, c) => acc + Number(c.amount), 0),
+        contasPendentes: contasPendentes.length,
+        valorPendente: contasPendentes.reduce((acc, c) => acc + Number(c.amount), 0),
+        contasVencidas: contasVencidas.length,
+        valorVencido: contasVencidas.reduce((acc, c) => acc + Number(c.amount), 0),
+        resumoPorCategoria,
+        resumoPorFornecedor,
+        contasPorMes
+      };
+
     } catch (err) {
-      setError('Erro ao exportar Excel');
+      const appError = handleError(err, 'useRelatoriosGerais.gerarRelatorioReceitas');
+      setError(appError.message);
+      showMessage.saveError('Erro ao gerar relatório de receitas');
+      throw err;
     } finally {
       setLoading(false);
     }
   };
-
-  // Auto-gerar relatório quando filtros mudam
-  useEffect(() => {
-    gerarRelatorio();
-  }, [filtros.periodo_inicio, filtros.periodo_fim, filtros.tipo_relatorio]);
 
   return {
-    // Estados
-    filtros,
-    setFiltros,
     loading,
     error,
-    dados,
-    
-    // Dados calculados
-    resumoExecutivo,
-    relatorioFornecedores,
-    analiseContasPagar,
-    
-    // Funções
-    gerarRelatorio,
-    exportarPDF,
-    exportarExcel,
-    aplicarPeriodoRapido,
-    
-    // Constantes
-    PERIODOS_RAPIDOS
+    gerarRelatorioContas,
+    gerarRelatorioReceitas
   };
-};
+}

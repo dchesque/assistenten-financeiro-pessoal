@@ -10,9 +10,9 @@ import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import { AccountReceivableModal } from '@/components/accounts/AccountReceivableModal';
 import { ReceiptModal } from '@/components/accounts/ReceiptModal';
-import { useAccountsReceivable } from '@/hooks/useAccountsReceivable';
+import { useContasReceber } from '@/hooks/useContasReceber';
 import { useCategories } from '@/hooks/useCategories';
-import { useContatos } from '@/hooks/useContatos';
+import { usePagadores } from '@/hooks/usePagadores';
 import { useLoadingState } from '@/hooks/useLoadingStates';
 import { AccountReceivable, ReceiptData } from '@/types/accounts';
 import { formatCurrency } from '@/utils/currency';
@@ -34,9 +34,9 @@ const STATUS_LABELS = {
 };
 
 export default function ContasReceber() {
-  const { accounts, loading, createAccount, markAsReceived, deleteAccount } = useAccountsReceivable();
+  const { contas: accounts, loading, criarConta: createAccount, marcarComoRecebido: markAsReceived, excluirConta: deleteAccount } = useContasReceber();
   const { categories } = useCategories();
-  const { contatos: contacts } = useContatos();
+  const { pagadores: contacts } = usePagadores();
   const { isLoading, setLoading } = useLoadingState();
 
   const [accountModalOpen, setAccountModalOpen] = useState(false);

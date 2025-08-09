@@ -132,6 +132,7 @@ export type Database = {
           category_id: string | null
           contact_id: string | null
           created_at: string
+          customer_id: string | null
           customer_name: string | null
           deleted_at: string | null
           description: string
@@ -149,6 +150,7 @@ export type Database = {
           category_id?: string | null
           contact_id?: string | null
           created_at?: string
+          customer_id?: string | null
           customer_name?: string | null
           deleted_at?: string | null
           description: string
@@ -166,6 +168,7 @@ export type Database = {
           category_id?: string | null
           contact_id?: string | null
           created_at?: string
+          customer_id?: string | null
           customer_name?: string | null
           deleted_at?: string | null
           description?: string
@@ -211,6 +214,20 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "active_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
@@ -475,6 +492,72 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      customers: {
+        Row: {
+          active: boolean
+          address: string | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          document: string | null
+          document_type: string | null
+          email: string | null
+          id: string
+          metadata: Json
+          name: string
+          notes: string | null
+          phone: string | null
+          state: string | null
+          type: string
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+          zip: string | null
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string
+          metadata?: Json
+          name: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string
+          metadata?: Json
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -1213,6 +1296,72 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      active_customers: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          city: string | null
+          created_at: string | null
+          deleted_at: string | null
+          document: string | null
+          document_type: string | null
+          email: string | null
+          id: string | null
+          metadata: Json | null
+          name: string | null
+          notes: string | null
+          phone: string | null
+          state: string | null
+          type: string | null
+          updated_at: string | null
+          user_id: string | null
+          whatsapp: string | null
+          zip: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string | null
+          metadata?: Json | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string | null
+          metadata?: Json | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+          zip?: string | null
+        }
+        Relationships: []
       }
       active_suppliers: {
         Row: {

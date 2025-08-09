@@ -10,7 +10,7 @@ import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import { AccountPayableModal } from '@/components/accounts/AccountPayableModal';
 import { PaymentModal } from '@/components/accounts/PaymentModal';
-import { useContasPagar } from '@/hooks/useContasPagarSupabase';
+import { useContasPagarOtimizado } from '@/hooks/useContasPagarOtimizado';
 import { useCategories } from '@/hooks/useCategories';
 import { useContatos } from '@/hooks/useContatos';
 import { useLoadingState } from '@/hooks/useLoadingStates';
@@ -34,7 +34,7 @@ const STATUS_LABELS = {
 };
 
 export default function ContasPagar() {
-  const { contas: accounts, loading, criarConta: createAccount, baixarConta: markAsPaid, excluirConta: deleteAccount } = useContasPagar();
+  const { contas: accounts, loading, criarConta: createAccount, baixarConta: markAsPaid, excluirConta: deleteAccount } = useContasPagarOtimizado();
   const { categories } = useCategories();
   const { contatos: contacts } = useContatos();
   const { isLoading, setLoading } = useLoadingState();
@@ -104,10 +104,7 @@ export default function ContasPagar() {
     if (!selectedAccount) return;
     setLoading('saving', true);
     try {
-      await markAsPaid(selectedAccount.id, { 
-        data_pagamento: paymentData.paid_at || new Date().toISOString().split('T')[0],
-        valor_pago: (paymentData as any).amount || 0 
-      });
+      await markAsPaid(selectedAccount.id, paymentData);
       setPaymentModalOpen(false);
       setSelectedAccount(null);
     } finally {

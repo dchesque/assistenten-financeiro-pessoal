@@ -67,7 +67,7 @@ export function MovimentacoesTable() {
                   R$ {movimentacao.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </TableCell>
                 <TableCell className="px-6 py-4 whitespace-nowrap">
-                  <StatusBadge status={movimentacao.status} />
+                  <StatusBadge status={movimentacao.status as "pendente" | "pago" | "vencido"} />
                 </TableCell>
                 <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">

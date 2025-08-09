@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react';
-import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useErrorHandler } from './useErrorHandler';
 
 export interface MovimentacaoRecente {
   id: string;
-  data: Date;
-  fornecedor: string;
+  tipo: 'pagar' | 'receber';
   descricao: string;
   valor: number;
-  status: 'pendente' | 'pago' | 'vencido';
+  data: string;
+  status: string;
+  categoria?: string;
+  fornecedor?: string;
+  cliente?: string;
 }
-
 
 export const useMovimentacoesRecentes = () => {
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoRecente[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { handleError } = useErrorHandler();
 
   const carregarMovimentacoes = async () => {
     if (!user) return;
@@ -23,44 +27,86 @@ export const useMovimentacoesRecentes = () => {
     try {
       setLoading(true);
       
-      // Buscar contas a pagar recentes do Supabase
-      const contasPagar = await dataService.contasPagar.getAll();
-      
-      // Converter para o formato esperado
-      const movimentacoesConvertidas: MovimentacaoRecente[] = contasPagar
-        .slice(0, 5) // Apenas as 5 mais recentes
-        .map((conta: any) => ({
-          id: conta.id,
-          data: new Date(conta.due_date || conta.data_vencimento),
-          fornecedor: conta.supplier?.name || conta.fornecedor?.nome || 'Fornecedor',
-          descricao: conta.description || conta.descricao,
-          valor: conta.amount || conta.valor_original || 0,
-          status: mapearStatus(conta.status)
-        }));
+      // Buscar contas a pagar recentes
+      const { data: contasPagar } = await supabase
+        .from('accounts_payable')
+        .select(`
+          id,
+          description,
+          amount,
+          due_date,
+          status,
+          category:categories(name),
+          supplier:suppliers(name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-      setMovimentacoes(movimentacoesConvertidas);
+      // Buscar contas a receber recentes
+      const { data: contasReceber } = await supabase
+        .from('accounts_receivable')
+        .select(`
+          id,
+          description,
+          amount,
+          due_date,
+          status,
+          customer_name,
+          category:categories(name),
+          customer:customers(name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // Combinar e ordenar todas as movimentações
+      const todasMovimentacoes: MovimentacaoRecente[] = [];
+
+      // Adicionar contas a pagar
+      contasPagar?.forEach(conta => {
+        todasMovimentacoes.push({
+          id: conta.id,
+          tipo: 'pagar',
+          descricao: conta.description,
+          valor: Number(conta.amount),
+          data: conta.due_date,
+          status: conta.status,
+          categoria: (conta as any).category?.name,
+          fornecedor: (conta as any).supplier?.name
+        });
+      });
+
+      // Adicionar contas a receber
+      contasReceber?.forEach(conta => {
+        todasMovimentacoes.push({
+          id: conta.id,
+          tipo: 'receber',
+          descricao: conta.description,
+          valor: Number(conta.amount),
+          data: conta.due_date,
+          status: conta.status,
+          categoria: (conta as any).category?.name,
+          cliente: (conta as any).customer?.name || conta.customer_name
+        });
+      });
+
+      // Ordenar por data mais recente e limitar a 15 itens
+      const movimentacoesOrdenadas = todasMovimentacoes
+        .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+        .slice(0, 15);
+
+      setMovimentacoes(movimentacoesOrdenadas);
+
     } catch (error) {
+      handleError(error, 'useMovimentacoesRecentes.carregarMovimentacoes');
       console.error('Erro ao carregar movimentações recentes:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Mapear status do Supabase para o formato esperado
-  const mapearStatus = (status: string): 'pendente' | 'pago' | 'vencido' => {
-    switch (status) {
-      case 'paid': return 'pago';
-      case 'overdue': return 'vencido';
-      case 'pending': 
-      default: return 'pendente';
-    }
-  };
-
   useEffect(() => {
     if (user) {
       carregarMovimentacoes();
-    } else {
-      setMovimentacoes([]);
     }
   }, [user]);
 
