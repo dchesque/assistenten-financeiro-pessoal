@@ -68,24 +68,29 @@ export function useFormulario<T extends Record<string, any>>(
     const dadosFinais = dadosParaSalvar || dados;
     
     console.log('🔄 Iniciando salvamento do formulário');
+    console.log('📋 Dados atuais do formulário:', dados);
     console.log('📋 Dados finais para salvar:', dadosFinais);
+    console.log('🔍 Comparação de dados:', { original: dados, final: dadosFinais });
     
     if (validacao && !validarTodos()) {
       console.log('❌ Validação falhou, não salvando');
+      console.log('❌ Erros de validação:', erros);
       return;
     }
     
     setCarregando(true);
     try {
       console.log('💾 Chamando função de salvamento...');
+      console.log('💾 Dados sendo enviados:', JSON.stringify(dadosFinais, null, 2));
       await onSalvar(dadosFinais);
       console.log('✅ Salvamento concluído com sucesso');
     } catch (error) {
       console.error('❌ Erro no salvamento:', error);
+      throw error;
     } finally {
       setCarregando(false);
     }
-  }, [dados, onSalvar, validacao, validarTodos]);
+  }, [dados, onSalvar, validacao, validarTodos, erros]);
 
   return {
     dados,

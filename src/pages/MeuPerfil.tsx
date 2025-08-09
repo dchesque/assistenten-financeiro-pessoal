@@ -60,13 +60,17 @@ export default function MeuPerfil() {
     esquemaValidacao
   );
 
-  // Sincronizar formulário quando dados do perfil mudarem
+  // Flag para controlar sincronização inicial
+  const [inicializado, setInicializado] = useState(false);
+
+  // Sincronizar dados do perfil com o formulário APENAS na inicialização
   useEffect(() => {
-    if (dadosPerfil.email || Object.keys(dadosPerfil).some(key => dadosPerfil[key as keyof DadosPerfil])) {
-      console.log('🔄 Sincronizando formulário com dados do perfil:', dadosPerfil);
+    if (dadosPerfil && !inicializado && (dadosPerfil.email || Object.keys(dadosPerfil).some(key => dadosPerfil[key as keyof DadosPerfil]))) {
+      console.log('🔄 Sincronização inicial dos dados do perfil:', dadosPerfil);
       alterarCampos(dadosPerfil);
+      setInicializado(true);
     }
-  }, [dadosPerfil, alterarCampos]);
+  }, [dadosPerfil, inicializado, alterarCampos]);
 
   // Upload de avatar
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,22 +84,28 @@ export default function MeuPerfil() {
   };
 
   // Busca automática de endereço por CEP
-  const handleCEPChange = (value: string) => {
+  const handleCEPChange = async (value: string) => {
     const cepFormatado = aplicarMascaraCEP(value);
+    console.log('🔍 Buscando CEP:', cepFormatado);
+    
+    // Atualizar o campo CEP no formulário imediatamente
     alterarCampo('cep', cepFormatado);
     
-    // Se CEP está completo, buscar endereço
     if (cepFormatado.replace(/\D/g, '').length === 8) {
-      console.log('🔍 CEP completo, buscando endereço:', cepFormatado);
-      buscarEnderecoPorCEP(cepFormatado, (endereco) => {
-        // Callback para atualizar o formulário também
-        console.log('📝 Atualizando formulário com endereço:', endereco);
+      console.log('🔍 CEP completo, iniciando busca...');
+      const endereco = await buscarEnderecoPorCEP(cepFormatado);
+      
+      if (endereco) {
+        console.log('📍 Endereço encontrado, atualizando formulário:', endereco);
+        // Atualizar apenas os campos de endereço, mantendo o CEP atual
         alterarCampos({
-          endereco: endereco.endereco,
-          cidade: endereco.cidade,
-          estado: endereco.estado
+          endereco: endereco.logradouro || '',
+          cidade: endereco.cidade || '',
+          estado: endereco.estado || ''
         });
-      });
+      } else {
+        console.log('❌ Endereço não encontrado para CEP:', cepFormatado);
+      }
     }
   };
 

@@ -123,38 +123,27 @@ export function useProfileData() {
   };
 
   // Função para buscar endereço pelo CEP
-  const buscarEnderecoPorCEP = async (cep: string, callbackAtualizacao?: (endereco: any) => void) => {
-    console.log('🔍 Buscando CEP:', cep);
+  const buscarEnderecoPorCEP = async (cep: string) => {
+    console.log('🔍 Iniciando busca de CEP:', cep);
+    
     if (cep.replace(/\D/g, '').length === 8) {
       const endereco = await buscarCEP(cep);
       if (endereco) {
-        console.log('📍 Endereço encontrado:', endereco);
-        
-        // Atualizar estado interno do profile
-        setDadosPerfil(prev => ({
-          ...prev,
-          endereco: endereco.logradouro,
-          cidade: endereco.cidade,
-          estado: endereco.estado
-        }));
-        
-        // Chamar callback para atualizar formulário também
-        if (callbackAtualizacao) {
-          callbackAtualizacao({
-            endereco: endereco.logradouro,
-            cidade: endereco.cidade,
-            estado: endereco.estado
-          });
-        }
+        console.log('📍 CEP encontrado:', endereco);
         
         toast({
           title: 'Endereço encontrado',
           description: 'Dados preenchidos automaticamente'
         });
+        
+        return endereco;
       } else {
         console.log('⚠️ CEP não encontrado');
+        return null;
       }
     }
+    
+    return null;
   };
 
   // Função para upload de avatar
