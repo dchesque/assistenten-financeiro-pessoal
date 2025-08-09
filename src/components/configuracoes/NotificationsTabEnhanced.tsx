@@ -507,14 +507,14 @@ export function NotificationsTabEnhanced() {
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select 
-                  value={filters.status || ''} 
-                  onValueChange={(value) => handleFilterChange('status', value || undefined)}
+                  value={filters.status || 'all'} 
+                  onValueChange={(value) => handleFilterChange('status', value === 'all' ? undefined : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="sent">Enviadas</SelectItem>
                     <SelectItem value="read">Lidas</SelectItem>
                     <SelectItem value="pending">Pendentes</SelectItem>
@@ -526,14 +526,14 @@ export function NotificationsTabEnhanced() {
               <div className="space-y-2">
                 <Label>Tipo</Label>
                 <Select 
-                  value={filters.type || ''} 
-                  onValueChange={(value) => handleFilterChange('type', value || undefined)}
+                  value={filters.type || 'all'} 
+                  onValueChange={(value) => handleFilterChange('type', value === 'all' ? undefined : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="bill_due_soon">Conta vencendo</SelectItem>
                     <SelectItem value="bill_overdue">Conta vencida</SelectItem>
                     <SelectItem value="trial_expiring">Trial expirando</SelectItem>
@@ -546,14 +546,14 @@ export function NotificationsTabEnhanced() {
               <div className="space-y-2">
                 <Label>Severidade</Label>
                 <Select 
-                  value={filters.severity || ''} 
-                  onValueChange={(value) => handleFilterChange('severity', value || undefined)}
+                  value={filters.severity || 'all'} 
+                  onValueChange={(value) => handleFilterChange('severity', value === 'all' ? undefined : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     <SelectItem value="info">Info</SelectItem>
                     <SelectItem value="success">Sucesso</SelectItem>
                     <SelectItem value="warning">Aviso</SelectItem>
