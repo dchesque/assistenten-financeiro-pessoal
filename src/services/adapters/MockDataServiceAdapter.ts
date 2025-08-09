@@ -86,11 +86,13 @@ export class MockDataServiceAdapter implements IDataService {
         .map(conta => ({ ...conta, id: Number(conta.id) })) as any;
     },
     
-    marcarComoPaga: async (id: string | number, dataPagamento: Date, valorPago?: number) => {
+    marcarComoPaga: async (id: string | number, dados: { dataPagamento: Date; valorPago?: number; bankAccountId?: string; observacoes?: string; }) => {
       const conta = await this.mockService.updateContaPagar(String(id), {
         status: 'pago',
-        data_pagamento: dataPagamento.toISOString(),
-        valor_final: valorPago
+        data_pagamento: dados.dataPagamento.toISOString(),
+        valor_final: dados.valorPago,
+        bank_account_id: dados.bankAccountId,
+        observacoes: dados.observacoes
       } as any);
       return { ...conta, id: Number(conta.id) } as any;
     }

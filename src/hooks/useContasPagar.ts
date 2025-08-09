@@ -106,7 +106,12 @@ export function useContasPagar() {
     
     try {
       await showMessage.promise(
-        withRetry(() => dataService.contasPagar.marcarComoPaga(id, dataPagamento, dadosPagamento.valor_pago)),
+        withRetry(() => dataService.contasPagar.marcarComoPaga(id, {
+          dataPagamento,
+          valorPago: dadosPagamento.valor_pago,
+          bankAccountId: dadosPagamento.banco_id?.toString(),
+          observacoes: undefined
+        })),
         {
           loading: 'Baixando conta...',
           success: 'Conta baixada com sucesso!',
