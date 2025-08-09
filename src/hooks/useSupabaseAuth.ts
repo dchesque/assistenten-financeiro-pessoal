@@ -1,15 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { ProfileService, UserProfile } from '@/services/profileService';
-import { SubscriptionService } from '@/services/subscriptionService';
+import { UserProfile } from '@/types/userProfile';
 import { logService } from '@/services/logService';
 import { toast } from 'sonner';
-
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutos
-const WARNING_TIME = 5 * 60 * 1000; // 5 minutos antes do timeout
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutos
 
 export function useSupabaseAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -17,135 +11,127 @@ export function useSupabaseAuth() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [loginAttempts, setLoginAttempts] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
   const [lockoutEndTime, setLockoutEndTime] = useState<number | null>(null);
-  
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const warningRef = useRef<NodeJS.Timeout | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
 
-  // Função para resetar timers de timeout
-  const resetSessionTimeout = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    if (warningRef.current) clearTimeout(warningRef.current);
-    
-    lastActivityRef.current = Date.now();
-    
-    // Timer para aviso de timeout (25 minutos)
-    warningRef.current = setTimeout(() => {
-      toast.warning('Sua sessão expirará em 5 minutos por inatividade', {
-        duration: 10000,
-        action: {
-          label: 'Continuar',
-          onClick: () => resetSessionTimeout()
-        }
-      });
-    }, SESSION_TIMEOUT - WARNING_TIME);
-    
-    // Timer para logout automático (30 minutos)
-    timeoutRef.current = setTimeout(() => {
-      signOut();
-      toast.error('Sessão expirada por inatividade');
-    }, SESSION_TIMEOUT);
-  }, []);
+  // Calcular se está bloqueado
+  const isLocked = lockoutEndTime && lockoutEndTime > Date.now();
 
   // Função para carregar perfil do usuário
-  const loadUserProfile = useCallback(async (userId: string) => {
+  const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      const userProfile = await ProfileService.getCurrentProfile();
-      setProfile(userProfile);
-      return userProfile;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        logService.logError(error, 'useSupabaseAuth.loadUserProfile');
+        return null;
+      }
+
+      return data;
     } catch (error) {
       logService.logError(error, 'useSupabaseAuth.loadUserProfile');
       return null;
     }
-  }, []);
+  };
 
-  // Verificar lockout ao inicializar
+  // Função para resetar timeout de sessão
+  const resetSessionTimeout = () => {
+    // Implementar timeout de sessão se necessário
+  };
+
+  // Carregar tentativas de login do localStorage
   useEffect(() => {
-    const storedAttempts = parseInt(localStorage.getItem('loginAttempts') || '0');
-    const storedLockoutEnd = parseInt(localStorage.getItem('lockoutEndTime') || '0');
+    const storedAttempts = localStorage.getItem('login_attempts');
+    const storedLockoutEnd = localStorage.getItem('lockout_end_time');
     
-    setLoginAttempts(storedAttempts);
+    if (storedAttempts) {
+      setLoginAttempts(parseInt(storedAttempts));
+    }
     
-    if (storedLockoutEnd > Date.now()) {
-      setIsLocked(true);
-      setLockoutEndTime(storedLockoutEnd);
-      
-      // Timer para desbloquear automaticamente
-      setTimeout(() => {
-        setIsLocked(false);
-        setLockoutEndTime(null);
-        setLoginAttempts(0);
-        localStorage.removeItem('loginAttempts');
-        localStorage.removeItem('lockoutEndTime');
-      }, storedLockoutEnd - Date.now());
+    if (storedLockoutEnd) {
+      const lockoutEnd = parseInt(storedLockoutEnd);
+      if (lockoutEnd > Date.now()) {
+        setLockoutEndTime(lockoutEnd);
+      } else {
+        // Lockout expirou, limpar
+        localStorage.removeItem('login_attempts');
+        localStorage.removeItem('lockout_end_time');
+      }
     }
   }, []);
 
-  // Configurar listener de autenticação
+  // Função para incrementar tentativas de login
+  const incrementLoginAttempts = () => {
+    const newAttempts = loginAttempts + 1;
+    setLoginAttempts(newAttempts);
+    localStorage.setItem('login_attempts', newAttempts.toString());
+
+    if (newAttempts >= 5) {
+      // Bloquear por 15 minutos
+      const lockoutEnd = Date.now() + 15 * 60 * 1000;
+      setLockoutEndTime(lockoutEnd);
+      localStorage.setItem('lockout_end_time', lockoutEnd.toString());
+    }
+  };
+
+  // Configurar listeners de autenticação
   useEffect(() => {
-    // Configurar listener de mudanças de auth
+    // Listener para mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+        setLoading(false);
+
         if (session?.user) {
-          // Defer profile loading para evitar problemas
+          // Carregar perfil do usuário
           setTimeout(async () => {
-            await loadUserProfile(session.user.id);
-            resetSessionTimeout();
+            const userProfile = await loadUserProfile(session.user.id);
+            setProfile(userProfile);
           }, 0);
         } else {
           setProfile(null);
-          // Limpar timers
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          if (warningRef.current) clearTimeout(warningRef.current);
         }
       }
     );
 
-    // Verificar sessão existente
+    // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+      setLoading(false);
+
       if (session?.user) {
         setTimeout(async () => {
-          await loadUserProfile(session.user.id);
-          resetSessionTimeout();
+          const userProfile = await loadUserProfile(session.user.id);
+          setProfile(userProfile);
         }, 0);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [loadUserProfile, resetSessionTimeout]);
+  }, []);
 
   // Detectar atividade do usuário para resetar timeout
   useEffect(() => {
-    if (!session) return;
-
-    const activities = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
     const handleActivity = () => {
-      // Throttle para evitar muitos resets
-      if (Date.now() - lastActivityRef.current > 60000) { // 1 minuto
-        resetSessionTimeout();
-      }
+      resetSessionTimeout();
     };
 
-    activities.forEach(activity => {
-      document.addEventListener(activity, handleActivity, true);
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(event => {
+      document.addEventListener(event, handleActivity, { passive: true });
     });
 
     return () => {
-      activities.forEach(activity => {
-        document.removeEventListener(activity, handleActivity, true);
+      events.forEach(event => {
+        document.removeEventListener(event, handleActivity);
       });
     };
-  }, [session, resetSessionTimeout]);
+  }, []);
 
   // Função para login via WhatsApp/OTP
   const signInWithWhatsApp = async (whatsapp: string) => {
@@ -212,6 +198,90 @@ export function useSupabaseAuth() {
     }
   };
 
+  // Função para login via email/senha
+  const signInWithEmail = async (email: string, password: string) => {
+    if (isLocked) {
+      const remainingTime = Math.ceil((lockoutEndTime! - Date.now()) / 60000);
+      toast.error(`Conta bloqueada. Tente novamente em ${remainingTime} minutos.`);
+      return { error: 'Conta bloqueada' };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        incrementLoginAttempts();
+        logService.logError(error, 'useSupabaseAuth.signInWithEmail');
+        throw error;
+      }
+
+      // Reset tentativas de login em caso de sucesso
+      setLoginAttempts(0);
+      localStorage.removeItem('login_attempts');
+      localStorage.removeItem('lockout_end_time');
+
+      return { error: null, user: data.user };
+    } catch (error: any) {
+      logService.logError(error, 'useSupabaseAuth.signInWithEmail');
+      return { error };
+    }
+  };
+
+  // Função para cadastro via email/senha
+  const signUpWithEmail = async (email: string, password: string, userData?: { nome?: string }) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            name: userData?.nome || '',
+            email
+          }
+        }
+      });
+
+      if (error) {
+        logService.logError(error, 'useSupabaseAuth.signUpWithEmail');
+        throw error;
+      }
+
+      // Se o usuário foi criado, criar perfil e trial
+      if (data.user) {
+        try {
+          // Criar perfil
+          await supabase.rpc('upsert_profile', {
+            p_user_id: data.user.id,
+            p_phone: '', // Email signup não tem telefone
+            p_name: userData?.nome || '',
+            p_email: email
+          });
+
+          // Criar trial subscription
+          await supabase.rpc('create_trial_subscription', {
+            p_user_id: data.user.id
+          });
+        } catch (profileError) {
+          logService.logError(profileError, 'useSupabaseAuth.signUpWithEmail.createProfile');
+          // Não falhar o signup se o perfil falhar, pode ser resolvido depois
+        }
+      }
+
+      return { 
+        error: null, 
+        user: data.user,
+        needsEmailConfirmation: !data.session // Se não tem session, precisa confirmar email
+      };
+    } catch (error: any) {
+      logService.logError(error, 'useSupabaseAuth.signUpWithEmail');
+      return { error };
+    }
+  };
+
   // Função para verificar código OTP
   const verifyCode = async (whatsapp: string, code: string) => {
     if (isLocked) {
@@ -225,7 +295,7 @@ export function useSupabaseAuth() {
       const cleanPhone = whatsapp.replace(/\D/g, '');
       const formattedPhone = `+55${cleanPhone}`;
 
-      // Verificar OTP
+      // Verificar código OTP
       const { data, error } = await supabase.auth.verifyOtp({
         phone: formattedPhone,
         token: code,
@@ -233,63 +303,51 @@ export function useSupabaseAuth() {
       });
 
       if (error) {
-        // Incrementar tentativas
-        const newAttempts = loginAttempts + 1;
-        setLoginAttempts(newAttempts);
-        localStorage.setItem('loginAttempts', newAttempts.toString());
-        
-        if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-          const lockoutEnd = Date.now() + LOCKOUT_DURATION;
-          setIsLocked(true);
-          setLockoutEndTime(lockoutEnd);
-          localStorage.setItem('lockoutEndTime', lockoutEnd.toString());
-          
-          toast.error(`Muitas tentativas inválidas. Conta bloqueada por 15 minutos.`);
-          
-          // Timer para desbloquear automaticamente
-          setTimeout(() => {
-            setIsLocked(false);
-            setLockoutEndTime(null);
-            setLoginAttempts(0);
-            localStorage.removeItem('loginAttempts');
-            localStorage.removeItem('lockoutEndTime');
-          }, LOCKOUT_DURATION);
-        } else {
-          const remainingAttempts = MAX_LOGIN_ATTEMPTS - newAttempts;
-          toast.error(`Código inválido. Restam ${remainingAttempts} tentativas.`);
+        // Incrementar tentativas apenas para códigos inválidos
+        if (error.message?.includes('invalid') || error.message?.includes('expired')) {
+          incrementLoginAttempts();
         }
         
+        logService.logError(error, 'useSupabaseAuth.verifyCode');
         throw error;
       }
 
-      // Reset attempts on success
+      // Reset tentativas de login em caso de sucesso
       setLoginAttempts(0);
-      localStorage.removeItem('loginAttempts');
-      localStorage.removeItem('lockoutEndTime');
+      localStorage.removeItem('login_attempts');
+      localStorage.removeItem('lockout_end_time');
 
-      if (data.user) {
-        // Criar ou atualizar perfil
-        await ProfileService.upsertProfile(
-          data.user.id,
-          formattedPhone,
-          data.user.user_metadata?.name
-        );
+      // Se usuário foi criado, configurar perfil e trial
+      if (data.user && data.session) {
+        try {
+          // Buscar se perfil já existe
+          const existingProfile = await loadUserProfile(data.user.id);
+          
+          if (!existingProfile) {
+            // Criar perfil usando metadados do usuário
+            const userName = data.user.user_metadata?.name || '';
+            const userPhone = data.user.phone || formattedPhone;
+            
+            await supabase.rpc('upsert_profile', {
+              p_user_id: data.user.id,
+              p_phone: userPhone,
+              p_name: userName
+            });
 
-        // Garantir que o trial existe (será criado se for primeiro login)
-        await SubscriptionService.createTrial(data.user.id);
+            // Criar trial subscription
+            await supabase.rpc('create_trial_subscription', {
+              p_user_id: data.user.id
+            });
 
-        // Verificar se precisa do onboarding
-        const userProfile = await loadUserProfile(data.user.id);
-        const needsOnboarding = !userProfile?.onboarding_completed;
-        
-        return { 
-          error: null, 
-          needsOnboarding,
-          user: data.user 
-        };
+            return { error: null, needsOnboarding: true, user: data.user };
+          }
+        } catch (profileError) {
+          logService.logError(profileError, 'useSupabaseAuth.verifyCode.createProfile');
+          // Não falhar a verificação se o perfil falhar
+        }
       }
 
-      return { error: null };
+      return { error: null, needsOnboarding: false, user: data.user };
     } catch (error: any) {
       logService.logError(error, 'useSupabaseAuth.verifyCode');
       return { error };
@@ -299,10 +357,6 @@ export function useSupabaseAuth() {
   // Função para logout
   const signOut = async () => {
     try {
-      // Limpar timers
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (warningRef.current) clearTimeout(warningRef.current);
-      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -310,60 +364,66 @@ export function useSupabaseAuth() {
         throw error;
       }
 
+      // Limpar dados locais
       setUser(null);
       setSession(null);
       setProfile(null);
       
-      toast.info('Logout realizado com sucesso');
-      
-      // Forçar navegação imediata para auth
+      // Redirecionar para página de autenticação
       window.location.href = '/auth';
       
       return { error: null };
     } catch (error: any) {
       logService.logError(error, 'useSupabaseAuth.signOut');
-      toast.error('Erro no logout');
       return { error };
     }
   };
 
-  // Função para reset de senha (não aplicável para WhatsApp, mas mantemos para compatibilidade)
+  // Função para resetar senha via email
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      });
+
       if (error) {
         logService.logError(error, 'useSupabaseAuth.resetPassword');
         throw error;
       }
-      
-      toast.success('Email de recuperação enviado!');
+
       return { error: null };
     } catch (error: any) {
       logService.logError(error, 'useSupabaseAuth.resetPassword');
-      toast.error('Erro ao enviar email de recuperação');
       return { error };
     }
   };
 
   return {
+    // Estados de autenticação
     user,
     session,
     profile,
     loading,
+    isAuthenticated: !!user,
+    role: profile?.role || 'user',
+    isAdmin: profile?.role === 'admin',
+
+    // Funções de autenticação
     signInWithWhatsApp,
     signUpWithWhatsApp,
+    signInWithEmail,
+    signUpWithEmail,
     verifyCode,
     signOut,
     resetPassword,
+
+    // Funções de sessão
     resetSessionTimeout,
     loadUserProfile,
-    isAuthenticated: !!session,
+
+    // Estado de bloqueio
     loginAttempts,
     isLocked,
-    lockoutEndTime,
-    // Expor role para uso em guards
-    role: profile?.role || 'user',
-    isAdmin: profile?.role === 'admin'
+    lockoutEndTime
   };
 }

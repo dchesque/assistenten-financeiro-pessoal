@@ -6,69 +6,62 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageCircle, ArrowLeft, Send, Shield, TrendingUp, Users, DollarSign, BarChart3, Sparkles, CheckCircle, Zap, Globe } from 'lucide-react';
+import { Eye, EyeOff, MessageCircle, Phone, Send, Sparkles, TrendingUp, Users, CheckCircle, Shield, Lock, CreditCard, Mail, LogIn, UserPlus, ArrowLeft, DollarSign, BarChart3, Zap, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { GRADIENTES, GLASSMORPHISM, ANIMATIONS } from '@/constants/designSystem';
 
 export default function Auth() {
-  const { signInWithWhatsApp, signUpWithWhatsApp, verifyCode, isAuthenticated, loading, loginAttempts, isLocked, lockoutEndTime } = useAuth();
+  const {
+    signInWithWhatsApp,
+    signUpWithWhatsApp,
+    signInWithEmail,
+    signUpWithEmail,
+    verifyCode,
+    loginAttempts,
+    isLocked,
+    lockoutEndTime
+  } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'login';
-  
-  const [step, setStep] = useState<'phone' | 'code'>('phone');
+  const returnUrl = searchParams.get('returnUrl');
+
   const [formData, setFormData] = useState({
     whatsapp: '',
-    code: '',
     nome: '',
-    password: '',
-    confirmPassword: ''
+    codigo: '',
+    email: '',
+    senha: '',
+    confirmarSenha: ''
   });
+  const [step, setStep] = useState<'phone' | 'code'>('phone');
+  const [authMethod, setAuthMethod] = useState<'whatsapp' | 'email'>('whatsapp');
   const [formLoading, setFormLoading] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-
-  // Redirecionar se já autenticado
-  useEffect(() => {
-    if (isAuthenticated && !loading) {
-      // Verificar se há returnUrl
-      const returnUrl = localStorage.getItem('returnUrl');
-      if (returnUrl && returnUrl !== '/auth') {
-        localStorage.removeItem('returnUrl');
-        navigate(returnUrl);
-      } else {
-        navigate('/dashboard');
-      }
-    }
-  }, [isAuthenticated, loading, navigate]);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Calcular força da senha
   useEffect(() => {
-    if (formData.password) {
+    if (formData.senha) {
       let strength = 0;
-      if (formData.password.length >= 8) strength += 25;
-      if (/[a-z]/.test(formData.password)) strength += 25;
-      if (/[A-Z]/.test(formData.password)) strength += 25;
-      if (/[0-9]/.test(formData.password)) strength += 25;
-      if (/[^A-Za-z0-9]/.test(formData.password)) strength += 25;
-      setPasswordStrength(Math.min(strength, 100));
+      if (formData.senha.length >= 8) strength += 25;
+      if (/[A-Z]/.test(formData.senha)) strength += 25;
+      if (/[0-9]/.test(formData.senha)) strength += 25;
+      if (/[^A-Za-z0-9]/.test(formData.senha)) strength += 25;
+      setPasswordStrength(strength);
     } else {
       setPasswordStrength(0);
     }
-  }, [formData.password]);
+  }, [formData.senha]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const formatWhatsApp = (value: string) => {
-    // Remove tudo que não é número
     const numbers = value.replace(/\D/g, '');
-    
-    // Aplica máscara (xx) xxxxx-xxxx
     if (numbers.length <= 11) {
       return numbers
         .replace(/(\d{2})(\d)/, '($1) $2')
@@ -78,108 +71,170 @@ export default function Auth() {
     return value;
   };
 
+  // Função para enviar código WhatsApp
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.whatsapp) return;
     
-    // Verificar se está bloqueado
-    if (isLocked && lockoutEndTime) {
-      const remainingTime = Math.ceil((lockoutEndTime - Date.now()) / 60000);
-      toast({ 
-        title: 'Conta bloqueada', 
-        description: `Muitas tentativas inválidas. Tente novamente em ${remainingTime} minutos.`,
-        variant: 'destructive'
-      });
+    if (!formData.whatsapp.trim()) {
+      toast.error('Por favor, digite seu número do WhatsApp');
       return;
     }
-    
-    // Validar formato do WhatsApp
-    const numbers = formData.whatsapp.replace(/\D/g, '');
-    if (numbers.length < 11) {
-      toast({ title: 'Atenção', description: 'Por favor, digite um número válido' });
-      return;
-    }
-    
+
     setFormLoading(true);
     
     try {
+      let result;
+      
       if (mode === 'signup') {
         if (!formData.nome.trim()) {
-          toast({ title: 'Atenção', description: 'Por favor, digite seu nome' });
-          setFormLoading(false);
+          toast.error('Por favor, digite seu nome');
           return;
         }
-        await signUpWithWhatsApp(formData.whatsapp, { nome: formData.nome });
+        result = await signUpWithWhatsApp(formData.whatsapp, {
+          nome: formData.nome
+        });
       } else {
-        await signInWithWhatsApp(formData.whatsapp);
+        result = await signInWithWhatsApp(formData.whatsapp);
       }
-      
-      setCodeSent(true);
-      setStep('code');
-      toast({ title: 'Sucesso', description: 'Código enviado para seu WhatsApp!' });
+
+      if (result.error) {
+        if (result.error.message?.includes('locked')) {
+          toast.error('Muitas tentativas incorretas. Conta temporariamente bloqueada.');
+        } else {
+          toast.error('Erro ao enviar código. Tente novamente.');
+        }
+      } else {
+        toast.success(`Código enviado para ${formatWhatsApp(formData.whatsapp)}!`);
+        setStep('code');
+      }
     } catch (error) {
-      toast({ title: 'Erro', description: 'Erro ao enviar código', variant: 'destructive' });
+      toast.error('Erro inesperado. Tente novamente.');
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
+  // Função para autenticação via email
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.code) return;
     
-    setFormLoading(true);
-    try {
-      const result = await verifyCode(formData.whatsapp, formData.code);
-      
-      if (result.error) {
-        // Erro já tratado no useAuth
+    if (!formData.email.trim() || !formData.senha.trim()) {
+      toast.error('Por favor, preencha email e senha');
+      return;
+    }
+
+    if (mode === 'signup') {
+      if (!formData.nome.trim()) {
+        toast.error('Por favor, digite seu nome');
         return;
       }
+      if (formData.senha !== formData.confirmarSenha) {
+        toast.error('As senhas não coincidem');
+        return;
+      }
+      if (passwordStrength < 50) {
+        toast.error('Senha muito fraca. Use pelo menos 8 caracteres com maiúsculas e números');
+        return;
+      }
+    }
+
+    setFormLoading(true);
+    
+    try {
+      let result;
       
-      if (result.needsOnboarding) {
-        navigate('/onboarding');
-      } else {
-        // Verificar returnUrl
-        const returnUrl = localStorage.getItem('returnUrl');
-        if (returnUrl && returnUrl !== '/auth') {
-          localStorage.removeItem('returnUrl');
-          navigate(returnUrl);
+      if (mode === 'signup') {
+        result = await signUpWithEmail(formData.email, formData.senha, {
+          nome: formData.nome
+        });
+        
+        if (result.error) {
+          if (result.error.message?.includes('already registered')) {
+            toast.error('Este email já está cadastrado. Tente fazer login.');
+          } else {
+            toast.error('Erro ao criar conta. Tente novamente.');
+          }
         } else {
-          navigate('/dashboard');
+          if (result.needsEmailConfirmation) {
+            toast.success('Conta criada! Verifique seu email para confirmar.');
+          } else {
+            toast.success('Conta criada com sucesso!');
+            navigate(returnUrl || '/dashboard');
+          }
+        }
+      } else {
+        result = await signInWithEmail(formData.email, formData.senha);
+        
+        if (result.error) {
+          if (result.error.message?.includes('Invalid login credentials')) {
+            toast.error('Email ou senha incorretos');
+          } else if (result.error.message?.includes('locked')) {
+            toast.error('Muitas tentativas incorretas. Conta temporariamente bloqueada.');
+          } else {
+            toast.error('Erro ao fazer login. Tente novamente.');
+          }
+        } else {
+          toast.success('Login realizado com sucesso!');
+          navigate(returnUrl || '/dashboard');
         }
       }
     } catch (error) {
-      toast({ title: 'Erro', description: 'Código inválido', variant: 'destructive' });
+      toast.error('Erro inesperado. Tente novamente.');
     } finally {
       setFormLoading(false);
     }
   };
 
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength < 25) return 'bg-red-500';
-    if (passwordStrength < 50) return 'bg-orange-500';
-    if (passwordStrength < 75) return 'bg-yellow-500';
+  // Função para verificar código WhatsApp
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.codigo.trim()) {
+      toast.error('Por favor, digite o código');
+      return;
+    }
+
+    setFormLoading(true);
+    
+    try {
+      const result = await verifyCode(formData.whatsapp, formData.codigo);
+      
+      if (result.error) {
+        if (result.error.message?.includes('invalid')) {
+          toast.error('Código inválido. Tente novamente.');
+        } else if (result.error.message?.includes('expired')) {
+          toast.error('Código expirado. Solicite um novo código.');
+        } else {
+          toast.error('Erro ao verificar código. Tente novamente.');
+        }
+      } else {
+        toast.success('Código verificado com sucesso!');
+        if (result.needsOnboarding) {
+          navigate('/onboarding');
+        } else {
+          navigate(returnUrl || '/dashboard');
+        }
+      }
+    } catch (error) {
+      toast.error('Erro inesperado. Tente novamente.');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const getPasswordStrengthColor = (strength: number) => {
+    if (strength < 25) return 'bg-red-500';
+    if (strength < 50) return 'bg-orange-500';
+    if (strength < 75) return 'bg-yellow-500';
     return 'bg-green-500';
   };
 
-  const getPasswordStrengthText = () => {
-    if (passwordStrength < 25) return 'Muito fraca';
-    if (passwordStrength < 50) return 'Fraca';
-    if (passwordStrength < 75) return 'Boa';
+  const getPasswordStrengthText = (strength: number) => {
+    if (strength < 25) return 'Muito fraca';
+    if (strength < 50) return 'Fraca';
+    if (strength < 75) return 'Boa';
     return 'Forte';
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 relative overflow-hidden">
@@ -317,7 +372,7 @@ export default function Auth() {
                 </CardTitle>
                 <CardDescription>
                   {step === 'phone' 
-                    ? 'Digite seu WhatsApp para continuar' 
+                    ? (authMethod === 'whatsapp' ? 'Digite seu WhatsApp para continuar' : 'Entre com seu email e senha')
                     : 'Confirme o código enviado para seu WhatsApp'
                   }
                 </CardDescription>
@@ -335,7 +390,7 @@ export default function Auth() {
                         <h3 className="text-lg font-semibold text-gray-900">Código enviado!</h3>
                         <p className="text-sm text-muted-foreground mt-1">
                           Enviamos um código para<br />
-                          <span className="font-medium text-green-600">{formData.whatsapp}</span>
+                          <span className="font-medium text-green-600">{formatWhatsApp(formData.whatsapp)}</span>
                         </p>
                       </div>
                     </div>
@@ -345,8 +400,8 @@ export default function Auth() {
                       <Input
                         id="code"
                         type="text"
-                        value={formData.code}
-                        onChange={(e) => handleInputChange('code', e.target.value)}
+                        value={formData.codigo}
+                        onChange={(e) => handleInputChange('codigo', e.target.value)}
                         className={`${GLASSMORPHISM.input} text-center text-lg tracking-widest font-mono`}
                         placeholder="123456"
                         maxLength={6}
@@ -377,8 +432,7 @@ export default function Auth() {
                         type="button"
                         onClick={() => {
                           setStep('phone');
-                          setCodeSent(false);
-                          setFormData(prev => ({ ...prev, code: '' }));
+                          setFormData(prev => ({ ...prev, codigo: '' }));
                         }}
                         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
@@ -397,7 +451,7 @@ export default function Auth() {
                     </div>
                   </form>
                 ) : (
-                  // Tela de inserção do número
+                  // Formulários de autenticação
                   <Tabs value={mode === 'signup' ? 'signup' : 'login'} className="space-y-6">
                     <TabsList className="grid w-full grid-cols-2 bg-gray-100/80 backdrop-blur-sm">
                       <TabsTrigger value="login" onClick={() => navigate('/auth')} className="data-[state=active]:bg-white">
@@ -409,124 +463,396 @@ export default function Auth() {
                     </TabsList>
 
                     <TabsContent value="login" className="space-y-4">
-                      <form onSubmit={handleSendCode} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="whatsapp" className="text-sm font-medium text-gray-700">
-                            Número do WhatsApp
-                          </Label>
-                          <Input
-                            id="whatsapp"
-                            type="tel"
-                            value={formatWhatsApp(formData.whatsapp)}
-                            onChange={(e) => handleInputChange('whatsapp', e.target.value)}
-                            className={GLASSMORPHISM.input}
-                            placeholder="(11) 99999-9999"
-                            disabled={isLocked}
-                            required
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Digite seu número com DDD
-                          </p>
-                          {loginAttempts > 0 && !isLocked && (
-                            <p className="text-xs text-orange-600">
-                              {5 - loginAttempts} tentativas restantes
+                      {/* Método WhatsApp (padrão) */}
+                      {authMethod === 'whatsapp' && (
+                        <form onSubmit={handleSendCode} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="whatsapp" className="text-sm font-medium text-gray-700">
+                              Número do WhatsApp
+                            </Label>
+                            <Input
+                              id="whatsapp"
+                              type="tel"
+                              value={formatWhatsApp(formData.whatsapp)}
+                              onChange={(e) => handleInputChange('whatsapp', e.target.value)}
+                              className={GLASSMORPHISM.input}
+                              placeholder="(11) 99999-9999"
+                              disabled={isLocked}
+                              required
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Digite seu número com DDD
                             </p>
-                          )}
-                          {isLocked && lockoutEndTime && (
-                            <p className="text-xs text-red-600">
-                              Conta bloqueada. Tente em {Math.ceil((lockoutEndTime - Date.now()) / 60000)} minutos.
-                            </p>
-                          )}
-                        </div>
+                            {loginAttempts > 0 && !isLocked && (
+                              <p className="text-xs text-orange-600">
+                                {5 - loginAttempts} tentativas restantes
+                              </p>
+                            )}
+                            {isLocked && lockoutEndTime && (
+                              <p className="text-xs text-red-600">
+                                Conta bloqueada. Tente em {Math.ceil((lockoutEndTime - Date.now()) / 60000)} minutos.
+                              </p>
+                            )}
+                          </div>
 
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="remember"
-                            checked={rememberMe}
-                            onChange={(e) => setRememberMe(e.target.checked)}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <Label htmlFor="remember" className="text-sm text-gray-700">
-                            Lembrar-me neste dispositivo
-                          </Label>
-                        </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="remember"
+                              checked={rememberMe}
+                              onChange={(e) => setRememberMe(e.target.checked)}
+                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <Label htmlFor="remember" className="text-sm text-gray-700">
+                              Lembrar-me neste dispositivo
+                            </Label>
+                          </div>
 
-                        <Button
-                          type="submit"
-                          className={`w-full btn-primary ${ANIMATIONS.fast}`}
-                          disabled={formLoading || isLocked}
-                        >
-                          {formLoading ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                              Enviando...
-                            </>
-                          ) : isLocked ? (
-                            'Conta temporariamente bloqueada'
-                          ) : (
-                            <>
-                              <Send className="w-4 h-4 mr-2" />
-                              Enviar código
-                            </>
-                          )}
-                        </Button>
-                      </form>
+                          <Button
+                            type="submit"
+                            className={`w-full btn-primary ${ANIMATIONS.fast}`}
+                            disabled={formLoading || isLocked}
+                          >
+                            {formLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                Enviando...
+                              </>
+                            ) : isLocked ? (
+                              'Conta temporariamente bloqueada'
+                            ) : (
+                              <>
+                                <Send className="w-4 h-4 mr-2" />
+                                Enviar código
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      )}
+
+                      {/* Método Email */}
+                      {authMethod === 'email' && (
+                        <form onSubmit={handleEmailAuth} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="email-login" className="text-sm font-medium text-gray-700">
+                              Email
+                            </Label>
+                            <Input
+                              id="email-login"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => handleInputChange('email', e.target.value)}
+                              className={GLASSMORPHISM.input}
+                              placeholder="seu@email.com"
+                              disabled={isLocked}
+                              required
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="senha-login" className="text-sm font-medium text-gray-700">
+                              Senha
+                            </Label>
+                            <div className="relative">
+                              <Input
+                                id="senha-login"
+                                type={showPassword ? "text" : "password"}
+                                value={formData.senha}
+                                onChange={(e) => handleInputChange('senha', e.target.value)}
+                                className={GLASSMORPHISM.input}
+                                placeholder="Sua senha"
+                                disabled={isLocked}
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                              >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="remember-email"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <Label htmlFor="remember-email" className="text-sm text-gray-700">
+                                Lembrar-me
+                              </Label>
+                            </div>
+                            <button
+                              type="button"
+                              className="text-sm text-blue-600 hover:text-blue-800"
+                              onClick={() => toast.info('Função em desenvolvimento')}
+                            >
+                              Esqueci a senha
+                            </button>
+                          </div>
+
+                          <Button
+                            type="submit"
+                            className={`w-full btn-primary ${ANIMATIONS.fast}`}
+                            disabled={formLoading || isLocked}
+                          >
+                            {formLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                Entrando...
+                              </>
+                            ) : isLocked ? (
+                              'Conta temporariamente bloqueada'
+                            ) : (
+                              <>
+                                <LogIn className="w-4 h-4 mr-2" />
+                                Entrar
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      )}
+
+                      {/* Toggle entre métodos */}
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-gray-200" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-white px-2 text-muted-foreground">ou</span>
+                        </div>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full bg-white/80 backdrop-blur-sm hover:bg-white/90"
+                        onClick={() => setAuthMethod(authMethod === 'whatsapp' ? 'email' : 'whatsapp')}
+                      >
+                        {authMethod === 'whatsapp' ? (
+                          <>
+                            <Mail className="w-4 h-4 mr-2" />
+                            Entrar com email
+                          </>
+                        ) : (
+                          <>
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Entrar com WhatsApp
+                          </>
+                        )}
+                      </Button>
                     </TabsContent>
 
                     <TabsContent value="signup" className="space-y-4">
-                      <form onSubmit={handleSendCode} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="nome" className="text-sm font-medium text-gray-700">
-                            Nome completo
-                          </Label>
-                          <Input
-                            id="nome"
-                            type="text"
-                            value={formData.nome}
-                            onChange={(e) => handleInputChange('nome', e.target.value)}
-                            className={GLASSMORPHISM.input}
-                            placeholder="Seu nome completo"
-                            required
-                          />
-                        </div>
+                      {/* Método WhatsApp (padrão) */}
+                      {authMethod === 'whatsapp' && (
+                        <form onSubmit={handleSendCode} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="nome" className="text-sm font-medium text-gray-700">
+                              Nome completo
+                            </Label>
+                            <Input
+                              id="nome"
+                              type="text"
+                              value={formData.nome}
+                              onChange={(e) => handleInputChange('nome', e.target.value)}
+                              className={GLASSMORPHISM.input}
+                              placeholder="Seu nome completo"
+                              required
+                            />
+                          </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="whatsapp-signup" className="text-sm font-medium text-gray-700">
-                            Número do WhatsApp
-                          </Label>
-                          <Input
-                            id="whatsapp-signup"
-                            type="tel"
-                            value={formatWhatsApp(formData.whatsapp)}
-                            onChange={(e) => handleInputChange('whatsapp', e.target.value)}
-                            className={GLASSMORPHISM.input}
-                            placeholder="(11) 99999-9999"
-                            required
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Digite seu número com DDD
-                          </p>
-                        </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="whatsapp-signup" className="text-sm font-medium text-gray-700">
+                              Número do WhatsApp
+                            </Label>
+                            <Input
+                              id="whatsapp-signup"
+                              type="tel"
+                              value={formatWhatsApp(formData.whatsapp)}
+                              onChange={(e) => handleInputChange('whatsapp', e.target.value)}
+                              className={GLASSMORPHISM.input}
+                              placeholder="(11) 99999-9999"
+                              required
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Digite seu número com DDD
+                            </p>
+                          </div>
 
-                        <Button
-                          type="submit"
-                          className={`w-full btn-primary ${ANIMATIONS.fast}`}
-                          disabled={formLoading}
-                        >
-                          {formLoading ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                              Criando conta...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              Criar conta grátis
-                            </>
-                          )}
-                        </Button>
-                      </form>
+                          <Button
+                            type="submit"
+                            className={`w-full btn-primary ${ANIMATIONS.fast}`}
+                            disabled={formLoading}
+                          >
+                            {formLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                Criando conta...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Criar conta grátis
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      )}
+
+                      {/* Método Email */}
+                      {authMethod === 'email' && (
+                        <form onSubmit={handleEmailAuth} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="nome-email" className="text-sm font-medium text-gray-700">
+                              Nome completo
+                            </Label>
+                            <Input
+                              id="nome-email"
+                              type="text"
+                              value={formData.nome}
+                              onChange={(e) => handleInputChange('nome', e.target.value)}
+                              className={GLASSMORPHISM.input}
+                              placeholder="Seu nome completo"
+                              required
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="email-signup" className="text-sm font-medium text-gray-700">
+                              Email
+                            </Label>
+                            <Input
+                              id="email-signup"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => handleInputChange('email', e.target.value)}
+                              className={GLASSMORPHISM.input}
+                              placeholder="seu@email.com"
+                              required
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="senha-signup" className="text-sm font-medium text-gray-700">
+                              Senha
+                            </Label>
+                            <div className="relative">
+                              <Input
+                                id="senha-signup"
+                                type={showPassword ? "text" : "password"}
+                                value={formData.senha}
+                                onChange={(e) => handleInputChange('senha', e.target.value)}
+                                className={GLASSMORPHISM.input}
+                                placeholder="Crie uma senha forte"
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                              >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                            {formData.senha && (
+                              <div className="space-y-1">
+                                <div className="flex space-x-1">
+                                  {[25, 50, 75, 100].map((threshold) => (
+                                    <div
+                                      key={threshold}
+                                      className={`h-1 flex-1 rounded ${
+                                        passwordStrength >= threshold
+                                          ? getPasswordStrengthColor(passwordStrength)
+                                          : 'bg-gray-200'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <p className={`text-xs ${
+                                  passwordStrength >= 50 ? 'text-green-600' : 'text-orange-600'
+                                }`}>
+                                  {getPasswordStrengthText(passwordStrength)}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="confirmar-senha" className="text-sm font-medium text-gray-700">
+                              Confirmar senha
+                            </Label>
+                            <Input
+                              id="confirmar-senha"
+                              type="password"
+                              value={formData.confirmarSenha}
+                              onChange={(e) => handleInputChange('confirmarSenha', e.target.value)}
+                              className={GLASSMORPHISM.input}
+                              placeholder="Digite a senha novamente"
+                              required
+                            />
+                            {formData.confirmarSenha && (
+                              <p className={`text-xs ${
+                                formData.senha === formData.confirmarSenha ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {formData.senha === formData.confirmarSenha ? 'Senhas coincidem' : 'Senhas não coincidem'}
+                              </p>
+                            )}
+                          </div>
+
+                          <Button
+                            type="submit"
+                            className={`w-full btn-primary ${ANIMATIONS.fast}`}
+                            disabled={formLoading || passwordStrength < 50 || formData.senha !== formData.confirmarSenha}
+                          >
+                            {formLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                Criando conta...
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="w-4 h-4 mr-2" />
+                                Criar conta grátis
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      )}
+
+                      {/* Toggle entre métodos */}
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-gray-200" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-white px-2 text-muted-foreground">ou</span>
+                        </div>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full bg-white/80 backdrop-blur-sm hover:bg-white/90"
+                        onClick={() => setAuthMethod(authMethod === 'whatsapp' ? 'email' : 'whatsapp')}
+                      >
+                        {authMethod === 'whatsapp' ? (
+                          <>
+                            <Mail className="w-4 h-4 mr-2" />
+                            Cadastrar com email
+                          </>
+                        ) : (
+                          <>
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Cadastrar com WhatsApp
+                          </>
+                        )}
+                      </Button>
                     </TabsContent>
                   </Tabs>
                 )}
