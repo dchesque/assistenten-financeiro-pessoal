@@ -98,15 +98,38 @@ export default function Categorias() {
   };
 
   const handleSave = async () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'O nome da categoria é obrigatório.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.group_name) {
+      toast({
+        title: 'Erro',
+        description: 'O grupo da categoria é obrigatório.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
+      const categoryData = {
+        ...formData,
+        color: getDefaultColorByType(formData.type)
+      };
+
       if (editingCategory) {
-        await updateCategory(editingCategory.id, formData);
+        await updateCategory(editingCategory.id, categoryData);
         toast({
           title: 'Categoria atualizada!',
           description: 'A categoria foi atualizada com sucesso.',
         });
       } else {
-        await createCategory(formData);
+        await createCategory(categoryData);
         toast({
           title: 'Categoria criada!',
           description: 'A nova categoria foi criada com sucesso.',
@@ -334,7 +357,7 @@ export default function Categorias() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="group">Grupo</Label>
+              <Label htmlFor="group">Grupo *</Label>
               <Select
                 value={formData.group_name}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, group_name: value }))}
@@ -370,32 +393,13 @@ export default function Categorias() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Cor</Label>
-              <div className="grid grid-cols-5 gap-2">
-                {CATEGORY_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, color }))}
-                    className={`w-12 h-12 rounded-lg border-2 transition-all ${
-                      formData.color === color
-                        ? 'border-primary scale-110'
-                        : 'border-border hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
-              </div>
-            </div>
-
             {/* Preview */}
             <div className="p-4 bg-muted rounded-lg">
               <Label className="text-sm font-medium mb-2 block">Preview</Label>
               <div className="flex items-center space-x-3">
                 <div 
                   className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-                  style={{ backgroundColor: formData.color }}
+                  style={{ backgroundColor: getDefaultColorByType(formData.type) }}
                 >
                   {getIconComponent(formData.icon || 'Circle')}
                 </div>
@@ -403,11 +407,10 @@ export default function Categorias() {
                   <p className="font-medium">{formData.name || 'Nome da categoria'}</p>
                   <div className="flex items-center space-x-2">
                     <Badge 
-                      variant={formData.type === 'income' ? 'default' : 'secondary'}
                       className={`text-xs ${
                         formData.type === 'income' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-red-100 text-red-700'
+                          ? 'bg-green-100/80 text-green-700 border-green-200' 
+                          : 'bg-red-100/80 text-red-700 border-red-200'
                       }`}
                     >
                       {formData.type === 'income' ? 'Receita' : 'Despesa'}
@@ -427,7 +430,10 @@ export default function Categorias() {
             <Button variant="outline" onClick={handleCloseModal}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={!formData.name}>
+            <Button 
+              onClick={handleSave} 
+              disabled={!formData.name.trim() || !formData.group_name}
+            >
               {editingCategory ? 'Atualizar' : 'Criar'}
             </Button>
           </div>
