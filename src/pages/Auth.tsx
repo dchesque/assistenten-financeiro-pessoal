@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, MessageCircle, AlertCircle, Info, Eye, EyeOff, DollarSign, BarChart3, Zap, Shield, Smile } from 'lucide-react';
+import { Loader2, Mail, MessageCircle, AlertCircle, Info, Eye, EyeOff, DollarSign, BarChart3, Zap, Shield, Smile, ArrowLeft, Search, Chrome } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -23,7 +24,7 @@ export default function Auth() {
   const [emailSent, setEmailSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<'email' | 'whatsapp' | 'google' | 'apple' | null>(null);
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -286,305 +287,309 @@ export default function Auth() {
             </div>
           </div>
 
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">Acesse sua conta</h2>
-              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <p className="text-gray-600">Digite seu WhatsApp para continuar</p>
-          </div>
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold text-gray-900">Acesse sua conta</CardTitle>
+              <CardDescription className="text-gray-600">Escolha como deseja entrar</CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              {!selectedMethod ? (
+                <>
+                  {/* Tabs */}
+                  <Tabs value={mode} className="mb-6">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger 
+                        value="signin" 
+                        onClick={() => navigate('/auth?mode=signin')}
+                      >
+                        Entrar
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="signup" 
+                        onClick={() => navigate('/auth?mode=signup')}
+                      >
+                        Criar conta
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
 
-          {!showEmailLogin ? (
-            <>
-              {/* Tabs */}
-              <Tabs value={mode} className="mb-6">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger 
-                    value="signin" 
-                    onClick={() => navigate('/auth?mode=signin')}
-                  >
-                    Entrar
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="signup" 
-                    onClick={() => navigate('/auth?mode=signup')}
-                  >
-                    Criar conta
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+                  {/* Step 1: Seleção do método */}
+                  <div className="space-y-4">
+                    {/* Email e senha - Ativo */}
+                    <Button
+                      variant="outline"
+                      className="w-full h-14 justify-start text-left hover:bg-gray-50 transition-all duration-200"
+                      onClick={() => setSelectedMethod('email')}
+                    >
+                      <Mail className="mr-3 h-5 w-5 text-blue-600" />
+                      <div>
+                        <div className="font-medium">Email e senha</div>
+                        <div className="text-sm text-gray-500">Acesso tradicional com email</div>
+                      </div>
+                    </Button>
 
-              {/* WhatsApp Form */}
-              <form onSubmit={handleWhatsAppAuth} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="whatsapp">Número do WhatsApp</Label>
-                  <Input
-                    id="whatsapp"
-                    type="tel"
-                    placeholder="(11) 99999-9999"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    required
-                    className="bg-gray-50 border-gray-200"
-                  />
-                  <p className="text-xs text-gray-500">Digite seu número com DDD</p>
-                </div>
+                    {/* WhatsApp - Em breve */}
+                    <div className="relative">
+                      <Button
+                        variant="outline"
+                        className="w-full h-14 justify-start text-left opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        <MessageCircle className="mr-3 h-5 w-5 text-green-600" />
+                        <div>
+                          <div className="font-medium">WhatsApp</div>
+                          <div className="text-sm text-gray-500">Login rápido via WhatsApp</div>
+                        </div>
+                      </Button>
+                      <Badge className="absolute top-2 right-2 bg-orange-100 text-orange-700 text-xs">
+                        Em breve
+                      </Badge>
+                    </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="remember" 
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(!!checked)}
-                  />
-                  <Label htmlFor="remember" className="text-sm text-gray-600">
-                    Lembrar-me neste dispositivo
-                  </Label>
-                </div>
+                    {/* Google - Em breve */}
+                    <div className="relative">
+                      <Button
+                        variant="outline"
+                        className="w-full h-14 justify-start text-left opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        <Search className="mr-3 h-5 w-5 text-red-600" />
+                        <div>
+                          <div className="font-medium">Google</div>
+                          <div className="text-sm text-gray-500">Entre com sua conta Google</div>
+                        </div>
+                      </Button>
+                      <Badge className="absolute top-2 right-2 bg-orange-100 text-orange-700 text-xs">
+                        Em breve
+                      </Badge>
+                    </div>
 
-                {error && (
-                  <Alert className="border-red-200 bg-red-50">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                    <AlertDescription className="text-red-800">
-                      {error}
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando código...
-                    </>
-                  ) : (
-                    <>
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Enviar código
-                    </>
-                  )}
-                </Button>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-300" />
+                    {/* Apple - Em breve */}
+                    <div className="relative">
+                      <Button
+                        variant="outline"
+                        className="w-full h-14 justify-start text-left opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        <Chrome className="mr-3 h-5 w-5 text-black" />
+                        <div>
+                          <div className="font-medium">Apple</div>
+                          <div className="text-sm text-gray-500">Entre com sua conta Apple</div>
+                        </div>
+                      </Button>
+                      <Badge className="absolute top-2 right-2 bg-orange-100 text-orange-700 text-xs">
+                        Em breve
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-500">OU</span>
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowEmailLogin(true)}
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Entrar com email
-                </Button>
-              </form>
-            </>
-          ) : (
-            <>
-              {/* Email Form */}
-              <div className="mb-6">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setShowEmailLogin(false)}
-                  className="mb-4"
-                >
-                  ← Voltar ao WhatsApp
-                </Button>
-              </div>
-
-              {showForgotPassword ? (
-                <form onSubmit={handleForgotPassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-gray-50 border-gray-200"
-                    />
-                  </div>
-
-                  {error && (
-                    <Alert className="border-red-200 bg-red-50">
-                      <AlertCircle className="h-4 w-4 text-red-600" />
-                      <AlertDescription className="text-red-800">
-                        {error}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  <div className="flex gap-2">
+                </>
+              ) : (
+                <>
+                  {/* Step 2: Formulário específico */}
+                  <div className="mb-6">
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => {
-                        setShowForgotPassword(false);
+                        setSelectedMethod(null);
                         setError('');
+                        setShowForgotPassword(false);
                       }}
-                      className="flex-1"
+                      className="flex items-center text-gray-600 hover:text-gray-900"
                     >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
                       Voltar
                     </Button>
-                    <Button
-                      type="submit"
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Enviando...
-                        </>
+                  </div>
+
+                  {selectedMethod === 'email' && (
+                    <>
+                      {showForgotPassword ? (
+                        <form onSubmit={handleForgotPassword} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="seu@email.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                              className="bg-gray-50 border-gray-200"
+                            />
+                          </div>
+
+                          {error && (
+                            <Alert className="border-red-200 bg-red-50">
+                              <AlertCircle className="h-4 w-4 text-red-600" />
+                              <AlertDescription className="text-red-800">
+                                {error}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setShowForgotPassword(false);
+                                setError('');
+                              }}
+                              className="flex-1"
+                            >
+                              Voltar
+                            </Button>
+                            <Button
+                              type="submit"
+                              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                              disabled={loading}
+                            >
+                              {loading ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Enviando...
+                                </>
+                              ) : (
+                                'Enviar link de recuperação'
+                              )}
+                            </Button>
+                          </div>
+                        </form>
                       ) : (
-                        'Enviar link de recuperação'
+                        <form onSubmit={handleEmailAuth} className="space-y-4">
+                          {mode === 'signup' && (
+                            <div className="space-y-2">
+                              <Label htmlFor="name">Nome completo</Label>
+                              <Input
+                                id="name"
+                                type="text"
+                                placeholder="Seu nome completo"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                                className="bg-gray-50 border-gray-200"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="seu@email.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                              className="bg-gray-50 border-gray-200"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="password">Senha</Label>
+                            <div className="relative">
+                              <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                placeholder={mode === 'signup' ? 'Mínimo 8 caracteres' : 'Sua senha'}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="bg-gray-50 border-gray-200"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                              >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                            {mode === 'signup' && (
+                              <p className="text-xs text-gray-600">
+                                Use pelo menos 8 caracteres com letras maiúsculas, minúsculas e números
+                              </p>
+                            )}
+                          </div>
+                          
+                          {mode === 'signup' && (
+                            <div className="space-y-2">
+                              <Label htmlFor="confirmPassword">Confirmar senha</Label>
+                              <Input
+                                id="confirmPassword"
+                                type="password"
+                                placeholder="Digite a senha novamente"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                className="bg-gray-50 border-gray-200"
+                              />
+                            </div>
+                          )}
+
+                          {emailSent && (
+                            <Alert className="border-green-200 bg-green-50">
+                              <Mail className="h-4 w-4 text-green-600" />
+                              <AlertDescription className="text-green-800">
+                                Email enviado! Verifique sua caixa de entrada.
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  onClick={handleResendConfirmation}
+                                  className="ml-2 p-0 h-auto text-green-700 hover:text-green-600"
+                                  disabled={loading}
+                                >
+                                  Reenviar
+                                </Button>
+                              </AlertDescription>
+                            </Alert>
+                          )}
+
+                          {error && (
+                            <Alert className="border-red-200 bg-red-50">
+                              <AlertCircle className="h-4 w-4 text-red-600" />
+                              <AlertDescription className="text-red-800">
+                                {error}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+
+                          <Button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                            disabled={loading || isLocked}
+                          >
+                            {loading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                {mode === 'signup' ? 'Criando conta...' : 'Entrando...'}
+                              </>
+                            ) : (
+                              mode === 'signup' ? 'Criar conta' : 'Entrar'
+                            )}
+                          </Button>
+
+                          {mode === 'signin' && (
+                            <div className="text-center">
+                              <button
+                                type="button"
+                                onClick={() => setShowForgotPassword(true)}
+                                className="text-sm text-blue-600 hover:text-blue-500"
+                              >
+                                Esqueceu a senha?
+                              </button>
+                            </div>
+                          )}
+                        </form>
                       )}
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <form onSubmit={handleEmailAuth} className="space-y-4">
-                  {mode === 'signup' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome completo</Label>
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="Seu nome completo"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        className="bg-gray-50 border-gray-200"
-                      />
-                    </div>
+                    </>
                   )}
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-gray-50 border-gray-200"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder={mode === 'signup' ? 'Mínimo 8 caracteres' : 'Sua senha'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="bg-gray-50 border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {mode === 'signup' && (
-                      <p className="text-xs text-gray-600">
-                        Use pelo menos 8 caracteres com letras maiúsculas, minúsculas e números
-                      </p>
-                    )}
-                  </div>
-                  
-                  {mode === 'signup' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirmar senha</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="Digite a senha novamente"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        className="bg-gray-50 border-gray-200"
-                      />
-                    </div>
-                  )}
-
-                  {emailSent && (
-                    <Alert className="border-green-200 bg-green-50">
-                      <Mail className="h-4 w-4 text-green-600" />
-                      <AlertDescription className="text-green-800">
-                        Email enviado! Verifique sua caixa de entrada.
-                        <Button
-                          variant="link"
-                          size="sm"
-                          onClick={handleResendConfirmation}
-                          className="ml-2 p-0 h-auto text-green-700 hover:text-green-600"
-                          disabled={loading}
-                        >
-                          Reenviar
-                        </Button>
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  {error && (
-                    <Alert className="border-red-200 bg-red-50">
-                      <AlertCircle className="h-4 w-4 text-red-600" />
-                      <AlertDescription className="text-red-800">
-                        {error}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                    disabled={loading || isLocked}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {mode === 'signup' ? 'Criando conta...' : 'Entrando...'}
-                      </>
-                    ) : (
-                      mode === 'signup' ? 'Criar conta' : 'Entrar'
-                    )}
-                  </Button>
-
-                  {mode === 'signin' && (
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => setShowForgotPassword(true)}
-                        className="text-sm text-blue-600 hover:text-blue-500"
-                      >
-                        Esqueceu a senha?
-                      </button>
-                    </div>
-                  )}
-                </form>
+                </>
               )}
-            </>
-          )}
+            </CardContent>
+          </Card>
 
           {/* Footer */}
           <div className="mt-8 text-center text-xs text-gray-500">
