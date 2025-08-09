@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockDataService } from '@/services/mockDataService';
+import { dataService } from '@/services/DataServiceFactory';
 
 interface CategoriaSelectorProps {
   value: string;
@@ -19,11 +19,11 @@ export function CategoriaSelector({ value, onChange, tipo = 'todos' }: Categoria
   const loadCategorias = async () => {
     try {
       setLoading(true);
-      const data = await mockDataService.getCategorias();
+      const data = await dataService.categorias.getAll();
       
       const categoriasFiltradas = tipo === 'todos' 
         ? data 
-        : data.filter(cat => cat.tipo === tipo);
+        : data.filter(cat => (cat.tipo || cat.type) === tipo);
       
       setCategorias(categoriasFiltradas);
     } catch (error) {
@@ -46,9 +46,9 @@ export function CategoriaSelector({ value, onChange, tipo = 'todos' }: Categoria
             <div className="flex items-center gap-2">
               <div 
                 className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: cat.cor }}
+                style={{ backgroundColor: cat.cor || cat.color }}
               />
-              {cat.nome}
+              {cat.nome || cat.name}
             </div>
           </SelectItem>
         ))}

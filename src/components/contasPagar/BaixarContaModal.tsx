@@ -5,7 +5,7 @@ import { Banco } from '@/types/banco';
 import { formatarMoeda, formatarData } from '@/utils/formatters';
 import { aplicarMascaraMoeda, converterMoedaParaNumero, numeroParaMascaraMoeda } from '@/utils/masks';
 import { SectionHeader, FieldDisplay, LoadingSpinner } from './ModalComponents';
-import { useBancosSupabase } from '@/hooks/useBancosSupabase';
+import { useBancosSupabase } from '@/hooks/useBancosReal';
 import { TipoPagamento, TIPOS_PAGAMENTO_LABELS } from '@/types/formaPagamento';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useResponsive } from '@/hooks/useResponsive';

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
+import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
 import { useErrorHandler } from './useErrorHandler';
 import { showMessage } from '@/utils/messages';
-import { Fornecedor } from '@/types/fornecedor';
 
 export interface EstatisticasFornecedor {
   total: number;
@@ -12,104 +12,63 @@ export interface EstatisticasFornecedor {
   valorTotal: number;
 }
 
-// Dados mock para fornecedores
-const mockFornecedores: Fornecedor[] = [
-  {
-    id: 1,
-    nome: 'ABC Fornecimentos Ltda',
-    documento: '12.345.678/0001-90',
-    tipo: 'pessoa_juridica',
-    tipo_fornecedor: 'despesa',
-    email: 'contato@abc.com',
-    telefone: '(11) 99999-9999',
-    endereco: 'Rua Principal, 123',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '01234-567',
-    observacoes: 'Fornecedor principal',
-    ativo: true,
-    dataCadastro: '2024-01-15',
-    totalCompras: 15,
-    valorTotal: 25000.00,
-    ultimaCompra: '2024-12-20'
-  },
-  {
-    id: 2,
-    nome: 'João Silva',
-    documento: '123.456.789-01',
-    tipo: 'pessoa_fisica',
-    tipo_fornecedor: 'receita',
-    email: 'joao@email.com',
-    telefone: '(11) 88888-8888',
-    endereco: 'Av. Secundária, 456',
-    cidade: 'Rio de Janeiro',
-    estado: 'RJ',
-    cep: '20000-000',
-    observacoes: '',
-    ativo: true,
-    dataCadastro: '2024-02-10',
-    totalCompras: 8,
-    valorTotal: 12000.00,
-    ultimaCompra: '2024-12-18'
-  }
-];
+export interface UseFornecedoresReturn {
+  fornecedores: any[];
+  loading: boolean;
+  error: string | null;
+  estatisticas: EstatisticasFornecedor;
+  criarFornecedor: (fornecedor: any) => Promise<any>;
+  atualizarFornecedor: (id: string, fornecedor: any) => Promise<any>;
+  excluirFornecedor: (id: string) => Promise<void>;
+  buscarFornecedores: (termo: string) => any[];
+  buscarPorDocumento: (documento: string) => any;
+  atualizarEstatisticas: () => Promise<void>;
+  recarregar: () => Promise<void>;
+  carregarFornecedores: () => Promise<void>;
+}
 
-export function useFornecedores() {
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
+export function useFornecedores(): UseFornecedoresReturn {
+  const [fornecedores, setFornecedores] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { handleError, withRetry, withTimeout, cancelAll } = useErrorHandler('fornecedores');
 
-  const calcularEstatisticas = (fornecedoresList: Fornecedor[]): EstatisticasFornecedor => {
-    const ativos = fornecedoresList.filter(f => f.ativo);
-    const inativos = fornecedoresList.filter(f => !f.ativo);
+  const calcularEstatisticas = (fornecedoresList: any[]): EstatisticasFornecedor => {
+    const ativos = fornecedoresList.filter(f => f.ativo || f.active);
+    const inativos = fornecedoresList.filter(f => !(f.ativo || f.active));
     
     return {
       total: fornecedoresList.length,
       ativos: ativos.length,
       inativos: inativos.length,
-      totalCompras: fornecedoresList.reduce((acc, f) => acc + (f.totalCompras || 0), 0),
-      valorTotal: fornecedoresList.reduce((acc, f) => acc + (f.valorTotal || 0), 0)
+      totalCompras: fornecedoresList.reduce((acc, f) => acc + (f.totalCompras || f.total_purchases || 0), 0),
+      valorTotal: fornecedoresList.reduce((acc, f) => acc + (f.valorTotal || f.total_value || 0), 0)
     };
   };
 
   const carregarFornecedores = async () => {
     if (!user) return;
-    setLoading(true);
-    setError(null);
-    
-    const loadingToast = showMessage.loading('Carregando fornecedores...');
     
     try {
-      // Simular delay de API
-      await withRetry(() => 
-        withTimeout(new Promise(resolve => setTimeout(() => resolve(mockFornecedores), 500)), 10000)
-      );
+      setLoading(true);
+      setError(null);
       
-      setFornecedores(mockFornecedores);
-      showMessage.dismiss();
-    } catch (err) {
-      showMessage.dismiss();
-      const appErr = handleError(err, 'carregar-fornecedores');
+      const data = await dataService.fornecedores.getAll();
+      setFornecedores(data);
+    } catch (error) {
+      console.error('Erro ao carregar fornecedores:', error);
+      const appErr = handleError(error, 'carregar-fornecedores');
       setError(appErr.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const criarFornecedor = async (fornecedor: Omit<Fornecedor, 'id' | 'dataCadastro'>): Promise<Fornecedor> => {
+  const criarFornecedor = async (fornecedor: any): Promise<any> => {
     try {
-      const novoFornecedor: Fornecedor = {
-        ...fornecedor,
-        id: Math.max(...fornecedores.map(f => f.id)) + 1,
-        dataCadastro: new Date().toISOString(),
-        totalCompras: 0,
-        valorTotal: 0
-      };
-
-      await showMessage.promise(
-        withRetry(() => new Promise(resolve => setTimeout(() => resolve(novoFornecedor), 500))),
+      const novoFornecedor = await showMessage.promise(
+        dataService.fornecedores.create(fornecedor),
         {
           loading: 'Salvando fornecedor...',
           success: 'Fornecedor criado com sucesso!',
@@ -125,17 +84,10 @@ export function useFornecedores() {
     }
   };
 
-  const atualizarFornecedor = async (id: number, dadosAtualizacao: Partial<Fornecedor>): Promise<Fornecedor> => {
+  const atualizarFornecedor = async (id: string, dadosAtualizacao: any): Promise<any> => {
     try {
-      const fornecedorAtualizado = fornecedores.find(f => f.id === id);
-      if (!fornecedorAtualizado) {
-        throw new Error('Fornecedor não encontrado');
-      }
-      
-      const fornecedorNovo = { ...fornecedorAtualizado, ...dadosAtualizacao };
-
-      await showMessage.promise(
-        withRetry(() => new Promise(resolve => setTimeout(() => resolve(fornecedorNovo), 500))),
+      const fornecedorAtualizado = await showMessage.promise(
+        dataService.fornecedores.update(id, dadosAtualizacao),
         {
           loading: 'Atualizando fornecedor...',
           success: 'Fornecedor atualizado com sucesso!',
@@ -143,20 +95,20 @@ export function useFornecedores() {
         }
       );
       
-      setFornecedores(prev => prev.map(f => f.id === id ? fornecedorNovo : f));
-      return fornecedorNovo;
+      setFornecedores(prev => prev.map(f => f.id === id ? fornecedorAtualizado : f));
+      return fornecedorAtualizado;
     } catch (err) {
       handleError(err, 'atualizar-fornecedor');
       throw err;
     }
   };
 
-  const excluirFornecedor = async (id: number): Promise<void> => {
+  const excluirFornecedor = async (id: string): Promise<void> => {
     const fornecedorAExcluir = fornecedores.find(f => f.id === id);
     
     try {
       await showMessage.promise(
-        withRetry(() => new Promise(resolve => setTimeout(resolve, 500))),
+        dataService.fornecedores.delete(id),
         {
           loading: 'Excluindo fornecedor...',
           success: 'Fornecedor excluído com sucesso!',
@@ -178,20 +130,34 @@ export function useFornecedores() {
     }
   };
 
-  const buscarFornecedores = (termo: string): Fornecedor[] => {
+  const buscarFornecedores = (termo: string): any[] => {
     if (!termo) return fornecedores;
     
     const termoLower = termo.toLowerCase();
     return fornecedores.filter(f => 
-      f.nome.toLowerCase().includes(termoLower) ||
-      f.documento.includes(termo) ||
-      f.email?.toLowerCase().includes(termoLower)
+      (f.nome || f.name)?.toLowerCase().includes(termoLower) ||
+      (f.documento || f.document)?.includes(termo) ||
+      (f.email)?.toLowerCase().includes(termoLower)
     );
+  };
+
+  const buscarPorDocumento = (documento: string) => {
+    return fornecedores.find(f => (f.documento || f.document) === documento);
+  };
+
+  const atualizarEstatisticas = async () => {
+    // Estatísticas já são calculadas automaticamente
+  };
+
+  const recarregar = async (): Promise<void> => {
+    await carregarFornecedores();
   };
 
   useEffect(() => {
     if (user) {
       carregarFornecedores();
+    } else {
+      setFornecedores([]);
     }
 
     return () => {
@@ -199,28 +165,18 @@ export function useFornecedores() {
     };
   }, [user, cancelAll]);
 
-  const buscarPorDocumento = (documento: string) => {
-    return fornecedores.find(f => f.documento === documento);
-  };
-
-  const atualizarEstatisticas = async () => {
-    // Mock - já calculado automaticamente
-  };
-
-  const recarregar = carregarFornecedores;
-
   return {
     fornecedores,
     loading,
     error,
     estatisticas: calcularEstatisticas(fornecedores),
-    carregarFornecedores,
     criarFornecedor,
     atualizarFornecedor,
     excluirFornecedor,
     buscarFornecedores,
     buscarPorDocumento,
     atualizarEstatisticas,
-    recarregar
+    recarregar,
+    carregarFornecedores
   };
 }

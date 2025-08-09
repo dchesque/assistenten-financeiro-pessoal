@@ -5,9 +5,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, DollarSign, Building2, FolderTree, CreditCard, AlertTriangle } from 'lucide-react';
 import { FormaPagamento, TIPOS_PAGAMENTO_LABELS, TIPOS_PAGAMENTO_ICONS } from '@/types/formaPagamento';
-import { useFornecedoresSupabase } from '@/hooks/useFornecedoresSupabase';
+import { useFornecedores } from '@/hooks/useFornecedores';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
-import { useBancosSupabase } from '@/hooks/useBancosSupabase';
+import { useBancosSupabase } from '@/hooks/useBancosReal';
 import { formatarMoedaExibicao } from '@/utils/masks';
 
 interface ContaPreviewProps {
@@ -18,7 +18,7 @@ interface ContaPreviewProps {
 
 export function ContaPreview({ conta, formaPagamento, className = "" }: ContaPreviewProps) {
   // Buscar dados relacionados via hooks
-  const { fornecedores } = useFornecedoresSupabase();
+  const { fornecedores } = useFornecedores();
   const { planoContas } = usePlanoContas();
   const { bancos } = useBancosSupabase();
   

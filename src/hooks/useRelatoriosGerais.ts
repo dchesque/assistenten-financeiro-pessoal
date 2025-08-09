@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { addDays, format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 // Hooks do Supabase
-import { useFornecedoresSupabase } from '@/hooks/useFornecedoresSupabase';
+import { useFornecedores } from '@/hooks/useFornecedores';
 import { useContasPagar } from '@/hooks/useContasPagar';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
 
@@ -83,7 +83,7 @@ const PERIODOS_RAPIDOS = [
 ];
 
 export const useRelatoriosGerais = () => {
-  const { fornecedores } = useFornecedoresSupabase();
+  const { fornecedores } = useFornecedores();
   const { contas } = useContasPagar();
   const { planoContas: planos } = usePlanoContas();
   

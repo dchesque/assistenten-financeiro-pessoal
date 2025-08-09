@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { mockDataService, type ContaPagar } from '@/services/mockDataService';
+import { dataService } from '@/services/DataServiceFactory';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
 export interface UseContasPagarReturn {
-  contas: ContaPagar[];
+  contas: any[];
   loading: boolean;
   error: string | null;
-  criarConta: (conta: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => Promise<ContaPagar>;
-  atualizarConta: (id: string, conta: Partial<ContaPagar>) => Promise<ContaPagar | null>;
+  criarConta: (conta: any) => Promise<any>;
+  atualizarConta: (id: string, conta: any) => Promise<any>;
   excluirConta: (id: string) => Promise<void>;
-  baixarConta: (id: string, dados: { data_pagamento: string; valor_pago?: number }) => Promise<ContaPagar | null>;
+  baixarConta: (id: string, dados: { data_pagamento: string; valor_pago?: number }) => Promise<any>;
   recarregar: () => Promise<void>;
   estatisticas: {
     total_contas: number;
@@ -25,7 +25,7 @@ export interface UseContasPagarReturn {
 }
 
 export function useContasPagar(): UseContasPagarReturn {
-  const [contas, setContas] = useState<ContaPagar[]>([]);
+  const [contas, setContas] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -33,13 +33,13 @@ export function useContasPagar(): UseContasPagarReturn {
   // Calcular estatísticas
   const estatisticas = {
     total_contas: contas.length,
-    valor_total: contas.reduce((total, conta) => total + conta.valor_original, 0),
-    pendentes: contas.filter(conta => conta.status === 'pendente').length,
-    valor_pendente: contas.filter(conta => conta.status === 'pendente').reduce((total, conta) => total + conta.valor_original, 0),
-    vencidas: contas.filter(conta => conta.status === 'vencido').length,
-    valor_vencido: contas.filter(conta => conta.status === 'vencido').reduce((total, conta) => total + conta.valor_original, 0),
-    pagas: contas.filter(conta => conta.status === 'pago').length,
-    valor_pago: contas.filter(conta => conta.status === 'pago').reduce((total, conta) => total + (conta.valor_pago || conta.valor_original), 0)
+    valor_total: contas.reduce((total, conta) => total + (conta.amount || conta.valor_original || 0), 0),
+    pendentes: contas.filter(conta => conta.status === 'pendente' || conta.status === 'pending').length,
+    valor_pendente: contas.filter(conta => conta.status === 'pendente' || conta.status === 'pending').reduce((total, conta) => total + (conta.amount || conta.valor_original || 0), 0),
+    vencidas: contas.filter(conta => conta.status === 'vencido' || conta.status === 'overdue').length,
+    valor_vencido: contas.filter(conta => conta.status === 'vencido' || conta.status === 'overdue').reduce((total, conta) => total + (conta.amount || conta.valor_original || 0), 0),
+    pagas: contas.filter(conta => conta.status === 'pago' || conta.status === 'paid').length,
+    valor_pago: contas.filter(conta => conta.status === 'pago' || conta.status === 'paid').reduce((total, conta) => total + (conta.amount || conta.valor_pago || conta.valor_original || 0), 0)
   };
 
   const carregarContas = async () => {
@@ -48,7 +48,7 @@ export function useContasPagar(): UseContasPagarReturn {
     try {
       setLoading(true);
       setError(null);
-      const data = await mockDataService.getContasPagar();
+      const data = await dataService.contasPagar.getAll();
       setContas(data);
     } catch (error) {
       console.error('Erro ao carregar contas:', error);
@@ -59,21 +59,23 @@ export function useContasPagar(): UseContasPagarReturn {
     }
   };
 
-  const criarConta = async (dadosConta: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<ContaPagar> => {
+  const criarConta = async (dadosConta: any): Promise<any> => {
     try {
       setLoading(true);
       
       // Validações básicas
-      if (dadosConta.valor_original <= 0) {
+      const valor = dadosConta.amount || dadosConta.valor_original;
+      if (valor <= 0) {
         throw new Error('Valor deve ser maior que zero');
       }
 
-      if (new Date(dadosConta.data_vencimento) < new Date()) {
+      const dataVencimento = dadosConta.due_date || dadosConta.data_vencimento;
+      if (dataVencimento && new Date(dataVencimento) < new Date()) {
         // Permitir datas passadas, mas alertar
         console.warn('Data de vencimento no passado');
       }
 
-      const novaConta = await mockDataService.createContaPagar(dadosConta);
+      const novaConta = await dataService.contasPagar.create(dadosConta);
       setContas(prev => [...prev, novaConta]);
       
       toast.success('Conta a pagar criada com sucesso!');
@@ -89,16 +91,17 @@ export function useContasPagar(): UseContasPagarReturn {
     }
   };
 
-  const atualizarConta = async (id: string, dadosAtualizacao: Partial<ContaPagar>): Promise<ContaPagar | null> => {
+  const atualizarConta = async (id: string, dadosAtualizacao: any): Promise<any> => {
     try {
       setLoading(true);
       
       // Validações
-      if (dadosAtualizacao.valor_original !== undefined && dadosAtualizacao.valor_original <= 0) {
+      const valor = dadosAtualizacao.amount || dadosAtualizacao.valor_original;
+      if (valor !== undefined && valor <= 0) {
         throw new Error('Valor deve ser maior que zero');
       }
 
-      const contaAtualizada = await mockDataService.updateContaPagar(id, dadosAtualizacao);
+      const contaAtualizada = await dataService.contasPagar.update(id, dadosAtualizacao);
       
       if (contaAtualizada) {
         setContas(prev => 
@@ -123,14 +126,9 @@ export function useContasPagar(): UseContasPagarReturn {
     try {
       setLoading(true);
       
-      const sucesso = await mockDataService.deleteContaPagar(id);
-      
-      if (sucesso) {
-        setContas(prev => prev.filter(conta => conta.id !== id));
-        toast.success('Conta a pagar excluída com sucesso!');
-      } else {
-        throw new Error('Conta não encontrada');
-      }
+      await dataService.contasPagar.delete(id);
+      setContas(prev => prev.filter(conta => conta.id !== id));
+      toast.success('Conta a pagar excluída com sucesso!');
     } catch (error) {
       console.error('Erro ao excluir conta:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir conta a pagar';
@@ -142,7 +140,7 @@ export function useContasPagar(): UseContasPagarReturn {
     }
   };
 
-  const baixarConta = async (id: string, dados: { data_pagamento: string; valor_pago?: number }): Promise<ContaPagar | null> => {
+  const baixarConta = async (id: string, dados: { data_pagamento: string; valor_pago?: number }): Promise<any> => {
     try {
       setLoading(true);
       
@@ -151,13 +149,13 @@ export function useContasPagar(): UseContasPagarReturn {
         throw new Error('Conta não encontrada');
       }
 
-      const dadosAtualizacao: Partial<ContaPagar> = {
-        status: 'pago',
-        data_pagamento: dados.data_pagamento,
-        valor_pago: dados.valor_pago ?? conta.valor_original
+      const dadosAtualizacao = {
+        status: 'paid',
+        paid_at: dados.data_pagamento,
+        amount: dados.valor_pago ?? (conta.amount || conta.valor_original)
       };
 
-      const contaAtualizada = await mockDataService.updateContaPagar(id, dadosAtualizacao);
+      const contaAtualizada = await dataService.contasPagar.marcarComoPaga(id, dadosAtualizacao);
       
       if (contaAtualizada) {
         setContas(prev => 

@@ -9,7 +9,7 @@ import { PlanoContas } from '@/types/planoContas';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
 import { useBancos } from '@/hooks/useBancos';
-import { useContasPagar } from '@/hooks/useContasPagarMock';
+import { useContasPagar } from '@/hooks/useContasPagarSupabase';
 import { useContatos } from '@/hooks/useContatos';
 import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
 import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';

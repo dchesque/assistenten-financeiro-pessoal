@@ -8,7 +8,7 @@ import { Fornecedor } from '@/types/fornecedor';
 import { PlanoContas } from '@/types/planoContas';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
-import { useBancosSupabase } from '@/hooks/useBancosSupabase';
+import { useBancosSupabase } from '@/hooks/useBancosReal';
 import { useContasPagar } from '@/hooks/useContasPagar';
 import { useCredores } from '@/hooks/useCredores';
 import { FornecedorSelector as PagadorSelector } from '@/components/contasPagar/FornecedorSelector';

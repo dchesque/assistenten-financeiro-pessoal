@@ -16,7 +16,7 @@ import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useDebounce } from '../hooks/useDebounce';
 import { useLoadingStates } from '../hooks/useLoadingStates';
-import { useBancosSupabase } from '../hooks/useBancosSupabase';
+import { useBancosSupabase } from '../hooks/useBancosReal';
 import { DadosOFX } from '../utils/ofxParser';
 import { toast } from '@/hooks/use-toast';
 
@@ -90,7 +90,7 @@ export default function Bancos() {
     setLoading('saving', true);
     try {
       if (bancoSelecionado) {
-        await atualizarBanco(bancoSelecionado.id, dadosBanco);
+        await atualizarBanco(bancoSelecionado.id.toString(), dadosBanco);
         toast({ title: 'Sucesso', description: 'Banco atualizado com sucesso' });
       } else {
         await criarBanco(dadosBanco);
@@ -276,7 +276,7 @@ export default function Bancos() {
         onUpload={async (arquivo, bancoId, dadosOFX: DadosOFX) => {
             try {
               // Atualizar banco com dados do OFX
-              await atualizarBanco(bancoId, {
+              await atualizarBanco(bancoId.toString(), {
                 saldo_atual: dadosOFX.saldoFinal,
                 ultimo_fitid: dadosOFX.fitid,
                 data_ultima_sincronizacao: new Date().toISOString()
