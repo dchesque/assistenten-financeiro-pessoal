@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { AlertTriangle, Monitor, Sun, Moon, Globe, Bell, Settings as SettingsIcon, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Monitor, Sun, Moon, Globe, Bell, Settings as SettingsIcon, RotateCcw, HardDrive, MessageSquare } from 'lucide-react';
+import { BackupTab } from '@/components/configuracoes/BackupTab';
+import { NotificationsTab } from '@/components/configuracoes/NotificationsTab';
 import { useSettings } from '@/hooks/useSettings';
 import { SettingsUpdateData, TIMEZONE_OPTIONS, LOCALE_OPTIONS, CURRENCY_OPTIONS, DATE_FORMAT_OPTIONS, START_PAGE_OPTIONS } from '@/types/settings';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
@@ -100,7 +102,7 @@ export default function Configuracoes() {
       </div>
 
       <Tabs defaultValue="aparencia" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="aparencia" className="flex items-center gap-2">
             <Monitor className="h-4 w-4" />
             Aparência
@@ -116,6 +118,14 @@ export default function Configuracoes() {
           <TabsTrigger value="preferencias" className="flex items-center gap-2">
             <SettingsIcon className="h-4 w-4" />
             Preferências
+          </TabsTrigger>
+          <TabsTrigger value="historico-notificacoes" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Histórico
+          </TabsTrigger>
+          <TabsTrigger value="backup" className="flex items-center gap-2">
+            <HardDrive className="h-4 w-4" />
+            Backup
           </TabsTrigger>
         </TabsList>
 
@@ -347,6 +357,34 @@ export default function Configuracoes() {
                   </Select>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="historico-notificacoes">
+          <Card>
+            <CardHeader>
+              <CardTitle>Histórico de Notificações</CardTitle>
+              <CardDescription>
+                Visualize e gerencie suas notificações
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <NotificationsTab />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="backup">
+          <Card>
+            <CardHeader>
+              <CardTitle>Backup e Restauração</CardTitle>
+              <CardDescription>
+                Gerencie backups dos seus dados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BackupTab />
             </CardContent>
           </Card>
         </TabsContent>

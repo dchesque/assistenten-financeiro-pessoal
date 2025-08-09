@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Check, CheckCheck, X, Filter, Search, Calendar } from 'lucide-react';
+import { Bell, Check, CheckCheck, X, Filter, RefreshCw } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationFilters, NOTIFICATION_CONFIGS } from '@/types/notification';
 import { formatDistanceToNow } from 'date-fns';
@@ -14,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-export default function Notificacoes() {
+export function NotificationsTab() {
   const [filters, setFilters] = useState<NotificationFilters>({
     limit: 25,
     offset: 0
@@ -70,35 +69,37 @@ export default function Notificacoes() {
 
   if (error) {
     return (
-      <div className="p-4 lg:p-8">
-        <Alert variant="destructive">
-          <X className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      </div>
+      <Alert variant="destructive">
+        <X className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <div className="p-4 lg:p-8 space-y-6">
+    <div className="space-y-6">
+      {/* Header com ações */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Bell className="h-6 w-6 text-primary" />
+          <Bell className="h-5 w-5 text-primary" />
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Notificações</h1>
-            <p className="text-muted-foreground">
+            <p className="font-medium">
               {unreadCount > 0 ? `${unreadCount} não lidas` : 'Todas lidas'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {notifications.length} notificações total
             </p>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={refresh}>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={refresh}>
+            <RefreshCw className="h-4 w-4 mr-1" />
             Atualizar
           </Button>
           {unreadCount > 0 && (
-            <Button onClick={markAllAsRead}>
-              <CheckCheck className="h-4 w-4 mr-2" />
+            <Button size="sm" onClick={markAllAsRead}>
+              <CheckCheck className="h-4 w-4 mr-1" />
               Marcar todas como lidas
             </Button>
           )}
@@ -107,7 +108,7 @@ export default function Notificacoes() {
 
       {/* Estatísticas */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="text-center">
@@ -233,7 +234,7 @@ export default function Notificacoes() {
       {/* Lista de notificações */}
       <Card>
         <CardHeader>
-          <CardTitle>Notificações</CardTitle>
+          <CardTitle>Histórico de Notificações</CardTitle>
           <CardDescription>
             {notifications.length} notificações encontradas
           </CardDescription>
@@ -243,7 +244,9 @@ export default function Notificacoes() {
             <LoadingSkeleton lines={5} height="h-20" type="list" />
           ) : notifications.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Nenhuma notificação encontrada
+              <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhuma notificação encontrada</p>
+              <p className="text-sm">As notificações aparecem aqui quando ações são necessárias</p>
             </div>
           ) : (
             <div className="space-y-3">

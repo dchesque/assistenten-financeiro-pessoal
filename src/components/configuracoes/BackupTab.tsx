@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Download, Upload, FileText, Shield, CheckCircle, AlertTriangle, XCircle, Info } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,7 +11,7 @@ import { useBackup } from '@/hooks/useBackup';
 import { BackupFile, ImportOptions, ValidationIssue } from '@/types/backup';
 import { toast } from 'sonner';
 
-const BackupPage = () => {
+export function BackupTab() {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [backupData, setBackupData] = useState<BackupFile | null>(null);
@@ -119,34 +119,27 @@ const BackupPage = () => {
   };
 
   return (
-    <div className="p-4 lg:p-8 space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Backup & Importação</h1>
-        <p className="text-gray-600 mt-1">Gerencie seus dados com segurança</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Exportação */}
-        <Card className="bg-white/80 backdrop-blur-sm border border-white/20">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Download className="w-5 h-5 text-blue-600" />
               <span>Exportar Dados</span>
             </CardTitle>
+            <CardDescription>
+              Faça backup completo dos seus dados em formato JSON seguro.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-600">
-              Faça backup completo dos seus dados em formato JSON seguro.
-            </p>
-            
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Último backup:</span>
+                <span className="text-muted-foreground">Último backup:</span>
                 <Badge variant="secondary">Nunca</Badge>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Tamanho estimado:</span>
+                <span className="text-muted-foreground">Tamanho estimado:</span>
                 <Badge variant="secondary">~50KB</Badge>
               </div>
             </div>
@@ -162,7 +155,7 @@ const BackupPage = () => {
             <Button
               onClick={exportBackup}
               disabled={isExporting}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+              className="w-full"
             >
               {isExporting ? (
                 <div className="flex items-center space-x-2">
@@ -180,32 +173,31 @@ const BackupPage = () => {
         </Card>
 
         {/* Importação */}
-        <Card className="bg-white/80 backdrop-blur-sm border border-white/20">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Upload className="w-5 h-5 text-green-600" />
               <span>Importar Dados</span>
             </CardTitle>
+            <CardDescription>
+              Restaure seus dados a partir de um backup JSON.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-600">
-              Restaure seus dados a partir de um backup JSON.
-            </p>
-
             {/* Drop Zone */}
             <div
-              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+              className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
                 dragActive 
-                  ? 'border-blue-500 bg-blue-50/50' 
-                  : 'border-gray-300 hover:border-gray-400'
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-muted-foreground/25 hover:border-muted-foreground/50'
               }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">
+              <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground mb-2">
                 Arraste um arquivo JSON aqui ou
               </p>
               <input
@@ -223,11 +215,11 @@ const BackupPage = () => {
             </div>
 
             {selectedFile && (
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-muted rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                    <p className="text-sm text-gray-600">{formatFileSize(selectedFile.size)}</p>
+                    <p className="font-medium">{selectedFile.name}</p>
+                    <p className="text-sm text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
                   </div>
                   <Button
                     variant="outline"
@@ -257,7 +249,7 @@ const BackupPage = () => {
 
       {/* Modal de Importação */}
       <Dialog open={importModalOpen} onOpenChange={setImportModalOpen}>
-        <DialogContent className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Confirmar Importação</DialogTitle>
           </DialogHeader>
@@ -273,9 +265,9 @@ const BackupPage = () => {
               <TabsContent value="preview" className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {Object.entries(validationReport.preview.recordCounts).map(([key, count]) => (
-                    <div key={key} className="bg-gray-50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-gray-900">{count}</div>
-                      <div className="text-sm text-gray-600 capitalize">
+                    <div key={key} className="bg-muted rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold">{count}</div>
+                      <div className="text-sm text-muted-foreground capitalize">
                         {key.replace('_', ' ')}
                       </div>
                     </div>
@@ -284,7 +276,7 @@ const BackupPage = () => {
 
                 <div className="space-y-2">
                   <p className="font-medium">Informações do Backup:</p>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                  <div className="bg-muted rounded-lg p-4 space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Exportado em:</span>
                       <span>{new Date(backupData.exported_at).toLocaleString('pt-BR')}</span>
@@ -335,7 +327,7 @@ const BackupPage = () => {
                         />
                         <div>
                           <div className="font-medium">Merge (Recomendado)</div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-muted-foreground">
                             Mescla dados novos com existentes, mantendo registros únicos
                           </div>
                         </div>
@@ -349,8 +341,8 @@ const BackupPage = () => {
                           disabled
                         />
                         <div>
-                          <div className="font-medium text-gray-400">Replace (Em breve)</div>
-                          <div className="text-sm text-gray-400">
+                          <div className="font-medium text-muted-foreground">Replace (Em breve)</div>
+                          <div className="text-sm text-muted-foreground">
                             Substitui todos os dados existentes
                           </div>
                         </div>
@@ -383,7 +375,6 @@ const BackupPage = () => {
             <Button
               onClick={handleImportConfirm}
               disabled={!validationReport?.valid || isImporting}
-              className="bg-gradient-to-r from-green-600 to-green-700 text-white"
             >
               {isImporting ? 'Importando...' : 'Confirmar Importação'}
             </Button>
@@ -392,6 +383,4 @@ const BackupPage = () => {
       </Dialog>
     </div>
   );
-};
-
-export default BackupPage;
+}
