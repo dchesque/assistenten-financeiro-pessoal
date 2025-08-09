@@ -113,6 +113,24 @@ export interface IDataService {
     atualizarSaldo(id: number, novoSaldo: number): Promise<Banco>;
   };
 
+  // ============ BANK ACCOUNTS ============
+  bankAccounts: {
+    getByBankId(bankId: number): Promise<any[]>;
+    create(data: any): Promise<any>;
+    transferBetweenAccounts(from: string, to: string, amount: number): Promise<void>;
+  };
+
+  // ============ TRANSAÇÕES ============
+  transactions: {
+    getAll(filtros?: any): Promise<any[]>;
+    getById(id: string | number): Promise<any | null>;
+    create(data: any): Promise<any>;
+    update(id: string | number, data: any): Promise<any>;
+    delete(id: string | number): Promise<void>;
+    getExtrato(accountId: string, periodo: { inicio: Date; fim: Date }): Promise<any>;
+    getByAccount(accountId: string, limit?: number): Promise<any[]>;
+  };
+
   // ============ DASHBOARD ============
   dashboard: {
     getSummary(): Promise<DashboardSummary>;

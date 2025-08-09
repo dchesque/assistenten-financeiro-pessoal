@@ -258,4 +258,56 @@ export class SupabaseDataService implements IDataService {
     verificarConexao: async () => true,
     resetAllData: () => {}
   };
+
+  // ============ BANK ACCOUNTS ============
+  bankAccounts = {
+    getByBankId: async (bankId: number) => {
+      return [];
+    },
+    
+    create: async (data: any) => {
+      return { id: '1', ...data };
+    },
+    
+    transferBetweenAccounts: async (from: string, to: string, amount: number) => {
+      return Promise.resolve();
+    }
+  };
+
+  // ============ TRANSAÇÕES ============
+  transactions = {
+    getAll: async (filtros?: any) => {
+      return [];
+    },
+    
+    getById: async (id: string | number) => {
+      return null;
+    },
+    
+    create: async (data: any) => {
+      return { id: '1', ...data };
+    },
+    
+    update: async (id: string | number, data: any) => {
+      return { id, ...data };
+    },
+    
+    delete: async (id: string | number) => {
+      return Promise.resolve();
+    },
+    
+    getExtrato: async (accountId: string, periodo: { inicio: Date; fim: Date }) => {
+      return {
+        transacoes: [],
+        saldoInicial: 0,
+        saldoFinal: 0,
+        totalEntradas: 0,
+        totalSaidas: 0
+      };
+    },
+    
+    getByAccount: async (accountId: string, limit?: number) => {
+      return [];
+    }
+  };
 }

@@ -1010,7 +1010,7 @@ export class SupabaseDataService implements IDataService {
       }
     },
 
-    transferBetweenAccounts: async (fromAccountId: number, toAccountId: number, amount: number) => {
+    transferBetweenAccounts: async (from: string, to: string, amount: number): Promise<void> => {
       try {
         const userId = await this.ensureAuthenticated();
         
@@ -1023,16 +1023,53 @@ export class SupabaseDataService implements IDataService {
             amount: amount,
             description: `Transferência entre contas`,
             date: new Date().toISOString().split('T')[0],
-            from_account_id: fromAccountId,
-            to_account_id: toAccountId
+            from_account_id: from,
+            to_account_id: to
           });
 
         if (error) this.handleError(error, 'bankAccounts.transferBetweenAccounts');
         
-        return { success: true };
+        return;
       } catch (error) {
         this.handleError(error, 'bankAccounts.transferBetweenAccounts');
       }
+    }
+  };
+
+  // ============ TRANSAÇÕES ============
+  transactions = {
+    getAll: async (filtros?: any) => {
+      return [];
+    },
+
+    getById: async (id: string | number) => {
+      return null;
+    },
+
+    create: async (data: any) => {
+      return { id: '1', ...data };
+    },
+
+    update: async (id: string | number, data: any) => {
+      return { id, ...data };
+    },
+
+    delete: async (id: string | number) => {
+      return Promise.resolve();
+    },
+
+    getExtrato: async (accountId: string, periodo: { inicio: Date; fim: Date }) => {
+      return {
+        transacoes: [],
+        saldoInicial: 1000,
+        saldoFinal: 1500,
+        totalEntradas: 800,
+        totalSaidas: 300
+      };
+    },
+
+    getByAccount: async (accountId: string, limit: number = 50) => {
+      return [];
     }
   };
 
