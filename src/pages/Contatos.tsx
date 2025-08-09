@@ -39,7 +39,7 @@ export default function Contatos() {
   const breadcrumbItems = [
     { label: 'Início', href: '/dashboard' },
     { label: 'Cadastros' },
-    { label: 'Contatos' }
+    { label: 'Pessoas e Empresas' }
   ];
 
   // Combinar credores e pagadores com tipo
@@ -135,7 +135,7 @@ export default function Contatos() {
       {/* Container principal com padding responsivo e max-width */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-4 lg:px-8 lg:py-8">
       <PageHeader 
-        title="Contatos" 
+        title="Pessoas e Empresas" 
         subtitle="Gerencie credores e pagadores"
         breadcrumb={breadcrumbItems}
         actions={
