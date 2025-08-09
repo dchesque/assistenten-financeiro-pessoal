@@ -324,7 +324,7 @@ export default function MeuPerfil() {
 
                 <div className="flex justify-end">
                   <Button 
-                    onClick={salvar}
+                    onClick={() => salvar()}
                     disabled={estaCarregando || salvando || uploadingAvatar}
                     className="btn-primary"
                   >

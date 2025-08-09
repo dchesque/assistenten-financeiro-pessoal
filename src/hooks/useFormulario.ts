@@ -65,7 +65,8 @@ export function useFormulario<T extends Record<string, any>>(
   }, [validarTodosInterno, dados]);
 
   const salvar = useCallback(async (dadosParaSalvar?: any) => {
-    const dadosFinais = dadosParaSalvar || dados;
+    // Garantir que sempre usamos os dados do formulário quando dadosParaSalvar não for válido
+    const dadosFinais = (dadosParaSalvar && typeof dadosParaSalvar === 'object' && !dadosParaSalvar.type) ? dadosParaSalvar : dados;
     
     console.log('🔄 Iniciando salvamento do formulário');
     console.log('📋 Dados atuais do formulário:', dados);
