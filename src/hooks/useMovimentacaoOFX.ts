@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useAuth } from './useAuth';
+import { transactionsService, BankTransaction, CreateTransactionData, UpdateTransactionData, TransactionFilters } from '@/services/transactionsService';
+import { showMessage } from '@/utils/messages';
+import { useErrorHandler } from './useErrorHandler';
 
 export interface MovimentacaoOFXSupabase {
-  id: number;
-  banco_id: number;
+  id: string;
+  banco_id: string;
   data_movimentacao: string;
   descricao: string;
   valor: number;
@@ -12,135 +15,167 @@ export interface MovimentacaoOFXSupabase {
   saldo_posterior: number;
   codigo_autenticacao?: string;
   status_conciliacao: 'pendente' | 'conciliado' | 'divergente';
-  conta_pagar_id?: number;
+  conta_pagar_id?: string;
   observacao_conciliacao?: string;
   created_at: string;
   updated_at: string;
 }
 
-// Dados mock para movimentações OFX
-const mockMovimentacoes: MovimentacaoOFXSupabase[] = [
-  {
-    id: 1,
-    banco_id: 1,
-    data_movimentacao: '2024-12-22',
-    descricao: 'TED RECEBIDA - ABC FORNECIMENTOS',
-    valor: 1500.00,
-    tipo: 'credito',
-    saldo_anterior: 13500.00,
-    saldo_posterior: 15000.00,
-    codigo_autenticacao: 'TED123456',
-    status_conciliacao: 'pendente',
-    created_at: '2024-12-22T10:30:00Z',
-    updated_at: '2024-12-22T10:30:00Z'
-  },
-  {
-    id: 2,
-    banco_id: 1,
-    data_movimentacao: '2024-12-21',
-    descricao: 'PAGTO FORNECEDOR XYZ',
-    valor: 850.00,
-    tipo: 'debito',
-    saldo_anterior: 14350.00,
-    saldo_posterior: 13500.00,
-    codigo_autenticacao: 'PAG789012',
-    status_conciliacao: 'conciliado',
-    conta_pagar_id: 15,
-    created_at: '2024-12-21T14:20:00Z',
-    updated_at: '2024-12-21T14:25:00Z'
-  }
-];
+// Converter BankTransaction para MovimentacaoOFXSupabase
+const transactionToMovimentacao = (transaction: BankTransaction, accountId: string): MovimentacaoOFXSupabase => ({
+  id: transaction.id,
+  banco_id: transaction.from_account_id || transaction.to_account_id || '',
+  data_movimentacao: transaction.date,
+  descricao: transaction.description || 'Movimentação bancária',
+  valor: Number(transaction.amount),
+  tipo: transaction.type === 'expense' || (transaction.type === 'transfer' && transaction.from_account_id === accountId) ? 'debito' : 'credito',
+  saldo_anterior: 0, // Será calculado dinamicamente
+  saldo_posterior: 0, // Será calculado dinamicamente
+  codigo_autenticacao: transaction.reference_id,
+  status_conciliacao: transaction.accounts_payable_id || transaction.accounts_receivable_id ? 'conciliado' : 'pendente',
+  conta_pagar_id: transaction.accounts_payable_id,
+  observacao_conciliacao: transaction.notes,
+  created_at: transaction.created_at,
+  updated_at: transaction.updated_at
+});
 
-export function useMovimentacaoOFX(bancoId?: number) {
+export function useMovimentacaoOFX(bancoId?: string) {
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoOFXSupabase[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { handleError } = useErrorHandler();
 
-  const listarMovimentacoes = async (bancoIdParam?: number) => {
+  const listarMovimentacoes = async (bancoIdParam?: string) => {
+    if (!user) return;
+    
     setLoading(true);
     setError(null);
     
     try {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const accountId = bancoIdParam || bancoId;
+      const filters: TransactionFilters = {};
       
-      let movimentacoesFiltradas = mockMovimentacoes;
-      
-      if (bancoIdParam || bancoId) {
-        const id = bancoIdParam || bancoId;
-        movimentacoesFiltradas = mockMovimentacoes.filter(m => m.banco_id === id);
+      if (accountId) {
+        filters.account_id = accountId;
       }
       
-      setMovimentacoes(movimentacoesFiltradas);
-    } catch (error) {
-      setError('Erro ao carregar movimentações');
-      toast.error('Erro ao carregar movimentações OFX');
+      const transactions = await transactionsService.getTransactions(filters);
+      
+      // Converter transactions para movimentações e calcular saldos
+      let saldoAcumulado = 0;
+      const movimentacoesConvertidas = transactions.map((transaction, index) => {
+        const movimentacao = transactionToMovimentacao(transaction, accountId || '');
+        
+        // Calcular saldos (simulado)
+        const valorMovimentacao = movimentacao.tipo === 'credito' ? movimentacao.valor : -movimentacao.valor;
+        movimentacao.saldo_anterior = saldoAcumulado;
+        saldoAcumulado += valorMovimentacao;
+        movimentacao.saldo_posterior = saldoAcumulado;
+        
+        return movimentacao;
+      });
+      
+      setMovimentacoes(movimentacoesConvertidas);
+    } catch (err) {
+      const appError = handleError(err, 'useMovimentacaoOFX.listarMovimentacoes');
+      setError(appError.message);
+      showMessage.saveError('Erro ao carregar movimentações OFX');
     } finally {
       setLoading(false);
     }
   };
 
   const criarMovimentacao = async (movimentacao: Omit<MovimentacaoOFXSupabase, 'id' | 'created_at' | 'updated_at'>): Promise<MovimentacaoOFXSupabase> => {
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const novaMovimentacao: MovimentacaoOFXSupabase = {
-      ...movimentacao,
-      id: Math.max(...movimentacoes.map(m => m.id)) + 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    setMovimentacoes(prev => [...prev, novaMovimentacao]);
-    toast.success('Movimentação criada com sucesso!');
-    
-    return novaMovimentacao;
-  };
-
-  const atualizarMovimentacao = async (id: number, updates: Partial<MovimentacaoOFXSupabase>): Promise<MovimentacaoOFXSupabase> => {
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const movimentacaoAtualizada = movimentacoes.find(m => m.id === id);
-    if (!movimentacaoAtualizada) {
-      throw new Error('Movimentação não encontrada');
+    try {
+      const transactionData: CreateTransactionData = {
+        from_account_id: movimentacao.tipo === 'debito' ? movimentacao.banco_id : undefined,
+        to_account_id: movimentacao.tipo === 'credito' ? movimentacao.banco_id : undefined,
+        type: movimentacao.tipo === 'debito' ? 'expense' : 'income',
+        amount: movimentacao.valor,
+        description: movimentacao.descricao,
+        date: movimentacao.data_movimentacao,
+        reference_id: movimentacao.codigo_autenticacao,
+        notes: movimentacao.observacao_conciliacao
+      };
+      
+      const transaction = await transactionsService.createTransaction(transactionData);
+      const novaMovimentacao = transactionToMovimentacao(transaction, movimentacao.banco_id);
+      
+      setMovimentacoes(prev => [...prev, novaMovimentacao]);
+      showMessage.saveSuccess('Movimentação criada com sucesso!');
+      
+      return novaMovimentacao;
+    } catch (err) {
+      handleError(err, 'useMovimentacaoOFX.criarMovimentacao');
+      showMessage.saveError('Erro ao criar movimentação');
+      throw err;
     }
-    
-    const movimentacaoNova = { 
-      ...movimentacaoAtualizada, 
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-    
-    setMovimentacoes(prev => prev.map(m => m.id === id ? movimentacaoNova : m));
-    toast.success('Movimentação atualizada com sucesso!');
-    
-    return movimentacaoNova;
   };
 
-  const vincularContaPagar = async (movimentacaoId: number, contaPagarId: number): Promise<void> => {
-    await atualizarMovimentacao(movimentacaoId, {
-      status_conciliacao: 'conciliado',
-      conta_pagar_id: contaPagarId
-    });
-    
-    toast.success('Movimentação vinculada à conta a pagar!');
+  const atualizarMovimentacao = async (id: string, updates: Partial<MovimentacaoOFXSupabase>): Promise<MovimentacaoOFXSupabase> => {
+    try {
+      const transactionUpdates: UpdateTransactionData = {};
+      
+      if (updates.descricao) transactionUpdates.description = updates.descricao;
+      if (updates.valor) transactionUpdates.amount = updates.valor;
+      if (updates.data_movimentacao) transactionUpdates.date = updates.data_movimentacao;
+      if (updates.codigo_autenticacao) transactionUpdates.reference_id = updates.codigo_autenticacao;
+      if (updates.observacao_conciliacao) transactionUpdates.notes = updates.observacao_conciliacao;
+      if (updates.conta_pagar_id) transactionUpdates.accounts_payable_id = updates.conta_pagar_id;
+      
+      const transaction = await transactionsService.updateTransaction(id, transactionUpdates);
+      const movimentacaoAtualizada = transactionToMovimentacao(transaction, bancoId || '');
+      
+      setMovimentacoes(prev => prev.map(m => m.id === id ? movimentacaoAtualizada : m));
+      showMessage.saveSuccess('Movimentação atualizada com sucesso!');
+      
+      return movimentacaoAtualizada;
+    } catch (err) {
+      handleError(err, 'useMovimentacaoOFX.atualizarMovimentacao');
+      showMessage.saveError('Erro ao atualizar movimentação');
+      throw err;
+    }
   };
 
-  const marcarComoIgnorada = async (movimentacaoId: number, observacao?: string): Promise<void> => {
-    await atualizarMovimentacao(movimentacaoId, {
-      status_conciliacao: 'divergente',
-      observacao_conciliacao: observacao
-    });
-    
-    toast.success('Movimentação marcada como divergente!');
+  const vincularContaPagar = async (movimentacaoId: string, contaPagarId: string): Promise<void> => {
+    try {
+      await transactionsService.reconcileTransaction(movimentacaoId, contaPagarId);
+      
+      setMovimentacoes(prev => prev.map(m => 
+        m.id === movimentacaoId 
+          ? { ...m, status_conciliacao: 'conciliado', conta_pagar_id: contaPagarId }
+          : m
+      ));
+      
+      showMessage.saveSuccess('Movimentação vinculada à conta a pagar!');
+    } catch (err) {
+      handleError(err, 'useMovimentacaoOFX.vincularContaPagar');
+      showMessage.saveError('Erro ao vincular conta a pagar');
+      throw err;
+    }
+  };
+
+  const marcarComoIgnorada = async (movimentacaoId: string, observacao?: string): Promise<void> => {
+    try {
+      await atualizarMovimentacao(movimentacaoId, {
+        status_conciliacao: 'divergente',
+        observacao_conciliacao: observacao
+      });
+      
+      showMessage.saveSuccess('Movimentação marcada como divergente!');
+    } catch (err) {
+      handleError(err, 'useMovimentacaoOFX.marcarComoIgnorada');
+      showMessage.saveError('Erro ao marcar movimentação como divergente');
+      throw err;
+    }
   };
 
   useEffect(() => {
-    if (bancoId) {
+    if (bancoId && user) {
       listarMovimentacoes(bancoId);
     }
-  }, [bancoId]);
+  }, [bancoId, user]);
 
   return {
     movimentacoes,

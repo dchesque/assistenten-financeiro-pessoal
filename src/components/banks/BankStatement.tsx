@@ -4,12 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { dataService } from '@/services/DataServiceFactory';
+import { transactionsService } from '@/services/transactionsService';
 import { useAuth } from '@/hooks/useAuth';
+import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { CalendarIcon, Download, FileText, Filter, Printer } from 'lucide-react';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/utils/currency';
+import { Badge } from '@/components/ui/badge';
 
 interface BankAccount {
   id: string;
@@ -25,11 +28,12 @@ interface Transaction {
   date: string;
   type: 'income' | 'expense' | 'transfer';
   amount: number;
-  description: string;
+  description?: string;
   from_account_id?: string;
   to_account_id?: string;
-  accounts_payable?: { description: string };
-  accounts_receivable?: { description: string };
+  accounts_payable_id?: string;
+  accounts_receivable_id?: string;
+  notes?: string;
 }
 
 interface ExtratoData {
@@ -49,50 +53,47 @@ export function BankStatement() {
   });
   const [extratoData, setExtratoData] = useState<ExtratoData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  
   const { user } = useAuth();
+  const { accounts: bankAccounts } = useBankAccounts();
 
   useEffect(() => {
-    if (user) {
-      carregarContas();
+    if (bankAccounts) {
+      const mappedAccounts = bankAccounts.map(account => ({
+        id: account.id,
+        account_number: account.account_number || '',
+        agency: account.agency || '',
+        bank: {
+          name: account.bank?.name || 'Banco não identificado'
+        }
+      }));
+      setAccounts(mappedAccounts);
     }
-  }, [user]);
-
-  const carregarContas = async () => {
-    try {
-      const bancos = await dataService.bancos.getAll();
-      const allAccounts: BankAccount[] = [];
-      
-      for (const banco of bancos) {
-        // Mock bank accounts - na implementação real seria dataService.bankAccounts.getByBankId(banco.id)
-        const contas = [{
-          id: `${banco.id}-1`,
-          account_number: '12345-6',
-          agency: '1234',
-          bank: { name: banco.nome }
-        }];
-        allAccounts.push(...contas);
-      }
-      
-      setAccounts(allAccounts);
-    } catch (error) {
-      console.error('Erro ao carregar contas:', error);
-    }
-  };
+  }, [bankAccounts]);
 
   const gerarExtrato = async () => {
-    if (!selectedAccount) return;
-
+    if (!selectedAccount || !user) return;
+    
+    setLoading(true);
+    
     try {
-      setLoading(true);
-      // Mock extrato - na implementação real seria dataService.transactions.getExtrato
-      const extrato = {
-        transacoes: [],
-        saldoInicial: 1000,
-        saldoFinal: 1500,
-        totalEntradas: 800,
-        totalSaidas: 300
-      };
-      setExtratoData(extrato);
+      const startDate = format(dateRange.inicio, 'yyyy-MM-dd');
+      const endDate = format(dateRange.fim, 'yyyy-MM-dd');
+      
+      const statement = await transactionsService.getAccountStatement(
+        selectedAccount,
+        startDate,
+        endDate
+      );
+      
+      setExtratoData({
+        transacoes: statement.transactions,
+        saldoInicial: statement.initialBalance,
+        saldoFinal: statement.finalBalance,
+        totalEntradas: statement.totalIncome,
+        totalSaidas: statement.totalExpense
+      });
     } catch (error) {
       console.error('Erro ao gerar extrato:', error);
     } finally {
@@ -100,293 +101,287 @@ export function BankStatement() {
     }
   };
 
-  const formatarMoeda = (valor: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor);
-  };
-
-  const formatarData = (dataStr: string) => {
-    return format(new Date(dataStr), 'dd/MM/yyyy', { locale: ptBR });
-  };
-
-  const getTransactionDescription = (transaction: Transaction) => {
-    if (transaction.accounts_payable) {
-      return `Pagamento: ${transaction.accounts_payable.description}`;
+  const getTransactionTypeColor = (type: string) => {
+    switch (type) {
+      case 'income':
+        return 'bg-green-100/80 text-green-700';
+      case 'expense':
+        return 'bg-red-100/80 text-red-700';
+      case 'transfer':
+        return 'bg-blue-100/80 text-blue-700';
+      default:
+        return 'bg-gray-100/80 text-gray-700';
     }
-    if (transaction.accounts_receivable) {
-      return `Recebimento: ${transaction.accounts_receivable.description}`;
-    }
-    return transaction.description || 'Transação manual';
   };
 
-  const getTransactionValue = (transaction: Transaction) => {
-    const isCredit = transaction.to_account_id === selectedAccount;
-    return isCredit ? transaction.amount : -transaction.amount;
+  const getTransactionTypeLabel = (type: string) => {
+    switch (type) {
+      case 'income':
+        return 'Entrada';
+      case 'expense':
+        return 'Saída';
+      case 'transfer':
+        return 'Transferência';
+      default:
+        return type;
+    }
   };
 
   const exportarPDF = () => {
-    window.print();
+    console.log('Exportar PDF do extrato');
+    // Implementar exportação para PDF
   };
 
-  const periodosPredefinidos = [
-    { label: 'Últimos 7 dias', inicio: subDays(new Date(), 7), fim: new Date() },
-    { label: 'Últimos 30 dias', inicio: subDays(new Date(), 30), fim: new Date() },
-    { label: 'Este mês', inicio: startOfMonth(new Date()), fim: endOfMonth(new Date()) },
-    { label: 'Mês passado', inicio: startOfMonth(subDays(new Date(), 30)), fim: endOfMonth(subDays(new Date(), 30)) }
-  ];
+  const imprimirExtrato = () => {
+    console.log('Imprimir extrato');
+    // Implementar funcionalidade de impressão
+  };
+
+  const exportarExcel = () => {
+    console.log('Exportar Excel do extrato');
+    // Implementar exportação para Excel
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 lg:p-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Extrato Bancário</h1>
+          <p className="text-gray-600">Visualize movimentações detalhadas por conta</p>
+        </div>
+        
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filtros
+          </Button>
+          
+          {extratoData && (
+            <>
+              <Button variant="outline" onClick={exportarPDF}>
+                <FileText className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+              <Button variant="outline" onClick={imprimirExtrato}>
+                <Printer className="w-4 h-4 mr-2" />
+                Imprimir
+              </Button>
+              <Button variant="outline" onClick={exportarExcel}>
+                <Download className="w-4 h-4 mr-2" />
+                Excel
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* Filtros */}
-      <Card className="card-base">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <FileText className="w-5 h-5" />
-            <span>Extrato Bancário</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Seleção de Conta */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Conta Bancária</label>
-              <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma conta" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.bank.name} - {account.agency}/{account.account_number}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Período Predefinido */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Período</label>
-              <Select 
-                onValueChange={(value) => {
-                  const periodo = periodosPredefinidos[parseInt(value)];
-                  if (periodo) {
-                    setDateRange({ inicio: periodo.inicio, fim: periodo.fim });
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Período predefinido" />
-                </SelectTrigger>
-                <SelectContent>
-                  {periodosPredefinidos.map((periodo, index) => (
-                    <SelectItem key={index} value={index.toString()}>
-                      {periodo.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Data Início */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Data Início</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dateRange.inicio && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.inicio ? formatarData(dateRange.inicio.toISOString()) : "Selecionar"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dateRange.inicio}
-                    onSelect={(date) => date && setDateRange(prev => ({ ...prev, inicio: date }))}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Data Fim */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Data Fim</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dateRange.fim && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.fim ? formatarData(dateRange.fim.toISOString()) : "Selecionar"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dateRange.fim}
-                    onSelect={(date) => date && setDateRange(prev => ({ ...prev, fim: date }))}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center mt-4">
-            <Button 
-              onClick={gerarExtrato}
-              disabled={!selectedAccount || loading}
-              className="btn-primary"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              {loading ? 'Gerando...' : 'Gerar Extrato'}
-            </Button>
-
-            {extratoData && (
-              <div className="flex space-x-2">
-                <Button variant="outline" onClick={exportarPDF}>
-                  <Printer className="w-4 h-4 mr-2" />
-                  Imprimir
-                </Button>
-                <Button variant="outline">
-                  <Download className="w-4 h-4 mr-2" />
-                  Exportar Excel
-                </Button>
+      {showFilters && (
+        <Card className="bg-white/80 backdrop-blur-sm border border-white/20">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Conta Bancária
+                </label>
+                <Select value={selectedAccount} onValueChange={setSelectedAccount}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma conta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map(account => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.bank.name} - Ag: {account.agency} - CC: {account.account_number}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Resultados do Extrato */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Data Início
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateRange.inicio && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.inicio ? format(dateRange.inicio, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={dateRange.inicio}
+                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, inicio: date }))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Data Fim
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateRange.fim && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.fim ? format(dateRange.fim, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={dateRange.fim}
+                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, fim: date }))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-4">
+              <Button 
+                onClick={gerarExtrato}
+                disabled={!selectedAccount || loading}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                {loading ? 'Gerando...' : 'Gerar Extrato'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Resumo do Extrato */}
       {extratoData && (
-        <div className="space-y-6 print:space-y-4" id="extrato-content">
-          {/* Resumo */}
-          <Card className="card-base print:shadow-none">
-            <CardHeader>
-              <CardTitle>Resumo do Período</CardTitle>
-              <p className="text-sm text-gray-600">
-                {formatarData(dateRange.inicio.toISOString())} a {formatarData(dateRange.fim.toISOString())}
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Saldo Inicial</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-blue-50/80 rounded-lg">
-                  <p className="text-sm text-gray-600">Saldo Inicial</p>
-                  <p className="text-xl font-semibold text-blue-700">
-                    {formatarMoeda(extratoData.saldoInicial)}
-                  </p>
-                </div>
-                <div className="text-center p-4 bg-green-50/80 rounded-lg">
-                  <p className="text-sm text-gray-600">Total Entradas</p>
-                  <p className="text-xl font-semibold text-green-700">
-                    {formatarMoeda(extratoData.totalEntradas)}
-                  </p>
-                </div>
-                <div className="text-center p-4 bg-red-50/80 rounded-lg">
-                  <p className="text-sm text-gray-600">Total Saídas</p>
-                  <p className="text-xl font-semibold text-red-700">
-                    {formatarMoeda(extratoData.totalSaidas)}
-                  </p>
-                </div>
-                <div className="text-center p-4 bg-purple-50/80 rounded-lg">
-                  <p className="text-sm text-gray-600">Saldo Final</p>
-                  <p className="text-xl font-semibold text-purple-700">
-                    {formatarMoeda(extratoData.saldoFinal)}
-                  </p>
-                </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {formatCurrency(extratoData.saldoInicial)}
               </div>
             </CardContent>
           </Card>
 
-          {/* Lista de Transações */}
-          <Card className="card-base print:shadow-none">
-            <CardHeader>
-              <CardTitle>Movimentações</CardTitle>
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-green-600">Total Entradas</CardTitle>
             </CardHeader>
             <CardContent>
-              {extratoData.transacoes.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  Nenhuma movimentação encontrada no período selecionado
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {extratoData.transacoes.map((transaction, index) => {
-                    const valor = getTransactionValue(transaction);
-                    const isCredit = valor > 0;
-                    
-                    return (
-                      <div 
-                        key={transaction.id} 
-                        className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50/50 print:hover:bg-transparent"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-3 h-3 rounded-full ${
-                              isCredit ? 'bg-green-500' : 'bg-red-500'
-                            }`}></div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {getTransactionDescription(transaction)}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {formatarData(transaction.date)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className={`font-semibold ${
-                            isCredit ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {isCredit ? '+' : ''}{formatarMoeda(valor)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {transaction.type === 'transfer' ? 'Transferência' : 
-                             transaction.type === 'income' ? 'Receita' : 'Despesa'}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <div className="text-2xl font-bold text-green-600">
+                {formatCurrency(extratoData.totalEntradas)}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-red-600">Total Saídas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">
+                {formatCurrency(extratoData.totalSaidas)}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Saldo Final</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${extratoData.saldoFinal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(extratoData.saldoFinal)}
+              </div>
             </CardContent>
           </Card>
         </div>
       )}
 
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #extrato-content, #extrato-content * {
-            visibility: visible;
-          }
-          #extrato-content {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-        }
-      `}</style>
+      {/* Lista de Transações */}
+      {extratoData && (
+        <Card className="bg-white/80 backdrop-blur-sm border border-white/20">
+          <CardHeader>
+            <CardTitle>Movimentações do Período</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {extratoData.transacoes.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Nenhuma movimentação encontrada no período selecionado.
+                </div>
+              ) : (
+                extratoData.transacoes.map((transacao) => (
+                  <div key={transacao.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white/50">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Badge className={getTransactionTypeColor(transacao.type)}>
+                          {getTransactionTypeLabel(transacao.type)}
+                        </Badge>
+                        <span className="text-sm text-gray-600">
+                          {format(new Date(transacao.date), 'dd/MM/yyyy', { locale: ptBR })}
+                        </span>
+                      </div>
+                      <div className="font-medium text-gray-900">
+                        {transacao.description || 'Movimentação bancária'}
+                      </div>
+                      {transacao.notes && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          {transacao.notes}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className={`text-lg font-bold ${
+                        transacao.type === 'income' || 
+                        (transacao.type === 'transfer' && transacao.to_account_id === selectedAccount)
+                          ? 'text-green-600' 
+                          : 'text-red-600'
+                      }`}>
+                        {(transacao.type === 'income' || 
+                          (transacao.type === 'transfer' && transacao.to_account_id === selectedAccount))
+                          ? '+' : '-'
+                        }
+                        {formatCurrency(transacao.amount)}
+                      </div>
+                      
+                      {(transacao.accounts_payable_id || transacao.accounts_receivable_id) && (
+                        <Badge className="bg-blue-100/80 text-blue-700 mt-1">
+                          Conciliado
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
