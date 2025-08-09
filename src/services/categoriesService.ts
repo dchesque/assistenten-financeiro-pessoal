@@ -7,8 +7,6 @@ export class CategoriesService {
       .from('categories')
       .select('*')
       .is('deleted_at', null)
-      .order('type', { ascending: true })
-      .order('group_name', { ascending: true })
       .order('name', { ascending: true });
 
     if (filters?.search) {
@@ -19,9 +17,6 @@ export class CategoriesService {
       query = query.eq('type', filters.type);
     }
 
-    if (filters?.group) {
-      query = query.eq('group_name', filters.group);
-    }
 
     const { data, error } = await query;
 
@@ -44,7 +39,6 @@ export class CategoriesService {
       .insert({
         name: category.name,
         type: category.type,
-        group_name: category.group_name,
         color: category.color,
         icon: category.icon || 'Circle',
         user_id: userData.user.id,

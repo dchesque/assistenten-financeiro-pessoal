@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Edit, Trash2, Eye } from 'lucide-react';
-import { Category, getGroupsByType } from '@/types/category';
+import { Category } from '@/types/category';
 import * as LucideIcons from 'lucide-react';
 
 interface CategoriasListProps {
@@ -21,9 +21,8 @@ export function CategoriasList({ categories, onEdit, onDelete }: CategoriasListP
     return IconComponent ? <IconComponent className="w-4 h-4" /> : <LucideIcons.Circle className="w-4 h-4" />;
   };
 
-  const getGroupLabel = (category: Category) => {
-    const groups = getGroupsByType(category.type);
-    return groups[category.group_name as keyof typeof groups] || category.group_name || 'Outros';
+  const isSystemCategory = (category: Category) => {
+    return category.is_system === true || category.user_id === null;
   };
 
   return (
@@ -35,7 +34,7 @@ export function CategoriasList({ categories, onEdit, onDelete }: CategoriasListP
               <TableHead className="w-12"></TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Grupo</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -62,8 +61,16 @@ export function CategoriasList({ categories, onEdit, onDelete }: CategoriasListP
                     {category.type === 'income' ? 'Receita' : 'Despesa'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-gray-600">
-                  {getGroupLabel(category)}
+                <TableCell>
+                  {isSystemCategory(category) ? (
+                    <Badge variant="secondary" className="text-xs">
+                      Sistema
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">
+                      Pessoal
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
@@ -131,8 +138,10 @@ export function CategoriasList({ categories, onEdit, onDelete }: CategoriasListP
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Grupo</label>
-                  <p className="text-sm text-gray-900">{getGroupLabel(viewingCategory)}</p>
+                  <label className="text-sm font-medium text-gray-600">Status</label>
+                  <p className="text-sm text-gray-900">
+                    {isSystemCategory(viewingCategory) ? 'Categoria do Sistema' : 'Categoria Pessoal'}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Cor</label>

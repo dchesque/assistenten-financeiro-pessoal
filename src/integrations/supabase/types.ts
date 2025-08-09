@@ -389,10 +389,11 @@ export type Database = {
           group_name: string | null
           icon: string | null
           id: string
+          is_system: boolean | null
           name: string
           type: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           color?: string | null
@@ -401,10 +402,11 @@ export type Database = {
           group_name?: string | null
           icon?: string | null
           id?: string
+          is_system?: boolean | null
           name: string
           type?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           color?: string | null
@@ -413,10 +415,11 @@ export type Database = {
           group_name?: string | null
           icon?: string | null
           id?: string
+          is_system?: boolean | null
           name?: string
           type?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

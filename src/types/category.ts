@@ -1,11 +1,11 @@
 export interface Category {
   id: string;
-  user_id: string;
+  user_id?: string | null; // Nullable para categorias do sistema
   name: string;
   type: 'income' | 'expense';
-  group_name?: string;
   color?: string;
   icon?: string;
+  is_system?: boolean; // Indica se é categoria do sistema
   created_at: string;
   updated_at: string;
 }
@@ -13,7 +13,6 @@ export interface Category {
 export interface CreateCategory {
   name: string;
   type: 'income' | 'expense';
-  group_name?: string;
   color?: string;
   icon?: string;
 }
@@ -25,14 +24,14 @@ export interface UpdateCategory extends Partial<CreateCategory> {
 export interface CategoryFilters {
   search?: string;
   type?: 'income' | 'expense' | 'all';
-  group?: string;
 }
 
 export interface CategoryStats {
   total: number;
   income: number;
   expense: number;
-  recent: number;
+  system: number; // Categorias do sistema
+  personal: number; // Categorias pessoais
 }
 
 // Grupos de receitas

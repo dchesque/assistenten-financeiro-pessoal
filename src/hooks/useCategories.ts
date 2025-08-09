@@ -89,14 +89,10 @@ export function useCategories() {
     const total = categories.length;
     const income = categories.filter(cat => cat.type === 'income').length;
     const expense = categories.filter(cat => cat.type === 'expense').length;
-    const recent = categories.filter(cat => {
-      const createdAt = new Date(cat.created_at);
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      return createdAt >= sevenDaysAgo;
-    }).length;
+    const system = categories.filter(cat => cat.is_system === true || cat.user_id === null).length;
+    const personal = categories.filter(cat => cat.is_system !== true && cat.user_id !== null).length;
 
-    return { total, income, expense, recent };
+    return { total, income, expense, system, personal };
   };
 
   const getCategoryById = (id: string): Category | undefined => {
