@@ -239,7 +239,7 @@ export class SupabaseDataService implements IDataService {
     }
   }
 
-  // ============ CONTAS A PAGAR ============
+  // ============ CONTAS A PAGAR - IMPLEMENTAÇÃO COMPLETA ============
   contasPagar = {
     getAll: async (filtros?: any): Promise<ContaPagar[]> => {
       try {
@@ -249,17 +249,39 @@ export class SupabaseDataService implements IDataService {
           .from('accounts_payable')
           .select(`
             *,
-            supplier:suppliers(name),
-            contact:contacts(name),
-            category:categories(name, color)
+            supplier:suppliers(name, document),
+            contact:contacts(name, document, type),
+            category:categories(name, color),
+            bank_account:bank_accounts(
+              id,
+              account_number,
+              agency,
+              bank:banks(name)
+            )
           `)
           .eq('user_id', userId)
           .is('deleted_at', null);
 
-        if (filtros?.status) {
+        // Aplicar filtros
+        if (filtros?.status && filtros.status !== 'todos') {
           query = query.eq('status', filtros.status);
         }
 
+        if (filtros?.contact_id && filtros.contact_id !== 'todos') {
+          query = query.eq('contact_id', filtros.contact_id);
+        }
+
+        if (filtros?.category_id && filtros.category_id !== 'todos') {
+          query = query.eq('category_id', filtros.category_id);
+        }
+
+        if (filtros?.data_inicio && filtros?.data_fim) {
+          query = query
+            .gte('due_date', filtros.data_inicio)
+            .lte('due_date', filtros.data_fim);
+        }
+
+        // Ordenação: vencimento próximo primeiro
         const { data, error } = await query.order('due_date', { ascending: true });
         
         if (error) this.handleError(error, 'contasPagar.getAll');
@@ -278,9 +300,15 @@ export class SupabaseDataService implements IDataService {
           .from('accounts_payable')
           .select(`
             *,
-            supplier:suppliers(name),
-            contact:contacts(name),
-            category:categories(name, color)
+            supplier:suppliers(name, document),
+            contact:contacts(name, document, type),
+            category:categories(name, color),
+            bank_account:bank_accounts(
+              id,
+              account_number,
+              agency,
+              bank:banks(name)
+            )
           `)
           .eq('id', id)
           .eq('user_id', userId)
@@ -302,14 +330,37 @@ export class SupabaseDataService implements IDataService {
       try {
         const userId = await this.ensureAuthenticated();
         
+        // Validar se contact_id existe
+        if (data.fornecedor_id) {
+          const { data: contact } = await this.supabaseClient
+            .from('contacts')
+            .select('id')
+            .eq('id', data.fornecedor_id)
+            .eq('user_id', userId)
+            .single();
+            
+          if (!contact) {
+            throw new Error('Contato não encontrado');
+          }
+        }
+
+        // Calcular status baseado na data de vencimento
+        const today = new Date().toISOString().split('T')[0];
+        const dueDate = data.data_vencimento;
+        let status = 'pending';
+        
+        if (dueDate < today) {
+          status = 'overdue';
+        }
+
         const insertData = {
           user_id: userId,
           description: data.descricao,
           amount: data.valor_original,
           due_date: data.data_vencimento,
-          status: data.status || 'pending',
+          status: status,
           supplier_id: data.fornecedor_id || null,
-          contact_id: data.fornecedor_id || null, // Transitório
+          contact_id: data.fornecedor_id || null,
           category_id: data.plano_conta_id || null,
           notes: data.observacoes || null
         };
@@ -328,6 +379,35 @@ export class SupabaseDataService implements IDataService {
       }
     },
 
+    createBatch: async (contas: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'>[]): Promise<ContaPagar[]> => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        
+        const insertData = contas.map(conta => ({
+          user_id: userId,
+          description: conta.descricao,
+          amount: conta.valor_original,
+          due_date: conta.data_vencimento,
+          status: conta.data_vencimento < new Date().toISOString().split('T')[0] ? 'overdue' : 'pending',
+          supplier_id: conta.fornecedor_id || null,
+          contact_id: conta.fornecedor_id || null,
+          category_id: conta.plano_conta_id || null,
+          notes: conta.observacoes || null
+        }));
+
+        const { data: newRecords, error } = await this.supabaseClient
+          .from('accounts_payable')
+          .insert(insertData)
+          .select();
+        
+        if (error) this.handleError(error, 'contasPagar.createBatch');
+        
+        return (newRecords || []).map(this.mapAccountPayableFromSupabase);
+      } catch (error) {
+        this.handleError(error, 'contasPagar.createBatch');
+      }
+    },
+
     update: async (id: string | number, data: Partial<ContaPagar>): Promise<ContaPagar> => {
       try {
         const userId = await this.ensureAuthenticated();
@@ -338,7 +418,14 @@ export class SupabaseDataService implements IDataService {
 
         if (data.descricao !== undefined) updateData.description = data.descricao;
         if (data.valor_original !== undefined) updateData.amount = data.valor_original;
-        if (data.data_vencimento !== undefined) updateData.due_date = data.data_vencimento;
+        if (data.data_vencimento !== undefined) {
+          updateData.due_date = data.data_vencimento;
+          // Recalcular status se mudou a data
+          const today = new Date().toISOString().split('T')[0];
+          if (data.data_vencimento < today && data.status !== 'pago') {
+            updateData.status = 'overdue';
+          }
+        }
         if (data.status !== undefined) updateData.status = data.status;
         if (data.observacoes !== undefined) updateData.notes = data.observacoes;
 
@@ -384,11 +471,16 @@ export class SupabaseDataService implements IDataService {
         
         const { data, error } = await this.supabaseClient
           .from('accounts_payable')
-          .select('*')
+          .select(`
+            *,
+            contact:contacts(name),
+            category:categories(name, color)
+          `)
           .eq('user_id', userId)
           .is('deleted_at', null)
           .gte('due_date', dataInicio.toISOString().split('T')[0])
-          .lte('due_date', dataFim.toISOString().split('T')[0]);
+          .lte('due_date', dataFim.toISOString().split('T')[0])
+          .order('due_date', { ascending: true });
         
         if (error) this.handleError(error, 'contasPagar.getByVencimento');
         
@@ -404,10 +496,15 @@ export class SupabaseDataService implements IDataService {
         
         const { data, error } = await this.supabaseClient
           .from('accounts_payable')
-          .select('*')
+          .select(`
+            *,
+            contact:contacts(name),
+            category:categories(name, color)
+          `)
           .eq('user_id', userId)
           .eq('status', status)
-          .is('deleted_at', null);
+          .is('deleted_at', null)
+          .order('due_date', { ascending: true });
         
         if (error) this.handleError(error, 'contasPagar.getByStatus');
         
@@ -417,15 +514,85 @@ export class SupabaseDataService implements IDataService {
       }
     },
 
-    marcarComoPaga: async (id: string | number, dataPagamento: Date, valorPago?: number): Promise<ContaPagar> => {
+    getVencidas: async (): Promise<ContaPagar[]> => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        const today = new Date().toISOString().split('T')[0];
+        
+        const { data, error } = await this.supabaseClient
+          .from('accounts_payable')
+          .select(`
+            *,
+            contact:contacts(name),
+            category:categories(name, color)
+          `)
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .or(`status.eq.overdue,and(status.eq.pending,due_date.lt.${today})`)
+          .order('due_date', { ascending: true });
+        
+        if (error) this.handleError(error, 'contasPagar.getVencidas');
+        
+        return (data || []).map(this.mapAccountPayableFromSupabase);
+      } catch (error) {
+        this.handleError(error, 'contasPagar.getVencidas');
+      }
+    },
+
+    getProximosVencimentos: async (dias: number = 7): Promise<ContaPagar[]> => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        const today = new Date();
+        const futureDate = new Date();
+        futureDate.setDate(today.getDate() + dias);
+        
+        const { data, error } = await this.supabaseClient
+          .from('accounts_payable')
+          .select(`
+            *,
+            contact:contacts(name),
+            category:categories(name, color)
+          `)
+          .eq('user_id', userId)
+          .eq('status', 'pending')
+          .is('deleted_at', null)
+          .gte('due_date', today.toISOString().split('T')[0])
+          .lte('due_date', futureDate.toISOString().split('T')[0])
+          .order('due_date', { ascending: true });
+        
+        if (error) this.handleError(error, 'contasPagar.getProximosVencimentos');
+        
+        return (data || []).map(this.mapAccountPayableFromSupabase);
+      } catch (error) {
+        this.handleError(error, 'contasPagar.getProximosVencimentos');
+      }
+    },
+
+    marcarComoPaga: async (id: string | number, dados: {
+      dataPagamento: Date;
+      valorPago?: number;
+      bankAccountId?: string;
+      observacoes?: string;
+    }): Promise<ContaPagar> => {
       try {
         const userId = await this.ensureAuthenticated();
         
-        const { data: updatedRecord, error } = await this.supabaseClient
+         // Buscar dados da conta
+         const conta = await this.contasPagar.getById(id);
+        if (!conta) {
+          throw new Error('Conta não encontrada');
+        }
+
+        const valorPago = dados.valorPago || conta.valor_original;
+
+        // Atualizar conta como paga
+        const { data: updatedRecord, error: updateError } = await this.supabaseClient
           .from('accounts_payable')
           .update({
             status: 'paid',
-            paid_at: dataPagamento.toISOString().split('T')[0],
+            paid_at: dados.dataPagamento.toISOString().split('T')[0],
+            bank_account_id: dados.bankAccountId || null,
+            notes: dados.observacoes || conta.observacoes,
             updated_at: new Date().toISOString()
           })
           .eq('id', id)
@@ -434,11 +601,138 @@ export class SupabaseDataService implements IDataService {
           .select()
           .single();
         
-        if (error) this.handleError(error, 'contasPagar.marcarComoPaga');
+        if (updateError) this.handleError(updateError, 'contasPagar.marcarComoPaga.update');
+
+        // Criar transação de saída
+        const { error: transactionError } = await this.supabaseClient
+          .from('transactions')
+          .insert({
+            user_id: userId,
+            type: 'expense',
+            amount: valorPago,
+            description: `Pagamento: ${conta.descricao}`,
+            date: dados.dataPagamento.toISOString().split('T')[0],
+            from_account_id: dados.bankAccountId || null,
+            accounts_payable_id: id,
+            notes: dados.observacoes
+          });
+
+        if (transactionError) {
+          console.warn('Erro ao criar transação:', transactionError);
+          // Não falhar o pagamento por erro na transação
+        }
+
+        // Atualizar saldo da conta bancária (se especificada)
+        if (dados.bankAccountId) {
+          try {
+            // Buscar banco da conta
+            const { data: bankAccount } = await this.supabaseClient
+              .from('bank_accounts')
+              .select('bank_id')
+              .eq('id', dados.bankAccountId)
+              .single();
+
+            if (bankAccount) {
+              // Atualizar saldo inicial do banco (simplificado)
+              await this.supabaseClient
+                .from('banks')
+                .update({
+                  initial_balance: this.supabaseClient.rpc('subtract_balance', {
+                    bank_id: bankAccount.bank_id,
+                    amount: valorPago
+                  })
+                })
+                .eq('id', bankAccount.bank_id);
+            }
+          } catch (balanceError) {
+            console.warn('Erro ao atualizar saldo:', balanceError);
+            // Não falhar o pagamento por erro no saldo
+          }
+        }
         
         return this.mapAccountPayableFromSupabase(updatedRecord);
       } catch (error) {
         this.handleError(error, 'contasPagar.marcarComoPaga');
+      }
+    },
+
+    pagarVarias: async (ids: (string | number)[], dados: {
+      dataPagamento: Date;
+      bankAccountId?: string;
+      observacoes?: string;
+    }): Promise<ContaPagar[]> => {
+      try {
+        const results = [];
+        
+        for (const id of ids) {
+           try {
+             const result = await this.contasPagar.marcarComoPaga(id, dados);
+            results.push(result);
+          } catch (error) {
+            console.error(`Erro ao pagar conta ${id}:`, error);
+            // Continuar com as outras contas
+          }
+        }
+        
+        return results;
+      } catch (error) {
+        this.handleError(error, 'contasPagar.pagarVarias');
+      }
+    },
+
+    getDashboardSummary: async () => {
+      try {
+        const userId = await this.ensureAuthenticated();
+        const today = new Date().toISOString().split('T')[0];
+        const next7Days = new Date();
+        next7Days.setDate(next7Days.getDate() + 7);
+
+        // Total pendente
+        const { data: pendentes } = await this.supabaseClient
+          .from('accounts_payable')
+          .select('amount')
+          .eq('user_id', userId)
+          .eq('status', 'pending')
+          .is('deleted_at', null);
+
+        // Vencidas
+        const { data: vencidas } = await this.supabaseClient
+          .from('accounts_payable')
+          .select('amount')
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .or(`status.eq.overdue,and(status.eq.pending,due_date.lt.${today})`);
+
+        // Vencendo hoje
+        const { data: vencendoHoje } = await this.supabaseClient
+          .from('accounts_payable')
+          .select('amount')
+          .eq('user_id', userId)
+          .eq('status', 'pending')
+          .eq('due_date', today)
+          .is('deleted_at', null);
+
+        // Próximos 7 dias
+        const { data: proximos7Dias } = await this.supabaseClient
+          .from('accounts_payable')
+          .select('amount')
+          .eq('user_id', userId)
+          .eq('status', 'pending')
+          .gte('due_date', today)
+          .lte('due_date', next7Days.toISOString().split('T')[0])
+          .is('deleted_at', null);
+
+        return {
+          totalPendente: (pendentes || []).reduce((sum, item) => sum + parseFloat(item.amount), 0),
+          totalVencidas: (vencidas || []).reduce((sum, item) => sum + parseFloat(item.amount), 0),
+          quantidadeVencidas: (vencidas || []).length,
+          totalVencendoHoje: (vencendoHoje || []).reduce((sum, item) => sum + parseFloat(item.amount), 0),
+          quantidadeVencendoHoje: (vencendoHoje || []).length,
+          totalProximos7Dias: (proximos7Dias || []).reduce((sum, item) => sum + parseFloat(item.amount), 0),
+          quantidadeProximos7Dias: (proximos7Dias || []).length
+        };
+      } catch (error) {
+        this.handleError(error, 'contasPagar.getDashboardSummary');
       }
     }
   };

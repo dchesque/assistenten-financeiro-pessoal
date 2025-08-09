@@ -67,7 +67,7 @@ export interface IDataService {
     delete(id: string | number): Promise<void>;
     getByVencimento(dataInicio: Date, dataFim: Date): Promise<ContaPagar[]>;
     getByStatus(status: string): Promise<ContaPagar[]>;
-    marcarComoPaga(id: string | number, dataPagamento: Date, valorPago?: number): Promise<ContaPagar>;
+    marcarComoPaga(id: string | number, dados: { dataPagamento: Date; valorPago?: number; bankAccountId?: string; observacoes?: string }): Promise<ContaPagar>;
   };
 
   // ============ CONTAS A RECEBER ============
