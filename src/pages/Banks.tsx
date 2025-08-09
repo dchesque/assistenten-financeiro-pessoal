@@ -11,6 +11,7 @@ import { BankCard } from '@/components/banks/BankCard';
 import { BanksList } from '@/components/banks/BanksList';
 import { BankModal } from '@/components/banks/BankModal';
 import { BankAccountModal } from '@/components/banks/BankAccountModal';
+import { BankAccountsViewModal } from '@/components/banks/BankAccountsViewModal';
 import { useBanks } from '@/hooks/useBanks';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
 import { useLoadingState } from '@/hooks/useLoadingStates';
@@ -33,6 +34,8 @@ export default function Banks() {
   // Estados de filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | BankType>('all');
+  const [viewAccountsModalOpen, setViewAccountsModalOpen] = useState(false);
+  const [selectedBankForView, setSelectedBankForView] = useState<BankWithAccounts | null>(null);
 
   // Filtrar bancos
   const filteredBanks = banks.filter(bank => {
@@ -109,8 +112,8 @@ export default function Banks() {
   };
 
   const handleViewAccounts = (bank: BankWithAccounts) => {
-    // TODO: Implementar modal de visualização de contas
-    console.log('Ver contas do banco:', bank.name);
+    setSelectedBankForView(bank);
+    setViewAccountsModalOpen(true);
   };
 
   const handleCreateAccount = async (accountData: any) => {
@@ -294,6 +297,15 @@ export default function Banks() {
         onSave={handleCreateAccount}
         bankId={selectedBankForAccount}
         loading={isLoading('saving')}
+      />
+
+      <BankAccountsViewModal
+        isOpen={viewAccountsModalOpen}
+        onClose={() => {
+          setViewAccountsModalOpen(false);
+          setSelectedBankForView(null);
+        }}
+        bank={selectedBankForView}
       />
 
       <ConfirmacaoModal

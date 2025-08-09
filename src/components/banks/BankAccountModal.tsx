@@ -100,9 +100,11 @@ export function BankAccountModal({
         pix_key: formData.pix_key.trim() || undefined
       };
 
+      console.log('🔧 BankAccountModal - Enviando dados:', dataToSave);
       await onSave(dataToSave);
       onClose();
     } catch (error) {
+      console.error('❌ Erro no modal ao salvar conta:', error);
       // Error handling is done in the parent component
     }
   };

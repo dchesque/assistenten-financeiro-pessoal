@@ -49,7 +49,7 @@ export function BanksList({ banks, onEdit, onDelete, onAddAccount, onViewAccount
             <TableHead className="font-semibold">Tipo</TableHead>
             <TableHead className="font-semibold text-center">Contas</TableHead>
             <TableHead className="font-semibold">Contas Vinculadas</TableHead>
-            <TableHead className="font-semibold w-[50px]"></TableHead>
+            <TableHead className="font-semibold w-[180px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -102,36 +102,82 @@ export function BanksList({ banks, onEdit, onDelete, onAddAccount, onViewAccount
               </TableCell>
               
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-white/95 backdrop-blur-xl border border-white/20">
-                    <DropdownMenuItem onClick={() => onEdit(bank)} className="cursor-pointer">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onAddAccount(bank)} className="cursor-pointer">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Conta
-                    </DropdownMenuItem>
-                    {bank.accounts.length > 0 && (
-                      <DropdownMenuItem onClick={() => onViewAccounts(bank)} className="cursor-pointer">
-                        <Eye className="h-4 w-4 mr-2" />
-                        Ver Contas
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem
-                      onClick={() => onDelete(bank)}
-                      className="cursor-pointer text-red-600 focus:text-red-600"
+                <div className="flex items-center gap-1">
+                  {/* Botões de ação diretos */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(bank)}
+                    className="h-7 px-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                    title="Editar banco"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onAddAccount(bank)}
+                    className="h-7 px-2 text-gray-600 hover:text-green-600 hover:bg-green-50"
+                    title="Adicionar conta"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                  
+                  {bank.accounts.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewAccounts(bank)}
+                      className="h-7 px-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+                      title="Ver contas"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                  )}
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(bank)}
+                    className="h-7 px-2 text-gray-600 hover:text-red-600 hover:bg-red-50"
+                    title="Excluir banco"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+
+                  {/* Menu dropdown como alternativa */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 ml-1">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-white/95 backdrop-blur-xl border border-white/20">
+                      <DropdownMenuItem onClick={() => onEdit(bank)} className="cursor-pointer">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onAddAccount(bank)} className="cursor-pointer">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar Conta
+                      </DropdownMenuItem>
+                      {bank.accounts.length > 0 && (
+                        <DropdownMenuItem onClick={() => onViewAccounts(bank)} className="cursor-pointer">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver Contas
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        onClick={() => onDelete(bank)}
+                        className="cursor-pointer text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </TableCell>
             </TableRow>
           ))}

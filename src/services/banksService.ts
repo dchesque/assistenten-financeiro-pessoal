@@ -91,13 +91,20 @@ export const banksService = {
   },
 
   async createBankAccount(account: Omit<BankAccount, 'id' | 'created_at' | 'updated_at'>): Promise<BankAccount> {
+    console.log('🔧 createBankAccount - Dados recebidos:', account);
+    
     const { data, error } = await supabase
       .from('bank_accounts')
       .insert([account])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Erro ao criar conta bancária:', error);
+      throw error;
+    }
+    
+    console.log('✅ Conta criada com sucesso:', data);
     return data;
   },
 
