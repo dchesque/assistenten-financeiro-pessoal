@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Building2, User, Plus } from 'lucide-react';
 import { Fornecedor } from '@/types/fornecedor';
-import { useFornecedores } from '@/hooks/useFornecedores';
+import { useContatos } from '@/hooks/useContatos';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { CadastroRapidoFornecedorModal } from './CadastroRapidoFornecedorModal';
 
 interface FornecedorSelectorProps {
-  value?: Fornecedor | null;
-  onSelect: (fornecedor: Fornecedor) => void;
+  value?: any | null;
+  onSelect: (fornecedor: any) => void;
   placeholder?: string;
   className?: string;
 }
@@ -26,25 +26,28 @@ export function FornecedorSelector({
   const [busca, setBusca] = useState('');
   const [cadastroRapidoOpen, setCadastroRapidoOpen] = useState(false);
   
-  const { fornecedores, loading } = useFornecedores();
+  const { contatos, loading } = useContatos();
+  
+  // Filtrar apenas fornecedores (suppliers)
+  const fornecedores = contatos.filter(contato => contato.type === 'supplier');
   const buscaDebounced = useDebounce(busca, 300);
   
   
   const fornecedoresFiltrados = fornecedores.filter(fornecedor =>
-    fornecedor.ativo && (
-      fornecedor.nome.toLowerCase().includes(buscaDebounced.toLowerCase()) ||
-      fornecedor.documento.includes(buscaDebounced) ||
-      fornecedor.email?.toLowerCase().includes(buscaDebounced.toLowerCase())
+    fornecedor.active && (
+      fornecedor.name.toLowerCase().includes(buscaDebounced.toLowerCase()) ||
+      (fornecedor.document && fornecedor.document.includes(buscaDebounced)) ||
+      (fornecedor.email && fornecedor.email.toLowerCase().includes(buscaDebounced.toLowerCase()))
     )
   ).slice(0, 15);
 
-  const handleSelect = (fornecedor: Fornecedor) => {
+  const handleSelect = (fornecedor: any) => {
     onSelect(fornecedor);
     setOpen(false);
     setBusca('');
   };
 
-  const handleFornecedorCriado = (fornecedor: Fornecedor) => {
+  const handleFornecedorCriado = (fornecedor: any) => {
     onSelect(fornecedor);
     setOpen(false);
   };
@@ -60,14 +63,14 @@ export function FornecedorSelector({
         >
           {value ? (
             <div className="flex items-center space-x-2">
-              {value.tipo === 'pessoa_juridica' ? (
+              {value.document_type === 'cnpj' ? (
                 <Building2 className="h-4 w-4 text-muted-foreground" />
               ) : (
                 <User className="h-4 w-4 text-muted-foreground" />
               )}
-              <span className="truncate">{value.nome}</span>
+              <span className="truncate">{value.name}</span>
               <Badge variant="outline" className="text-xs">
-                {value.documento}
+                {value.document || 'Sem documento'}
               </Badge>
             </div>
           ) : (
@@ -113,26 +116,26 @@ export function FornecedorSelector({
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      {fornecedor.tipo === 'pessoa_juridica' ? (
+                      {fornecedor.document_type === 'cnpj' ? (
                         <Building2 className="h-5 w-5 text-blue-600" />
                       ) : (
                         <User className="h-5 w-5 text-green-600" />
                       )}
                       
                       <div>
-                        <div className="font-medium text-gray-900">{fornecedor.nome}</div>
+                        <div className="font-medium text-gray-900">{fornecedor.name}</div>
                         <div className="text-sm text-gray-500">
-                          {fornecedor.documento} • {fornecedor.email || 'Sem email'}
+                          {fornecedor.document || 'Sem documento'} • {fornecedor.email || 'Sem email'}
                         </div>
                       </div>
                     </div>
                     
                     <div className="text-right">
                       <div className="text-sm font-medium text-gray-900">
-                        R$ {fornecedor.valorTotal?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        Ativo
                       </div>
                       <div className="text-xs text-gray-500">
-                        {fornecedor.totalCompras} compras
+                        {fornecedor.type}
                       </div>
                     </div>
                   </div>

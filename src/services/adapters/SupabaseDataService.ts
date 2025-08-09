@@ -142,13 +142,37 @@ export class SupabaseDataService implements IDataService {
     },
 
     create: async (data: any): Promise<any> => {
+      // Mapear campos do ContaPagar para accounts_payable
+      const mappedData = {
+        description: data.descricao,
+        amount: data.valor_original || data.valor_final,
+        due_date: data.data_vencimento,
+        status: data.status === 'pendente' ? 'pending' : 
+                data.status === 'pago' ? 'paid' : 
+                data.status === 'vencido' ? 'overdue' : 'pending',
+        notes: data.observacoes,
+        contact_id: data.fornecedor_id,
+        supplier_id: data.fornecedor_id, 
+        category_id: data.plano_conta_id,
+        bank_account_id: data.banco_id,
+        paid_at: data.data_pagamento,
+        user_id: data.user_id
+      };
+
+      console.log('🔥 Dados mapeados para inserção:', mappedData);
+
       const { data: result, error } = await supabase
         .from('accounts_payable')
-        .insert([data])
+        .insert([mappedData])
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao inserir conta:', error);
+        throw error;
+      }
+      
+      console.log('✅ Conta criada:', result);
       return result;
     },
 

@@ -66,8 +66,8 @@ export function usePlanoContas() {
     return contas.filter(c => (c.tipo_dre === tipo_dre || c.type === tipo_dre) && (c.ativo || c.active));
   };
 
-  const buscarContasAnaliticas = (termo?: string): any[] => {
-    const contasAnaliticas = contas.filter(c => (c.aceita_lancamento || c.accepts_entries) && (c.ativo || c.active));
+  const buscarContasAnaliticas = async (termo?: string): Promise<any[]> => {
+    const contasAnaliticas = contas.filter(c => (c.aceita_lancamento !== false) && (c.ativo !== false));
     if (!termo) return contasAnaliticas;
     
     return contasAnaliticas.filter(c => 

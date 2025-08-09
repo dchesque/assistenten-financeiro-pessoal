@@ -11,10 +11,12 @@ import { FormaPagamento } from '@/types/formaPagamento';
 import { useBancos } from '@/hooks/useBancos';
 import { useContasPagar } from '@/hooks/useContasPagarSupabase';
 import { useContatos } from '@/hooks/useContatos';
+import { useAuth } from '@/hooks/useAuth';
 import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
 import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
 import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
+import { RecorrenciaSection, RecorrenciaData } from '@/components/contasPagar/RecorrenciaSection';
 import { Button } from '@/components/ui/button';
 import { LoadingButton } from '@/components/ui/LoadingButton';
 import { Input } from '@/components/ui/input';
@@ -37,8 +39,12 @@ export default function NovaConta() {
   const navigate = useNavigate();
   const { criarConta, loading } = useContasPagar();
   const { bancos } = useBancos();
-  const { credores } = useContatos();
+  const { contatos } = useContatos();
+  const { user } = useAuth();
   const { isSaving, setLoading } = useLoadingStates();
+
+  // Filtrar apenas credores (suppliers)
+  const credores = contatos.filter(contato => contato.type === 'supplier');
 
   // Estados do formulário
   const [conta, setConta] = useState<Partial<ContaPagar>>({
@@ -78,10 +84,13 @@ export default function NovaConta() {
   const [temRascunho, setTemRascunho] = useState(false);
   
   // Estados para recorrência
-  const [contaRecorrente, setContaRecorrente] = useState(false);
-  const [periodicidade, setPeriodicidade] = useState<'semanal' | 'quinzenal' | 'mensal' | 'bimestral' | 'trimestral' | 'semestral' | 'anual'>('mensal');
-  const [quantidadeParcelas, setQuantidadeParcelas] = useState(1);
-  const [dataInicioRecorrencia, setDataInicioRecorrencia] = useState(new Date().toISOString().split('T')[0]);
+  const [recorrencia, setRecorrencia] = useState<RecorrenciaData>({
+    ativo: false,
+    tipo: 'mensal',
+    quantidade_parcelas: 1,
+    data_inicio: new Date().toISOString().split('T')[0],
+    valor_parcela: 0
+  });
 
   // Função de validação em tempo real
   const validarCampoTempoReal = async (campo: string, valor: any) => {
@@ -160,10 +169,18 @@ export default function NovaConta() {
       ...prev,
       valor_final: final
     }));
-  }, [conta.valor_original, conta.valor_juros, conta.valor_desconto]);
+    
+    // Atualizar valor da parcela na recorrência
+    if (recorrencia.ativo && final > 0) {
+      setRecorrencia(prev => ({
+        ...prev,
+        valor_parcela: final / prev.quantidade_parcelas
+      }));
+    }
+  }, [conta.valor_original, conta.valor_juros, conta.valor_desconto, recorrencia.ativo, recorrencia.quantidade_parcelas]);
 
   // Função para selecionar credor e auto-preencher categoria
-  const handleCredorSelect = (credor: Fornecedor) => {
+  const handleCredorSelect = (credor: any) => {
     setCredorSelecionado(credor);
     setConta(prev => ({
       ...prev,
@@ -171,38 +188,14 @@ export default function NovaConta() {
     }));
 
     // Auto-preencher categoria padrão do credor se existir
-    if (credor.categoria_padrao_id) {
-      // Mock: categoria padrão
-      const categoriaDefault: PlanoContas = {
-        id: credor.categoria_padrao_id,
-        codigo: 'CATPADRAO',
-        nome: 'Categoria Padrão',
-        tipo_dre: 'despesa_pessoal',
-        cor: '#6B7280',
-        icone: 'Package',
-        nivel: 1,
-        plano_pai_id: null,
-        aceita_lancamento: true,
-        ativo: true,
-        total_contas: 0,
-        valor_total: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      setContaSelecionada(categoriaDefault);
+    if (credor.category_id) {
+      // Buscar categoria do credor via API
+      // Por enquanto, limpar seleção para o usuário escolher
+      setContaSelecionada(null);
       setConta(prev => ({
         ...prev,
-        plano_conta_id: categoriaDefault.id
+        plano_conta_id: undefined
       }));
-    } else {
-      // Credor sem categoria padrão - não alterar seleção atual
-      if (!contaSelecionada) {
-        setConta(prev => ({
-          ...prev,
-          plano_conta_id: undefined
-        }));
-      }
     }
   };
 
@@ -379,48 +372,99 @@ export default function NovaConta() {
     
     setLoading('saving', true);
     try {
-      // ✅ OBRIGATÓRIO: Obter user_id
-      // Mock user - Supabase removido
-      const user = { id: '1' };
       if (!user) throw new Error('Usuário não autenticado');
 
-      const contaParaSalvar = {
-        fornecedor_id: credorSelecionado!.id!.toString(),
-        plano_conta_id: contaSelecionada!.id!.toString(),
-        banco_id: marcarComoPago && formaPagamento.banco_id ? formaPagamento.banco_id.toString() : undefined,
-        documento_referencia: conta.documento_referencia,
-        descricao: conta.descricao!,
-        data_emissao: conta.data_emissao,
-        data_vencimento: conta.data_vencimento!,
-        valor_original: conta.valor_original!,
-        parcela_atual: 1,
-        total_parcelas: 1,
-        forma_pagamento: 'dinheiro_pix',
-        percentual_juros: conta.percentual_juros,
-        valor_juros: conta.valor_juros || 0,
-        percentual_desconto: conta.percentual_desconto,
-        valor_desconto: conta.valor_desconto || 0,
-        valor_final: conta.valor_final!,
-        status: marcarComoPago ? 'pago' : (conta.status as 'pendente' | 'pago' | 'vencido' | 'cancelado'),
-        data_pagamento: marcarComoPago ? new Date().toISOString().split('T')[0] : conta.data_pagamento,
-        valor_pago: marcarComoPago ? conta.valor_final : conta.valor_pago,
-        dda: conta.dda!,
-        observacoes: conta.observacoes
-      };
-
-      await criarConta(contaParaSalvar);
+      // Se recorrência está ativa, criar múltiplas contas
+      if (recorrencia.ativo && recorrencia.quantidade_parcelas > 1) {
+        await criarContasRecorrentes(marcarComoPago);
+      } else {
+        await criarContaSimples(marcarComoPago);
+      }
       
       // Após salvar com sucesso, limpar rascunho
       localStorage.removeItem('rascunho_conta_individual');
       setRascunhoSalvo(false);
       
-      // ✅ MELHORAR TOAST DE SUCESSO
       toast({ title: 'Sucesso', description: `Conta "${conta.descricao}" criada com sucesso!` });
       navigate('/contas-pagar');
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message || 'Erro ao salvar conta. Tente novamente.', variant: 'destructive' });
     } finally {
       setLoading('saving', false);
+    }
+  };
+
+  const criarContaSimples = async (marcarComoPago: boolean) => {
+    const contaParaSalvar = {
+      user_id: user!.id,
+      fornecedor_id: credorSelecionado!.id.toString(),
+      plano_conta_id: contaSelecionada!.id.toString(),
+      banco_id: marcarComoPago && formaPagamento.banco_id ? formaPagamento.banco_id.toString() : undefined,
+      documento_referencia: conta.documento_referencia,
+      descricao: conta.descricao!,
+      data_emissao: conta.data_emissao,
+      data_vencimento: conta.data_vencimento!,
+      valor_original: conta.valor_original!,
+      valor_final: conta.valor_final!,
+      status: marcarComoPago ? 'pago' : 'pendente',
+      data_pagamento: marcarComoPago ? new Date().toISOString().split('T')[0] : undefined,
+      valor_pago: marcarComoPago ? conta.valor_final : undefined,
+      dda: conta.dda || false,
+      observacoes: conta.observacoes
+    };
+
+    await criarConta(contaParaSalvar);
+  };
+
+  const criarContasRecorrentes = async (marcarComoPago: boolean) => {
+    const contasParaCriar = [];
+    let dataAtual = new Date(recorrencia.data_inicio);
+    
+    for (let i = 0; i < recorrencia.quantidade_parcelas; i++) {
+      const contaParaSalvar = {
+        user_id: user!.id,
+        fornecedor_id: credorSelecionado!.id.toString(),
+        plano_conta_id: contaSelecionada!.id.toString(),
+        banco_id: marcarComoPago && i === 0 && formaPagamento.banco_id ? formaPagamento.banco_id.toString() : undefined,
+        documento_referencia: conta.documento_referencia ? `${conta.documento_referencia} (${i + 1}/${recorrencia.quantidade_parcelas})` : undefined,
+        descricao: `${conta.descricao} - Parcela ${i + 1}/${recorrencia.quantidade_parcelas}`,
+        data_emissao: conta.data_emissao,
+        data_vencimento: dataAtual.toISOString().split('T')[0],
+        valor_original: recorrencia.valor_parcela,
+        valor_final: recorrencia.valor_parcela,
+        status: marcarComoPago && i === 0 ? 'pago' : 'pendente',
+        data_pagamento: marcarComoPago && i === 0 ? new Date().toISOString().split('T')[0] : undefined,
+        valor_pago: marcarComoPago && i === 0 ? recorrencia.valor_parcela : undefined,
+        dda: conta.dda || false,
+        observacoes: conta.observacoes
+      };
+      
+      await criarConta(contaParaSalvar);
+
+      // Calcular próxima data
+      switch (recorrencia.tipo) {
+        case 'semanal':
+          dataAtual.setDate(dataAtual.getDate() + 7);
+          break;
+        case 'quinzenal':
+          dataAtual.setDate(dataAtual.getDate() + 15);
+          break;
+        case 'mensal':
+          dataAtual.setMonth(dataAtual.getMonth() + 1);
+          break;
+        case 'bimestral':
+          dataAtual.setMonth(dataAtual.getMonth() + 2);
+          break;
+        case 'trimestral':
+          dataAtual.setMonth(dataAtual.getMonth() + 3);
+          break;
+        case 'semestral':
+          dataAtual.setMonth(dataAtual.getMonth() + 6);
+          break;
+        case 'anual':
+          dataAtual.setFullYear(dataAtual.getFullYear() + 1);
+          break;
+      }
     }
   };
   return (
@@ -672,83 +716,24 @@ export default function NovaConta() {
                 <Separator />
 
                 {/* Seção: Recorrência */}
+                <RecorrenciaSection
+                  value={recorrencia}
+                  onChange={setRecorrencia}
+                  valorTotal={conta.valor_final || 0}
+                />
+
+                <Separator />
+
+                {/* Seção: DDA */}
                 <div className="space-y-6">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">4</span>
-                    </div>
-                    <h2 className="text-xl font-semibold text-gray-900">Recorrência</h2>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="flex items-center space-x-3">
-                      <Checkbox 
-                        id="conta-recorrente"
-                        checked={contaRecorrente}
-                        onCheckedChange={(checked) => setContaRecorrente(checked as boolean)}
-                      />
-                      <Label htmlFor="conta-recorrente" className="text-sm font-medium text-gray-700">
-                        Esta é uma conta recorrente
-                      </Label>
-                    </div>
-
-                    {contaRecorrente && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-blue-50/80 backdrop-blur-sm border border-blue-200 rounded-xl">
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700">
-                            Periodicidade <span className="text-red-500">*</span>
-                          </Label>
-                          <Select value={periodicidade} onValueChange={(value: any) => setPeriodicidade(value)}>
-                            <SelectTrigger className="bg-white/80 backdrop-blur-sm border-gray-300/50">
-                              <SelectValue placeholder="Selecionar periodicidade" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="semanal">Semanal</SelectItem>
-                              <SelectItem value="quinzenal">Quinzenal</SelectItem>
-                              <SelectItem value="mensal">Mensal</SelectItem>
-                              <SelectItem value="bimestral">Bimestral</SelectItem>
-                              <SelectItem value="trimestral">Trimestral</SelectItem>
-                              <SelectItem value="semestral">Semestral</SelectItem>
-                              <SelectItem value="anual">Anual</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700">
-                            Quantidade de parcelas <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            type="number"
-                            min="1"
-                            max="60"
-                            value={quantidadeParcelas}
-                            onChange={(e) => setQuantidadeParcelas(parseInt(e.target.value) || 1)}
-                            className="bg-white/80 backdrop-blur-sm border-gray-300/50"
-                            placeholder="1"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700">
-                            Data de início <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            type="date"
-                            value={dataInicioRecorrencia}
-                            onChange={(e) => setDataInicioRecorrencia(e.target.value)}
-                            className="bg-white/80 backdrop-blur-sm border-gray-300/50"
-                          />
-                        </div>
-
-                        <div className="md:col-span-3 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg p-4">
-                          <p className="text-sm text-gray-600">
-                            <strong>Resumo:</strong> Serão criadas <strong>{quantidadeParcelas} parcelas</strong> com 
-                            periodicidade <strong>{periodicidade}</strong> a partir de <strong>{new Date(dataInicioRecorrencia).toLocaleDateString('pt-BR')}</strong>.
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    <Checkbox id="dda" checked={conta.dda} onCheckedChange={checked => setConta(prev => ({
+                      ...prev,
+                      dda: checked as boolean
+                    }))} />
+                    <Label htmlFor="dda" className="text-sm font-medium text-gray-700">
+                      Esta conta é paga via DDA (Débito Direto Autorizado)
+                    </Label>
                   </div>
                 </div>
 
@@ -758,7 +743,7 @@ export default function NovaConta() {
                 <div className="space-y-6">
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">5</span>
+                      <span className="text-white font-bold text-sm">4</span>
                     </div>
                     <h2 className="text-xl font-semibold text-gray-900">Status da Conta</h2>
                   </div>
@@ -824,42 +809,44 @@ export default function NovaConta() {
                 <Separator />
 
                 {/* Seção: Forma de Pagamento */}
-                <FormaPagamentoSection 
-                  value={formaPagamento}
-                  onChange={setFormaPagamento}
-                  numeroParcelas={1}
-                  bancos={bancos as any}
-                />
-
-                <Separator />
-
-                {/* Seção: Configurações Adicionais */}
                 <div className="space-y-6">
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold text-sm">6</span>
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900">Configurações Adicionais</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Forma de Pagamento</h2>
+                  </div>
+                  
+                  <FormaPagamentoSection 
+                    value={formaPagamento}
+                    onChange={setFormaPagamento}
+                    numeroParcelas={1}
+                    bancos={bancos as any}
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Seção: Observações */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">7</span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Observações</h2>
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="dda" checked={conta.dda} onCheckedChange={checked => setConta(prev => ({
-                      ...prev,
-                      dda: checked as boolean
-                    }))} />
-                      <Label htmlFor="dda" className="text-sm font-medium text-gray-700">
-                        Esta conta é paga via DDA (Débito Direto Autorizado)
-                      </Label>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Observações</Label>
-                      <Textarea placeholder="Observações adicionais sobre esta conta..." value={conta.observacoes || ''} onChange={e => setConta(prev => ({
-                      ...prev,
-                      observacoes: e.target.value
-                    }))} className="bg-white/80 backdrop-blur-sm border-gray-300/50 min-h-[100px]" />
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">Observações</Label>
+                    <Textarea 
+                      placeholder="Observações adicionais sobre esta conta..." 
+                      value={conta.observacoes || ''} 
+                      onChange={e => setConta(prev => ({
+                        ...prev,
+                        observacoes: e.target.value
+                      }))} 
+                      className="bg-white/80 backdrop-blur-sm border-gray-300/50 min-h-[100px]" 
+                    />
                   </div>
                 </div>
 
