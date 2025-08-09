@@ -87,6 +87,8 @@ export function useCategories() {
 
   const getStats = (): CategoryStats => {
     const total = categories.length;
+    const income = categories.filter(cat => cat.type === 'income').length;
+    const expense = categories.filter(cat => cat.type === 'expense').length;
     const recent = categories.filter(cat => {
       const createdAt = new Date(cat.created_at);
       const sevenDaysAgo = new Date();
@@ -94,7 +96,7 @@ export function useCategories() {
       return createdAt >= sevenDaysAgo;
     }).length;
 
-    return { total, recent };
+    return { total, income, expense, recent };
   };
 
   const getCategoryById = (id: string): Category | undefined => {

@@ -386,8 +386,11 @@ export type Database = {
           color: string | null
           created_at: string
           deleted_at: string | null
+          group_name: string | null
+          icon: string | null
           id: string
           name: string
+          type: string
           updated_at: string
           user_id: string
         }
@@ -395,8 +398,11 @@ export type Database = {
           color?: string | null
           created_at?: string
           deleted_at?: string | null
+          group_name?: string | null
+          icon?: string | null
           id?: string
           name: string
+          type?: string
           updated_at?: string
           user_id: string
         }
@@ -404,8 +410,11 @@ export type Database = {
           color?: string | null
           created_at?: string
           deleted_at?: string | null
+          group_name?: string | null
+          icon?: string | null
           id?: string
           name?: string
+          type?: string
           updated_at?: string
           user_id?: string
         }
