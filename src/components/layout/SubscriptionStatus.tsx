@@ -101,10 +101,10 @@ export function SubscriptionStatus({ expanded, mobile = false }: SubscriptionSta
     <div className="px-0 py-2">
       <button
         onClick={handleStatusClick}
-        className={`w-full flex items-center gap-2 p-2 rounded-md border transition-all duration-200 hover:scale-[1.01] ${config.bgColor} ${config.borderColor} hover:bg-opacity-20`}
+        className={`w-full flex items-center justify-center gap-2 p-2 rounded-md border transition-all duration-200 hover:scale-[1.01] ${config.bgColor} ${config.borderColor} hover:bg-opacity-20`}
       >
         <IconComponent className={`w-3 h-3 ${config.color} flex-shrink-0`} />
-        <div className="flex-1 text-left">
+        <div className="text-center">
           <span className={`text-xs font-medium ${config.color}`}>
             {config.label}
           </span>
