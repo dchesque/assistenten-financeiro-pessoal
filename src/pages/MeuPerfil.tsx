@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, User, Save, Shield, Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -44,20 +44,28 @@ export default function MeuPerfil() {
     cep: [{ validador: VALIDACOES_COMUNS.CEP, mensagem: '' }]
   };
 
-  // Hook do formulário
+  // Hook do formulário - sincronizar com dados do perfil
   const {
     dados,
     alterarCampo,
+    alterarCampos,
     estaCarregando,
     salvar,
     erros
   } = useFormulario(
-    dadosPerfil,
+    dadosPerfil, // usar dados carregados do Supabase
     async (dadosForm) => {
       await salvarPerfil(dadosForm);
     },
     esquemaValidacao
   );
+
+  // Sincronizar formulário quando dados do perfil mudarem
+  useEffect(() => {
+    if (dadosPerfil.nome || dadosPerfil.email) {
+      alterarCampos(dadosPerfil);
+    }
+  }, [dadosPerfil, alterarCampos]);
 
   // Upload de avatar
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

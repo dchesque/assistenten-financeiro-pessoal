@@ -181,21 +181,18 @@ export function useProfileData() {
 
     setSalvando(true);
     try {
-      // Preparar dados para atualização
-      const updateData = {
-        name: dados.nome,
-        phone: dados.telefone,
-        ...(dados.bio !== undefined && { bio: dados.bio }),
-        ...(dados.avatar_url !== undefined && { avatar_url: dados.avatar_url }),
-        ...(dados.endereco !== undefined && { endereco: dados.endereco }),
-        ...(dados.cidade !== undefined && { cidade: dados.cidade }),
-        ...(dados.estado !== undefined && { estado: dados.estado }),
-        ...(dados.cep !== undefined && { cep: dados.cep }),
-        ...(dados.whatsapp !== undefined && { whatsapp: dados.whatsapp })
-      };
-
-      // Atualizar via RPC function
-      const { error } = await supabase.rpc('update_user_profile', updateData);
+      // Usar a função RPC correta
+      const { error } = await supabase.rpc('update_user_profile', {
+        p_name: dados.nome,
+        p_phone: dados.telefone,
+        p_bio: dados.bio,
+        p_avatar_url: dados.avatar_url,
+        p_endereco: dados.endereco,
+        p_cidade: dados.cidade,
+        p_estado: dados.estado,
+        p_cep: dados.cep,
+        p_whatsapp: dados.whatsapp
+      });
 
       if (error) {
         throw error;
