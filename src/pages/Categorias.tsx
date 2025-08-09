@@ -13,8 +13,9 @@ import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import EmptyState from '@/components/ui/EmptyState';
+import { CategoriasList } from '@/components/categorias/CategoriasList';
 import { Plus, Search, Edit, Trash2, Filter } from 'lucide-react';
-import { Category, CreateCategory, CATEGORY_COLORS, getGroupsByType, getIconsByGroup } from '@/types/category';
+import { Category, CreateCategory, CATEGORY_COLORS, getGroupsByType, getIconsByGroup, getDefaultColorByType } from '@/types/category';
 import { toast } from '@/hooks/use-toast';
 import * as LucideIcons from 'lucide-react';
 
@@ -34,7 +35,7 @@ export default function Categorias() {
     name: '',
     type: 'expense',
     group_name: '',
-    color: CATEGORY_COLORS[0],
+    color: getDefaultColorByType('expense'),
     icon: 'Circle'
   });
 
@@ -68,7 +69,7 @@ export default function Categorias() {
         name: category.name,
         type: category.type,
         group_name: category.group_name || '',
-        color: category.color || CATEGORY_COLORS[0],
+        color: category.color || getDefaultColorByType(category.type),
         icon: category.icon || 'Circle'
       });
     } else {
@@ -77,7 +78,7 @@ export default function Categorias() {
         name: '',
         type: 'expense',
         group_name: '',
-        color: CATEGORY_COLORS[0],
+        color: getDefaultColorByType('expense'),
         icon: 'Circle'
       });
     }
@@ -91,7 +92,7 @@ export default function Categorias() {
       name: '',
       type: 'expense',
       group_name: '',
-      color: CATEGORY_COLORS[0],
+      color: getDefaultColorByType('expense'),
       icon: 'Circle'
     });
   };
@@ -152,7 +153,11 @@ export default function Categorias() {
       const groups = getGroupsByType(formData.type);
       const firstGroup = Object.keys(groups)[0];
       if (!formData.group_name || !Object.keys(groups).includes(formData.group_name)) {
-        setFormData(prev => ({ ...prev, group_name: firstGroup }));
+        setFormData(prev => ({ 
+          ...prev, 
+          group_name: firstGroup,
+          color: getDefaultColorByType(formData.type)
+        }));
       }
     }
   }, [formData.type]);
@@ -271,8 +276,8 @@ export default function Categorias() {
         </Select>
       </div>
 
-      {/* Categories by Group */}
-      {Object.keys(groupedCategories).length === 0 ? (
+      {/* Categories List */}
+      {filteredCategories.length === 0 ? (
         <EmptyState
           icon={Plus}
           title="Nenhuma categoria encontrada"
@@ -281,62 +286,11 @@ export default function Categorias() {
           onAction={() => handleOpenModal()}
         />
       ) : (
-        <div className="space-y-8">
-          {Object.entries(groupedCategories).map(([group, groupCategories]) => (
-            <div key={group}>
-              <h3 className="text-lg font-semibold mb-4 capitalize">
-                {availableGroups[group as keyof typeof availableGroups] || group}
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                {groupCategories.map((category) => (
-                  <Card key={category.id} className="card-base group hover:scale-105 transition-all duration-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <div 
-                            className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-                            style={{ backgroundColor: category.color }}
-                          >
-                            {getIconComponent(category.icon || 'Circle')}
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{category.name}</h4>
-                            <Badge 
-                              variant={category.type === 'income' ? 'default' : 'secondary'}
-                              className={`text-xs ${
-                                category.type === 'income' 
-                                  ? 'bg-green-100 text-green-700' 
-                                  : 'bg-red-100 text-red-700'
-                              }`}
-                            >
-                              {category.type === 'income' ? 'Receita' : 'Despesa'}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenModal(category)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeletingCategory(category)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+        <CategoriasList
+          categories={filteredCategories}
+          onEdit={handleOpenModal}
+          onDelete={setDeletingCategory}
+        />
       )}
 
       {/* Modal */}
