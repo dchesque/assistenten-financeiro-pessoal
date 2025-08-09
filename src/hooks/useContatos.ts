@@ -42,7 +42,7 @@ export function useContatos(): UseContatosReturn {
       setLoading(true);
       setError(null);
       
-      // Buscar contatos com dados de categoria
+      // Buscar contatos com dados de categoria, filtrando apenas registros não excluídos
       const { data, error } = await supabase
         .from('contacts')
         .select(`
@@ -54,12 +54,13 @@ export function useContatos(): UseContatosReturn {
             type
           )
         `)
-        .eq('deleted_at', null)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
         
       if (error) throw error;
       setContatos(data || []);
     } catch (error) {
+      console.error('Erro ao carregar contatos:', error);
       const appError = handleError(error, 'useContatos.carregarContatos');
       setError(appError.message);
     } finally {

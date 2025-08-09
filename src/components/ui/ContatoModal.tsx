@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MaskedInput, masks } from '@/components/ui/MaskedInput';
 import { useCategories } from '@/hooks/useCategories';
-import { getGroupsByType, getDefaultIconByGroup } from '@/types/category';
+import { getGroupsByType } from '@/types/category';
 import { toast } from '@/hooks/use-toast';
 
 interface ContatoModalProps {
@@ -24,17 +24,18 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
   const { categories } = useCategories();
   
   const [formData, setFormData] = useState({
-    name: contato?.name || contato?.nome || '',
-    document_type: contato?.document_type || 'cpf',
-    document: contato?.document || contato?.documento || '',
-    email: contato?.email || '',
-    phone: contato?.phone || contato?.telefone || '',
-    address: contato?.address || contato?.endereco || '',
-    notes: contato?.notes || contato?.observacoes || '',
-    type: contato?.type || (tipo === 'credor' ? 'supplier' : 'customer'),
-    category_id: contato?.category_id || '',
+    name: '',
+    document_type: 'cpf',
+    document: '',
+    email: '',
+    phone: '',
+    address: '',
+    notes: '',
+    type: tipo === 'credor' ? 'supplier' : 'customer',
+    category_id: '',
     category_type: tipo === 'credor' ? 'expense' : 'income',
-    category_group: ''
+    category_group: '',
+    active: true
   });
 
   // Categorias filtradas por tipo
@@ -49,17 +50,18 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
   useEffect(() => {
     if (contato) {
       setFormData({
-        name: contato.name || contato.nome || '',
+        name: contato.name || '',
         document_type: contato.document_type || 'cpf',
-        document: contato.document || contato.documento || '',
+        document: contato.document || '',
         email: contato.email || '',
-        phone: contato.phone || contato.telefone || '',
-        address: contato.address || contato.endereco || '',
-        notes: contato.notes || contato.observacoes || '',
+        phone: contato.phone || '',
+        address: contato.address || '',
+        notes: contato.notes || '',
         type: contato.type || (tipo === 'credor' ? 'supplier' : 'customer'),
         category_id: contato.category_id || '',
         category_type: tipo === 'credor' ? 'expense' : 'income',
-        category_group: ''
+        category_group: '',
+        active: contato.active !== undefined ? contato.active : true
       });
     } else {
       setFormData({
@@ -73,7 +75,8 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
         type: tipo === 'credor' ? 'supplier' : 'customer',
         category_id: '',
         category_type: tipo === 'credor' ? 'expense' : 'income',
-        category_group: ''
+        category_group: '',
+        active: true
       });
     }
   }, [contato, tipo, isOpen]);
@@ -96,19 +99,23 @@ export function ContatoModal({ isOpen, onClose, contato, onSave, tipo = 'credor'
     
     try {
       const dadosParaSalvar = {
-        ...formData,
-        // Garantir que campos opcionais vazios sejam null
+        name: formData.name.trim(),
+        document_type: formData.document_type,
         document: formData.document?.trim() || null,
         email: formData.email?.trim() || null,
         phone: formData.phone?.trim() || null,
         address: formData.address?.trim() || null,
-        notes: formData.notes?.trim() || null
+        notes: formData.notes?.trim() || null,
+        type: formData.type,
+        category_id: formData.category_id,
+        active: formData.active
       };
       
       await onSave(dadosParaSalvar);
       toast({ title: 'Sucesso', description: contato ? 'Contato atualizado!' : 'Contato criado!' });
       onClose();
     } catch (error) {
+      console.error('Erro ao salvar contato:', error);
       toast({ title: 'Erro', description: 'Erro ao salvar contato', variant: 'destructive' });
     } finally {
       setLoading(false);
