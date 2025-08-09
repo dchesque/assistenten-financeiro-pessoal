@@ -70,7 +70,6 @@ export function useFormulario<T extends Record<string, any>>(
     console.log('🔄 Iniciando salvamento do formulário');
     console.log('📋 Dados atuais do formulário:', dados);
     console.log('📋 Dados finais para salvar:', dadosFinais);
-    console.log('🔍 Comparação de dados:', { original: dados, final: dadosFinais });
     
     if (validacao && !validarTodos()) {
       console.log('❌ Validação falhou, não salvando');
@@ -81,7 +80,6 @@ export function useFormulario<T extends Record<string, any>>(
     setCarregando(true);
     try {
       console.log('💾 Chamando função de salvamento...');
-      console.log('💾 Dados sendo enviados:', JSON.stringify(dadosFinais, null, 2));
       await onSalvar(dadosFinais);
       console.log('✅ Salvamento concluído com sucesso');
     } catch (error) {
