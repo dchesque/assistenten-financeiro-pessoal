@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Grid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +8,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import { ConfirmacaoModal } from '@/components/ui/ConfirmacaoModal';
 import { BankCard } from '@/components/banks/BankCard';
+import { BanksList } from '@/components/banks/BanksList';
 import { BankModal } from '@/components/banks/BankModal';
 import { BankAccountModal } from '@/components/banks/BankAccountModal';
 import { useBanks } from '@/hooks/useBanks';
@@ -28,6 +29,7 @@ export default function Banks() {
   const [selectedBankForAccount, setSelectedBankForAccount] = useState<string>('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [bankToDelete, setBankToDelete] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('list');
 
   // Estados de filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,20 +48,32 @@ export default function Banks() {
   const totalAccounts = banks.reduce((sum, bank) => sum + bank.accounts.length, 0);
   const averageBalance = totalBanks > 0 ? totalBalance / totalBanks : 0;
 
-  const handleCreateBank = async (bankData: Omit<Bank, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+  const handleCreateBank = async (bankData: Omit<Bank, 'id' | 'created_at' | 'updated_at' | 'user_id'>, accountData?: { agency?: string; account_number?: string; pix_key?: string }) => {
     setLoading('saving', true);
     try {
-      await createBank(bankData);
+      const newBank = await createBank(bankData);
+      
+      // Se tiver dados de conta, criar a conta junto
+      if (accountData && newBank) {
+        await createAccount({
+          bank_id: newBank.id,
+          agency: accountData.agency,
+          account_number: accountData.account_number,
+          pix_key: accountData.pix_key
+        });
+      }
     } finally {
       setLoading('saving', false);
     }
   };
 
-  const handleUpdateBank = async (bankData: Omit<Bank, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+  const handleUpdateBank = async (bankData: Omit<Bank, 'id' | 'created_at' | 'updated_at' | 'user_id'>, accountData?: { agency?: string; account_number?: string; pix_key?: string }) => {
     if (!selectedBank) return;
     setLoading('saving', true);
     try {
       await updateBank(selectedBank.id, bankData);
+      // Note: Para edição, não criamos nova conta automaticamente
+      // O usuário deve usar o botão "Adicionar Conta" para isso
     } finally {
       setLoading('saving', false);
     }
@@ -70,8 +84,8 @@ export default function Banks() {
     setBankModalOpen(true);
   };
 
-  const handleDeleteBank = (bankId: string) => {
-    setBankToDelete(bankId);
+  const handleDeleteBank = (bank: BankWithAccounts) => {
+    setBankToDelete(bank.id);
     setDeleteModalOpen(true);
   };
 
@@ -87,9 +101,14 @@ export default function Banks() {
     }
   };
 
-  const handleAddAccount = (bankId: string) => {
-    setSelectedBankForAccount(bankId);
+  const handleAddAccount = (bank: BankWithAccounts) => {
+    setSelectedBankForAccount(bank.id);
     setAccountModalOpen(true);
+  };
+
+  const handleViewAccounts = (bank: BankWithAccounts) => {
+    // TODO: Implementar modal de visualização de contas
+    console.log('Ver contas do banco:', bank.name);
   };
 
   const handleCreateAccount = async (accountData: any) => {
@@ -180,16 +199,40 @@ export default function Banks() {
               ))}
             </SelectContent>
           </Select>
+          
+          {/* Toggle de visualização */}
+          <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="rounded-none border-0"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+              className="rounded-none border-0"
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Lista de bancos */}
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <LoadingSkeleton key={i} className="h-64" />
-          ))}
-        </div>
+        viewMode === 'list' ? (
+          <LoadingSkeleton className="h-96" />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <LoadingSkeleton key={i} className="h-64" />
+            ))}
+          </div>
+        )
       ) : filteredBanks.length === 0 ? (
         <EmptyState
           icon={Plus}
@@ -205,6 +248,14 @@ export default function Banks() {
             setBankModalOpen(true);
           }}
         />
+      ) : viewMode === 'list' ? (
+        <BanksList
+          banks={filteredBanks}
+          onEdit={handleEditBank}
+          onDelete={handleDeleteBank}
+          onAddAccount={handleAddAccount}
+          onViewAccounts={handleViewAccounts}
+        />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredBanks.map(bank => (
@@ -214,7 +265,7 @@ export default function Banks() {
               onEdit={handleEditBank}
               onDelete={handleDeleteBank}
               onAddAccount={handleAddAccount}
-              onViewAccounts={() => {}} // TODO: Implementar modal de visualização de contas
+              onViewAccounts={handleViewAccounts}
             />
           ))}
         </div>

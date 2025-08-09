@@ -1780,7 +1780,7 @@ export type Database = {
         | "read"
         | "error"
         | "other"
-      bank_type: "banco" | "carteira" | "outro"
+      bank_type: "banco" | "carteira" | "outro" | "corretora" | "cripto"
       notification_severity: "info" | "success" | "warning" | "error"
       notification_status: "pending" | "sent" | "read" | "dismissed" | "error"
       notification_type:
@@ -1935,7 +1935,7 @@ export const Constants = {
         "error",
         "other",
       ],
-      bank_type: ["banco", "carteira", "outro"],
+      bank_type: ["banco", "carteira", "outro", "corretora", "cripto"],
       notification_severity: ["info", "success", "warning", "error"],
       notification_status: ["pending", "sent", "read", "dismissed", "error"],
       notification_type: [

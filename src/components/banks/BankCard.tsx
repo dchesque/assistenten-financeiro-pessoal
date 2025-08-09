@@ -15,16 +15,25 @@ import { formatCurrency } from '@/lib/formatacaoBrasileira';
 interface BankCardProps {
   bank: BankWithAccounts;
   onEdit: (bank: BankWithAccounts) => void;
-  onDelete: (id: string) => void;
-  onAddAccount: (bankId: string) => void;
+  onDelete: (bank: BankWithAccounts) => void;
+  onAddAccount: (bank: BankWithAccounts) => void;
   onViewAccounts: (bank: BankWithAccounts) => void;
 }
 
 export function BankCard({ bank, onEdit, onDelete, onAddAccount, onViewAccounts }: BankCardProps) {
-  const typeColor = {
-    banco: 'bg-blue-100/80 text-blue-700',
-    carteira: 'bg-purple-100/80 text-purple-700',
-    outro: 'bg-gray-100/80 text-gray-700'
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'banco':
+        return 'bg-blue-100/80 text-blue-700';
+      case 'carteira':
+        return 'bg-green-100/80 text-green-700';
+      case 'corretora':
+        return 'bg-purple-100/80 text-purple-700';
+      case 'cripto':
+        return 'bg-orange-100/80 text-orange-700';
+      default:
+        return 'bg-gray-100/80 text-gray-700';
+    }
   };
 
   return (
@@ -32,7 +41,7 @@ export function BankCard({ bank, onEdit, onDelete, onAddAccount, onViewAccounts 
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div className="space-y-1">
           <h3 className="font-semibold text-gray-900 text-lg">{bank.name}</h3>
-          <Badge className={typeColor[bank.type]}>
+          <Badge className={`px-3 py-1 text-xs ${getTypeColor(bank.type)}`}>
             {BANK_TYPE_LABELS[bank.type]}
           </Badge>
         </div>
@@ -48,7 +57,7 @@ export function BankCard({ bank, onEdit, onDelete, onAddAccount, onViewAccounts 
               <Edit className="mr-2 h-4 w-4" />
               Editar
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onAddAccount(bank.id)}>
+            <DropdownMenuItem onClick={() => onAddAccount(bank)}>
               <Plus className="mr-2 h-4 w-4" />
               Nova Conta
             </DropdownMenuItem>
@@ -57,7 +66,7 @@ export function BankCard({ bank, onEdit, onDelete, onAddAccount, onViewAccounts 
               Ver Contas ({bank.accounts.length})
             </DropdownMenuItem>
             <DropdownMenuItem 
-              onClick={() => onDelete(bank.id)}
+              onClick={() => onDelete(bank)}
               className="text-red-600 focus:text-red-600"
             >
               <Trash2 className="mr-2 h-4 w-4" />

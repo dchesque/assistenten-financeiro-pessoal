@@ -10,7 +10,7 @@ import { formatCurrency } from '@/lib/formatacaoBrasileira';
 interface BankModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Omit<Bank, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => Promise<void>;
+  onSave: (data: Omit<Bank, 'id' | 'created_at' | 'updated_at' | 'user_id'>, accountData?: { agency?: string; account_number?: string; pix_key?: string }) => Promise<void>;
   bank?: Bank | null;
   loading?: boolean;
 }
@@ -20,6 +20,12 @@ export function BankModal({ isOpen, onClose, onSave, bank, loading = false }: Ba
     name: '',
     type: 'banco' as BankType,
     initial_balance: 0
+  });
+
+  const [accountData, setAccountData] = useState({
+    agency: '',
+    account_number: '',
+    pix_key: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -36,6 +42,11 @@ export function BankModal({ isOpen, onClose, onSave, bank, loading = false }: Ba
         name: '',
         type: 'banco',
         initial_balance: 0
+      });
+      setAccountData({
+        agency: '',
+        account_number: '',
+        pix_key: ''
       });
     }
     setErrors({});
@@ -62,7 +73,9 @@ export function BankModal({ isOpen, onClose, onSave, bank, loading = false }: Ba
     if (!validateForm()) return;
 
     try {
-      await onSave(formData);
+      // Se tiver dados de conta, passa junto
+      const hasAccountData = accountData.agency || accountData.account_number || accountData.pix_key;
+      await onSave(formData, hasAccountData ? accountData : undefined);
       onClose();
     } catch (error) {
       // Error handling is done in the parent component
@@ -125,6 +138,46 @@ export function BankModal({ isOpen, onClose, onSave, bank, loading = false }: Ba
               className={errors.initial_balance ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
             />
             {errors.initial_balance && <p className="text-sm text-red-600">{errors.initial_balance}</p>}
+          </div>
+
+          {/* Campos opcionais da conta */}
+          <div className="border-t border-gray-200 pt-4">
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Dados da Conta (Opcional)</h4>
+              <p className="text-xs text-gray-500">Você pode adicionar estes dados agora ou criar contas separadamente depois.</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="agency">Agência</Label>
+                <Input
+                  id="agency"
+                  value={accountData.agency}
+                  onChange={(e) => setAccountData(prev => ({ ...prev, agency: e.target.value }))}
+                  placeholder="0001"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="account_number">Número da Conta</Label>
+                <Input
+                  id="account_number"
+                  value={accountData.account_number}
+                  onChange={(e) => setAccountData(prev => ({ ...prev, account_number: e.target.value }))}
+                  placeholder="12345-6"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 mt-3">
+              <Label htmlFor="pix_key">Chave PIX</Label>
+              <Input
+                id="pix_key"
+                value={accountData.pix_key}
+                onChange={(e) => setAccountData(prev => ({ ...prev, pix_key: e.target.value }))}
+                placeholder="email@exemplo.com, CPF, telefone..."
+              />
+            </div>
           </div>
 
           <DialogFooter className="flex gap-2 pt-4">
