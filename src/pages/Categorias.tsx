@@ -15,7 +15,7 @@ import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import { CategoriasList } from '@/components/categorias/CategoriasList';
 import { Plus, Search, Edit, Trash2, Filter } from 'lucide-react';
-import { Category, CreateCategory, CATEGORY_COLORS, getGroupsByType, getIconsByGroup, getDefaultColorByType } from '@/types/category';
+import { Category, CreateCategory, CATEGORY_COLORS, getGroupsByType, getIconsByGroup, getDefaultColorByType, getDefaultIconByGroup } from '@/types/category';
 import { toast } from '@/hooks/use-toast';
 import * as LucideIcons from 'lucide-react';
 
@@ -70,7 +70,7 @@ export default function Categorias() {
         type: category.type,
         group_name: category.group_name || '',
         color: category.color || getDefaultColorByType(category.type),
-        icon: category.icon || 'Circle'
+        icon: category.icon || getDefaultIconByGroup(category.group_name || '')
       });
     } else {
       setEditingCategory(null);
@@ -119,7 +119,8 @@ export default function Categorias() {
     try {
       const categoryData = {
         ...formData,
-        color: getDefaultColorByType(formData.type)
+        color: getDefaultColorByType(formData.type),
+        icon: getDefaultIconByGroup(formData.group_name)
       };
 
       if (editingCategory) {
@@ -168,7 +169,6 @@ export default function Categorias() {
   };
 
   const availableGroups = getGroupsByType(formData.type);
-  const availableIcons = getIconsByGroup(formData.group_name || 'outros');
 
   // Auto-select first group when type changes
   useEffect(() => {
@@ -179,19 +179,20 @@ export default function Categorias() {
         setFormData(prev => ({ 
           ...prev, 
           group_name: firstGroup,
-          color: getDefaultColorByType(formData.type)
+          color: getDefaultColorByType(formData.type),
+          icon: getDefaultIconByGroup(firstGroup)
         }));
       }
     }
   }, [formData.type]);
 
-  // Auto-select first icon when group changes
+  // Auto-select icon when group changes
   useEffect(() => {
     if (formData.group_name) {
-      const icons = getIconsByGroup(formData.group_name);
-      if (formData.icon && !(icons as readonly string[]).includes(formData.icon)) {
-        setFormData(prev => ({ ...prev, icon: icons[0] }));
-      }
+      setFormData(prev => ({ 
+        ...prev, 
+        icon: getDefaultIconByGroup(formData.group_name) 
+      }));
     }
   }, [formData.group_name]);
 
@@ -373,26 +374,6 @@ export default function Categorias() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Ícone</Label>
-              <div className="grid grid-cols-6 gap-2">
-                {availableIcons.map((iconName) => (
-                  <button
-                    key={iconName}
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, icon: iconName }))}
-                    className={`p-3 rounded-lg border-2 flex items-center justify-center transition-colors ${
-                      formData.icon === iconName
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    {getIconComponent(iconName)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Preview */}
             <div className="p-4 bg-muted rounded-lg">
               <Label className="text-sm font-medium mb-2 block">Preview</Label>
@@ -401,7 +382,7 @@ export default function Categorias() {
                   className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
                   style={{ backgroundColor: getDefaultColorByType(formData.type) }}
                 >
-                  {getIconComponent(formData.icon || 'Circle')}
+                  {getIconComponent(getDefaultIconByGroup(formData.group_name) || 'Circle')}
                 </div>
                 <div>
                   <p className="font-medium">{formData.name || 'Nome da categoria'}</p>

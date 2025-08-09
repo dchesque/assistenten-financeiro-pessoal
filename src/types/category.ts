@@ -135,3 +135,9 @@ export const getGroupsByType = (type: 'income' | 'expense') => {
 export const getIconsByGroup = (group: string) => {
   return GROUP_ICONS[group as keyof typeof GROUP_ICONS] || GROUP_ICONS.outros;
 };
+
+// Função para obter ícone padrão por grupo
+export const getDefaultIconByGroup = (group: string): string => {
+  const icons = GROUP_ICONS[group as keyof typeof GROUP_ICONS];
+  return icons ? icons[0] : 'Circle';
+};
