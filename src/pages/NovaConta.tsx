@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
-import { ArrowLeft, Save, CreditCard, Calendar, AlertTriangle, FileText, CheckCircle, Repeat } from 'lucide-react';
+import { ArrowLeft, Save, CreditCard, Calendar, AlertTriangle, FileText, CheckCircle, Repeat, Building2 } from 'lucide-react';
 import { ContaPagar } from '@/types/contaPagar';
 import { Fornecedor } from '@/types/fornecedor';
-import { PlanoContas } from '@/types/planoContas';
+import { Category } from '@/types/category';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
 import { useBancos } from '@/hooks/useBancos';
@@ -13,7 +13,7 @@ import { useContasPagar } from '@/hooks/useContasPagarSupabase';
 import { useContatos } from '@/hooks/useContatos';
 import { useAuth } from '@/hooks/useAuth';
 import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
-import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
+import { CategoriaSelectorNovo } from '@/components/contasPagar/CategoriaSelectorNovo';
 import { ContaPreview } from '@/components/contasPagar/ContaPreview';
 import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
 import { RecorrenciaSection, RecorrenciaData } from '@/components/contasPagar/RecorrenciaSection';
@@ -72,7 +72,7 @@ export default function NovaConta() {
   const [valorDescontoMask, setValorDescontoMask] = useState('');
   const [valorPagoMask, setValorPagoMask] = useState('');
   const [credorSelecionado, setCredorSelecionado] = useState<Fornecedor | null>(null);
-  const [contaSelecionada, setContaSelecionada] = useState<PlanoContas | null>(null);
+  const [contaSelecionada, setContaSelecionada] = useState<Category | null>(null);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
     tipo: 'dinheiro_pix'
   });
@@ -542,7 +542,19 @@ export default function NovaConta() {
                       <Label className="text-sm font-medium text-gray-700">
                         Categoria/Plano de Contas <span className="text-red-500">*</span>
                       </Label>
-                      <PlanoContasSelector value={contaSelecionada} onSelect={setContaSelecionada} placeholder="Selecionar categoria..." className="w-full" />
+                      <CategoriaSelectorNovo 
+                        value={contaSelecionada as any} 
+                        onSelect={(categoria) => {
+                          setContaSelecionada(categoria as any);
+                          setConta(prev => ({
+                            ...prev,
+                            plano_conta_id: categoria.id
+                          }));
+                        }} 
+                        placeholder="Selecionar categoria..." 
+                        className="w-full" 
+                        tipo="expense"
+                      />
                     </div>
                   </div>
                 </div>

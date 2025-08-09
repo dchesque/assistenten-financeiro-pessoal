@@ -19,7 +19,7 @@ export function BankAccountSelector({
   disabled = false
 }: BankAccountSelectorProps) {
   const { bancos } = useBancos();
-  const { bankAccounts } = useBankAccounts();
+  const { accounts: bankAccounts } = useBankAccounts();
   
   // Filtrar contas do banco selecionado
   const contasDisponiveis = value?.banco_id 
