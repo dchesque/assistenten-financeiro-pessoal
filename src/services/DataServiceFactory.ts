@@ -1,7 +1,7 @@
 // Factory pattern para gerenciar instâncias de serviços de dados
 import { IDataService } from './interfaces/IDataService';
 import { MockDataServiceAdapter } from './adapters/MockDataServiceAdapter';
-import { SupabaseDataService } from './adapters/SupabaseDataService';
+import { SupabaseDataService } from './SupabaseDataService';
 import { FEATURES } from '@/config/features';
 
 let serviceInstance: IDataService | null = null;

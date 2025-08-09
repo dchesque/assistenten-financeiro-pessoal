@@ -208,7 +208,25 @@ export class SupabaseDataService implements IDataService {
     create: async (data: any) => data,
     update: async (id: any, data: any) => data,
     delete: async () => {},
-    atualizarSaldo: async (id: any, saldo: any) => ({ id, saldo })
+    atualizarSaldo: async (id: number, novoSaldo: number) => {
+      // Implementação simples por enquanto
+      return {
+        id,
+        nome: 'Banco Placeholder',
+        codigo_banco: '000',
+        agencia: '0000',
+        conta: '00000-0',
+        digito_verificador: '0',
+        tipo_conta: 'conta_corrente' as const,
+        saldo_inicial: novoSaldo,
+        saldo_atual: novoSaldo,
+        limite_usado: 0,
+        suporta_ofx: false,
+        ativo: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+    }
   };
 
   dashboard = {
