@@ -41,9 +41,15 @@ export const banksService = {
   },
 
   async createBank(bank: Omit<Bank, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Bank> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Usuário não autenticado');
+    }
+
     const { data, error } = await supabase
       .from('banks')
-      .insert([bank])
+      .insert([{ ...bank, user_id: user.id }])
       .select()
       .single();
 
