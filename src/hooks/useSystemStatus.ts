@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FEATURES } from '@/config/features';
+import { DATABASE_CONFIG } from '@/config/database.config';
 
 interface SystemStatus {
   isOnline: boolean;
@@ -8,9 +10,12 @@ interface SystemStatus {
 }
 
 export function useSystemStatus() {
+  // Detecta se está em modo demo baseado na configuração real
+  const isDemoMode = DATABASE_CONFIG.USE_MOCK_DATA || !FEATURES.USE_SUPABASE;
+  
   const [status, setStatus] = useState<SystemStatus>({
     isOnline: navigator.onLine,
-    isDemoMode: true, // Como estamos usando mock data
+    isDemoMode,
     lastSync: localStorage.getItem('lastSync'),
     appVersion: import.meta.env.VITE_APP_VERSION || '1.0.0'
   });
