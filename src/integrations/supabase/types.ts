@@ -616,8 +616,14 @@ export type Database = {
       profiles: {
         Row: {
           ativo: boolean
+          avatar_url: string | null
+          bio: string | null
+          cep: string | null
+          cidade: string | null
           created_at: string
           deleted_at: string | null
+          endereco: string | null
+          estado: string | null
           features_limit: Json
           id: string
           last_login: string | null
@@ -627,16 +633,24 @@ export type Database = {
           phone_verified: boolean | null
           plan: Database["public"]["Enums"]["user_plan"]
           role: Database["public"]["Enums"]["app_role"]
+          security_config: Json | null
           subscription_ends_at: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at: string | null
           updated_at: string
           user_id: string
+          whatsapp: string | null
         }
         Insert: {
           ativo?: boolean
+          avatar_url?: string | null
+          bio?: string | null
+          cep?: string | null
+          cidade?: string | null
           created_at?: string
           deleted_at?: string | null
+          endereco?: string | null
+          estado?: string | null
           features_limit?: Json
           id?: string
           last_login?: string | null
@@ -646,16 +660,24 @@ export type Database = {
           phone_verified?: boolean | null
           plan?: Database["public"]["Enums"]["user_plan"]
           role?: Database["public"]["Enums"]["app_role"]
+          security_config?: Json | null
           subscription_ends_at?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
           updated_at?: string
           user_id: string
+          whatsapp?: string | null
         }
         Update: {
           ativo?: boolean
+          avatar_url?: string | null
+          bio?: string | null
+          cep?: string | null
+          cidade?: string | null
           created_at?: string
           deleted_at?: string | null
+          endereco?: string | null
+          estado?: string | null
           features_limit?: Json
           id?: string
           last_login?: string | null
@@ -665,11 +687,13 @@ export type Database = {
           phone_verified?: boolean | null
           plan?: Database["public"]["Enums"]["user_plan"]
           role?: Database["public"]["Enums"]["app_role"]
+          security_config?: Json | null
           subscription_ends_at?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -1492,6 +1516,36 @@ export type Database = {
           user_id: string
         }
       }
+      get_user_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          ativo: boolean
+          avatar_url: string | null
+          bio: string | null
+          cep: string | null
+          cidade: string | null
+          created_at: string
+          deleted_at: string | null
+          endereco: string | null
+          estado: string | null
+          features_limit: Json
+          id: string
+          last_login: string | null
+          name: string | null
+          onboarding_completed: boolean | null
+          phone: string
+          phone_verified: boolean | null
+          plan: Database["public"]["Enums"]["user_plan"]
+          role: Database["public"]["Enums"]["app_role"]
+          security_config: Json | null
+          subscription_ends_at: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+      }
       get_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1559,17 +1613,18 @@ export type Database = {
         Args: { p_table_name: string; p_record_id: string; p_user_id?: string }
         Returns: boolean
       }
-      upsert_profile: {
-        Args: {
-          p_user_id: string
-          p_phone: string
-          p_name?: string
-          p_email?: string
-        }
+      update_security_config: {
+        Args: { p_config: Json }
         Returns: {
           ativo: boolean
+          avatar_url: string | null
+          bio: string | null
+          cep: string | null
+          cidade: string | null
           created_at: string
           deleted_at: string | null
+          endereco: string | null
+          estado: string | null
           features_limit: Json
           id: string
           last_login: string | null
@@ -1579,11 +1634,88 @@ export type Database = {
           phone_verified: boolean | null
           plan: Database["public"]["Enums"]["user_plan"]
           role: Database["public"]["Enums"]["app_role"]
+          security_config: Json | null
           subscription_ends_at: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at: string | null
           updated_at: string
           user_id: string
+          whatsapp: string | null
+        }
+      }
+      update_user_profile: {
+        Args: {
+          p_name?: string
+          p_phone?: string
+          p_bio?: string
+          p_avatar_url?: string
+          p_endereco?: string
+          p_cidade?: string
+          p_estado?: string
+          p_cep?: string
+          p_whatsapp?: string
+        }
+        Returns: {
+          ativo: boolean
+          avatar_url: string | null
+          bio: string | null
+          cep: string | null
+          cidade: string | null
+          created_at: string
+          deleted_at: string | null
+          endereco: string | null
+          estado: string | null
+          features_limit: Json
+          id: string
+          last_login: string | null
+          name: string | null
+          onboarding_completed: boolean | null
+          phone: string
+          phone_verified: boolean | null
+          plan: Database["public"]["Enums"]["user_plan"]
+          role: Database["public"]["Enums"]["app_role"]
+          security_config: Json | null
+          subscription_ends_at: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+      }
+      upsert_profile: {
+        Args: {
+          p_user_id: string
+          p_phone: string
+          p_name?: string
+          p_email?: string
+        }
+        Returns: {
+          ativo: boolean
+          avatar_url: string | null
+          bio: string | null
+          cep: string | null
+          cidade: string | null
+          created_at: string
+          deleted_at: string | null
+          endereco: string | null
+          estado: string | null
+          features_limit: Json
+          id: string
+          last_login: string | null
+          name: string | null
+          onboarding_completed: boolean | null
+          phone: string
+          phone_verified: boolean | null
+          plan: Database["public"]["Enums"]["user_plan"]
+          role: Database["public"]["Enums"]["app_role"]
+          security_config: Json | null
+          subscription_ends_at: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
         }
       }
       upsert_settings: {

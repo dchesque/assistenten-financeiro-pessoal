@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormulario } from '@/hooks/useFormulario';
 import { useMascaras } from '@/hooks/useMascaras';
-import { useProfileData } from '@/hooks/useProfileData';
+import { useProfileData, type DadosPerfil } from '@/hooks/useProfileData';
 import { InputValidacao } from '@/components/ui/InputValidacao';
 import { VALIDACOES_COMUNS } from '@/utils/validacoes';
 import { SecurityTab } from '@/components/configuracoes/SecurityTab';
@@ -62,7 +62,8 @@ export default function MeuPerfil() {
 
   // Sincronizar formulário quando dados do perfil mudarem
   useEffect(() => {
-    if (dadosPerfil.nome || dadosPerfil.email) {
+    if (dadosPerfil.email || Object.keys(dadosPerfil).some(key => dadosPerfil[key as keyof DadosPerfil])) {
+      console.log('🔄 Sincronizando formulário com dados do perfil:', dadosPerfil);
       alterarCampos(dadosPerfil);
     }
   }, [dadosPerfil, alterarCampos]);

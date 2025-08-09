@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useBuscaCEP } from '@/hooks/useBuscaCEP';
 
-interface DadosPerfil {
+export interface DadosPerfil {
   nome: string;
   email: string;
   telefone: string;
@@ -54,22 +54,51 @@ export function useProfileData() {
 
   // Carregar dados do perfil ao montar o componente
   useEffect(() => {
-    if (profile && user && !authLoading) {
-      setDadosPerfil({
-        nome: profile.name || '',
+    if (user?.id && !authLoading) {
+      console.log('🔄 Carregando dados do perfil para usuário:', user.id);
+      carregarDadosPerfil();
+    }
+  }, [user?.id, authLoading]);
+
+  // Carregar dados do perfil
+  const carregarDadosPerfil = async () => {
+    if (!user?.id) {
+      console.log('⚠️ Usuário não identificado, não carregando perfil');
+      return;
+    }
+
+    setCarregando(true);
+    console.log('🔄 Carregando perfil do banco para user_id:', user.id);
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('❌ Erro ao buscar perfil:', error);
+        throw error;
+      }
+
+      console.log('📄 Dados do perfil carregados:', data);
+
+      const dadosCarregados: DadosPerfil = {
+        nome: data?.name || '',
         email: user.email || '',
-        telefone: profile.phone || '',
-        whatsapp: (profile as any).whatsapp || '',
-        endereco: (profile as any).endereco || '',
-        cidade: (profile as any).cidade || '',
-        estado: (profile as any).estado || '',
-        cep: (profile as any).cep || '',
-        avatar_url: (profile as any).avatar_url || '',
-        bio: (profile as any).bio || ''
-      });
+        telefone: data?.phone || '',
+        whatsapp: data?.whatsapp || '',
+        cep: data?.cep || '',
+        endereco: data?.endereco || '',
+        cidade: data?.cidade || '',
+        estado: data?.estado || '',
+        bio: data?.bio || '',
+        avatar_url: data?.avatar_url || ''
+      };
 
       // Carregar configurações de segurança
-      const securityConfigRaw = (profile as any).security_config;
+      const securityConfigRaw = data?.security_config;
       if (securityConfigRaw) {
         setSecurityConfig({
           two_factor_enabled: securityConfigRaw.two_factor_enabled || false,
@@ -78,8 +107,20 @@ export function useProfileData() {
           backup_codes_generated: securityConfigRaw.backup_codes_generated || false
         });
       }
+
+      console.log('✅ Dados processados para o formulário:', dadosCarregados);
+      setDadosPerfil(dadosCarregados);
+    } catch (error: any) {
+      console.error('❌ Erro ao carregar dados do perfil:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar dados do perfil',
+        variant: 'destructive'
+      });
+    } finally {
+      setCarregando(false);
     }
-  }, [profile, user, authLoading]);
+  };
 
   // Função para buscar endereço pelo CEP
   const buscarEnderecoPorCEP = async (cep: string) => {
@@ -177,41 +218,53 @@ export function useProfileData() {
 
   // Função para salvar dados do perfil
   const salvarPerfil = async (dados: Partial<DadosPerfil>) => {
-    if (!user) return false;
+    if (!user?.id) {
+      toast({
+        title: 'Erro',
+        description: 'Usuário não autenticado',
+        variant: 'destructive'
+      });
+      return false;
+    }
 
     setSalvando(true);
+    console.log('🔄 Salvando perfil:', dados);
+    
     try {
       // Usar a função RPC correta
-      const { error } = await supabase.rpc('update_user_profile', {
-        p_name: dados.nome,
-        p_phone: dados.telefone,
-        p_bio: dados.bio,
-        p_avatar_url: dados.avatar_url,
-        p_endereco: dados.endereco,
-        p_cidade: dados.cidade,
-        p_estado: dados.estado,
-        p_cep: dados.cep,
-        p_whatsapp: dados.whatsapp
+      const { data, error } = await supabase.rpc('update_user_profile', {
+        p_name: dados.nome || null,
+        p_phone: dados.telefone || null,
+        p_bio: dados.bio || null,
+        p_avatar_url: dados.avatar_url || null,
+        p_endereco: dados.endereco || null,
+        p_cidade: dados.cidade || null,
+        p_estado: dados.estado || null,
+        p_cep: dados.cep || null,
+        p_whatsapp: dados.whatsapp || null
       });
 
       if (error) {
+        console.error('❌ Erro RPC:', error);
         throw error;
       }
 
-      // Atualizar estado local
-      setDadosPerfil(prev => ({ ...prev, ...dados }));
+      console.log('✅ Dados salvos no Supabase:', data);
 
+      // Recarregar dados do Supabase para garantir sincronização
+      await carregarDadosPerfil();
+      
       toast({
         title: 'Sucesso',
         description: 'Perfil atualizado com sucesso!'
       });
 
       return true;
-    } catch (error) {
-      console.error('Erro ao salvar perfil:', error);
+    } catch (error: any) {
+      console.error('❌ Erro ao salvar perfil:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao salvar alterações',
+        description: 'Erro ao salvar alterações: ' + error.message,
         variant: 'destructive'
       });
       return false;

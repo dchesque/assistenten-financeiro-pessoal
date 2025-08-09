@@ -47,6 +47,7 @@ export function useFormulario<T extends Record<string, any>>(
   }, [validarCampoInterno]);
 
   const alterarCampos = useCallback((novosValues: Partial<T>) => {
+    console.log('📝 Alterando campos do formulário:', novosValues);
     setDados(prev => ({ ...prev, ...novosValues }));
   }, []);
 
