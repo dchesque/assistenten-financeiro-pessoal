@@ -45,6 +45,11 @@ export function CategoriaSelector({ value, onChange, tipo = 'all', placeholder =
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
+        {categorias.length === 0 && (
+          <SelectItem value="empty" disabled>
+            Nenhuma categoria encontrada
+          </SelectItem>
+        )}
         {categorias.map((categoria) => (
           <SelectItem key={categoria.id} value={categoria.id}>
             <div className="flex items-center gap-2">

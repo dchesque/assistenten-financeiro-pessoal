@@ -251,7 +251,7 @@ export default function NovoRecebimento() {
                     <div className="space-y-2">
                       <Label>Cliente/Pagador</Label>
                       <ContactSelector
-                        value={formData.contact_id}
+                        value={formData.contact_id || ""}
                         onChange={(value) => setFormData(prev => ({ ...prev, contact_id: value }))}
                         tipo="customer"
                         placeholder="Selecione o cliente"
@@ -261,7 +261,7 @@ export default function NovoRecebimento() {
                     <div className="space-y-2">
                       <Label>Categoria</Label>
                       <CategoriaSelector
-                        value={formData.category_id}
+                        value={formData.category_id || ""}
                         onChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
                         tipo="income"
                         placeholder="Selecione a categoria"

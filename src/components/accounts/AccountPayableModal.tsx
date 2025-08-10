@@ -89,8 +89,8 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
         amount: formData.amount,
         due_date: formData.due_date,
         status: formData.status,
-        category_id: formData.category_id || undefined,
-        contact_id: formData.contact_id || undefined,
+        category_id: formData.category_id === 'empty' ? undefined : formData.category_id || undefined,
+        contact_id: formData.contact_id === 'empty' ? undefined : formData.contact_id || undefined,
         notes: formData.notes.trim() || undefined
       };
 
@@ -157,12 +157,12 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="category_id">Categoria</Label>
-              <Select value={formData.category_id} onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}>
+              <Select value={formData.category_id || 'empty'} onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value === 'empty' ? '' : value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhuma categoria</SelectItem>
+                  <SelectItem value="empty">Nenhuma categoria</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category.id} value={category.id}>
                       <div className="flex items-center space-x-2">
@@ -179,12 +179,12 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
 
             <div className="space-y-2">
               <Label htmlFor="contact_id">Fornecedor</Label>
-              <Select value={formData.contact_id} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value }))}>
+              <Select value={formData.contact_id || 'empty'} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value === 'empty' ? '' : value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o fornecedor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum fornecedor</SelectItem>
+                  <SelectItem value="empty">Nenhum fornecedor</SelectItem>
                   {contatos.filter(c => c.type === 'supplier' || c.type === 'other').map(contato => (
                     <SelectItem key={contato.id} value={contato.id}>
                       {contato.name}

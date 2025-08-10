@@ -18,6 +18,14 @@ export function ContactSelector({
   placeholder = "Selecione um contato",
   required = false 
 }: ContactSelectorProps) {
+  const handleChange = (newValue: string) => {
+    if (newValue === "empty") {
+      onChange("");
+    } else {
+      onChange(newValue);
+    }
+  };
+  
   const { contatos, credores, pagadores, loading } = useContatos();
 
   const getContatos = () => {
@@ -68,12 +76,12 @@ export function ContactSelector({
   }
 
   return (
-    <Select value={value} onValueChange={onChange} required={required}>
+    <Select value={value || "empty"} onValueChange={handleChange} required={required}>
       <SelectTrigger>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {!required && <SelectItem value="">Nenhum contato</SelectItem>}
+        {!required && <SelectItem value="empty">Nenhum contato</SelectItem>}
         {contatosFiltrados.map((contato) => (
           <SelectItem key={contato.id} value={contato.id}>
             <div className="flex items-center justify-between w-full">
@@ -92,7 +100,7 @@ export function ContactSelector({
           </SelectItem>
         ))}
         {contatosFiltrados.length === 0 && (
-          <SelectItem value="" disabled>
+          <SelectItem value="empty" disabled>
             Nenhum contato encontrado
           </SelectItem>
         )}

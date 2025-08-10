@@ -263,7 +263,7 @@ export default function NovaConta() {
                     <div className="space-y-2">
                       <Label>Fornecedor</Label>
                       <ContactSelector
-                        value={formData.contact_id}
+                        value={formData.contact_id || ""}
                         onChange={(value) => setFormData(prev => ({ ...prev, contact_id: value }))}
                         tipo="supplier"
                         placeholder="Selecione o fornecedor"
@@ -273,7 +273,7 @@ export default function NovaConta() {
                     <div className="space-y-2">
                       <Label>Categoria</Label>
                       <CategoriaSelector
-                        value={formData.category_id}
+                        value={formData.category_id || ""}
                         onChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
                         tipo="expense"
                         placeholder="Selecione a categoria"
