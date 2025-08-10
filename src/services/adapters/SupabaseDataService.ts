@@ -153,7 +153,7 @@ export class SupabaseDataService implements IDataService {
         throw new Error('Credor e categoria são obrigatórios');
       }
 
-      // Mapear campos do ContaPagar para accounts_payable
+      // Mapear campos do ContaPagar para accounts_payable (apenas campos que existem na tabela)
       const mappedData = {
         description: data.descricao,
         amount: data.valor_original || data.valor_final,
@@ -166,13 +166,7 @@ export class SupabaseDataService implements IDataService {
         category_id: data.plano_conta_id,
         bank_account_id: data.banco_id,
         paid_at: data.data_pagamento,
-        user_id: data.user_id,
-        issue_date: data.data_emissao,
-        reference_document: data.documento_referencia,
-        original_amount: data.valor_original,
-        final_amount: data.valor_final || data.valor_original,
-        paid_amount: data.valor_pago,
-        dda_enabled: data.dda || false
+        user_id: data.user_id
       };
 
       console.log('🔥 Dados mapeados para inserção:', mappedData);
