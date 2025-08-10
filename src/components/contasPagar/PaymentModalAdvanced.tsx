@@ -19,6 +19,15 @@ interface PaymentModalAdvancedProps {
     description: string;
     amount: number;
     due_date: string;
+    contact?: {
+      id: string;
+      name: string;
+    };
+    category?: {
+      id: string;
+      name: string;
+      color?: string;
+    };
   } | null;
   loading?: boolean;
 }
@@ -131,13 +140,32 @@ export function PaymentModalAdvanced({
         </DialogHeader>
 
         <div className="mb-4 p-4 bg-blue-50/80 rounded-lg border border-blue-200/50">
-          <h4 className="font-medium text-blue-900 mb-2">Detalhes da Conta</h4>
-          <p className="text-sm text-blue-800 mb-1">
-            <strong>Descrição:</strong> {conta.description}
-          </p>
-          <p className="text-sm text-blue-800">
-            <strong>Valor Original:</strong> {formatCurrency(valorOriginal)}
-          </p>
+          <h4 className="font-medium text-blue-900 mb-3">Detalhes da Conta</h4>
+          <div className="space-y-2">
+            <p className="text-sm text-blue-800">
+              <strong>Descrição:</strong> {conta.description}
+            </p>
+            <p className="text-sm text-blue-800">
+              <strong>Valor Original:</strong> {formatCurrency(valorOriginal)}
+            </p>
+            {conta.contact && (
+              <p className="text-sm text-blue-800">
+                <strong>Contato:</strong> {conta.contact.name}
+              </p>
+            )}
+            {conta.category && (
+              <div className="flex items-center gap-2 text-sm text-blue-800">
+                <strong>Categoria:</strong>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: conta.category.color || '#6B7280' }}
+                  />
+                  <span>{conta.category.name}</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -202,12 +230,17 @@ export function PaymentModalAdvanced({
             </div>
             <Input
               id="valor_pago"
-              type="number"
-              step="0.01"
-              value={formData.valor_pago}
-              onChange={(e) => setFormData(prev => ({ ...prev, valor_pago: parseFloat(e.target.value) || 0 }))}
+              type="text"
+              value={formatCurrency(formData.valor_pago)}
+              onChange={(e) => {
+                // Remove tudo exceto números
+                const numbers = e.target.value.replace(/\D/g, '');
+                // Converte para centavos e depois para reais
+                const value = parseFloat(numbers) / 100 || 0;
+                setFormData(prev => ({ ...prev, valor_pago: value }));
+              }}
               className={errors.valor_pago ? 'border-red-500' : ''}
-              placeholder="0,00"
+              placeholder="R$ 0,00"
             />
             {errors.valor_pago && <p className="text-sm text-red-600">{errors.valor_pago}</p>}
           </div>
