@@ -153,7 +153,45 @@ export class SupabaseDataService implements IDataService {
         throw new Error('Credor e categoria são obrigatórios');
       }
 
-      // Mapear campos do ContaPagar para accounts_payable
+      // Verificar se o contact_id existe
+      if (data.fornecedor_id) {
+        const { data: contact, error: contactError } = await supabase
+          .from('contacts')
+          .select('id')
+          .eq('id', data.fornecedor_id)
+          .eq('user_id', data.user_id)
+          .maybeSingle();
+        
+        if (contactError) {
+          console.error('Erro ao verificar credor:', contactError);
+          throw new Error('Erro ao verificar credor');
+        }
+        
+        if (!contact) {
+          throw new Error('Credor não encontrado ou não pertence ao usuário');
+        }
+      }
+
+      // Verificar se a categoria existe
+      if (data.plano_conta_id) {
+        const { data: category, error: categoryError } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('id', data.plano_conta_id)
+          .eq('user_id', data.user_id)
+          .maybeSingle();
+        
+        if (categoryError) {
+          console.error('Erro ao verificar categoria:', categoryError);
+          throw new Error('Erro ao verificar categoria');
+        }
+        
+        if (!category) {
+          throw new Error('Categoria não encontrada ou não pertence ao usuário');
+        }
+      }
+
+      // Mapear campos do ContaPagar para accounts_payable (usando contact_id em vez de supplier_id)
       const mappedData = {
         description: data.descricao,
         amount: data.valor_original || data.valor_final,
@@ -162,7 +200,7 @@ export class SupabaseDataService implements IDataService {
                 data.status === 'pago' ? 'paid' : 
                 data.status === 'vencido' ? 'overdue' : 'pending',
         notes: data.observacoes,
-        supplier_id: data.fornecedor_id,
+        contact_id: data.fornecedor_id, // Usar contact_id em vez de supplier_id
         category_id: data.plano_conta_id,
         bank_account_id: data.banco_id,
         paid_at: data.data_pagamento,
