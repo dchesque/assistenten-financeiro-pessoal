@@ -98,7 +98,7 @@ export function PaymentModalAdvanced({
 
     try {
       const paymentData = {
-        bank_account_id: formData.bank_account_id || undefined,
+        bank_account_id: formData.bank_account_id === 'none' ? undefined : formData.bank_account_id || undefined,
         paid_at: formData.paid_at,
         valor_pago: formData.valor_pago,
         valor_original: valorOriginal,
@@ -153,7 +153,7 @@ export function PaymentModalAdvanced({
                   <SelectValue placeholder="Selecione a conta (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Não informar conta</SelectItem>
+                  <SelectItem value="none">Não informar conta</SelectItem>
                   {allBankAccounts.length === 0 ? (
                   <SelectItem value="nenhuma" disabled>
                     Nenhuma conta cadastrada
