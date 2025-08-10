@@ -25,6 +25,11 @@ export function ContaPreview({ conta, formaPagamento, credorSelecionado, contaSe
   const { planoContas } = usePlanoContas();
   const { bancos } = useBancosSupabase();
   
+  // Debug logs
+  console.log('ContaPreview - credorSelecionado:', credorSelecionado);
+  console.log('ContaPreview - contaSelecionada:', contaSelecionada);
+  console.log('ContaPreview - conta:', conta);
+  
   // Usar os objetos passados diretamente ao invés de buscar pelos IDs
   const fornecedor = credorSelecionado || (conta.fornecedor_id 
     ? fornecedores.find(f => f.id.toString() === conta.fornecedor_id?.toString())
@@ -128,26 +133,36 @@ export function ContaPreview({ conta, formaPagamento, credorSelecionado, contaSe
         {/* Informações principais */}
         <div className="space-y-4">
           {/* Credor */}
-          {fornecedor && (
+          {fornecedor ? (
             <div className="flex items-start space-x-3">
-              <Building2 className="h-5 w-5 text-blue-600 mt-0.5" />
+              <Building2 className="h-5 w-5 text-primary mt-0.5" />
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-900">{fornecedor.nome}</div>
                 <div className="text-xs text-gray-500">{fornecedor.documento}</div>
               </div>
             </div>
+          ) : (
+            <div className="flex items-start space-x-3 text-gray-400">
+              <Building2 className="h-5 w-5 mt-0.5" />
+              <span className="text-sm">Nenhum credor selecionado</span>
+            </div>
           )}
 
           {/* Categoria */}
-          {planoContasItem && (
+          {planoContasItem ? (
             <div className="flex items-start space-x-3">
-              <FolderTree className="h-5 w-5 text-purple-600 mt-0.5" />
+              <FolderTree className="h-5 w-5 text-success mt-0.5" />
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-900">
-                  {planoContasItem.codigo} - {planoContasItem.nome}
+                  {planoContasItem.name}
                 </div>
-                <div className="text-xs text-gray-500">{planoContasItem.descricao}</div>
+                <div className="text-xs text-gray-500">{planoContasItem.color}</div>
               </div>
+            </div>
+          ) : (
+            <div className="flex items-start space-x-3 text-gray-400">
+              <FolderTree className="h-5 w-5 mt-0.5" />
+              <span className="text-sm">Nenhuma categoria selecionada</span>
             </div>
           )}
 
