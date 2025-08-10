@@ -146,7 +146,7 @@ export function FiltrosInteligentes({
                 <SelectValue placeholder="Selecionar mês" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os meses</SelectItem>
+                <SelectItem value="todos_meses">Todos os meses</SelectItem>
                 <SelectItem value="2024-01">Janeiro 2024</SelectItem>
                 <SelectItem value="2024-02">Fevereiro 2024</SelectItem>
                 <SelectItem value="2024-03">Março 2024</SelectItem>

@@ -115,11 +115,11 @@ export default function ContaVisualizarModal({
                   )}
                   <FieldDisplay 
                     label="Credor" 
-                    value={`${conta.fornecedor.nome} (${conta.fornecedor.tipo === 'pessoa_fisica' ? 'Pessoa Física' : 'Pessoa Jurídica'})`} 
+                    value={conta.fornecedor ? conta.fornecedor.nome : 'Sem fornecedor'} 
                   />
                   <FieldDisplay 
                     label="Categoria" 
-                    value={`${conta.plano_conta.codigo} - ${conta.plano_conta.nome}`} 
+                    value={conta.plano_conta ? conta.plano_conta.nome : 'Sem categoria'} 
                   />
                 </div>
                 

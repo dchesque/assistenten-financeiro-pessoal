@@ -46,21 +46,8 @@ export function accountPayableToContaPagar(account: AccountPayable): ContaEnriqu
     fornecedor: account.contact ? { 
       nome: account.contact.name
     } : undefined,
-    plano_conta: account.category ? { 
-      id: parseInt(account.category.id),
-      codigo: 'AUTO',
-      nome: account.category.name,
-      tipo_dre: 'despesa_pessoal' as const,
-      cor: account.category.color || '#6B7280',
-      icone: 'Package',
-      nivel: 1,
-      plano_pai_id: null,
-      aceita_lancamento: true,
-      ativo: true,
-      total_contas: 0,
-      valor_total: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+    plano_contas: account.category ? { 
+      nome: account.category.name
     } : undefined,
     banco: account.bank_account?.bank ? { nome: account.bank_account.bank.name } : undefined,
     fornecedor_nome: account.contact?.name || '',

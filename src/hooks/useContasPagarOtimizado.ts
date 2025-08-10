@@ -61,7 +61,7 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
       }
 
       // Filtro por mês
-      if (filtros.mes && filtros.mes !== 'todos') {
+      if (filtros.mes && filtros.mes !== 'todos_meses') {
         const contaMes = conta.due_date.slice(0, 7); // YYYY-MM
         if (contaMes !== filtros.mes) {
           return false;
