@@ -142,6 +142,17 @@ export class SupabaseDataService implements IDataService {
     },
 
     create: async (data: any): Promise<any> => {
+      console.log('🔥 Dados recebidos para criação:', data);
+      
+      // Validar campos obrigatórios
+      if (!data.descricao || !data.valor_original || !data.data_vencimento) {
+        throw new Error('Campos obrigatórios não preenchidos: descrição, valor e data de vencimento');
+      }
+      
+      if (!data.fornecedor_id || !data.plano_conta_id) {
+        throw new Error('Credor e categoria são obrigatórios');
+      }
+
       // Mapear campos do ContaPagar para accounts_payable
       const mappedData = {
         description: data.descricao,
@@ -151,12 +162,17 @@ export class SupabaseDataService implements IDataService {
                 data.status === 'pago' ? 'paid' : 
                 data.status === 'vencido' ? 'overdue' : 'pending',
         notes: data.observacoes,
-        contact_id: data.fornecedor_id,
-        supplier_id: data.fornecedor_id, 
+        supplier_id: data.fornecedor_id,
         category_id: data.plano_conta_id,
         bank_account_id: data.banco_id,
         paid_at: data.data_pagamento,
-        user_id: data.user_id
+        user_id: data.user_id,
+        issue_date: data.data_emissao,
+        reference_document: data.documento_referencia,
+        original_amount: data.valor_original,
+        final_amount: data.valor_final || data.valor_original,
+        paid_amount: data.valor_pago,
+        dda_enabled: data.dda || false
       };
 
       console.log('🔥 Dados mapeados para inserção:', mappedData);
@@ -169,10 +185,16 @@ export class SupabaseDataService implements IDataService {
       
       if (error) {
         console.error('❌ Erro ao inserir conta:', error);
-        throw error;
+        console.error('❌ Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw new Error(`Erro ao criar conta: ${error.message}`);
       }
       
-      console.log('✅ Conta criada:', result);
+      console.log('✅ Conta criada com sucesso:', result);
       return result;
     },
 

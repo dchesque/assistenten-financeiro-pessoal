@@ -9,7 +9,7 @@ import { Category } from '@/types/category';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
 import { useBancos } from '@/hooks/useBancos';
-import { useContasPagar } from '@/hooks/useContasPagarSupabase';
+import { useContasPagar } from '@/hooks/useContasPagar';
 import { useContatos } from '@/hooks/useContatos';
 import { useAuth } from '@/hooks/useAuth';
 import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
@@ -357,24 +357,43 @@ export default function NovaConta() {
   };
 
   const criarContaSimples = async (marcarComoPago: boolean) => {
+    console.log('🔧 Criando conta simples...');
+    console.log('📋 Dados do credor selecionado:', credorSelecionado);
+    console.log('📋 Dados da categoria selecionada:', contaSelecionada);
+    console.log('📋 Dados da conta:', conta);
+    
+    if (!credorSelecionado) {
+      throw new Error('Selecione um credor antes de salvar');
+    }
+    
+    if (!contaSelecionada) {
+      throw new Error('Selecione uma categoria antes de salvar');
+    }
+
     const contaParaSalvar = {
       user_id: user!.id,
-      fornecedor_id: credorSelecionado!.id.toString(),
-      plano_conta_id: contaSelecionada!.id.toString(),
-      banco_id: marcarComoPago && formaPagamento.banco_id ? formaPagamento.banco_id.toString() : undefined,
+      fornecedor_id: credorSelecionado.id.toString(),
+      plano_conta_id: contaSelecionada.id.toString(),
+      banco_id: marcarComoPago && contaBancaria.conta_id ? contaBancaria.conta_id : undefined,
       documento_referencia: conta.documento_referencia,
       descricao: conta.descricao!,
-      data_emissao: conta.data_emissao,
+      data_emissao: conta.data_emissao || new Date().toISOString().split('T')[0],
       data_vencimento: conta.data_vencimento!,
       valor_original: conta.valor_original!,
       valor_final: conta.valor_final!,
       status: marcarComoPago ? 'pago' : 'pendente',
-      data_pagamento: marcarComoPago ? new Date().toISOString().split('T')[0] : undefined,
+      data_pagamento: marcarComoPago ? (conta.data_pagamento || new Date().toISOString().split('T')[0]) : undefined,
       valor_pago: marcarComoPago ? conta.valor_final : undefined,
       dda: conta.dda || false,
-      observacoes: conta.observacoes
-    };
+      observacoes: conta.observacoes,
+      // Campos obrigatórios da interface ContaPagar
+      parcela_atual: 1,
+      total_parcelas: 1,
+      forma_pagamento: formaPagamento.tipo
+    } as any;
 
+    console.log('💾 Dados preparados para salvar:', contaParaSalvar);
+    
     await criarConta(contaParaSalvar);
   };
 
@@ -387,7 +406,7 @@ export default function NovaConta() {
         user_id: user!.id,
         fornecedor_id: credorSelecionado!.id.toString(),
         plano_conta_id: contaSelecionada!.id.toString(),
-        banco_id: marcarComoPago && i === 0 && formaPagamento.banco_id ? formaPagamento.banco_id.toString() : undefined,
+        banco_id: marcarComoPago && i === 0 && contaBancaria.conta_id ? contaBancaria.conta_id : undefined,
         documento_referencia: conta.documento_referencia ? `${conta.documento_referencia} (${i + 1}/${recorrencia.quantidade_parcelas})` : undefined,
         descricao: `${conta.descricao} - Parcela ${i + 1}/${recorrencia.quantidade_parcelas}`,
         data_emissao: conta.data_emissao,
@@ -398,8 +417,12 @@ export default function NovaConta() {
         data_pagamento: marcarComoPago && i === 0 ? new Date().toISOString().split('T')[0] : undefined,
         valor_pago: marcarComoPago && i === 0 ? conta.valor_final : undefined,
         dda: conta.dda || false,
-        observacoes: conta.observacoes
-      };
+        observacoes: conta.observacoes,
+        // Campos obrigatórios da interface ContaPagar
+        parcela_atual: i + 1,
+        total_parcelas: recorrencia.quantidade_parcelas,
+        forma_pagamento: formaPagamento.tipo
+      } as any;
       
       await criarConta(contaParaSalvar);
 
