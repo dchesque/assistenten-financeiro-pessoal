@@ -28,7 +28,7 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
     due_date: '',
     status: 'pending' as AccountStatus,
     category_id: '',
-    supplier_id: '',
+    contact_id: '',
     notes: ''
   });
 
@@ -42,7 +42,7 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
         due_date: account.due_date,
         status: account.status,
         category_id: account.category_id || '',
-        supplier_id: account.supplier_id || '',
+        contact_id: account.contact_id || '',
         notes: account.notes || ''
       });
     } else {
@@ -52,7 +52,7 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
         due_date: '',
         status: 'pending',
         category_id: '',
-        supplier_id: '',
+        contact_id: '',
         notes: ''
       });
     }
@@ -90,7 +90,7 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
         due_date: formData.due_date,
         status: formData.status,
         category_id: formData.category_id || undefined,
-        supplier_id: formData.supplier_id || undefined,
+        contact_id: formData.contact_id || undefined,
         notes: formData.notes.trim() || undefined
       };
 
@@ -178,8 +178,8 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="supplier_id">Fornecedor</Label>
-              <Select value={formData.supplier_id} onValueChange={(value) => setFormData(prev => ({ ...prev, supplier_id: value }))}>
+              <Label htmlFor="contact_id">Fornecedor</Label>
+              <Select value={formData.contact_id} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o fornecedor" />
                 </SelectTrigger>

@@ -9,7 +9,7 @@ export interface AccountPayable {
   due_date: string;
   status: AccountStatus;
   category_id?: string;
-  supplier_id?: string;
+  contact_id?: string;
   bank_account_id?: string;
   paid_at?: string;
   notes?: string;

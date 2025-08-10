@@ -24,8 +24,8 @@ const ContasReceber = lazy(() => import('@/pages/ContasReceber'));
 const Categorias = lazy(() => import('@/pages/Categorias'));
 const Banks = lazy(() => import('@/pages/Banks'));
 
-// const NovaConta = lazy(() => import('@/pages/NovaConta')); // Removido - será recriado
-// const NovoRecebimento = lazy(() => import('@/pages/NovoRecebimento')); // Removido - será recriado
+const NovaConta = lazy(() => import('@/pages/NovaConta'));
+const NovoRecebimento = lazy(() => import('@/pages/NovoRecebimento'));
 const Contatos = lazy(() => import('@/pages/Contatos'));
 const MeuPerfil = lazy(() => import('@/pages/MeuPerfil'));
 const Assinatura = lazy(() => import('@/pages/Assinatura'));
@@ -77,8 +77,8 @@ function App() {
                 <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
                 <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
                 <Route path="/bancos" element={<ProtectedRoute><Layout><Banks /></Layout></ProtectedRoute>} />
-                {/* <Route path="/nova-conta" element={<ProtectedRoute><Layout><NovaConta /></Layout></ProtectedRoute>} /> */}
-                {/* <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><NovoRecebimento /></Layout></ProtectedRoute>} /> */}
+                <Route path="/nova-conta" element={<ProtectedRoute><Layout><NovaConta /></Layout></ProtectedRoute>} />
+                <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><NovoRecebimento /></Layout></ProtectedRoute>} />
                 <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
                 <Route path="/categorias" element={<ProtectedRoute><Layout><Categorias /></Layout></ProtectedRoute>} />
                 <Route path="/meu-perfil" element={<ProtectedRoute><Layout><MeuPerfil /></Layout></ProtectedRoute>} />
