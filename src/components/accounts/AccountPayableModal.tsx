@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AccountPayable, AccountStatus } from '@/types/accounts';
 import { formatCurrency, converterMoedaParaNumero } from '@/lib/formatacaoBrasileira';
 import { useCategories } from '@/hooks/useCategories';
-import { useContatos } from '@/hooks/useContatos'; // Usar contatos em vez de suppliers
+import { useSuppliers } from '@/hooks/useSuppliers';
 
 interface AccountPayableModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ interface AccountPayableModalProps {
 
 export function AccountPayableModal({ isOpen, onClose, onSave, account, loading = false }: AccountPayableModalProps) {
   const { categories } = useCategories();
-  const { contatos } = useContatos(); // Mudança de suppliers para contatos
+  const { suppliers } = useSuppliers();
 
   const [formData, setFormData] = useState({
     description: '',
@@ -28,7 +28,7 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
     due_date: '',
     status: 'pending' as AccountStatus,
     category_id: '',
-    contact_id: '',
+    supplier_id: '',
     notes: ''
   });
 
@@ -42,7 +42,7 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
         due_date: account.due_date,
         status: account.status,
         category_id: account.category_id || '',
-        contact_id: account.contact_id || '',
+        supplier_id: account.supplier_id || '',
         notes: account.notes || ''
       });
     } else {
@@ -52,7 +52,7 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
         due_date: '',
         status: 'pending',
         category_id: '',
-        contact_id: '',
+        supplier_id: '',
         notes: ''
       });
     }
@@ -89,8 +89,8 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
         amount: formData.amount,
         due_date: formData.due_date,
         status: formData.status,
-        category_id: formData.category_id === 'empty' ? undefined : formData.category_id || undefined,
-        contact_id: formData.contact_id === 'empty' ? undefined : formData.contact_id || undefined,
+        category_id: formData.category_id || undefined,
+        supplier_id: formData.supplier_id || undefined,
         notes: formData.notes.trim() || undefined
       };
 
@@ -157,12 +157,12 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="category_id">Categoria</Label>
-              <Select value={formData.category_id || 'empty'} onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value === 'empty' ? '' : value }))}>
+              <Select value={formData.category_id} onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="empty">Nenhuma categoria</SelectItem>
+                  <SelectItem value="">Nenhuma categoria</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category.id} value={category.id}>
                       <div className="flex items-center space-x-2">
@@ -178,16 +178,16 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contact_id">Fornecedor</Label>
-              <Select value={formData.contact_id || 'empty'} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value === 'empty' ? '' : value }))}>
+              <Label htmlFor="supplier_id">Fornecedor</Label>
+              <Select value={formData.supplier_id} onValueChange={(value) => setFormData(prev => ({ ...prev, supplier_id: value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o fornecedor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="empty">Nenhum fornecedor</SelectItem>
-                  {contatos.filter(c => c.type === 'supplier' || c.type === 'other').map(contato => (
-                    <SelectItem key={contato.id} value={contato.id}>
-                      {contato.name}
+                  <SelectItem value="">Nenhum fornecedor</SelectItem>
+                  {suppliers.map(supplier => (
+                    <SelectItem key={supplier.id} value={supplier.id}>
+                      {supplier.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

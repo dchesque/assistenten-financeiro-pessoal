@@ -6,8 +6,8 @@ export function useContasPagarFiltros() {
   const [filtros, setFiltros] = useState<FiltrosContaPagar>({
     busca: '',
     status: 'todos',
-    contact_id: 'todos', // Mudança de fornecedor_id para contact_id
-    category_id: 'todos', // Mudança de plano_conta_id para category_id
+    fornecedor_id: 'todos',
+    plano_conta_id: 'todos',
     data_inicio: '',
     data_fim: ''
   });
@@ -45,10 +45,10 @@ export function useContasPagarFiltros() {
       if (filtrosOtimizados.busca) {
         const busca = filtrosOtimizados.busca.toLowerCase();
         const matchDescricao = conta.descricao.toLowerCase().includes(busca);
-        const matchContato = conta.contact_nome?.toLowerCase().includes(busca); // Mudança de fornecedor_nome para contact_nome
+        const matchFornecedor = conta.fornecedor_nome.toLowerCase().includes(busca);
         const matchDocumento = conta.documento_referencia?.toLowerCase().includes(busca);
         
-        if (!matchDescricao && !matchContato && !matchDocumento) return false;
+        if (!matchDescricao && !matchFornecedor && !matchDocumento) return false;
       }
 
       // Filtro por status
@@ -56,13 +56,13 @@ export function useContasPagarFiltros() {
         return false;
       }
 
-      // Filtro por contato (ex-fornecedor)
-      if (filtrosOtimizados.contact_id !== 'todos' && conta.contact_id !== filtrosOtimizados.contact_id) {
+      // Filtro por fornecedor
+      if (filtrosOtimizados.fornecedor_id !== 'todos' && conta.fornecedor_id !== filtrosOtimizados.fornecedor_id) {
         return false;
       }
 
-      // Filtro por categoria (ex-plano de conta)
-      if (filtrosOtimizados.category_id !== 'todos' && conta.category_id !== filtrosOtimizados.category_id) {
+      // Filtro por plano de conta
+      if (filtrosOtimizados.plano_conta_id !== 'todos' && conta.plano_conta_id !== filtrosOtimizados.plano_conta_id) {
         return false;
       }
 
@@ -83,8 +83,8 @@ export function useContasPagarFiltros() {
     setFiltros({
       busca: '',
       status: 'todos',
-      contact_id: 'todos', // Mudança de fornecedor_id para contact_id
-      category_id: 'todos', // Mudança de plano_conta_id para category_id
+      fornecedor_id: 'todos',
+      plano_conta_id: 'todos',
       data_inicio: '',
       data_fim: ''
     });

@@ -1,811 +1,920 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { BlurBackground } from '@/components/ui/BlurBackground';
-import { useContasReceber } from '@/hooks/useContasReceber';
-import { useModalResponsive } from '@/hooks/useModalResponsive';
-import { ContactSelector } from '@/components/selectors/ContactSelector';
-import { CategoriaSelector } from '@/components/selectors/CategoriaSelector';
-import { toast } from '@/hooks/use-toast';
-import { formatCurrency, converterMoedaParaNumero } from '@/lib/formatacaoBrasileira';
+import { createBreadcrumb } from '@/utils/breadcrumbUtils';
+import { ArrowLeft, Save, CreditCard, Calendar, AlertTriangle, FileText, CheckCircle, Repeat } from 'lucide-react';
+import { ContaPagar } from '@/types/contaPagar';
+import { Fornecedor } from '@/types/fornecedor';
+import { PlanoContas } from '@/types/planoContas';
+import { Banco } from '@/types/banco';
+import { FormaPagamento } from '@/types/formaPagamento';
+import { useBancosSupabase } from '@/hooks/useBancosReal';
+import { useContasPagar } from '@/hooks/useContasPagar';
+import { useCredores } from '@/hooks/useCredores';
+import { FornecedorSelector as PagadorSelector } from '@/components/contasPagar/FornecedorSelector';
+import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
+import { ContaPreview } from '@/components/contasPagar/ContaPreview';
+import { FormaRecebimentoSection } from '@/components/contasPagar/FormaRecebimentoSection';
+import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/LoadingButton';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Calculator, CreditCard, Calendar, User, Tag, FileText, DollarSign, CheckCircle, AlertCircle, ArrowLeft, Building2, TrendingUp } from 'lucide-react';
-import { GRADIENTES, GLASSMORPHISM, ANIMATIONS } from '@/constants/designSystem';
-
-const FORMAS_RECEBIMENTO = [
-  'Dinheiro',
-  'PIX',
-  'Cartão de Débito',
-  'Cartão de Crédito',
-  'Transferência Bancária',
-  'Boleto',
-  'Cheque',
-  'Outro'
-];
-
-const ANIMATION_VARIANTS = {
-  card: {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, y: -20, scale: 0.95 }
-  },
-  container: {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.1
-      }
-    }
-  },
-  summary: {
-    hidden: { opacity: 0, x: 20 },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      transition: { duration: 0.4, delay: 0.2 }
-    }
-  }
-};
-
+import { useToast } from '@/hooks/use-toast';
+import { useLoadingStates } from '@/hooks/useLoadingStates';
+import { aplicarMascaraMoeda, aplicarMascaraPercentual, converterMoedaParaNumero, converterPercentualParaNumero, numeroParaMascaraMoeda, numeroParaMascaraPercentual, validarValorMonetario, validarPercentual, formatarMoedaExibicao } from '@/utils/masks';
+import { ValidationService } from '@/services/ValidationService';
+// Supabase removido - usando dados mock
+import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
+import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
+import { toast } from '@/hooks/use-toast';
 export default function NovoRecebimento() {
   const navigate = useNavigate();
-  const { criarConta, loading } = useContasReceber();
-  const { isMobile, getModalClasses } = useModalResponsive();
+  const { criarConta, estados } = useContasPagar();
+  const { bancos } = useBancosSupabase();
+  const { credores } = useCredores();
+  const { isSaving, setLoading } = useLoadingStates();
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
+  // Estados do formulário
+  const [conta, setConta] = useState<Partial<ContaPagar>>({
+    documento_referencia: '',
     descricao: '',
-    valor_original: 0,
     data_emissao: new Date().toISOString().split('T')[0],
     data_vencimento: '',
-    contact_id: '',
-    category_id: '',
-    forma_recebimento: 'PIX',
-    observacoes: '',
-    parcela_atual: 1,
-    total_parcelas: 1,
+    valor_original: 0,
     percentual_juros: 0,
-    percentual_desconto: 0
+    valor_juros: 0,
+    percentual_desconto: 0,
+    valor_desconto: 0,
+    valor_final: 0,
+    status: 'pendente' as 'pendente' | 'pago' | 'vencido' | 'cancelado',
+    dda: false,
+    observacoes: ''
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Estados para controlar valores com máscara
+  const [valorOriginalMask, setValorOriginalMask] = useState('');
+  const [percentualJurosMask, setPercentualJurosMask] = useState('');
+  const [valorJurosMask, setValorJurosMask] = useState('');
+  const [percentualDescontoMask, setPercentualDescontoMask] = useState('');
+  const [valorDescontoMask, setValorDescontoMask] = useState('');
+  const [valorPagoMask, setValorPagoMask] = useState('');
+  const [pagadorSelecionado, setPagadorSelecionado] = useState<Fornecedor | null>(null);
+  const [contaSelecionada, setContaSelecionada] = useState<PlanoContas | null>(null);
+  const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
+    tipo: 'dinheiro_pix'
+  });
+  
+  // Estados de validação em tempo real
+  const [errosValidacao, setErrosValidacao] = useState<Record<string, string>>({});
+  
+  // Estados do auto-save
+  const [rascunhoSalvo, setRascunhoSalvo] = useState(false);
+  const [temRascunho, setTemRascunho] = useState(false);
+  
+  // Estados para recorrência
+  const [contaRecorrente, setContaRecorrente] = useState(false);
+  const [periodicidade, setPeriodicidade] = useState<'semanal' | 'quinzenal' | 'mensal' | 'bimestral' | 'trimestral' | 'semestral' | 'anual'>('mensal');
+  const [quantidadeParcelas, setQuantidadeParcelas] = useState(1);
+  const [dataInicioRecorrencia, setDataInicioRecorrencia] = useState(new Date().toISOString().split('T')[0]);
+  
+  // Usar loading do hook
+  const loading = estados.salvandoEdicao;
 
-  const validateStep = (step: number, data = formData) => {
-    const newErrors: Record<string, string> = {};
+  // Função de validação em tempo real
+  const validarCampoTempoReal = async (campo: string, valor: any) => {
+    const { ValidationService } = await import('@/services/ValidationService');
+    const erro = ValidationService.validarContaPagar({ 
+      [campo]: valor,
+      // Passar contexto completo para validações mais precisas
+      fornecedor_id: pagadorSelecionado?.id,
+      plano_conta_id: contaSelecionada?.id,
+      data_emissao: conta.data_emissao
+    });
     
-    switch (step) {
-      case 1:
-        if (!data.descricao.trim()) newErrors.descricao = 'Descrição é obrigatória';
-        if (data.valor_original <= 0) newErrors.valor_original = 'Valor deve ser maior que zero';
-        if (!data.forma_recebimento) newErrors.forma_recebimento = 'Forma de recebimento é obrigatória';
-        break;
-      case 2:
-        if (!data.data_vencimento) newErrors.data_vencimento = 'Data de vencimento é obrigatória';
-        break;
-      case 3:
-        if (data.parcela_atual > data.total_parcelas) {
-          newErrors.parcela_atual = 'Parcela atual não pode ser maior que o total';
+    setErrosValidacao(prev => ({ 
+      ...prev, 
+      [campo]: erro[campo] || '' 
+    }));
+  };
+
+  // Auto-save automático
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Só salva se há dados preenchidos
+      if (conta.descricao || conta.valor_original > 0 || pagadorSelecionado || contaSelecionada) {
+        const rascunho = {
+          conta,
+          pagador: pagadorSelecionado,
+          categoria: contaSelecionada,
+          formaPagamento,
+          timestamp: Date.now(),
+          versao: '1.0'
+        };
+        
+        localStorage.setItem('rascunho_recebimento', JSON.stringify(rascunho));
+        setRascunhoSalvo(true);
+        
+        // Mostrar feedback sutil
+        setTimeout(() => setRascunhoSalvo(false), 2000);
+      }
+    }, 3000); // Salva após 3 segundos de inatividade
+    
+    return () => clearTimeout(timer);
+  }, [conta, pagadorSelecionado, contaSelecionada, formaPagamento]);
+
+  // Recuperar rascunho ao carregar página
+  useEffect(() => {
+    const rascunhoSalvo = localStorage.getItem('rascunho_recebimento');
+    if (rascunhoSalvo) {
+      try {
+        const dados = JSON.parse(rascunhoSalvo);
+        
+        // Verificar se não é muito antigo (24 horas)
+        const agora = Date.now();
+        const horasPassadas = (agora - dados.timestamp) / (1000 * 60 * 60);
+        
+        if (horasPassadas < 24) {
+          setTemRascunho(true);
+          // Não aplicar automaticamente, perguntar ao usuário
+        } else {
+          // Rascunho muito antigo, remover
+          localStorage.removeItem('rascunho_recebimento');
         }
-        break;
+      } catch (error) {
+        console.error('Erro ao recuperar rascunho:', error);
+        localStorage.removeItem('rascunho_recebimento');
+      }
     }
-    
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateForm = (data = formData) => {
-    return validateStep(1, data) && validateStep(2, data) && validateStep(3, data);
-  };
-
-  const calcularValorFinal = useCallback(() => {
-    let valor = formData.valor_original;
-    
-    if (formData.percentual_juros > 0) {
-      valor += (valor * formData.percentual_juros / 100);
-    }
-    
-    if (formData.percentual_desconto > 0) {
-      valor -= (valor * formData.percentual_desconto / 100);
-    }
-    
-    return valor;
-  }, [formData.valor_original, formData.percentual_juros, formData.percentual_desconto]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      toast({
-        title: 'Atenção',
-        description: 'Por favor, corrija os erros no formulário.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      const valorFinal = calcularValorFinal();
-      
-      const contaData = {
-        description: formData.descricao.trim(),
-        amount: valorFinal,
-        due_date: formData.data_vencimento,
-        status: 'pending' as const,
-        category_id: formData.category_id || undefined,
-        customer_name: formData.contact_id ? undefined : 'Cliente não informado',
-        notes: formData.observacoes.trim() || undefined
-      };
-
-      await criarConta(contaData);
-      toast({
-        title: 'Sucesso!',
-        description: 'Conta a receber criada com sucesso.',
-      });
-      navigate('/contas-receber');
-    } catch (error) {
-      console.error('Erro ao criar conta:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao criar conta a receber. Tente novamente.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleValorChange = useCallback((value: string) => {
-    const numericValue = converterMoedaParaNumero(value);
-    setFormData(prev => ({ ...prev, valor_original: numericValue }));
   }, []);
 
-  const nextStep = () => {
-    const newErrors: Record<string, string> = {};
-    
-    switch (currentStep) {
-      case 1:
-        if (!formData.descricao.trim()) newErrors.descricao = 'Descrição é obrigatória';
-        if (formData.valor_original <= 0) newErrors.valor_original = 'Valor deve ser maior que zero';
-        if (!formData.forma_recebimento) newErrors.forma_recebimento = 'Forma de recebimento é obrigatória';
-        break;
-      case 2:
-        if (!formData.data_vencimento) newErrors.data_vencimento = 'Data de vencimento é obrigatória';
-        break;
-      case 3:
-        if (formData.parcela_atual > formData.total_parcelas) {
-          newErrors.parcela_atual = 'Parcela atual não pode ser maior que o total';
-        }
-        break;
-    }
-    
-    setErrors(newErrors);
-    
-    if (Object.keys(newErrors).length === 0) {
-      setCurrentStep(prev => Math.min(prev + 1, 4));
-    }
-  };
+  // Cálculo automático do valor final
+  useEffect(() => {
+    const original = conta.valor_original || 0;
+    const juros = conta.valor_juros || 0;
+    const desconto = conta.valor_desconto || 0;
+    const final = original + juros - desconto;
+    setConta(prev => ({
+      ...prev,
+      valor_final: final
+    }));
+  }, [conta.valor_original, conta.valor_juros, conta.valor_desconto]);
 
-  const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
-  };
+  // Função para selecionar pagador e auto-preencher categoria
+  const handlePagadorSelect = (pagador: Fornecedor) => {
+    setPagadorSelecionado(pagador);
+    setConta(prev => ({
+      ...prev,
+      fornecedor_id: pagador.id
+    }));
 
-  const getStepIcon = (step: number) => {
-    const icons = [FileText, Calendar, DollarSign, Calculator];
-    const IconComponent = icons[step - 1];
-    return <IconComponent className="w-4 h-4" />;
-  };
-
-  const getStepTitle = (step: number) => {
-    const titles = ['Dados Principais', 'Datas e Relacionamentos', 'Valores e Parcelas', 'Resumo'];
-    return titles[step - 1];
-  };
-
-  const canProceed = () => {
-    return validateStep(currentStep);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50/20 to-cyan-50/20 relative">
-      <BlurBackground variant="page" />
+    // Auto-preencher categoria padrão do pagador se existir
+    if (pagador.categoria_padrao_id) {
+      // Mock: categoria padrão
+      const categoriaDefault: PlanoContas = {
+        id: pagador.categoria_padrao_id,
+        codigo: 'CATPADRAO',
+        nome: 'Categoria Padrão',
+        tipo_dre: 'despesa_pessoal',
+        cor: '#6B7280',
+        icone: 'Package',
+        nivel: 1,
+        plano_pai_id: null,
+        aceita_lancamento: true,
+        ativo: true,
+        total_contas: 0,
+        valor_total: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
       
-      <div className="relative z-10">
-        <PageContainer maxWidth="full">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={ANIMATION_VARIANTS.container}
-            className="space-y-6 max-w-6xl mx-auto"
+      setContaSelecionada(categoriaDefault);
+      setConta(prev => ({
+        ...prev,
+        plano_conta_id: categoriaDefault.id
+      }));
+    } else {
+      // Pagador sem categoria padrão - não alterar seleção atual
+      if (!contaSelecionada) {
+        setConta(prev => ({
+          ...prev,
+          plano_conta_id: undefined
+        }));
+      }
+    }
+  };
+
+  // Handlers para campos com máscara
+  const handleValorOriginal = (valor: string) => {
+    const mascarado = aplicarMascaraMoeda(valor);
+    const numero = converterMoedaParaNumero(mascarado);
+    setValorOriginalMask(mascarado);
+    setConta(prev => ({
+      ...prev,
+      valor_original: numero
+    }));
+  };
+  const handlePercentualJuros = (valor: string) => {
+    const mascarado = aplicarMascaraPercentual(valor);
+    const numero = converterPercentualParaNumero(mascarado);
+    setPercentualJurosMask(mascarado);
+
+    // Recalcular valor em reais
+    const valorJuros = (conta.valor_original || 0) * (numero / 100);
+    const mascaraJuros = numeroParaMascaraMoeda(valorJuros);
+    setValorJurosMask(mascaraJuros);
+    setConta(prev => ({
+      ...prev,
+      percentual_juros: numero,
+      valor_juros: valorJuros
+    }));
+  };
+  const handleValorJuros = (valor: string) => {
+    const mascarado = aplicarMascaraMoeda(valor);
+    const numero = converterMoedaParaNumero(mascarado);
+    setValorJurosMask(mascarado);
+
+    // Recalcular percentual
+    const percentual = conta.valor_original ? numero / conta.valor_original * 100 : 0;
+    const mascaraPercentual = numeroParaMascaraPercentual(percentual);
+    setPercentualJurosMask(mascaraPercentual);
+    setConta(prev => ({
+      ...prev,
+      valor_juros: numero,
+      percentual_juros: percentual
+    }));
+  };
+  const handlePercentualDesconto = (valor: string) => {
+    const mascarado = aplicarMascaraPercentual(valor);
+    const numero = converterPercentualParaNumero(mascarado);
+    setPercentualDescontoMask(mascarado);
+
+    // Recalcular valor em reais
+    const valorDesconto = (conta.valor_original || 0) * (numero / 100);
+    const mascaraDesconto = numeroParaMascaraMoeda(valorDesconto);
+    setValorDescontoMask(mascaraDesconto);
+    setConta(prev => ({
+      ...prev,
+      percentual_desconto: numero,
+      valor_desconto: valorDesconto
+    }));
+  };
+  const handleValorDesconto = (valor: string) => {
+    const mascarado = aplicarMascaraMoeda(valor);
+    const numero = converterMoedaParaNumero(mascarado);
+    setValorDescontoMask(mascarado);
+
+    // Recalcular percentual
+    const percentual = conta.valor_original ? numero / conta.valor_original * 100 : 0;
+    const mascaraPercentual = numeroParaMascaraPercentual(percentual);
+    setPercentualDescontoMask(mascaraPercentual);
+    setConta(prev => ({
+      ...prev,
+      valor_desconto: numero,
+      percentual_desconto: percentual
+    }));
+  };
+  const handleValorPago = (valor: string) => {
+    const mascarado = aplicarMascaraMoeda(valor);
+    const numero = converterMoedaParaNumero(mascarado);
+    setValorPagoMask(mascarado);
+    setConta(prev => ({
+      ...prev,
+      valor_pago: numero
+    }));
+  };
+  const validarFormulario = (): boolean => {
+    const errors: string[] = [];
+    
+    // Validações obrigatórias
+    if (!pagadorSelecionado || !pagadorSelecionado.id) {
+      errors.push('Selecione um pagador');
+    }
+    
+    if (!conta.descricao || conta.descricao.trim() === '') {
+      errors.push('Descrição é obrigatória');
+    } else if (conta.descricao.length < 3) {
+      errors.push('Descrição deve ter pelo menos 3 caracteres');
+    } else if (conta.descricao.length > 500) {
+      errors.push('Descrição deve ter no máximo 500 caracteres');
+    }
+    
+    if (!conta.valor_original || conta.valor_original <= 0) {
+      errors.push('Valor deve ser maior que zero');
+    } else if (conta.valor_original > 999999.99) {
+      errors.push('Valor máximo excedido (R$ 999.999,99)');
+    }
+    
+    if (!conta.data_emissao) {
+      errors.push('Data de emissão é obrigatória');
+    }
+    
+    if (!conta.data_vencimento) {
+      errors.push('Data de vencimento é obrigatória');
+    }
+    
+    // Validações de lógica de negócio
+    if (conta.data_emissao && conta.data_vencimento) {
+      const emissao = new Date(conta.data_emissao);
+      const vencimento = new Date(conta.data_vencimento);
+      
+      if (vencimento < emissao) {
+        errors.push('Data de vencimento não pode ser anterior à emissão');
+      }
+      
+      // Validar se não é muito no futuro (ex: máximo 5 anos)
+      const maxFutureDate = new Date();
+      maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 5);
+      if (vencimento > maxFutureDate) {
+        errors.push('Data de vencimento não pode ser superior a 5 anos');
+      }
+    }
+    
+    if (!contaSelecionada || !contaSelecionada.id) {
+      errors.push('Selecione uma categoria');
+    }
+    
+    // Validações específicas de status
+    if (conta.status === 'pago' && !formaPagamento.tipo) {
+      errors.push('Defina a forma de recebimento');
+    }
+    
+    // Mostrar erros se houver
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        toast({ title: 'Atenção', description: error });
+      });
+      return false;
+    }
+    
+    return true;
+  };
+  // Função para aplicar rascunho
+  const aplicarRascunho = () => {
+    const rascunhoSalvo = localStorage.getItem('rascunho_recebimento');
+    if (rascunhoSalvo) {
+      const dados = JSON.parse(rascunhoSalvo);
+      setConta(dados.conta);
+      setPagadorSelecionado(dados.pagador || dados.credor); // Retrocompatibilidade
+      setContaSelecionada(dados.categoria);
+      setFormaPagamento(dados.formaPagamento);
+      setTemRascunho(false);
+      
+      toast({ title: 'Sucesso', description: 'Rascunho aplicado - dados restaurados com sucesso' });
+    }
+  };
+
+  // Função para descartar rascunho
+  const descartarRascunho = () => {
+    localStorage.removeItem('rascunho_recebimento');
+    setTemRascunho(false);
+    
+    toast({ title: 'Sucesso', description: 'Rascunho descartado' });
+  };
+
+  const salvarConta = async (marcarComoPago = false) => {
+    if (!validarFormulario()) return;
+    
+    try {
+      // ✅ OBRIGATÓRIO: Obter user_id
+      // Mock user - Supabase removido
+      const user = { id: '1' };
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const contaParaSalvar: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'> = {
+        fornecedor_id: pagadorSelecionado!.id!,
+        plano_conta_id: contaSelecionada!.id!,
+        banco_id: marcarComoPago && formaPagamento.banco_id ? formaPagamento.banco_id : conta.banco_id,
+        documento_referencia: conta.documento_referencia,
+        descricao: conta.descricao!,
+        data_emissao: conta.data_emissao,
+        data_vencimento: conta.data_vencimento!,
+        valor_original: conta.valor_original!,
+        // Novos campos obrigatórios
+        parcela_atual: 1,
+        total_parcelas: 1,
+        forma_pagamento: formaPagamento.tipo || 'dinheiro_pix',
+        percentual_juros: conta.percentual_juros,
+        valor_juros: conta.valor_juros || 0,
+        percentual_desconto: conta.percentual_desconto,
+        valor_desconto: conta.valor_desconto || 0,
+        valor_final: conta.valor_final!,
+        status: marcarComoPago ? 'pago' : (conta.status as 'pendente' | 'pago' | 'vencido' | 'cancelado'),
+        data_pagamento: marcarComoPago ? new Date().toISOString().split('T')[0] : conta.data_pagamento,
+        valor_pago: marcarComoPago ? conta.valor_final : conta.valor_pago,
+        dda: false,
+        observacoes: null,
+        user_id: user.id  // 🔥 ADICIONAR USER_ID
+      };
+
+      await criarConta(contaParaSalvar);
+      
+      // Após salvar com sucesso, limpar rascunho
+      localStorage.removeItem('rascunho_recebimento');
+      setRascunhoSalvo(false);
+      
+      // ✅ MELHORAR TOAST DE SUCESSO
+      toast({ title: 'Sucesso', description: `Recebimento "${conta.descricao}" criado com sucesso!` });
+      navigate('/contas-receber');
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message || 'Erro ao salvar recebimento. Tente novamente.', variant: 'destructive' });
+    } finally {
+      setLoading('saving', false);
+    }
+  };
+  return (
+    <>
+      <PageHeader
+        breadcrumb={createBreadcrumb('/novo-recebimento')}
+        title="Novo Recebimento"
+        subtitle="Lançamento individual de recebimentos • Cadastro detalhado"
+        actions={
+          <Button
+            variant="outline" 
+            onClick={() => navigate('/contas-receber')}
+            className="bg-white/80 hover:bg-white/90"
           >
-            {/* Header com glassmorphism */}
-            <motion.div variants={ANIMATION_VARIANTS.card}>
-              <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-xl`}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                        Nova Conta a Receber
-                      </h1>
-                      <p className="text-muted-foreground mt-1">
-                        Cadastre uma nova conta a receber no sistema
-                      </p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => navigate('/contas-receber')}
-                      className={`${GLASSMORPHISM.input} hover:bg-white/20 transition-all duration-300`}
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Voltar
-                    </Button>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+        }
+      />
+
+      <div className="relative p-4 lg:p-8">
+        {/* Banner de rascunho encontrado */}
+        {temRascunho && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900">Rascunho encontrado</p>
+                  <p className="text-xs text-blue-600">Dados salvos automaticamente foram encontrados</p>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Button size="sm" variant="outline" onClick={aplicarRascunho}>
+                  Restaurar
+                </Button>
+                <Button size="sm" variant="destructive" onClick={descartarRascunho}>
+                  Descartar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-3 space-y-8">
+            {/* Seção 1: Dados do Pagador */}
+            <Card className="card-base">
+              <div className="p-6 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-semibold">1</span>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Step Navigation */}
-            <motion.div variants={ANIMATION_VARIANTS.card}>
-              <Card className={`${GLASSMORPHISM.card} border-white/20`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    {[1, 2, 3, 4].map((step) => (
-                      <div key={step} className="flex items-center">
-                        <div className={`
-                          flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300
-                          ${currentStep >= step 
-                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg' 
-                            : 'bg-white/60 text-gray-400 border border-gray-200'
-                          }
-                        `}>
-                          {currentStep > step ? <CheckCircle className="w-5 h-5" /> : getStepIcon(step)}
-                        </div>
-                        {step < 4 && (
-                          <div className={`
-                            w-12 lg:w-20 h-0.5 mx-2 transition-all duration-300
-                            ${currentStep > step ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-gray-200'}
-                          `} />
-                        )}
-                      </div>
-                    ))}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Dados do Pagador</h3>
+                    <p className="text-sm text-gray-600">Selecione quem pagará esta conta</p>
                   </div>
-                  <div className="mt-4 text-center">
-                    <h3 className="font-medium text-gray-900">
-                      Etapa {currentStep}: {getStepTitle(currentStep)}
-                    </h3>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Form Content */}
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Content */}
-                <div className="lg:col-span-2">
-                  <AnimatePresence mode="wait">
-                    {currentStep === 1 && (
-                      <motion.div
-                        key="step1"
-                        variants={ANIMATION_VARIANTS.card}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <FileText className="w-5 h-5 text-emerald-600" />
-                              Dados Principais
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-6">
-                            <div className="space-y-2">
-                              <Label htmlFor="descricao" className="text-sm font-medium">
-                                Descrição *
-                              </Label>
-                              <Input
-                                id="descricao"
-                                value={formData.descricao}
-                                onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                                placeholder="Ex: Venda de produtos"
-                                className={`${GLASSMORPHISM.input} transition-all duration-300 ${
-                                  errors.descricao ? 'border-red-500 bg-red-50/20' : 'focus:border-emerald-500'
-                                }`}
-                              />
-                              {errors.descricao && (
-                                <motion.p 
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="text-sm text-red-600 flex items-center gap-1"
-                                >
-                                  <AlertCircle className="w-3 h-3" />
-                                  {errors.descricao}
-                                </motion.p>
-                              )}
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="valor_original" className="text-sm font-medium">
-                                  Valor Original *
-                                </Label>
-                                <div className="relative">
-                                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                  <Input
-                                    id="valor_original"
-                                    value={formatCurrency(formData.valor_original)}
-                                    onChange={(e) => handleValorChange(e.target.value)}
-                                    placeholder="R$ 0,00"
-                                    className={`${GLASSMORPHISM.input} pl-10 transition-all duration-300 ${
-                                      errors.valor_original ? 'border-red-500 bg-red-50/20' : 'focus:border-emerald-500'
-                                    }`}
-                                  />
-                                </div>
-                                {errors.valor_original && (
-                                  <motion.p 
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-sm text-red-600 flex items-center gap-1"
-                                  >
-                                    <AlertCircle className="w-3 h-3" />
-                                    {errors.valor_original}
-                                  </motion.p>
-                                )}
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="forma_recebimento" className="text-sm font-medium">
-                                  Forma de Recebimento *
-                                </Label>
-                                <Select 
-                                  value={formData.forma_recebimento} 
-                                  onValueChange={(value) => setFormData(prev => ({ ...prev, forma_recebimento: value }))}
-                                >
-                                  <SelectTrigger className={`${GLASSMORPHISM.input} transition-all duration-300 ${
-                                    errors.forma_recebimento ? 'border-red-500' : 'focus:border-emerald-500'
-                                  }`}>
-                                    <CreditCard className="w-4 h-4 mr-2 text-gray-400" />
-                                    <SelectValue placeholder="Selecione" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {FORMAS_RECEBIMENTO.map((forma) => (
-                                      <SelectItem key={forma} value={forma}>
-                                        {forma}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                {errors.forma_recebimento && (
-                                  <motion.p 
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-sm text-red-600 flex items-center gap-1"
-                                  >
-                                    <AlertCircle className="w-3 h-3" />
-                                    {errors.forma_recebimento}
-                                  </motion.p>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    )}
-
-                    {currentStep === 2 && (
-                      <motion.div
-                        key="step2"
-                        variants={ANIMATION_VARIANTS.card}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="space-y-6"
-                      >
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <Calendar className="w-5 h-5 text-emerald-600" />
-                              Datas
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="data_emissao" className="text-sm font-medium">
-                                  Data de Emissão
-                                </Label>
-                                <Input
-                                  id="data_emissao"
-                                  type="date"
-                                  value={formData.data_emissao}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, data_emissao: e.target.value }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-emerald-500`}
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="data_vencimento" className="text-sm font-medium">
-                                  Data de Vencimento *
-                                </Label>
-                                <Input
-                                  id="data_vencimento"
-                                  type="date"
-                                  value={formData.data_vencimento}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, data_vencimento: e.target.value }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 ${
-                                    errors.data_vencimento ? 'border-red-500 bg-red-50/20' : 'focus:border-emerald-500'
-                                  }`}
-                                />
-                                {errors.data_vencimento && (
-                                  <motion.p 
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-sm text-red-600 flex items-center gap-1"
-                                  >
-                                    <AlertCircle className="w-3 h-3" />
-                                    {errors.data_vencimento}
-                                  </motion.p>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <Building2 className="w-5 h-5 text-emerald-600" />
-                              Relacionamentos
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium">Cliente/Pagador</Label>
-                                <ContactSelector
-                                  value={formData.contact_id || ""}
-                                  onChange={(value) => setFormData(prev => ({ ...prev, contact_id: value }))}
-                                  tipo="customer"
-                                  placeholder="Selecione o cliente"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium">Categoria</Label>
-                                <CategoriaSelector
-                                  value={formData.category_id || ""}
-                                  onChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
-                                  tipo="income"
-                                  placeholder="Selecione a categoria"
-                                />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    )}
-
-                    {currentStep === 3 && (
-                      <motion.div
-                        key="step3"
-                        variants={ANIMATION_VARIANTS.card}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="space-y-6"
-                      >
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <DollarSign className="w-5 h-5 text-emerald-600" />
-                              Valores e Parcelas
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="parcela_atual" className="text-sm font-medium">
-                                  Parcela Atual
-                                </Label>
-                                <Input
-                                  id="parcela_atual"
-                                  type="number"
-                                  min="1"
-                                  value={formData.parcela_atual}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, parcela_atual: parseInt(e.target.value) || 1 }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 ${
-                                    errors.parcela_atual ? 'border-red-500 bg-red-50/20' : 'focus:border-emerald-500'
-                                  }`}
-                                />
-                                {errors.parcela_atual && (
-                                  <motion.p 
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-sm text-red-600 flex items-center gap-1"
-                                  >
-                                    <AlertCircle className="w-3 h-3" />
-                                    {errors.parcela_atual}
-                                  </motion.p>
-                                )}
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="total_parcelas" className="text-sm font-medium">
-                                  Total de Parcelas
-                                </Label>
-                                <Input
-                                  id="total_parcelas"
-                                  type="number"
-                                  min="1"
-                                  value={formData.total_parcelas}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, total_parcelas: parseInt(e.target.value) || 1 }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-emerald-500`}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="percentual_juros" className="text-sm font-medium">
-                                  Juros (%)
-                                </Label>
-                                <Input
-                                  id="percentual_juros"
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={formData.percentual_juros}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, percentual_juros: parseFloat(e.target.value) || 0 }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-emerald-500`}
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="percentual_desconto" className="text-sm font-medium">
-                                  Desconto (%)
-                                </Label>
-                                <Input
-                                  id="percentual_desconto"
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={formData.percentual_desconto}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, percentual_desconto: parseFloat(e.target.value) || 0 }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-emerald-500`}
-                                />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle>Observações</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <Textarea
-                              value={formData.observacoes}
-                              onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
-                              placeholder="Observações adicionais sobre esta conta..."
-                              rows={4}
-                              className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-emerald-500 resize-none`}
-                            />
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    )}
-
-                    {currentStep === 4 && (
-                      <motion.div
-                        key="step4"
-                        variants={ANIMATION_VARIANTS.card}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <CheckCircle className="w-5 h-5 text-green-600" />
-                              Confirmação dos Dados
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div className="space-y-2">
-                                <strong>Descrição:</strong>
-                                <p className="text-muted-foreground">{formData.descricao}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <strong>Valor Original:</strong>
-                                <p className="text-muted-foreground">{formatCurrency(formData.valor_original)}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <strong>Data de Vencimento:</strong>
-                                <p className="text-muted-foreground">{new Date(formData.data_vencimento).toLocaleDateString('pt-BR')}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <strong>Forma de Recebimento:</strong>
-                                <p className="text-muted-foreground">{formData.forma_recebimento}</p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Navigation Buttons */}
-                  <motion.div
-                    variants={ANIMATION_VARIANTS.card}
-                    className="flex justify-between pt-6"
-                  >
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={prevStep}
-                      disabled={currentStep === 1}
-                      className={`${GLASSMORPHISM.input} hover:bg-white/20 transition-all duration-300`}
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Anterior
-                    </Button>
-
-                    {currentStep < 4 ? (
-                      <Button
-                        type="button"
-                        onClick={nextStep}
-                        disabled={!canProceed()}
-                        className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-lg transition-all duration-300 text-white"
-                      >
-                        Próximo
-                        <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
-                      </Button>
-                    ) : (
-                      <Button
-                        type="submit"
-                        disabled={loading || !validateForm()}
-                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:shadow-lg transition-all duration-300 text-white"
-                      >
-                        {loading ? 'Salvando...' : 'Criar Conta'}
-                        <CheckCircle className="w-4 h-4 ml-2" />
-                      </Button>
-                    )}
-                  </motion.div>
                 </div>
 
-                {/* Summary Sidebar */}
-                <motion.div
-                  variants={ANIMATION_VARIANTS.summary}
-                  className="space-y-6"
-                >
-                  <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-xl sticky top-6`}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Calculator className="w-5 h-5 text-emerald-600" />
-                        Resumo da Conta
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <motion.div 
-                        className="space-y-3"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Valor Original:</span>
-                          <motion.span 
-                            key={formData.valor_original}
-                            initial={{ scale: 1.2, color: '#059669' }}
-                            animate={{ scale: 1, color: '#1f2937' }}
-                            transition={{ duration: 0.3 }}
-                            className="font-medium"
-                          >
-                            {formatCurrency(formData.valor_original)}
-                          </motion.span>
-                        </div>
-                        
-                        <AnimatePresence>
-                          {formData.percentual_juros > 0 && (
-                            <motion.div 
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              className="flex justify-between"
-                            >
-                              <span className="text-muted-foreground">Juros ({formData.percentual_juros}%):</span>
-                              <span className="text-emerald-600 font-medium">
-                                + {formatCurrency(formData.valor_original * formData.percentual_juros / 100)}
-                              </span>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                        
-                        <AnimatePresence>
-                          {formData.percentual_desconto > 0 && (
-                            <motion.div 
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              className="flex justify-between"
-                            >
-                              <span className="text-muted-foreground">Desconto ({formData.percentual_desconto}%):</span>
-                              <span className="text-red-600 font-medium">
-                                - {formatCurrency(formData.valor_original * formData.percentual_desconto / 100)}
-                              </span>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                        
-                        <Separator />
-                        
-                        <div className="flex justify-between text-lg font-semibold">
-                          <span>Valor Final:</span>
-                          <motion.span 
-                            key={calcularValorFinal()}
-                            initial={{ scale: 1.2, color: '#059669' }}
-                            animate={{ scale: 1, color: '#059669' }}
-                            transition={{ duration: 0.4 }}
-                            className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent"
-                          >
-                            {formatCurrency(calcularValorFinal())}
-                          </motion.span>
-                        </div>
-                      </motion.div>
+                <div className="grid gap-6">
+                  <PagadorSelector
+                    value={pagadorSelecionado}
+                    onSelect={handlePagadorSelect}
+                    className="w-full"
+                  />
 
-                      <AnimatePresence>
-                        {formData.total_parcelas > 1 && (
-                          <motion.div 
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="pt-3 border-t border-white/20"
-                          >
-                            <div className="text-sm text-muted-foreground mb-2">Parcelas:</div>
-                            <Badge 
-                              variant="outline" 
-                              className="bg-gradient-to-r from-emerald-100 to-teal-100 border-emerald-200"
-                            >
-                              {formData.parcela_atual} de {formData.total_parcelas}
-                            </Badge>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      {currentStep === 4 && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 }}
-                          className="pt-4 border-t border-white/20"
-                        >
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => navigate('/contas-receber')}
-                            disabled={loading}
-                            className={`w-full ${GLASSMORPHISM.input} hover:bg-white/20 transition-all duration-300`}
-                          >
-                            Cancelar
-                          </Button>
-                        </motion.div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                  {/* Seletor de Categoria */}
+                  <PlanoContasSelector
+                    value={contaSelecionada}
+                    onSelect={(conta) => {
+                      setContaSelecionada(conta);
+                      setConta(prev => ({
+                        ...prev,
+                        plano_conta_id: conta?.id
+                      }));
+                    }}
+                    className="w-full"
+                  />
+                </div>
               </div>
-            </form>
-          </motion.div>
-        </PageContainer>
+            </Card>
+
+            {/* Seção 2: Dados do Recebimento */}
+            <Card className="card-base">
+              <div className="p-6 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-semibold">2</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Dados do Recebimento</h3>
+                    <p className="text-sm text-gray-600">Informações básicas e descrição</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="documento_referencia">Documento / Referência</Label>
+                    <Input
+                      id="documento_referencia"
+                      value={conta.documento_referencia}
+                      onChange={(e) => {
+                        setConta(prev => ({ ...prev, documento_referencia: e.target.value }));
+                        validarCampoTempoReal('documento_referencia', e.target.value);
+                      }}
+                      placeholder="Ex: NF 001234, Fatura #567"
+                      className="input-base"
+                      maxLength={50}
+                    />
+                    {errosValidacao.documento_referencia && (
+                      <p className="text-sm text-red-600">{errosValidacao.documento_referencia}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao">Descrição do Recebimento *</Label>
+                    <Input
+                      id="descricao"
+                      value={conta.descricao}
+                      onChange={(e) => {
+                        setConta(prev => ({ ...prev, descricao: e.target.value }));
+                        validarCampoTempoReal('descricao', e.target.value);
+                      }}
+                      placeholder="Descreva o recebimento..."
+                      className="input-base"
+                      maxLength={255}
+                      required
+                    />
+                    {errosValidacao.descricao && (
+                      <p className="text-sm text-red-600">{errosValidacao.descricao}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="data_emissao">Data de Emissão</Label>
+                      <Input
+                        id="data_emissao"
+                        type="date"
+                        value={conta.data_emissao}
+                        onChange={(e) => setConta(prev => ({ ...prev, data_emissao: e.target.value }))}
+                        className="input-base"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="data_vencimento">Data de Vencimento *</Label>
+                      <Input
+                        id="data_vencimento"
+                        type="date"
+                        value={conta.data_vencimento}
+                        onChange={(e) => {
+                          setConta(prev => ({ ...prev, data_vencimento: e.target.value }));
+                          validarCampoTempoReal('data_vencimento', e.target.value);
+                        }}
+                        className="input-base"
+                        required
+                      />
+                      {errosValidacao.data_vencimento && (
+                        <p className="text-sm text-red-600">{errosValidacao.data_vencimento}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Seção 3: Valores e Vencimento */}
+            <Card className="card-base">
+              <div className="p-6 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-semibold">3</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Valores e Cálculos</h3>
+                    <p className="text-sm text-gray-600">Configure valores, juros e descontos</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="valor_original">Valor Original *</Label>
+                    <Input
+                      id="valor_original"
+                      value={valorOriginalMask}
+                      onChange={(e) => handleValorOriginal(e.target.value)}
+                      placeholder="R$ 0,00"
+                      className="input-base"
+                      maxLength={15}
+                      required
+                    />
+                    {errosValidacao.valor_original && (
+                      <p className="text-sm text-red-600">{errosValidacao.valor_original}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <Label className="text-sm font-medium text-gray-700">Juros</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-gray-500">Percentual</Label>
+                          <Input
+                            value={percentualJurosMask}
+                            onChange={(e) => handlePercentualJuros(e.target.value)}
+                            placeholder="0,00%"
+                            className="input-base text-sm"
+                            maxLength={8}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-gray-500">Valor em R$</Label>
+                          <Input
+                            value={valorJurosMask}
+                            onChange={(e) => handleValorJuros(e.target.value)}
+                            placeholder="R$ 0,00"
+                            className="input-base text-sm"
+                            maxLength={15}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-sm font-medium text-gray-700">Desconto</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-gray-500">Percentual</Label>
+                          <Input
+                            value={percentualDescontoMask}
+                            onChange={(e) => handlePercentualDesconto(e.target.value)}
+                            placeholder="0,00%"
+                            className="input-base text-sm"
+                            maxLength={8}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-gray-500">Valor em R$</Label>
+                          <Input
+                            value={valorDescontoMask}
+                            onChange={(e) => handleValorDesconto(e.target.value)}
+                            placeholder="R$ 0,00"
+                            className="input-base text-sm"
+                            maxLength={15}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50/50 border border-blue-200/50 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Valor Final:</span>
+                      <span className="text-xl font-bold text-blue-600">
+                        {formatarMoedaExibicao(conta.valor_final || 0)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Seção 4: Recorrência (Opcional) */}
+            <Card className="card-base">
+              <div className="p-6 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                    <Repeat className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Recorrência</h3>
+                    <p className="text-sm text-gray-600">Configure repetições automáticas</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="conta_recorrente"
+                      checked={contaRecorrente}
+                      onCheckedChange={(checked) => setContaRecorrente(checked as boolean)}
+                    />
+                    <Label htmlFor="conta_recorrente" className="text-sm">
+                      Este é um recebimento recorrente
+                    </Label>
+                  </div>
+
+                  {contaRecorrente && (
+                    <div className="grid gap-4 p-4 bg-purple-50/50 border border-purple-200/50 rounded-xl">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="periodicidade">Periodicidade</Label>
+                          <Select value={periodicidade} onValueChange={(value: any) => setPeriodicidade(value)}>
+                            <SelectTrigger className="input-base">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="semanal">Semanal</SelectItem>
+                              <SelectItem value="quinzenal">Quinzenal</SelectItem>
+                              <SelectItem value="mensal">Mensal</SelectItem>
+                              <SelectItem value="bimestral">Bimestral</SelectItem>
+                              <SelectItem value="trimestral">Trimestral</SelectItem>
+                              <SelectItem value="semestral">Semestral</SelectItem>
+                              <SelectItem value="anual">Anual</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="quantidade_parcelas">Qtd. Parcelas</Label>
+                          <Input
+                            id="quantidade_parcelas"
+                            type="number"
+                            min="1"
+                            max="360"
+                            value={quantidadeParcelas}
+                            onChange={(e) => setQuantidadeParcelas(Number(e.target.value))}
+                            className="input-base"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="data_inicio">Data de Início</Label>
+                          <Input
+                            id="data_inicio"
+                            type="date"
+                            value={dataInicioRecorrencia}
+                            onChange={(e) => setDataInicioRecorrencia(e.target.value)}
+                            className="input-base"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Seção 5: Status da Conta */}
+            <Card className="card-base">
+              <div className="p-6 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Status do Recebimento</h3>
+                    <p className="text-sm text-gray-600">Defina o status atual</p>
+                  </div>
+                </div>
+
+                <RadioGroup
+                  value={conta.status}
+                  onValueChange={(value) => setConta(prev => ({ ...prev, status: value as 'pendente' | 'pago' | 'vencido' | 'cancelado' }))}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <div className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <RadioGroupItem value="pendente" id="pendente" />
+                    <Label htmlFor="pendente" className="flex-1 cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-blue-500" />
+                        <span>Pendente</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Aguardando recebimento</p>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <RadioGroupItem value="pago" id="pago" />
+                    <Label htmlFor="pago" className="flex-1 cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span>Pago</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Já foi pago</p>
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                {/* Campo de valor pago quando status é "pago" */}
+                {conta.status === 'pago' && (
+                  <div className="space-y-4 p-4 bg-green-50/50 border border-green-200/50 rounded-xl">
+                    <div className="space-y-2">
+                      <Label htmlFor="valor_pago">Valor Pago</Label>
+                      <Input
+                        id="valor_pago"
+                        value={valorPagoMask}
+                        onChange={(e) => handleValorPago(e.target.value)}
+                        placeholder="R$ 0,00"
+                        className="input-base"
+                        maxLength={15}
+                      />
+                      <p className="text-xs text-gray-500">
+                        Valor final: {formatarMoedaExibicao(conta.valor_final || 0)}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="data_pagamento">Data do Pagamento</Label>
+                      <Input
+                        id="data_pagamento"
+                        type="date"
+                        value={conta.data_pagamento || new Date().toISOString().split('T')[0]}
+                        onChange={(e) => setConta(prev => ({ ...prev, data_pagamento: e.target.value }))}
+                        className="input-base"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Seção 6: Forma de Recebimento */}
+            <Card className="card-base">
+              <div className="p-6 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Forma de Recebimento</h3>
+                    <p className="text-sm text-gray-600">Como será recebido</p>
+                  </div>
+                </div>
+
+                <FormaRecebimentoSection
+                  value={formaPagamento}
+                  onChange={setFormaPagamento}
+                  bancos={bancos}
+                />
+              </div>
+            </Card>
+
+            {/* Botões de Ação */}
+            <Card className="card-base">
+              <div className="p-6">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={() => salvarConta(false)}
+                    disabled={loading}
+                    className="btn-primary flex-1"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Salvar Recebimento
+                      </>
+                    )}
+                  </Button>
+
+                  {conta.status !== 'pago' && (
+                    <Button
+                      onClick={() => salvarConta(true)}
+                      disabled={loading}
+                      variant="outline"
+                      className="flex-1 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Salvar e Marcar como Recebido
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Sidebar direita - Preview */}
+          <div className="lg:col-span-2">
+            <div className="sticky top-8">
+              <ContaPreview
+                conta={conta}
+                formaPagamento={formaPagamento}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Indicador de auto-save */}
+        {rascunhoSalvo && (
+          <div className="fixed bottom-6 right-6 bg-green-100 border border-green-200 text-green-800 px-4 py-2 rounded-lg shadow-lg text-sm">
+            ✓ Rascunho salvo automaticamente
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }

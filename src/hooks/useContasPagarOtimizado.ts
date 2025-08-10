@@ -60,7 +60,7 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
       }
 
       // Filtro por fornecedor
-      if (filtros.fornecedor_id && conta.contact_id !== filtros.fornecedor_id) {
+      if (filtros.fornecedor_id && conta.supplier_id !== filtros.fornecedor_id) {
         return false;
       }
 

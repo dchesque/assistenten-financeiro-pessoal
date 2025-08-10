@@ -1,841 +1,1036 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { BlurBackground } from '@/components/ui/BlurBackground';
-import { useContasPagar } from '@/hooks/useContasPagar';
-import { useModalResponsive } from '@/hooks/useModalResponsive';
-import { ContactSelector } from '@/components/selectors/ContactSelector';
-import { CategoriaSelector } from '@/components/selectors/CategoriaSelector';
-import { toast } from '@/hooks/use-toast';
-import { formatCurrency, converterMoedaParaNumero } from '@/lib/formatacaoBrasileira';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Calculator, CreditCard, Calendar, User, Tag, FileText, DollarSign, CheckCircle, AlertCircle, ArrowLeft, Building2, Receipt } from 'lucide-react';
-import { GRADIENTES, GLASSMORPHISM, ANIMATIONS } from '@/constants/designSystem';
+import { createBreadcrumb } from '@/utils/breadcrumbUtils';
+import { ArrowLeft, Save, CreditCard, Calendar, AlertTriangle, FileText, CheckCircle, Repeat, Building2 } from 'lucide-react';
 import { ContaPagar } from '@/types/contaPagar';
-
-const FORMAS_PAGAMENTO = [
-  'Dinheiro',
-  'PIX',
-  'Cartão de Débito',
-  'Cartão de Crédito',
-  'Transferência Bancária',
-  'Boleto',
-  'Cheque',
-  'Outro'
-];
-
-const ANIMATION_VARIANTS = {
-  card: {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, y: -20, scale: 0.95 }
-  },
-  container: {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.1
-      }
-    }
-  },
-  summary: {
-    hidden: { opacity: 0, x: 20 },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      transition: { duration: 0.4, delay: 0.2 }
-    }
-  }
-};
-
+import { Fornecedor } from '@/types/fornecedor';
+import { Category } from '@/types/category';
+import { Banco } from '@/types/banco';
+import { FormaPagamento } from '@/types/formaPagamento';
+import { useBancos } from '@/hooks/useBancos';
+import { useContasPagar } from '@/hooks/useContasPagar';
+import { useContatos } from '@/hooks/useContatos';
+import { useAuth } from '@/hooks/useAuth';
+import { FornecedorSelector as CredorSelector } from '@/components/contasPagar/FornecedorSelector';
+import { CategoriaSelectorNovo } from '@/components/contasPagar/CategoriaSelectorNovo';
+import { ContaPreview } from '@/components/contasPagar/ContaPreview';
+import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
+import { RecorrenciaSection, RecorrenciaData } from '@/components/contasPagar/RecorrenciaSection';
+import { BankAccountSelector } from '@/components/contasPagar/BankAccountSelector';
+import { useBankAccountsAll } from '@/hooks/useBankAccountsAll';
+import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/LoadingButton';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { useLoadingStates } from '@/hooks/useLoadingStates';
+import { aplicarMascaraMoeda, aplicarMascaraPercentual, converterMoedaParaNumero, converterPercentualParaNumero, numeroParaMascaraMoeda, numeroParaMascaraPercentual, validarValorMonetario, validarPercentual, formatarMoedaExibicao } from '@/utils/masks';
+import { ValidationService } from '@/services/ValidationService';
+import { categoriesService } from '@/services/categoriesService';
+// Supabase removido - usando dados mock
+import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
+import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
+import { toast } from '@/hooks/use-toast';
 export default function NovaConta() {
   const navigate = useNavigate();
   const { criarConta, loading } = useContasPagar();
-  const { isMobile, getModalClasses } = useModalResponsive();
+  const { bancos } = useBancos();
+  const { contatos } = useContatos();
+  const { user } = useAuth();
+  const { isSaving, setLoading } = useLoadingStates();
+  
+  // Hook para contas bancárias
+  const { accounts: allBankAccounts = [] } = useBankAccountsAll();
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
+  // Filtrar apenas credores (suppliers)
+  const credores = contatos.filter(contato => contato.type === 'supplier');
+
+  // Estados do formulário
+  const [conta, setConta] = useState<Partial<ContaPagar>>({
+    documento_referencia: '',
     descricao: '',
-    valor_original: 0,
     data_emissao: new Date().toISOString().split('T')[0],
     data_vencimento: '',
-    contact_id: '',
-    category_id: '',
-    forma_pagamento: 'PIX',
-    dda: false,
-    observacoes: '',
-    parcela_atual: 1,
-    total_parcelas: 1,
+    valor_original: 0,
     percentual_juros: 0,
-    percentual_desconto: 0
+    valor_juros: 0,
+    percentual_desconto: 0,
+    valor_desconto: 0,
+    valor_final: 0,
+    status: 'pendente',
+    dda: false,
+    observacoes: ''
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Estados para controlar valores com máscara
+  const [valorOriginalMask, setValorOriginalMask] = useState('');
+  const [percentualJurosMask, setPercentualJurosMask] = useState('');
+  const [valorJurosMask, setValorJurosMask] = useState('');
+  const [percentualDescontoMask, setPercentualDescontoMask] = useState('');
+  const [valorDescontoMask, setValorDescontoMask] = useState('');
+  const [valorPagoMask, setValorPagoMask] = useState('');
+  const [credorSelecionado, setCredorSelecionado] = useState<Fornecedor | null>(null);
+  const [contaSelecionada, setContaSelecionada] = useState<Category | null>(null);
+  const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
+    tipo: 'dinheiro_pix'
+  });
+  const [contaBancaria, setContaBancaria] = useState<{ banco_id?: string; conta_id?: string }>({});
+  
+  // Estados de validação em tempo real
+  const [errosValidacao, setErrosValidacao] = useState<Record<string, string>>({});
+  
+  // Estados do auto-save
+  const [rascunhoSalvo, setRascunhoSalvo] = useState(false);
+  const [temRascunho, setTemRascunho] = useState(false);
+  
+  // Estados para recorrência
+  const [recorrencia, setRecorrencia] = useState<RecorrenciaData>({
+    ativo: false,
+    tipo: 'mensal',
+    quantidade_parcelas: 1,
+    data_inicio: new Date().toISOString().split('T')[0],
+    valor_parcela: 0
+  });
 
-  const validateStep = (step: number, data = formData) => {
-    const newErrors: Record<string, string> = {};
+  // Função de validação em tempo real
+  const validarCampoTempoReal = async (campo: string, valor: any) => {
+    const { ValidationService } = await import('@/services/ValidationService');
+    const erro = ValidationService.validarContaPagar({ 
+      [campo]: valor,
+      // Passar contexto completo para validações mais precisas
+      fornecedor_id: credorSelecionado?.id,
+      plano_conta_id: contaSelecionada?.id,
+      data_emissao: conta.data_emissao  // 🔥 CORREÇÃO: Passar data de emissão para validação correta
+    });
     
-    switch (step) {
-      case 1:
-        if (!data.descricao.trim()) newErrors.descricao = 'Descrição é obrigatória';
-        if (data.valor_original <= 0) newErrors.valor_original = 'Valor deve ser maior que zero';
-        if (!data.forma_pagamento) newErrors.forma_pagamento = 'Forma de pagamento é obrigatória';
-        break;
-      case 2:
-        if (!data.data_vencimento) newErrors.data_vencimento = 'Data de vencimento é obrigatória';
-        break;
-      case 3:
-        if (data.parcela_atual > data.total_parcelas) {
-          newErrors.parcela_atual = 'Parcela atual não pode ser maior que o total';
+    setErrosValidacao(prev => ({ 
+      ...prev, 
+      [campo]: erro[campo] || '' 
+    }));
+  };
+
+  // Auto-save automático
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Só salva se há dados preenchidos
+      if (conta.descricao || conta.valor_original > 0 || credorSelecionado || contaSelecionada) {
+        const rascunho = {
+          conta,
+          credor: credorSelecionado,
+          categoria: contaSelecionada,
+          formaPagamento,
+          timestamp: Date.now(),
+          versao: '1.0'
+        };
+        
+        localStorage.setItem('rascunho_conta_individual', JSON.stringify(rascunho));
+        setRascunhoSalvo(true);
+        
+        // Mostrar feedback sutil
+        setTimeout(() => setRascunhoSalvo(false), 2000);
+      }
+    }, 3000); // Salva após 3 segundos de inatividade
+    
+    return () => clearTimeout(timer);
+  }, [conta, credorSelecionado, contaSelecionada, formaPagamento]);
+
+  // Recuperar rascunho ao carregar página
+  useEffect(() => {
+    const rascunhoSalvo = localStorage.getItem('rascunho_conta_individual');
+    if (rascunhoSalvo) {
+      try {
+        const dados = JSON.parse(rascunhoSalvo);
+        
+        // Verificar se não é muito antigo (24 horas)
+        const agora = Date.now();
+        const horasPassadas = (agora - dados.timestamp) / (1000 * 60 * 60);
+        
+        if (horasPassadas < 24) {
+          setTemRascunho(true);
+          // Não aplicar automaticamente, perguntar ao usuário
+        } else {
+          // Rascunho muito antigo, remover
+          localStorage.removeItem('rascunho_conta_individual');
         }
-        break;
+      } catch (error) {
+        console.error('Erro ao recuperar rascunho:', error);
+        localStorage.removeItem('rascunho_conta_individual');
+      }
     }
-    
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateForm = (data = formData) => {
-    return validateStep(1, data) && validateStep(2, data) && validateStep(3, data);
-  };
-
-  const calcularValorFinal = useCallback(() => {
-    let valor = formData.valor_original;
-    
-    if (formData.percentual_juros > 0) {
-      valor += (valor * formData.percentual_juros / 100);
-    }
-    
-    if (formData.percentual_desconto > 0) {
-      valor -= (valor * formData.percentual_desconto / 100);
-    }
-    
-    return valor;
-  }, [formData.valor_original, formData.percentual_juros, formData.percentual_desconto]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      toast({
-        title: 'Atenção',
-        description: 'Por favor, corrija os erros no formulário.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      const valorFinal = calcularValorFinal();
-      
-      const contaData: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'> = {
-        contact_id: formData.contact_id || '',
-        category_id: formData.category_id || '',
-        descricao: formData.descricao.trim(),
-        data_emissao: formData.data_emissao,
-        data_vencimento: formData.data_vencimento,
-        valor_original: formData.valor_original,
-        percentual_juros: formData.percentual_juros || 0,
-        valor_juros: formData.percentual_juros ? (formData.valor_original * formData.percentual_juros / 100) : 0,
-        percentual_desconto: formData.percentual_desconto || 0,
-        valor_desconto: formData.percentual_desconto ? (formData.valor_original * formData.percentual_desconto / 100) : 0,
-        valor_final: valorFinal,
-        status: 'pendente',
-        parcela_atual: formData.parcela_atual,
-        total_parcelas: formData.total_parcelas,
-        forma_pagamento: formData.forma_pagamento,
-        dda: formData.dda,
-        observacoes: formData.observacoes.trim() || undefined
-      };
-
-      await criarConta(contaData);
-      toast({
-        title: 'Sucesso!',
-        description: 'Conta a pagar criada com sucesso.',
-      });
-      navigate('/contas-pagar');
-    } catch (error) {
-      console.error('Erro ao criar conta:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao criar conta a pagar. Tente novamente.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleValorChange = useCallback((value: string) => {
-    const numericValue = converterMoedaParaNumero(value);
-    setFormData(prev => ({ ...prev, valor_original: numericValue }));
   }, []);
 
-  const nextStep = () => {
-    const newErrors: Record<string, string> = {};
+  // Cálculo automático do valor final (simplificado, sem juros/desconto)
+  useEffect(() => {
+    const final = conta.valor_original || 0;
+    setConta(prev => ({
+      ...prev,
+      valor_final: final
+    }));
     
-    switch (currentStep) {
-      case 1:
-        if (!formData.descricao.trim()) newErrors.descricao = 'Descrição é obrigatória';
-        if (formData.valor_original <= 0) newErrors.valor_original = 'Valor deve ser maior que zero';
-        if (!formData.forma_pagamento) newErrors.forma_pagamento = 'Forma de pagamento é obrigatória';
-        break;
-      case 2:
-        if (!formData.data_vencimento) newErrors.data_vencimento = 'Data de vencimento é obrigatória';
-        break;
-      case 3:
-        if (formData.parcela_atual > formData.total_parcelas) {
-          newErrors.parcela_atual = 'Parcela atual não pode ser maior que o total';
+    // Atualizar valor da parcela na recorrência (CADA parcela tem o valor integral)
+    if (recorrencia.ativo && final > 0) {
+      setRecorrencia(prev => ({
+        ...prev,
+        valor_parcela: final // Cada parcela mantém o valor integral, não dividido
+      }));
+    }
+  }, [conta.valor_original, recorrencia.ativo]);
+
+  // Função para selecionar credor e auto-preencher categoria
+  const handleCredorSelect = async (credor: any) => {
+    setCredorSelecionado(credor);
+    setConta(prev => ({
+      ...prev,
+      fornecedor_id: credor.id
+    }));
+
+    // Auto-preencher categoria padrão do credor se existir
+    if (credor.category_id) {
+      try {
+        // Buscar categoria do credor via API para auto-preencher
+        const categoria = await categoriesService.getById(credor.category_id);
+        if (categoria) {
+          setContaSelecionada(categoria);
+          setConta(prev => ({
+            ...prev,
+            plano_conta_id: categoria.id
+          }));
         }
-        break;
-    }
-    
-    setErrors(newErrors);
-    
-    if (Object.keys(newErrors).length === 0) {
-      setCurrentStep(prev => Math.min(prev + 1, 4));
+      } catch (error) {
+        console.warn('Erro ao buscar categoria do credor:', error);
+        // Se der erro, deixar para o usuário selecionar manualmente
+      }
     }
   };
 
-  const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+  // Handlers para campos com máscara
+  const handleValorOriginal = (valor: string) => {
+    const mascarado = aplicarMascaraMoeda(valor);
+    const numero = converterMoedaParaNumero(mascarado);
+    setValorOriginalMask(mascarado);
+    setConta(prev => ({
+      ...prev,
+      valor_original: numero
+    }));
+  };
+  const handleValorPago = (valor: string) => {
+    const mascarado = aplicarMascaraMoeda(valor);
+    const numero = converterMoedaParaNumero(mascarado);
+    setValorPagoMask(mascarado);
+    setConta(prev => ({
+      ...prev,
+      valor_pago: numero
+    }));
   };
 
-  const getStepIcon = (step: number) => {
-    const icons = [FileText, Calendar, DollarSign, Calculator];
-    const IconComponent = icons[step - 1];
-    return <IconComponent className="w-4 h-4" />;
+  // Botão para preencher valor original
+  const preencherValorOriginal = () => {
+    const valorOriginal = conta.valor_original || 0;
+    const mascarado = numeroParaMascaraMoeda(valorOriginal);
+    setValorPagoMask(mascarado);
+    setConta(prev => ({
+      ...prev,
+      valor_pago: valorOriginal
+    }));
   };
-
-  const getStepTitle = (step: number) => {
-    const titles = ['Dados Principais', 'Datas e Relacionamentos', 'Valores e Parcelas', 'Resumo'];
-    return titles[step - 1];
-  };
-
-  const canProceed = () => {
-    return validateStep(currentStep);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-purple-50/20 relative">
-      <BlurBackground variant="page" />
+  const validarFormulario = (): boolean => {
+    const errors: string[] = [];
+    
+    // Validações obrigatórias
+    if (!credorSelecionado || !credorSelecionado.id) {
+      errors.push('Selecione um credor');
+    }
+    
+    if (!conta.descricao || conta.descricao.trim() === '') {
+      errors.push('Descrição é obrigatória');
+    } else if (conta.descricao.length < 3) {
+      errors.push('Descrição deve ter pelo menos 3 caracteres');
+    } else if (conta.descricao.length > 500) {
+      errors.push('Descrição deve ter no máximo 500 caracteres');
+    }
+    
+    if (!conta.valor_original || conta.valor_original <= 0) {
+      errors.push('Valor deve ser maior que zero');
+    } else if (conta.valor_original > 999999.99) {
+      errors.push('Valor máximo excedido (R$ 999.999,99)');
+    }
+    
+    if (!conta.data_emissao) {
+      errors.push('Data de emissão é obrigatória');
+    }
+    
+    if (!conta.data_vencimento) {
+      errors.push('Data de vencimento é obrigatória');
+    }
+    
+    // Validações de lógica de negócio
+    if (conta.data_emissao && conta.data_vencimento) {
+      const emissao = new Date(conta.data_emissao);
+      const vencimento = new Date(conta.data_vencimento);
       
-      <div className="relative z-10">
-        <PageContainer maxWidth="full">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={ANIMATION_VARIANTS.container}
-            className="space-y-6 max-w-6xl mx-auto"
+      if (vencimento < emissao) {
+        errors.push('Data de vencimento não pode ser anterior à emissão');
+      }
+      
+      // Validar se não é muito no futuro (ex: máximo 5 anos)
+      const maxFutureDate = new Date();
+      maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 5);
+      if (vencimento > maxFutureDate) {
+        errors.push('Data de vencimento não pode ser superior a 5 anos');
+      }
+    }
+    
+    if (!contaSelecionada || !contaSelecionada.id) {
+      errors.push('Selecione uma categoria');
+    }
+    
+    // Validações específicas de status
+    if (conta.status === 'pago' && !conta.banco_id) {
+      errors.push('Selecione o banco para contas pagas');
+    }
+    
+    // Mostrar erros se houver
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        toast({ title: 'Atenção', description: error });
+      });
+      return false;
+    }
+    
+    return true;
+  };
+  // Função para aplicar rascunho
+  const aplicarRascunho = () => {
+    const rascunhoSalvo = localStorage.getItem('rascunho_conta_individual');
+    if (rascunhoSalvo) {
+      const dados = JSON.parse(rascunhoSalvo);
+      setConta(dados.conta);
+      setCredorSelecionado(dados.credor || dados.fornecedor); // Retrocompatibilidade
+      setContaSelecionada(dados.categoria);
+      setFormaPagamento(dados.formaPagamento);
+      setTemRascunho(false);
+      
+      toast({ title: 'Sucesso', description: 'Rascunho aplicado - dados restaurados com sucesso' });
+    }
+  };
+
+  // Função para descartar rascunho
+  const descartarRascunho = () => {
+    localStorage.removeItem('rascunho_conta_individual');
+    setTemRascunho(false);
+    
+    toast({ title: 'Sucesso', description: 'Rascunho descartado' });
+  };
+
+  const salvarConta = async (marcarComoPago = false) => {
+    if (!validarFormulario()) return;
+    
+    setLoading('saving', true);
+    try {
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // Se recorrência está ativa, criar múltiplas contas
+      if (recorrencia.ativo && recorrencia.quantidade_parcelas > 1) {
+        await criarContasRecorrentes(marcarComoPago);
+      } else {
+        await criarContaSimples(marcarComoPago);
+      }
+      
+      // Após salvar com sucesso, limpar rascunho
+      localStorage.removeItem('rascunho_conta_individual');
+      setRascunhoSalvo(false);
+      
+      toast({ title: 'Sucesso', description: `Conta "${conta.descricao}" criada com sucesso!` });
+      navigate('/contas-pagar');
+    } catch (error: any) {
+      toast({ title: 'Erro', description: error.message || 'Erro ao salvar conta. Tente novamente.', variant: 'destructive' });
+    } finally {
+      setLoading('saving', false);
+    }
+  };
+
+  const criarContaSimples = async (marcarComoPago: boolean) => {
+    console.log('🔧 Criando conta simples...');
+    console.log('📋 Dados do credor selecionado:', credorSelecionado);
+    console.log('📋 Dados da categoria selecionada:', contaSelecionada);
+    console.log('📋 Dados da conta:', conta);
+    
+    if (!credorSelecionado) {
+      throw new Error('Selecione um credor antes de salvar');
+    }
+    
+    if (!contaSelecionada) {
+      throw new Error('Selecione uma categoria antes de salvar');
+    }
+
+    const contaParaSalvar = {
+      user_id: user!.id,
+      fornecedor_id: credorSelecionado.id.toString(),
+      plano_conta_id: contaSelecionada.id.toString(),
+      banco_id: marcarComoPago && contaBancaria.conta_id ? contaBancaria.conta_id : undefined,
+      documento_referencia: conta.documento_referencia,
+      descricao: conta.descricao!,
+      data_emissao: conta.data_emissao || new Date().toISOString().split('T')[0],
+      data_vencimento: conta.data_vencimento!,
+      valor_original: conta.valor_original!,
+      valor_final: conta.valor_final!,
+      status: marcarComoPago ? 'pago' : 'pendente',
+      data_pagamento: marcarComoPago ? (conta.data_pagamento || new Date().toISOString().split('T')[0]) : undefined,
+      valor_pago: marcarComoPago ? conta.valor_final : undefined,
+      dda: conta.dda || false,
+      observacoes: conta.observacoes,
+      // Campos obrigatórios da interface ContaPagar
+      parcela_atual: 1,
+      total_parcelas: 1,
+      forma_pagamento: formaPagamento.tipo
+    } as any;
+
+    console.log('💾 Dados preparados para salvar:', contaParaSalvar);
+    
+    await criarConta(contaParaSalvar);
+  };
+
+  const criarContasRecorrentes = async (marcarComoPago: boolean) => {
+    const contasParaCriar = [];
+    let dataAtual = new Date(recorrencia.data_inicio);
+    
+    for (let i = 0; i < recorrencia.quantidade_parcelas; i++) {
+      const contaParaSalvar = {
+        user_id: user!.id,
+        fornecedor_id: credorSelecionado!.id.toString(),
+        plano_conta_id: contaSelecionada!.id.toString(),
+        banco_id: marcarComoPago && i === 0 && contaBancaria.conta_id ? contaBancaria.conta_id : undefined,
+        documento_referencia: conta.documento_referencia ? `${conta.documento_referencia} (${i + 1}/${recorrencia.quantidade_parcelas})` : undefined,
+        descricao: `${conta.descricao} - Parcela ${i + 1}/${recorrencia.quantidade_parcelas}`,
+        data_emissao: conta.data_emissao,
+        data_vencimento: dataAtual.toISOString().split('T')[0],
+        valor_original: conta.valor_original!, // Valor integral de cada parcela
+        valor_final: conta.valor_final!, // Valor integral de cada parcela
+        status: marcarComoPago && i === 0 ? 'pago' : 'pendente',
+        data_pagamento: marcarComoPago && i === 0 ? new Date().toISOString().split('T')[0] : undefined,
+        valor_pago: marcarComoPago && i === 0 ? conta.valor_final : undefined,
+        dda: conta.dda || false,
+        observacoes: conta.observacoes,
+        // Campos obrigatórios da interface ContaPagar
+        parcela_atual: i + 1,
+        total_parcelas: recorrencia.quantidade_parcelas,
+        forma_pagamento: formaPagamento.tipo
+      } as any;
+      
+      await criarConta(contaParaSalvar);
+
+      // Calcular próxima data
+      switch (recorrencia.tipo) {
+        case 'semanal':
+          dataAtual.setDate(dataAtual.getDate() + 7);
+          break;
+        case 'quinzenal':
+          dataAtual.setDate(dataAtual.getDate() + 15);
+          break;
+        case 'mensal':
+          dataAtual.setMonth(dataAtual.getMonth() + 1);
+          break;
+        case 'bimestral':
+          dataAtual.setMonth(dataAtual.getMonth() + 2);
+          break;
+        case 'trimestral':
+          dataAtual.setMonth(dataAtual.getMonth() + 3);
+          break;
+        case 'semestral':
+          dataAtual.setMonth(dataAtual.getMonth() + 6);
+          break;
+        case 'anual':
+          dataAtual.setFullYear(dataAtual.getFullYear() + 1);
+          break;
+      }
+    }
+  };
+  return (
+    <>
+      <PageHeader
+        breadcrumb={createBreadcrumb('/conta-individual')}
+        title="Nova Conta a Pagar"
+        subtitle="Lançamento individual de contas • Cadastro detalhado"
+        actions={
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/contas-pagar')}
+            className="bg-white/80 hover:bg-white/90"
           >
-            {/* Header com glassmorphism */}
-            <motion.div variants={ANIMATION_VARIANTS.card}>
-              <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-xl`}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-slate-900 to-purple-700 bg-clip-text text-transparent">
-                        Nova Conta a Pagar
-                      </h1>
-                      <p className="text-muted-foreground mt-1">
-                        Cadastre uma nova conta a pagar no sistema
-                      </p>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+        }
+      />
+
+      <div className="relative p-4 lg:p-8 cursor-auto">
+        {/* Banner de rascunho encontrado */}
+        {temRascunho && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900">Rascunho encontrado</p>
+                  <p className="text-xs text-blue-600">Dados salvos automaticamente foram encontrados</p>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Button size="sm" variant="outline" onClick={aplicarRascunho}>
+                  Restaurar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={descartarRascunho}>
+                  Descartar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Formulário principal */}
+          <div className="lg:col-span-2 space-y-8">
+            <Card className="bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg rounded-2xl">
+              <div className="p-8 space-y-8">
+                {/* Seção: Dados do Fornecedor */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">1</span>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => navigate('/contas-pagar')}
-                      className={`${GLASSMORPHISM.input} hover:bg-white/20 transition-all duration-300`}
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Voltar
-                    </Button>
+                    <h2 className="text-xl font-semibold text-gray-900">Dados do Credor</h2>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
 
-            {/* Step Navigation */}
-            <motion.div variants={ANIMATION_VARIANTS.card}>
-              <Card className={`${GLASSMORPHISM.card} border-white/20`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    {[1, 2, 3, 4].map((step) => (
-                      <div key={step} className="flex items-center">
-                        <div className={`
-                          flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300
-                          ${currentStep >= step 
-                            ? `bg-gradient-to-r ${GRADIENTES.primary} text-white shadow-lg` 
-                            : 'bg-white/60 text-gray-400 border border-gray-200'
-                          }
-                        `}>
-                          {currentStep > step ? <CheckCircle className="w-5 h-5" /> : getStepIcon(step)}
-                        </div>
-                        {step < 4 && (
-                          <div className={`
-                            w-12 lg:w-20 h-0.5 mx-2 transition-all duration-300
-                            ${currentStep > step ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-200'}
-                          `} />
-                        )}
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Credor <span className="text-red-500">*</span>
+                      </Label>
+                      <CredorSelector 
+                        value={credorSelecionado} 
+                        onSelect={handleCredorSelect} 
+                        placeholder="Selecionar credor..." 
+                        className="w-full" 
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Categoria/Plano de Contas <span className="text-red-500">*</span>
+                      </Label>
+                       <CategoriaSelectorNovo 
+                         value={contaSelecionada} 
+                         onSelect={(categoria) => {
+                           setContaSelecionada(categoria);
+                           setConta(prev => ({
+                             ...prev,
+                             plano_conta_id: categoria.id
+                           }));
+                         }} 
+                         placeholder="Selecionar categoria..."
+                        className="w-full" 
+                        tipo="expense"
+                      />
+                    </div>
                   </div>
-                  <div className="mt-4 text-center">
-                    <h3 className="font-medium text-gray-900">
-                      Etapa {currentStep}: {getStepTitle(currentStep)}
-                    </h3>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Form Content */}
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Content */}
-                <div className="lg:col-span-2">
-                  <AnimatePresence mode="wait">
-                    {currentStep === 1 && (
-                      <motion.div
-                        key="step1"
-                        variants={ANIMATION_VARIANTS.card}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <FileText className="w-5 h-5 text-purple-600" />
-                              Dados Principais
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-6">
-                            <div className="space-y-2">
-                              <Label htmlFor="descricao" className="text-sm font-medium">
-                                Descrição *
-                              </Label>
-                              <Input
-                                id="descricao"
-                                value={formData.descricao}
-                                onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                                placeholder="Ex: Aluguel do escritório"
-                                className={`${GLASSMORPHISM.input} transition-all duration-300 ${
-                                  errors.descricao ? 'border-red-500 bg-red-50/20' : 'focus:border-purple-500'
-                                }`}
-                              />
-                              {errors.descricao && (
-                                <motion.p 
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="text-sm text-red-600 flex items-center gap-1"
-                                >
-                                  <AlertCircle className="w-3 h-3" />
-                                  {errors.descricao}
-                                </motion.p>
-                              )}
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="valor_original" className="text-sm font-medium">
-                                  Valor Original *
-                                </Label>
-                                <div className="relative">
-                                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                  <Input
-                                    id="valor_original"
-                                    value={formatCurrency(formData.valor_original)}
-                                    onChange={(e) => handleValorChange(e.target.value)}
-                                    placeholder="R$ 0,00"
-                                    className={`${GLASSMORPHISM.input} pl-10 transition-all duration-300 ${
-                                      errors.valor_original ? 'border-red-500 bg-red-50/20' : 'focus:border-purple-500'
-                                    }`}
-                                  />
-                                </div>
-                                {errors.valor_original && (
-                                  <motion.p 
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-sm text-red-600 flex items-center gap-1"
-                                  >
-                                    <AlertCircle className="w-3 h-3" />
-                                    {errors.valor_original}
-                                  </motion.p>
-                                )}
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="forma_pagamento" className="text-sm font-medium">
-                                  Forma de Pagamento *
-                                </Label>
-                                <Select 
-                                  value={formData.forma_pagamento} 
-                                  onValueChange={(value) => setFormData(prev => ({ ...prev, forma_pagamento: value }))}
-                                >
-                                  <SelectTrigger className={`${GLASSMORPHISM.input} transition-all duration-300 ${
-                                    errors.forma_pagamento ? 'border-red-500' : 'focus:border-purple-500'
-                                  }`}>
-                                    <CreditCard className="w-4 h-4 mr-2 text-gray-400" />
-                                    <SelectValue placeholder="Selecione" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {FORMAS_PAGAMENTO.map((forma) => (
-                                      <SelectItem key={forma} value={forma}>
-                                        {forma}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                {errors.forma_pagamento && (
-                                  <motion.p 
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-sm text-red-600 flex items-center gap-1"
-                                  >
-                                    <AlertCircle className="w-3 h-3" />
-                                    {errors.forma_pagamento}
-                                  </motion.p>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    )}
-
-                    {currentStep === 2 && (
-                      <motion.div
-                        key="step2"
-                        variants={ANIMATION_VARIANTS.card}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="space-y-6"
-                      >
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <Calendar className="w-5 h-5 text-purple-600" />
-                              Datas
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="data_emissao" className="text-sm font-medium">
-                                  Data de Emissão
-                                </Label>
-                                <Input
-                                  id="data_emissao"
-                                  type="date"
-                                  value={formData.data_emissao}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, data_emissao: e.target.value }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-purple-500`}
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="data_vencimento" className="text-sm font-medium">
-                                  Data de Vencimento *
-                                </Label>
-                                <Input
-                                  id="data_vencimento"
-                                  type="date"
-                                  value={formData.data_vencimento}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, data_vencimento: e.target.value }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 ${
-                                    errors.data_vencimento ? 'border-red-500 bg-red-50/20' : 'focus:border-purple-500'
-                                  }`}
-                                />
-                                {errors.data_vencimento && (
-                                  <motion.p 
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-sm text-red-600 flex items-center gap-1"
-                                  >
-                                    <AlertCircle className="w-3 h-3" />
-                                    {errors.data_vencimento}
-                                  </motion.p>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <Building2 className="w-5 h-5 text-purple-600" />
-                              Relacionamentos
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium">Fornecedor</Label>
-                                <ContactSelector
-                                  value={formData.contact_id || ""}
-                                  onChange={(value) => setFormData(prev => ({ ...prev, contact_id: value }))}
-                                  tipo="supplier"
-                                  placeholder="Selecione o fornecedor"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium">Categoria</Label>
-                                <CategoriaSelector
-                                  value={formData.category_id || ""}
-                                  onChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
-                                  tipo="expense"
-                                  placeholder="Selecione a categoria"
-                                />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    )}
-
-                    {currentStep === 3 && (
-                      <motion.div
-                        key="step3"
-                        variants={ANIMATION_VARIANTS.card}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="space-y-6"
-                      >
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <DollarSign className="w-5 h-5 text-purple-600" />
-                              Valores e Parcelas
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="parcela_atual" className="text-sm font-medium">
-                                  Parcela Atual
-                                </Label>
-                                <Input
-                                  id="parcela_atual"
-                                  type="number"
-                                  min="1"
-                                  value={formData.parcela_atual}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, parcela_atual: parseInt(e.target.value) || 1 }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 ${
-                                    errors.parcela_atual ? 'border-red-500 bg-red-50/20' : 'focus:border-purple-500'
-                                  }`}
-                                />
-                                {errors.parcela_atual && (
-                                  <motion.p 
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-sm text-red-600 flex items-center gap-1"
-                                  >
-                                    <AlertCircle className="w-3 h-3" />
-                                    {errors.parcela_atual}
-                                  </motion.p>
-                                )}
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="total_parcelas" className="text-sm font-medium">
-                                  Total de Parcelas
-                                </Label>
-                                <Input
-                                  id="total_parcelas"
-                                  type="number"
-                                  min="1"
-                                  value={formData.total_parcelas}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, total_parcelas: parseInt(e.target.value) || 1 }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-purple-500`}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="percentual_juros" className="text-sm font-medium">
-                                  Juros (%)
-                                </Label>
-                                <Input
-                                  id="percentual_juros"
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={formData.percentual_juros}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, percentual_juros: parseFloat(e.target.value) || 0 }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-purple-500`}
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="percentual_desconto" className="text-sm font-medium">
-                                  Desconto (%)
-                                </Label>
-                                <Input
-                                  id="percentual_desconto"
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={formData.percentual_desconto}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, percentual_desconto: parseFloat(e.target.value) || 0 }))}
-                                  className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-purple-500`}
-                                />
-                              </div>
-                            </div>
-
-                            <motion.div 
-                              className={`${GLASSMORPHISM.card} p-4 border border-white/20 rounded-lg`}
-                              whileHover={{ scale: 1.02 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <Receipt className="w-5 h-5 text-purple-600" />
-                                  <span className="font-medium">DDA (Débito Direto Autorizado)</span>
-                                </div>
-                                <Switch
-                                  checked={formData.dda}
-                                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, dda: checked }))}
-                                />
-                              </div>
-                            </motion.div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg hover:shadow-xl transition-all duration-300`}>
-                          <CardHeader>
-                            <CardTitle>Observações</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <Textarea
-                              value={formData.observacoes}
-                              onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
-                              placeholder="Observações adicionais sobre esta conta..."
-                              rows={4}
-                              className={`${GLASSMORPHISM.input} transition-all duration-300 focus:border-purple-500 resize-none`}
-                            />
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    )}
-
-                    {currentStep === 4 && (
-                      <motion.div
-                        key="step4"
-                        variants={ANIMATION_VARIANTS.card}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-lg`}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <CheckCircle className="w-5 h-5 text-green-600" />
-                              Confirmação dos Dados
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div className="space-y-2">
-                                <strong>Descrição:</strong>
-                                <p className="text-muted-foreground">{formData.descricao}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <strong>Valor Original:</strong>
-                                <p className="text-muted-foreground">{formatCurrency(formData.valor_original)}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <strong>Data de Vencimento:</strong>
-                                <p className="text-muted-foreground">{new Date(formData.data_vencimento).toLocaleDateString('pt-BR')}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <strong>Forma de Pagamento:</strong>
-                                <p className="text-muted-foreground">{formData.forma_pagamento}</p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Navigation Buttons */}
-                  <motion.div
-                    variants={ANIMATION_VARIANTS.card}
-                    className="flex justify-between pt-6"
-                  >
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={prevStep}
-                      disabled={currentStep === 1}
-                      className={`${GLASSMORPHISM.input} hover:bg-white/20 transition-all duration-300`}
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Anterior
-                    </Button>
-
-                    {currentStep < 4 ? (
-                      <Button
-                        type="button"
-                        onClick={nextStep}
-                        disabled={!canProceed()}
-                        className={`bg-gradient-to-r ${GRADIENTES.primary} hover:shadow-lg transition-all duration-300 text-white`}
-                      >
-                        Próximo
-                        <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
-                      </Button>
-                    ) : (
-                      <Button
-                        type="submit"
-                        disabled={loading || !validateForm()}
-                        className={`bg-gradient-to-r ${GRADIENTES.sucesso} hover:shadow-lg transition-all duration-300 text-white`}
-                      >
-                        {loading ? 'Salvando...' : 'Criar Conta'}
-                        <CheckCircle className="w-4 h-4 ml-2" />
-                      </Button>
-                    )}
-                  </motion.div>
                 </div>
 
-                {/* Summary Sidebar */}
-                <motion.div
-                  variants={ANIMATION_VARIANTS.summary}
-                  className="space-y-6"
-                >
-                  <Card className={`${GLASSMORPHISM.card} border-white/20 shadow-xl sticky top-6`}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Calculator className="w-5 h-5 text-purple-600" />
-                        Resumo da Conta
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <motion.div 
-                        className="space-y-3"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Valor Original:</span>
-                          <motion.span 
-                            key={formData.valor_original}
-                            initial={{ scale: 1.2, color: '#3b82f6' }}
-                            animate={{ scale: 1, color: '#1f2937' }}
-                            transition={{ duration: 0.3 }}
-                            className="font-medium"
-                          >
-                            {formatCurrency(formData.valor_original)}
-                          </motion.span>
-                        </div>
-                        
-                        <AnimatePresence>
-                          {formData.percentual_juros > 0 && (
-                            <motion.div 
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              className="flex justify-between"
-                            >
-                              <span className="text-muted-foreground">Juros ({formData.percentual_juros}%):</span>
-                              <span className="text-red-600 font-medium">
-                                + {formatCurrency(formData.valor_original * formData.percentual_juros / 100)}
-                              </span>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                        
-                        <AnimatePresence>
-                          {formData.percentual_desconto > 0 && (
-                            <motion.div 
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              className="flex justify-between"
-                            >
-                              <span className="text-muted-foreground">Desconto ({formData.percentual_desconto}%):</span>
-                              <span className="text-green-600 font-medium">
-                                - {formatCurrency(formData.valor_original * formData.percentual_desconto / 100)}
-                              </span>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                        
-                        <Separator />
-                        
-                        <div className="flex justify-between text-lg font-semibold">
-                          <span>Valor Final:</span>
-                          <motion.span 
-                            key={calcularValorFinal()}
-                            initial={{ scale: 1.2, color: '#3b82f6' }}
-                            animate={{ scale: 1, color: '#7c3aed' }}
-                            transition={{ duration: 0.4 }}
-                            className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"
-                          >
-                            {formatCurrency(calcularValorFinal())}
-                          </motion.span>
-                        </div>
-                      </motion.div>
+                <Separator />
 
-                      <AnimatePresence>
-                        {formData.total_parcelas > 1 && (
-                          <motion.div 
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="pt-3 border-t border-white/20"
-                          >
-                            <div className="text-sm text-muted-foreground mb-2">Parcelas:</div>
-                            <Badge 
-                              variant="outline" 
-                              className="bg-gradient-to-r from-purple-100 to-blue-100 border-purple-200"
-                            >
-                              {formData.parcela_atual} de {formData.total_parcelas}
-                            </Badge>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                {/* Seção: Dados da Conta */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">2</span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Dados da Conta</h2>
+                  </div>
 
-                      {currentStep === 4 && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 }}
-                          className="pt-4 border-t border-white/20"
-                        >
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => navigate('/contas-pagar')}
-                            disabled={loading}
-                            className={`w-full ${GLASSMORPHISM.input} hover:bg-white/20 transition-all duration-300`}
-                          >
-                            Cancelar
-                          </Button>
-                        </motion.div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Data de Emissão
+                      </Label>
+                      <Input 
+                        type="date" 
+                        value={conta.data_emissao || ''} 
+                         onChange={e => {
+                           setConta(prev => ({ ...prev, data_emissao: e.target.value }));
+                           validarCampoTempoReal('data_emissao', e.target.value);
+                         }}
+                        className={`bg-white/80 backdrop-blur-sm ${
+                          errosValidacao.data_emissao ? 'border-red-300' : 'border-green-300'
+                        }`}
+                      />
+                      {errosValidacao.data_emissao && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                          <AlertTriangle className="w-4 h-4 mr-1" />
+                          {errosValidacao.data_emissao}
+                        </p>
                       )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                    </div>
+
+                    <div className="md:col-span-2 space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Descrição <span className="text-red-500">*</span>
+                      </Label>
+                      <Input 
+                        placeholder="Descrição da compra ou serviço" 
+                        value={conta.descricao || ''} 
+                         onChange={e => {
+                           setConta(prev => ({ ...prev, descricao: e.target.value }));
+                           validarCampoTempoReal('descricao', e.target.value);
+                         }}
+                        className={`bg-white/80 backdrop-blur-sm ${
+                          errosValidacao.descricao ? 'border-red-300 focus:border-red-500' : 'border-green-300 focus:border-green-500'
+                        }`}
+                      />
+                      {errosValidacao.descricao && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                          <AlertTriangle className="w-4 h-4 mr-1" />
+                          {errosValidacao.descricao}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Seção: Valores e Vencimento */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">3</span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Valores e Vencimento</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Valor Original <span className="text-red-500">*</span>
+                      </Label>
+                      <Input 
+                        type="text" 
+                        placeholder="R$ 0,00" 
+                        value={valorOriginalMask} 
+                         onChange={e => {
+                           handleValorOriginal(e.target.value);
+                           validarCampoTempoReal('valor_original', converterMoedaParaNumero(e.target.value));
+                         }}
+                        className={`bg-white/80 backdrop-blur-sm text-right text-lg font-medium ${
+                          errosValidacao.valor_original ? 'border-red-300' : 'border-green-300'
+                        }`}
+                      />
+                      {errosValidacao.valor_original && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                          <AlertTriangle className="w-4 h-4 mr-1" />
+                          {errosValidacao.valor_original}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Data de Vencimento <span className="text-red-500">*</span>
+                      </Label>
+                      <Input 
+                        type="date" 
+                        value={conta.data_vencimento || ''} 
+                         onChange={e => {
+                           setConta(prev => ({ ...prev, data_vencimento: e.target.value }));
+                           validarCampoTempoReal('data_vencimento', e.target.value);
+                         }}
+                        className={`bg-white/80 backdrop-blur-sm ${
+                          errosValidacao.data_vencimento ? 'border-red-300' : 'border-green-300'
+                        }`}
+                      />
+                      {errosValidacao.data_vencimento && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                          <AlertTriangle className="w-4 h-4 mr-1" />
+                          {errosValidacao.data_vencimento}
+                        </p>
+                      )}
+                    </div>
+
+
+                    <div className="md:col-span-2 bg-blue-50/80 backdrop-blur-sm border border-blue-200 rounded-xl p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-medium text-gray-700">Valor Final:</span>
+                        <span className="text-2xl font-bold text-blue-600">
+                          {formatarMoedaExibicao(conta.valor_final || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Seção: Recorrência */}
+                <RecorrenciaSection
+                  value={recorrencia}
+                  onChange={setRecorrencia}
+                  valorTotal={conta.valor_final || 0}
+                />
+
+                <Separator />
+
+                {/* Seção: DDA */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="dda" checked={conta.dda} onCheckedChange={checked => setConta(prev => ({
+                      ...prev,
+                      dda: checked as boolean
+                    }))} />
+                    <Label htmlFor="dda" className="text-sm font-medium text-gray-700">
+                      Esta conta é paga via DDA (Débito Direto Autorizado)
+                    </Label>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Seção: Status da Conta */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">4</span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Status da Conta</h2>
+                  </div>
+
+                  <RadioGroup value={conta.status} onValueChange={value => setConta(prev => ({
+                    ...prev,
+                    status: value as any
+                  }))} className="flex space-x-8">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="pendente" id="pendente" />
+                      <Label htmlFor="pendente" className="text-sm font-medium text-gray-700">
+                        🟡 Pendente
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="pago" id="pago" />
+                      <Label htmlFor="pago" className="text-sm font-medium text-gray-700">
+                        🟢 Pago
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  {/* Campos expandidos quando pago */}
+                  {conta.status === 'pago' && (
+                    <div className="space-y-6 p-6 bg-green-50/50 rounded-xl border border-green-200/50">
+                      {/* Banco e Conta */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <Building2 className="h-5 w-5 text-green-600" />
+                          <span className="font-medium text-green-900">Dados do Pagamento</span>
+                        </div>
+                        
+                        <BankAccountSelector
+                          value={contaBancaria}
+                          onChange={(value) => {
+                            setContaBancaria(value);
+                            if (value.banco_id) {
+                              setConta(prev => ({ ...prev, banco_id: value.banco_id }));
+                            }
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Forma de Pagamento */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <CreditCard className="h-5 w-5 text-green-600" />
+                          <span className="font-medium text-green-900">Forma de Pagamento</span>
+                        </div>
+                        
+                        <RadioGroup value={formaPagamento.tipo} onValueChange={tipo => setFormaPagamento(prev => ({
+                          ...prev,
+                          tipo: tipo as any
+                        }))} className="flex space-x-6">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="dinheiro_pix" id="dinheiro_pix" />
+                            <Label htmlFor="dinheiro_pix" className="text-sm font-medium text-gray-700">
+                              💰 Dinheiro/PIX
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="cartao" id="cartao" />
+                            <Label htmlFor="cartao" className="text-sm font-medium text-gray-700">
+                              💳 Cartão
+                            </Label>
+                          </div>
+                        </RadioGroup>
+
+                        {/* Tipo de cartão se for cartão */}
+                        {formaPagamento.tipo === 'cartao' && (
+                          <div className="pl-6 space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">Tipo de Cartão</Label>
+                            <RadioGroup value={formaPagamento.tipo_cartao} onValueChange={tipo => setFormaPagamento(prev => ({
+                              ...prev,
+                              tipo_cartao: tipo as any
+                            }))} className="flex space-x-4">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="debito" id="debito" />
+                                <Label htmlFor="debito" className="text-sm text-gray-600">Débito</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="credito" id="credito" />
+                                <Label htmlFor="credito" className="text-sm text-gray-600">Crédito</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Data e Valor do Pagamento */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Data de Pagamento
+                          </Label>
+                          <Input 
+                            type="date" 
+                            value={conta.data_pagamento || new Date().toISOString().split('T')[0]} 
+                            onChange={e => setConta(prev => ({
+                              ...prev,
+                              data_pagamento: e.target.value
+                            }))} 
+                            className="bg-white/80 backdrop-blur-sm border-gray-300/50" 
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700 flex items-center justify-between">
+                            Valor Pago <span className="text-red-500">*</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={preencherValorOriginal}
+                              className="text-xs h-6 px-2 bg-blue-50/80 hover:bg-blue-100/80 text-blue-700"
+                            >
+                              Preencher Valor Original
+                            </Button>
+                          </Label>
+                          <Input 
+                            type="text" 
+                            placeholder="R$ 0,00" 
+                            value={valorPagoMask} 
+                            onChange={e => handleValorPago(e.target.value)} 
+                            className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right" 
+                          />
+                        </div>
+                      </div>
+
+                      {/* Juros/Multa Calculados */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Juros/Multa Calculados
+                        </Label>
+                        <div className={`border rounded-lg p-3 ${
+                          (conta.valor_pago || 0) > (conta.valor_original || 0) 
+                            ? 'bg-red-50/80 border-red-200' 
+                            : (conta.valor_pago || 0) < (conta.valor_original || 0)
+                              ? 'bg-green-50/80 border-green-200'
+                              : 'bg-gray-50/80 border-gray-200'
+                        }`}>
+                          <div className="flex justify-between items-center">
+                            <span className={`text-lg font-bold ${
+                              (conta.valor_pago || 0) > (conta.valor_original || 0) 
+                                ? 'text-red-600' 
+                                : (conta.valor_pago || 0) < (conta.valor_original || 0)
+                                  ? 'text-green-600'
+                                  : 'text-gray-600'
+                            }`}>
+                              {((conta.valor_pago || 0) - (conta.valor_original || 0)) >= 0 
+                                ? `+ ${numeroParaMascaraMoeda((conta.valor_pago || 0) - (conta.valor_original || 0))}`
+                                : `- ${numeroParaMascaraMoeda(Math.abs((conta.valor_pago || 0) - (conta.valor_original || 0)))}`
+                              }
+                            </span>
+                            {(conta.valor_original || 0) > 0 && (
+                              <span className={`text-sm font-medium ${
+                                (conta.valor_pago || 0) > (conta.valor_original || 0) 
+                                  ? 'text-red-600' 
+                                  : (conta.valor_pago || 0) < (conta.valor_original || 0)
+                                    ? 'text-green-600'
+                                    : 'text-gray-600'
+                              }`}>
+                                {(((conta.valor_pago || 0) - (conta.valor_original || 0)) / (conta.valor_original || 1) * 100).toFixed(2)}%
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs mt-1 text-gray-600">
+                            Diferença entre valor pago e valor original
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Seção: Forma de Pagamento (apenas se pendente) */}
+                {conta.status === 'pendente' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">5</span>
+                      </div>
+                      <h2 className="text-xl font-semibold text-gray-900">Forma de Pagamento</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      <RadioGroup value={formaPagamento.tipo} onValueChange={tipo => setFormaPagamento(prev => ({
+                        ...prev,
+                        tipo: tipo as any
+                      }))} className="flex space-x-6">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="dinheiro_pix" id="forma_dinheiro_pix" />
+                          <Label htmlFor="forma_dinheiro_pix" className="text-sm font-medium text-gray-700">
+                            💰 Dinheiro/PIX
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="cartao" id="forma_cartao" />
+                          <Label htmlFor="forma_cartao" className="text-sm font-medium text-gray-700">
+                            💳 Cartão
+                          </Label>
+                        </div>
+                      </RadioGroup>
+
+                      {/* Tipo de cartão se for cartão */}
+                      {formaPagamento.tipo === 'cartao' && (
+                        <div className="pl-6 space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">Tipo de Cartão</Label>
+                          <RadioGroup value={formaPagamento.tipo_cartao} onValueChange={tipo => setFormaPagamento(prev => ({
+                            ...prev,
+                            tipo_cartao: tipo as any
+                          }))} className="flex space-x-4">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="debito" id="tipo_debito" />
+                              <Label htmlFor="tipo_debito" className="text-sm text-gray-600">Débito</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="credito" id="tipo_credito" />
+                              <Label htmlFor="tipo_credito" className="text-sm text-gray-600">Crédito</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Seletor de Banco e Conta (apenas para DDA) */}
+                {conta.dda && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4 p-4 bg-blue-50/80 border border-blue-200 rounded-xl">
+                      <div className="flex items-center space-x-2">
+                        <Building2 className="h-5 w-5 text-blue-600" />
+                        <span className="font-medium text-blue-900">
+                          Conta para Débito Automático (DDA)
+                        </span>
+                      </div>
+                      
+                      <BankAccountSelector
+                        value={contaBancaria}
+                        onChange={(value) => {
+                          setContaBancaria(value);
+                        }}
+                        className="w-full"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <Separator />
+
+                {/* Seção: Observações */}
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">{conta.status === 'pendente' ? '6' : '5'}</span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Observações</h2>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">Observações</Label>
+                    <Textarea 
+                      placeholder="Observações adicionais sobre esta conta..." 
+                      value={conta.observacoes || ''} 
+                      onChange={e => setConta(prev => ({
+                        ...prev,
+                        observacoes: e.target.value
+                      }))} 
+                      className="bg-white/80 backdrop-blur-sm border-gray-300/50 min-h-[100px]" 
+                    />
+                  </div>
+                </div>
+
+                {/* Botões de ação */}
+                <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+                  <Button variant="outline" onClick={() => navigate('/dashboard')} className="bg-white/80 backdrop-blur-sm border-white/20">
+                    Cancelar
+                  </Button>
+                  
+                  <LoadingButton 
+                    onClick={() => salvarConta(false)} 
+                    loading={isSaving} 
+                    loadingText="Salvando..."
+                    icon={<Save className="h-4 w-4" />}
+                    className="btn-primary flex-1"
+                  >
+                    Salvar
+                  </LoadingButton>
+                  
+                  <LoadingButton 
+                    onClick={() => salvarConta(true)} 
+                    loading={isSaving}
+                    loadingText="Salvando..."
+                    icon={<CreditCard className="h-4 w-4" />}
+                    className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800"
+                  >
+                    Salvar e Pagar
+                  </LoadingButton>
+                </div>
               </div>
-            </form>
-          </motion.div>
-        </PageContainer>
+            </Card>
+          </div>
+
+          {/* Sidebar de Preview */}
+          <div className="lg:col-span-1">
+            <ContaPreview 
+              conta={conta} 
+              formaPagamento={formaPagamento} 
+              credorSelecionado={credorSelecionado}
+              contaSelecionada={contaSelecionada}
+            />
+          </div>
+        </div>
       </div>
-    </div>
+      
+      {/* Indicador sutil de auto-save */}
+      {rascunhoSalvo && (
+        <div className="fixed bottom-4 right-4 bg-green-100 border border-green-200 rounded-lg px-3 py-2 flex items-center space-x-2 animate-fade-in-out z-50">
+          <CheckCircle className="w-4 h-4 text-green-600" />
+          <span className="text-sm text-green-800">Rascunho salvo</span>
+        </div>
+      )}
+    </>
   );
 }
