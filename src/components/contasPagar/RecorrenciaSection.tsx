@@ -121,7 +121,7 @@ export function RecorrenciaSection({
     onChange({
       ...value,
       ativo,
-      valor_parcela: ativo ? valorTotal / value.quantidade_parcelas : valorTotal
+      valor_parcela: ativo ? valorTotal : 0 // Cada parcela mantém o valor total
     });
   };
 
@@ -129,7 +129,7 @@ export function RecorrenciaSection({
     onChange({
       ...value,
       quantidade_parcelas: quantidade,
-      valor_parcela: valorTotal / quantidade
+      valor_parcela: valorTotal // Cada parcela mantém o valor total, não dividido
     });
   };
 
@@ -217,33 +217,46 @@ export function RecorrenciaSection({
                 <span className="font-medium text-blue-900">Resumo da Recorrência</span>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-blue-600">Valor por parcela:</span>
-                  <div className="font-medium text-blue-900">
-                    R$ {value.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                </div>
-                
-                <div>
-                  <span className="text-blue-600">Total de parcelas:</span>
-                  <div className="font-medium text-blue-900">{value.quantidade_parcelas}x</div>
-                </div>
-                
-                <div>
-                  <span className="text-blue-600">Frequência:</span>
-                  <div className="font-medium text-blue-900">{INTERVALOS[value.tipo].label}</div>
-                </div>
-                
-                {dataFinal && (
-                  <div>
-                    <span className="text-blue-600">Última parcela:</span>
-                    <div className="font-medium text-blue-900">
-                      {format(dataFinal, 'dd/MM/yyyy', { locale: ptBR })}
-                    </div>
-                  </div>
-                )}
-              </div>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                 <div>
+                   <span className="text-blue-600">Valor por parcela:</span>
+                   <div className="font-medium text-blue-900">
+                     R$ {value.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                   </div>
+                 </div>
+                 
+                 <div>
+                   <span className="text-blue-600">Total de parcelas:</span>
+                   <div className="font-medium text-blue-900">{value.quantidade_parcelas}x</div>
+                 </div>
+                 
+                 <div>
+                   <span className="text-blue-600">Frequência:</span>
+                   <div className="font-medium text-blue-900">{INTERVALOS[value.tipo].label}</div>
+                 </div>
+                 
+                 {dataFinal && (
+                   <div>
+                     <span className="text-blue-600">Última parcela:</span>
+                     <div className="font-medium text-blue-900">
+                       {format(dataFinal, 'dd/MM/yyyy', { locale: ptBR })}
+                     </div>
+                   </div>
+                 )}
+               </div>
+               
+               {/* Mostra valor total da recorrência */}
+               <div className="mt-3 p-3 bg-blue-100/50 rounded-lg border border-blue-300">
+                 <div className="flex justify-between items-center">
+                   <span className="font-medium text-blue-700">Valor Total da Recorrência:</span>
+                   <span className="font-bold text-blue-900 text-lg">
+                     R$ {(value.valor_parcela * value.quantidade_parcelas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                   </span>
+                 </div>
+                 <p className="text-xs text-blue-600 mt-1">
+                   {value.quantidade_parcelas} parcelas de R$ {value.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} cada
+                 </p>
+               </div>
             </div>
           </Card>
 

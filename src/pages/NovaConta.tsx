@@ -170,14 +170,14 @@ export default function NovaConta() {
       valor_final: final
     }));
     
-    // Atualizar valor da parcela na recorrência
+    // Atualizar valor da parcela na recorrência (CADA parcela tem o valor integral)
     if (recorrencia.ativo && final > 0) {
       setRecorrencia(prev => ({
         ...prev,
-        valor_parcela: final / prev.quantidade_parcelas
+        valor_parcela: final // Cada parcela mantém o valor integral, não dividido
       }));
     }
-  }, [conta.valor_original, recorrencia.ativo, recorrencia.quantidade_parcelas]);
+  }, [conta.valor_original, recorrencia.ativo]);
 
   // Função para selecionar credor e auto-preencher categoria
   const handleCredorSelect = async (credor: any) => {
@@ -388,11 +388,11 @@ export default function NovaConta() {
         descricao: `${conta.descricao} - Parcela ${i + 1}/${recorrencia.quantidade_parcelas}`,
         data_emissao: conta.data_emissao,
         data_vencimento: dataAtual.toISOString().split('T')[0],
-        valor_original: recorrencia.valor_parcela,
-        valor_final: recorrencia.valor_parcela,
+        valor_original: conta.valor_original!, // Valor integral de cada parcela
+        valor_final: conta.valor_final!, // Valor integral de cada parcela
         status: marcarComoPago && i === 0 ? 'pago' : 'pendente',
         data_pagamento: marcarComoPago && i === 0 ? new Date().toISOString().split('T')[0] : undefined,
-        valor_pago: marcarComoPago && i === 0 ? recorrencia.valor_parcela : undefined,
+        valor_pago: marcarComoPago && i === 0 ? conta.valor_final : undefined,
         dda: conta.dda || false,
         observacoes: conta.observacoes
       };
