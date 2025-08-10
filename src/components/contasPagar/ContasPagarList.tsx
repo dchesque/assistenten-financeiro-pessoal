@@ -115,12 +115,11 @@ export function ContasPagarList({ contas, loading, onEdit, onDelete, onView, onP
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-gray-200/50">
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="font-semibold text-gray-900">Vencimento</TableHead>
                 <TableHead className="font-semibold text-gray-900">Descrição</TableHead>
                 <TableHead className="font-semibold text-gray-900">Fornecedor</TableHead>
                 <TableHead className="font-semibold text-gray-900">Categoria</TableHead>
                 <TableHead className="font-semibold text-gray-900">Valor</TableHead>
-                <TableHead className="font-semibold text-gray-900">Vencimento</TableHead>
                 <TableHead className="font-semibold text-gray-900">Status</TableHead>
                 <TableHead className="w-40 font-semibold text-gray-900">Ações</TableHead>
               </TableRow>
@@ -133,71 +132,7 @@ export function ContasPagarList({ contas, loading, onEdit, onDelete, onView, onP
                     isOverdue(conta.due_date, conta.status) ? 'bg-red-50/30' : ''
                   }`}
                 >
-                  <TableCell>
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      conta.status === 'paid' 
-                        ? 'bg-green-100 text-green-600'
-                        : isOverdue(conta.due_date, conta.status)
-                        ? 'bg-red-100 text-red-600'
-                        : conta.status === 'pending'
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {getStatusIcon(conta.status, conta.due_date)}
-                    </div>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <div className="font-medium text-gray-900">
-                      {conta.description}
-                    </div>
-                    {conta.notes && (
-                      <div className="text-sm text-gray-500 mt-1 line-clamp-1">
-                        {conta.notes}
-                      </div>
-                    )}
-                  </TableCell>
-                  
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {conta.contact ? (
-                        <>
-                          <Building2 className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-700 text-sm">
-                            {conta.contact.name}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-gray-400 text-sm">-</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  
-                  <TableCell>
-                    {conta.category ? (
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: conta.category.color || '#6B7280' }}
-                        />
-                        <span className="text-sm text-gray-700">
-                          {conta.category.name}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 text-sm">Sem categoria</span>
-                    )}
-                  </TableCell>
-                  
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium text-gray-900">
-                        {formatCurrency(conta.amount)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  
+                  {/* Vencimento - Primeira coluna */}
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4 text-gray-400" />
@@ -216,6 +151,62 @@ export function ContasPagarList({ contas, loading, onEdit, onDelete, onView, onP
                     )}
                   </TableCell>
                   
+                  {/* Descrição */}
+                  <TableCell>
+                    <div className="font-medium text-gray-900">
+                      {conta.description}
+                    </div>
+                    {conta.notes && (
+                      <div className="text-sm text-gray-500 mt-1 line-clamp-1">
+                        {conta.notes}
+                      </div>
+                    )}
+                  </TableCell>
+                  
+                  {/* Fornecedor */}
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {conta.contact ? (
+                        <>
+                          <Building2 className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-700 text-sm">
+                            {conta.contact.name}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  
+                  {/* Categoria */}
+                  <TableCell>
+                    {conta.category ? (
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: conta.category.color || '#6B7280' }}
+                        />
+                        <span className="text-sm text-gray-700">
+                          {conta.category.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-sm">Sem categoria</span>
+                    )}
+                  </TableCell>
+                  
+                  {/* Valor */}
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="w-4 h-4 text-gray-400" />
+                      <span className="font-medium text-gray-900">
+                        {formatCurrency(conta.amount)}
+                      </span>
+                    </div>
+                  </TableCell>
+                  
+                  {/* Status */}
                   <TableCell>
                     {getStatusBadge(conta.status)}
                   </TableCell>
