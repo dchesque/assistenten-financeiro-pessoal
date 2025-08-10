@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from "sonner";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Layout } from '@/components/layout/Layout';
+import { ThemeController } from '@/components/layout/ThemeController';
 import { Loader2 } from 'lucide-react';
 import { StartupInitializer } from '@/components/layout/StartupInitializer';
 
@@ -57,13 +58,15 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
+        defaultTheme="light"
         enableSystem
         disableTransitionOnChange
+        storageKey="chatconta-theme"
       >
         <QueryClientProvider client={queryClient}>
           <StartupInitializer>
-            <Router>
+            <ThemeController>
+              <Router>
             <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -104,7 +107,8 @@ function App() {
                 className: 'sonner-toast',
               }}
             />
-            </Router>
+              </Router>
+            </ThemeController>
           </StartupInitializer>
         </QueryClientProvider>
       </ThemeProvider>
