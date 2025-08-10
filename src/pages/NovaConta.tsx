@@ -581,16 +581,6 @@ export default function NovaConta() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-gray-700">
-                        Documento/Referência
-                      </Label>
-                      <Input placeholder="NF 12345, Pedido 567, etc." value={conta.documento_referencia || ''} onChange={e => setConta(prev => ({
-                      ...prev,
-                      documento_referencia: e.target.value
-                    }))} className="bg-white/80 backdrop-blur-sm border-gray-300/50" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">
                         Data de Emissão
                       </Label>
                       <Input 
@@ -696,33 +686,6 @@ export default function NovaConta() {
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Juros/Multa</Label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-xs text-gray-500">Percentual</Label>
-                          <Input type="text" placeholder="0,00%" value={percentualJurosMask} onChange={e => handlePercentualJuros(e.target.value)} className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right" />
-                        </div>
-                        <div>
-                          <Label className="text-xs text-gray-500">Valor (R$)</Label>
-                          <Input type="text" placeholder="R$ 0,00" value={valorJurosMask} onChange={e => handleValorJuros(e.target.value)} className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right" />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Desconto</Label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-xs text-gray-500">Percentual</Label>
-                          <Input type="text" placeholder="0,00%" value={percentualDescontoMask} onChange={e => handlePercentualDesconto(e.target.value)} className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right" />
-                        </div>
-                        <div>
-                          <Label className="text-xs text-gray-500">Valor (R$)</Label>
-                          <Input type="text" placeholder="R$ 0,00" value={valorDescontoMask} onChange={e => handleValorDesconto(e.target.value)} className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right" />
-                        </div>
-                      </div>
-                    </div>
 
                     <div className="md:col-span-2 bg-blue-50/80 backdrop-blur-sm border border-blue-200 rounded-xl p-4">
                       <div className="flex justify-between items-center">
@@ -789,22 +752,25 @@ export default function NovaConta() {
                   </RadioGroup>
 
                   {/* Campos condicionais para pagamento */}
-                  {conta.status === 'pago' && <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-green-50/50 rounded-lg border border-green-200/50">
+                  {conta.status === 'pago' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-green-50/50 rounded-lg border border-green-200/50">
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
                           Banco <span className="text-red-500">*</span>
                         </Label>
                         <Select value={conta.banco_id?.toString()} onValueChange={value => setConta(prev => ({
-                      ...prev,
-                      banco_id: parseInt(value)
-                    }))}>
+                          ...prev,
+                          banco_id: parseInt(value)
+                        }))}>
                           <SelectTrigger className="bg-white/80 backdrop-blur-sm border-gray-300/50">
                             <SelectValue placeholder="Selecionar banco" />
                           </SelectTrigger>
                           <SelectContent>
-                            {bancos.filter(b => !b.deleted_at).map(banco => <SelectItem key={banco.id} value={banco.id}>
+                            {bancos.filter(b => !b.deleted_at).map(banco => (
+                              <SelectItem key={banco.id} value={banco.id}>
                                 {banco.name} - {banco.type}
-                              </SelectItem>)}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -813,19 +779,63 @@ export default function NovaConta() {
                         <Label className="text-sm font-medium text-gray-700">
                           Data de Pagamento
                         </Label>
-                        <Input type="date" value={conta.data_pagamento || new Date().toISOString().split('T')[0]} onChange={e => setConta(prev => ({
-                      ...prev,
-                      data_pagamento: e.target.value
-                    }))} className="bg-white/80 backdrop-blur-sm border-gray-300/50" />
+                        <Input 
+                          type="date" 
+                          value={conta.data_pagamento || new Date().toISOString().split('T')[0]} 
+                          onChange={e => setConta(prev => ({
+                            ...prev,
+                            data_pagamento: e.target.value
+                          }))} 
+                          className="bg-white/80 backdrop-blur-sm border-gray-300/50" 
+                        />
                       </div>
 
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
                           Valor Pago
                         </Label>
-                        <Input type="text" placeholder="R$ 0,00" value={valorPagoMask || (conta.valor_final ? numeroParaMascaraMoeda(conta.valor_final) : '')} onChange={e => handleValorPago(e.target.value)} className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right" />
+                        <div className="flex space-x-2">
+                          <Input 
+                            type="text" 
+                            placeholder="R$ 0,00" 
+                            value={valorPagoMask || (conta.valor_final ? numeroParaMascaraMoeda(conta.valor_final) : '')} 
+                            onChange={e => handleValorPago(e.target.value)} 
+                            className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right flex-1" 
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const valorOriginal = conta.valor_original || 0;
+                              setValorPagoMask(numeroParaMascaraMoeda(valorOriginal));
+                              setConta(prev => ({ ...prev, valor_pago: valorOriginal }));
+                            }}
+                            className="px-3 text-xs"
+                          >
+                            Valor Original
+                          </Button>
+                        </div>
                       </div>
-                    </div>}
+
+                      {/* Juros/Multa Calculados */}
+                      {conta.valor_pago && conta.valor_original && conta.valor_pago > conta.valor_original && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Juros/Multa Calculados
+                          </Label>
+                          <div className="bg-orange-50/80 border border-orange-200 rounded-lg p-3">
+                            <span className="text-lg font-bold text-orange-600">
+                              {numeroParaMascaraMoeda(conta.valor_pago - conta.valor_original)}
+                            </span>
+                            <p className="text-xs text-orange-600 mt-1">
+                              Diferença entre valor pago e valor original
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <Separator />

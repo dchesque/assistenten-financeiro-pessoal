@@ -44,8 +44,8 @@ export function FormaPagamentoSection({
     <div className={`space-y-6 ${className}`}>
       {/* Header da Seção */}
       <div className="flex items-center space-x-2">
-        <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
-          <CreditCard className="h-4 w-4 text-white" />
+        <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold text-sm">5</span>
         </div>
         <h2 className="text-xl font-semibold text-gray-900">Forma de Pagamento</h2>
       </div>
