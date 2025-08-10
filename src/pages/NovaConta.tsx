@@ -162,12 +162,9 @@ export default function NovaConta() {
     }
   }, []);
 
-  // Cálculo automático do valor final
+  // Cálculo automático do valor final (simplificado, sem juros/desconto)
   useEffect(() => {
-    const original = conta.valor_original || 0;
-    const juros = conta.valor_juros || 0;
-    const desconto = conta.valor_desconto || 0;
-    const final = original + juros - desconto;
+    const final = conta.valor_original || 0;
     setConta(prev => ({
       ...prev,
       valor_final: final
@@ -180,7 +177,7 @@ export default function NovaConta() {
         valor_parcela: final / prev.quantidade_parcelas
       }));
     }
-  }, [conta.valor_original, conta.valor_juros, conta.valor_desconto, recorrencia.ativo, recorrencia.quantidade_parcelas]);
+  }, [conta.valor_original, recorrencia.ativo, recorrencia.quantidade_parcelas]);
 
   // Função para selecionar credor e auto-preencher categoria
   const handleCredorSelect = async (credor: any) => {
@@ -219,66 +216,6 @@ export default function NovaConta() {
       valor_original: numero
     }));
   };
-  const handlePercentualJuros = (valor: string) => {
-    const mascarado = aplicarMascaraPercentual(valor);
-    const numero = converterPercentualParaNumero(mascarado);
-    setPercentualJurosMask(mascarado);
-
-    // Recalcular valor em reais
-    const valorJuros = (conta.valor_original || 0) * (numero / 100);
-    const mascaraJuros = numeroParaMascaraMoeda(valorJuros);
-    setValorJurosMask(mascaraJuros);
-    setConta(prev => ({
-      ...prev,
-      percentual_juros: numero,
-      valor_juros: valorJuros
-    }));
-  };
-  const handleValorJuros = (valor: string) => {
-    const mascarado = aplicarMascaraMoeda(valor);
-    const numero = converterMoedaParaNumero(mascarado);
-    setValorJurosMask(mascarado);
-
-    // Recalcular percentual
-    const percentual = conta.valor_original ? numero / conta.valor_original * 100 : 0;
-    const mascaraPercentual = numeroParaMascaraPercentual(percentual);
-    setPercentualJurosMask(mascaraPercentual);
-    setConta(prev => ({
-      ...prev,
-      valor_juros: numero,
-      percentual_juros: percentual
-    }));
-  };
-  const handlePercentualDesconto = (valor: string) => {
-    const mascarado = aplicarMascaraPercentual(valor);
-    const numero = converterPercentualParaNumero(mascarado);
-    setPercentualDescontoMask(mascarado);
-
-    // Recalcular valor em reais
-    const valorDesconto = (conta.valor_original || 0) * (numero / 100);
-    const mascaraDesconto = numeroParaMascaraMoeda(valorDesconto);
-    setValorDescontoMask(mascaraDesconto);
-    setConta(prev => ({
-      ...prev,
-      percentual_desconto: numero,
-      valor_desconto: valorDesconto
-    }));
-  };
-  const handleValorDesconto = (valor: string) => {
-    const mascarado = aplicarMascaraMoeda(valor);
-    const numero = converterMoedaParaNumero(mascarado);
-    setValorDescontoMask(mascarado);
-
-    // Recalcular percentual
-    const percentual = conta.valor_original ? numero / conta.valor_original * 100 : 0;
-    const mascaraPercentual = numeroParaMascaraPercentual(percentual);
-    setPercentualDescontoMask(mascaraPercentual);
-    setConta(prev => ({
-      ...prev,
-      valor_desconto: numero,
-      percentual_desconto: percentual
-    }));
-  };
   const handleValorPago = (valor: string) => {
     const mascarado = aplicarMascaraMoeda(valor);
     const numero = converterMoedaParaNumero(mascarado);
@@ -286,6 +223,17 @@ export default function NovaConta() {
     setConta(prev => ({
       ...prev,
       valor_pago: numero
+    }));
+  };
+
+  // Botão para preencher valor original
+  const preencherValorOriginal = () => {
+    const valorOriginal = conta.valor_original || 0;
+    const mascarado = numeroParaMascaraMoeda(valorOriginal);
+    setValorPagoMask(mascarado);
+    setConta(prev => ({
+      ...prev,
+      valor_pago: valorOriginal
     }));
   };
   const validarFormulario = (): boolean => {
@@ -495,7 +443,7 @@ export default function NovaConta() {
         }
       />
 
-      <div className="relative p-4 lg:p-8">
+      <div className="relative p-4 lg:p-8 cursor-auto">
         {/* Banner de rascunho encontrado */}
         {temRascunho && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -790,50 +738,57 @@ export default function NovaConta() {
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Valor Pago
-                        </Label>
-                        <div className="flex space-x-2">
-                          <Input 
-                            type="text" 
-                            placeholder="R$ 0,00" 
-                            value={valorPagoMask || (conta.valor_final ? numeroParaMascaraMoeda(conta.valor_final) : '')} 
-                            onChange={e => handleValorPago(e.target.value)} 
-                            className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right flex-1" 
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const valorOriginal = conta.valor_original || 0;
-                              setValorPagoMask(numeroParaMascaraMoeda(valorOriginal));
-                              setConta(prev => ({ ...prev, valor_pago: valorOriginal }));
-                            }}
-                            className="px-3 text-xs"
-                          >
-                            Valor Original
-                          </Button>
-                        </div>
-                      </div>
+                       <div className="space-y-2">
+                         <Label className="text-sm font-medium text-gray-700 flex items-center justify-between">
+                           Valor Pago <span className="text-red-500">*</span>
+                           <Button
+                             type="button"
+                             variant="outline"
+                             size="sm"
+                             onClick={preencherValorOriginal}
+                             className="text-xs h-6 px-2 bg-blue-50/80 hover:bg-blue-100/80 text-blue-700"
+                           >
+                             Preencher Valor Original
+                           </Button>
+                         </Label>
+                         <Input 
+                           type="text" 
+                           placeholder="R$ 0,00" 
+                           value={valorPagoMask} 
+                           onChange={e => handleValorPago(e.target.value)} 
+                           className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right" 
+                         />
+                       </div>
 
-                      {/* Juros/Multa Calculados */}
-                      {conta.valor_pago && conta.valor_original && conta.valor_pago > conta.valor_original && (
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700">
-                            Juros/Multa Calculados
-                          </Label>
-                          <div className="bg-orange-50/80 border border-orange-200 rounded-lg p-3">
-                            <span className="text-lg font-bold text-orange-600">
-                              {numeroParaMascaraMoeda(conta.valor_pago - conta.valor_original)}
-                            </span>
-                            <p className="text-xs text-orange-600 mt-1">
-                              Diferença entre valor pago e valor original
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                       {/* Juros/Multa Calculados */}
+                       <div className="space-y-2">
+                         <Label className="text-sm font-medium text-gray-700">
+                           Juros/Multa Calculados
+                         </Label>
+                         <div className={`border rounded-lg p-3 ${
+                           (conta.valor_pago || 0) > (conta.valor_original || 0) 
+                             ? 'bg-red-50/80 border-red-200' 
+                             : (conta.valor_pago || 0) < (conta.valor_original || 0)
+                               ? 'bg-green-50/80 border-green-200'
+                               : 'bg-gray-50/80 border-gray-200'
+                         }`}>
+                           <span className={`text-lg font-bold ${
+                             (conta.valor_pago || 0) > (conta.valor_original || 0) 
+                               ? 'text-red-600' 
+                               : (conta.valor_pago || 0) < (conta.valor_original || 0)
+                                 ? 'text-green-600'
+                                 : 'text-gray-600'
+                           }`}>
+                             {((conta.valor_pago || 0) - (conta.valor_original || 0)) >= 0 
+                               ? `+ ${numeroParaMascaraMoeda((conta.valor_pago || 0) - (conta.valor_original || 0))}`
+                               : `- ${numeroParaMascaraMoeda(Math.abs((conta.valor_pago || 0) - (conta.valor_original || 0)))}`
+                             }
+                           </span>
+                           <p className="text-xs mt-1 text-gray-600">
+                             Diferença entre valor pago e valor original
+                           </p>
+                         </div>
+                       </div>
                     </div>
                   )}
                 </div>
