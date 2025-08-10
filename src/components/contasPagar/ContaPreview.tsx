@@ -1,6 +1,7 @@
 import { ContaPagar } from '@/types/contaPagar';
 import { Fornecedor } from '@/types/fornecedor';
 import { PlanoContas } from '@/types/planoContas';
+import { Category } from '@/types/category';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, DollarSign, Building2, FolderTree, CreditCard, AlertTriangle } from 'lucide-react';
@@ -13,22 +14,25 @@ import { formatarMoedaExibicao } from '@/utils/masks';
 interface ContaPreviewProps {
   conta: Partial<ContaPagar>;
   formaPagamento?: FormaPagamento;
+  credorSelecionado?: Fornecedor | null;
+  contaSelecionada?: Category | null;
   className?: string;
 }
 
-export function ContaPreview({ conta, formaPagamento, className = "" }: ContaPreviewProps) {
+export function ContaPreview({ conta, formaPagamento, credorSelecionado, contaSelecionada, className = "" }: ContaPreviewProps) {
   // Buscar dados relacionados via hooks
   const { fornecedores } = useFornecedores();
   const { planoContas } = usePlanoContas();
   const { bancos } = useBancosSupabase();
   
-  const fornecedor = conta.fornecedor_id 
+  // Usar os objetos passados diretamente ao invés de buscar pelos IDs
+  const fornecedor = credorSelecionado || (conta.fornecedor_id 
     ? fornecedores.find(f => f.id.toString() === conta.fornecedor_id?.toString())
-    : null;
+    : null);
 
-  const planoContasItem = conta.plano_conta_id
+  const planoContasItem = contaSelecionada || (conta.plano_conta_id
     ? planoContas.find(p => p.id.toString() === conta.plano_conta_id?.toString())
-    : null;
+    : null);
 
   const banco = conta.banco_id
     ? bancos.find(b => b.id === conta.banco_id)

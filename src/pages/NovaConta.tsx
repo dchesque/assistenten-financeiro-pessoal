@@ -991,7 +991,12 @@ export default function NovaConta() {
 
           {/* Sidebar de Preview */}
           <div className="lg:col-span-1">
-            <ContaPreview conta={conta} formaPagamento={formaPagamento} />
+            <ContaPreview 
+              conta={conta} 
+              formaPagamento={formaPagamento} 
+              credorSelecionado={credorSelecionado}
+              contaSelecionada={contaSelecionada}
+            />
           </div>
         </div>
       </div>
