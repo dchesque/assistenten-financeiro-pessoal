@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { CategoriesService } from './categoriesService';
-import { SuppliersService } from './suppliersService';
+// import { SuppliersService } from './suppliersService'; // Removido - usando contacts
 import { banksService } from './banksService';
 import { accountsPayableService } from './accountsPayableService';
 import { accountsReceivableService } from './accountsReceivableService';

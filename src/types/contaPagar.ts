@@ -2,8 +2,8 @@ export interface ContaPagar {
   id?: number | string;
   
   // Relacionamentos
-  fornecedor_id: number | string;
-  plano_conta_id: number | string;
+  contact_id: number | string; // Credor (ex-fornecedor_id)
+  category_id: number | string; // Categoria (ex-plano_conta_id)
   banco_id?: number | string; // Se pago
   
   // Dados principais
@@ -43,8 +43,8 @@ export interface ContaPagar {
 
 // Interface estendida com dados relacionados para performance
 export interface ContaEnriquecida extends ContaPagar {
-  fornecedor_nome: string;
-  plano_conta_nome: string;
+  contact_nome: string; // Nome do contato (ex-fornecedor_nome)
+  category_nome: string; // Nome da categoria (ex-plano_conta_nome)
   banco_nome?: string;
   dias_para_vencimento: number;
   dias_em_atraso: number;
@@ -53,8 +53,8 @@ export interface ContaEnriquecida extends ContaPagar {
 export interface FiltrosContaPagar {
   busca: string;
   status: 'todos' | 'pendente' | 'pago' | 'vencido' | 'cancelado';
-  fornecedor_id: 'todos' | number;
-  plano_conta_id: 'todos' | number;
+  contact_id: 'todos' | number; // Filtro por credor (ex-fornecedor_id)
+  category_id: 'todos' | number; // Filtro por categoria (ex-plano_conta_id)
   data_inicio: string;
   data_fim: string;
 }

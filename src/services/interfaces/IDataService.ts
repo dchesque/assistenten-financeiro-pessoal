@@ -1,6 +1,6 @@
 import type { ContaPagar } from '@/types/contaPagar';
 import type { ContaReceber } from '@/types/contaReceber';
-import type { Fornecedor } from '@/types/fornecedor';
+// import type { Fornecedor } from '@/types/fornecedor'; // Removido - usando contacts
 import type { Categoria } from '@/types/categoria';
 import type { Banco } from '@/types/banco';
 

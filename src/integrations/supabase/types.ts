@@ -34,7 +34,6 @@ export type Database = {
           paid_at: string | null
           reference_document: string | null
           status: Database["public"]["Enums"]["account_status"]
-          supplier_id: string | null
           updated_at: string
           user_id: string
         }
@@ -57,7 +56,6 @@ export type Database = {
           paid_at?: string | null
           reference_document?: string | null
           status?: Database["public"]["Enums"]["account_status"]
-          supplier_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -80,7 +78,6 @@ export type Database = {
           paid_at?: string | null
           reference_document?: string | null
           status?: Database["public"]["Enums"]["account_status"]
-          supplier_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -118,20 +115,6 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "accounts_payable_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "active_suppliers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "accounts_payable_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
           {
@@ -839,68 +822,6 @@ export type Database = {
           },
         ]
       }
-      suppliers: {
-        Row: {
-          active: boolean
-          address: string | null
-          city: string | null
-          created_at: string
-          deleted_at: string | null
-          document: string | null
-          email: string | null
-          id: string
-          name: string
-          notes: string | null
-          phone: string | null
-          state: string | null
-          updated_at: string
-          user_id: string
-          zip: string | null
-        }
-        Insert: {
-          active?: boolean
-          address?: string | null
-          city?: string | null
-          created_at?: string
-          deleted_at?: string | null
-          document?: string | null
-          email?: string | null
-          id?: string
-          name: string
-          notes?: string | null
-          phone?: string | null
-          state?: string | null
-          updated_at?: string
-          user_id: string
-          zip?: string | null
-        }
-        Update: {
-          active?: boolean
-          address?: string | null
-          city?: string | null
-          created_at?: string
-          deleted_at?: string | null
-          document?: string | null
-          email?: string | null
-          id?: string
-          name?: string
-          notes?: string | null
-          phone?: string | null
-          state?: string | null
-          updated_at?: string
-          user_id?: string
-          zip?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "suppliers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
       transactions: {
         Row: {
           accounts_payable_id: string | null
@@ -1014,14 +935,19 @@ export type Database = {
           category_id: string | null
           contact_id: string | null
           created_at: string | null
+          dda_enabled: boolean | null
           deleted_at: string | null
           description: string | null
           due_date: string | null
+          final_amount: number | null
           id: string | null
+          issue_date: string | null
           notes: string | null
+          original_amount: number | null
+          paid_amount: number | null
           paid_at: string | null
+          reference_document: string | null
           status: Database["public"]["Enums"]["account_status"] | null
-          supplier_id: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -1031,14 +957,19 @@ export type Database = {
           category_id?: string | null
           contact_id?: string | null
           created_at?: string | null
+          dda_enabled?: boolean | null
           deleted_at?: string | null
           description?: string | null
           due_date?: string | null
+          final_amount?: number | null
           id?: string | null
+          issue_date?: string | null
           notes?: string | null
+          original_amount?: number | null
+          paid_amount?: number | null
           paid_at?: string | null
+          reference_document?: string | null
           status?: Database["public"]["Enums"]["account_status"] | null
-          supplier_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -1048,14 +979,19 @@ export type Database = {
           category_id?: string | null
           contact_id?: string | null
           created_at?: string | null
+          dda_enabled?: boolean | null
           deleted_at?: string | null
           description?: string | null
           due_date?: string | null
+          final_amount?: number | null
           id?: string | null
+          issue_date?: string | null
           notes?: string | null
+          original_amount?: number | null
+          paid_amount?: number | null
           paid_at?: string | null
+          reference_document?: string | null
           status?: Database["public"]["Enums"]["account_status"] | null
-          supplier_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -1096,20 +1032,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "accounts_payable_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "active_suppliers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "accounts_payable_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "accounts_payable_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -1125,6 +1047,7 @@ export type Database = {
           category_id: string | null
           contact_id: string | null
           created_at: string | null
+          customer_id: string | null
           customer_name: string | null
           deleted_at: string | null
           description: string | null
@@ -1142,6 +1065,7 @@ export type Database = {
           category_id?: string | null
           contact_id?: string | null
           created_at?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           deleted_at?: string | null
           description?: string | null
@@ -1159,6 +1083,7 @@ export type Database = {
           category_id?: string | null
           contact_id?: string | null
           created_at?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           deleted_at?: string | null
           description?: string | null
@@ -1204,6 +1129,20 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "active_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
@@ -1433,68 +1372,6 @@ export type Database = {
           zip?: string | null
         }
         Relationships: []
-      }
-      active_suppliers: {
-        Row: {
-          active: boolean | null
-          address: string | null
-          city: string | null
-          created_at: string | null
-          deleted_at: string | null
-          document: string | null
-          email: string | null
-          id: string | null
-          name: string | null
-          notes: string | null
-          phone: string | null
-          state: string | null
-          updated_at: string | null
-          user_id: string | null
-          zip: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          address?: string | null
-          city?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          document?: string | null
-          email?: string | null
-          id?: string | null
-          name?: string | null
-          notes?: string | null
-          phone?: string | null
-          state?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          zip?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          address?: string | null
-          city?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          document?: string | null
-          email?: string | null
-          id?: string | null
-          name?: string | null
-          notes?: string | null
-          phone?: string | null
-          state?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          zip?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "suppliers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
       }
     }
     Functions: {
