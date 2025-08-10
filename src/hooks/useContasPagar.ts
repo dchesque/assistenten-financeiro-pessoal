@@ -137,10 +137,10 @@ export function useContasPagar() {
     }
   };
 
-  const filtrarContas = (filtros: { status?: string; fornecedor_id?: number; data_inicio?: string; data_fim?: string }) => {
+  const filtrarContas = (filtros: { status?: string; contact_id?: number; data_inicio?: string; data_fim?: string }) => {
     return contas.filter(conta => {
       if (filtros.status && filtros.status !== 'todos' && conta.status !== filtros.status) return false;
-      if (filtros.fornecedor_id && conta.fornecedor_id !== filtros.fornecedor_id) return false;
+      if (filtros.contact_id && conta.contact_id !== filtros.contact_id) return false; // Mudança de fornecedor_id para contact_id
       if (filtros.data_inicio && conta.data_vencimento < filtros.data_inicio) return false;
       if (filtros.data_fim && conta.data_vencimento > filtros.data_fim) return false;
       return true;

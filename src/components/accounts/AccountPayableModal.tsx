@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AccountPayable, AccountStatus } from '@/types/accounts';
 import { formatCurrency, converterMoedaParaNumero } from '@/lib/formatacaoBrasileira';
 import { useCategories } from '@/hooks/useCategories';
-import { useSuppliers } from '@/hooks/useSuppliers';
+import { useContatos } from '@/hooks/useContatos'; // Usar contatos em vez de suppliers
 
 interface AccountPayableModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ interface AccountPayableModalProps {
 
 export function AccountPayableModal({ isOpen, onClose, onSave, account, loading = false }: AccountPayableModalProps) {
   const { categories } = useCategories();
-  const { suppliers } = useSuppliers();
+  const { contatos } = useContatos(); // Mudança de suppliers para contatos
 
   const [formData, setFormData] = useState({
     description: '',
@@ -185,9 +185,9 @@ export function AccountPayableModal({ isOpen, onClose, onSave, account, loading 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Nenhum fornecedor</SelectItem>
-                  {suppliers.map(supplier => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
+                  {contatos.filter(c => c.type === 'supplier' || c.type === 'other').map(contato => (
+                    <SelectItem key={contato.id} value={contato.id}>
+                      {contato.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

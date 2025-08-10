@@ -95,7 +95,7 @@ export const ContaCardAprimorado = ({
               </Badge>
             </div>
             
-            <p className="text-sm text-gray-600">{conta.fornecedor.nome}</p>
+            <p className="text-sm text-gray-600">{conta.contact?.name || 'Sem contato'}</p>
             {conta.documento_referencia && (
               <p className="text-xs text-gray-500 mt-1">Ref: {conta.documento_referencia}</p>
             )}

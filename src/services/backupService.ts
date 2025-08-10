@@ -75,12 +75,12 @@ class BackupService {
   private async getAllUserData(): Promise<BackupData> {
     // Instanciar services
     const categoriesServiceInstance = new CategoriesService();
-    const suppliersServiceInstance = new SuppliersService();
+    // const suppliersServiceInstance = new SuppliersService(); // Removido - usando contacts
 
     const [
       profiles,
       categories,
-      suppliers,
+      suppliers, // Vazio - tabela suppliers foi removida
       banks,
       bankAccounts,
       accountsPayable,
@@ -89,7 +89,7 @@ class BackupService {
     ] = await Promise.all([
       ProfileService.getCurrentProfile(),
       categoriesServiceInstance.list(),
-      suppliersServiceInstance.list(),
+      [], // Suppliers removido - retorna array vazio
       banksService.getBanks(),
       banksService.getBanksWithAccounts().then(banks => 
         banks.flatMap(bank => bank.accounts.map(acc => ({ ...acc, bank_id: bank.id })))
@@ -470,7 +470,7 @@ class BackupService {
     
     const operations = [
       { key: 'categories', service: new CategoriesService(), method: 'create' },
-      { key: 'suppliers', service: new SuppliersService(), method: 'create' },
+      // { key: 'suppliers', service: new SuppliersService(), method: 'create' }, // Removido - usando contacts
       { key: 'banks', service: banksService, method: 'createBank' },
       // bank_accounts precisa de tratamento especial pois não tem service direto
       { key: 'accounts_payable', service: accountsPayableService, method: 'createAccountPayable' },

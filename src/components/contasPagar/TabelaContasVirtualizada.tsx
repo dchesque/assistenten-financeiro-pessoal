@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { ContaEnriquecida } from '@/types/contaPagar';
-import ContaCard from './ContaCard';
+import { ContaCardAprimorado } from './ContaCardAprimorado'; // Mudança para ContaCardAprimorado
 
 interface TabelaContasVirtualizadaProps {
   contas: ContaEnriquecida[];
@@ -19,7 +19,7 @@ const ItemConta = memo(({ index, style, data }: any) => {
 
   return (
     <div style={style} className="p-2">
-      <ContaCard
+      <ContaCardAprimorado
         conta={conta}
         onEditar={() => onEditar(conta)}
         onBaixar={() => onBaixar(conta)}

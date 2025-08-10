@@ -84,7 +84,7 @@ const ItemRow: React.FC<ItemRowProps> = ({ index, style, data }) => {
             </Badge>
             <div className="min-w-0 flex-1">
               <div className="font-medium text-gray-900 truncate">{conta.descricao}</div>
-              <div className="text-sm text-gray-500 truncate">{conta.fornecedor_nome}</div>
+              <div className="text-sm text-gray-500 truncate">{conta.contact_nome || 'Sem contato'}</div>
               {vencimentoIndicator}
             </div>
           </div>
