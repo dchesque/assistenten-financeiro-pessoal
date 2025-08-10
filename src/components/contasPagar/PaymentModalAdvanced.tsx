@@ -149,10 +149,10 @@ export function PaymentModalAdvanced({
                 value={formData.bank_account_id} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, bank_account_id: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white border-gray-300">
                   <SelectValue placeholder="Selecione a conta (opcional)" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-[10000]">
                   <SelectItem value="none">Não informar conta</SelectItem>
                   {allBankAccounts.length === 0 ? (
                   <SelectItem value="nenhuma" disabled>
@@ -229,13 +229,13 @@ export function PaymentModalAdvanced({
               {jurosCalculado > 0 && (
                 <div className="flex justify-between text-red-600">
                   <span>+ Juros/Multa:</span>
-                  <span className="font-medium">+{formatCurrency(jurosCalculado)}</span>
+                  <span className="font-medium">+{formatCurrency(jurosCalculado)} ({((jurosCalculado / valorOriginal) * 100).toFixed(2)}%)</span>
                 </div>
               )}
               {descontoCalculado > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>- Desconto:</span>
-                  <span className="font-medium">-{formatCurrency(descontoCalculado)}</span>
+                  <span className="font-medium">-{formatCurrency(descontoCalculado)} ({((descontoCalculado / valorOriginal) * 100).toFixed(2)}%)</span>
                 </div>
               )}
               <Separator />
