@@ -1,52 +1,83 @@
-import { useState, useEffect } from 'react';
-import { X, Edit, User, FileText, DollarSign, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Edit, User, FileText, DollarSign, Calendar, Save } from 'lucide-react';
 import { ContaPagar } from '@/types/contaPagar';
 import { Fornecedor } from '@/types/fornecedor';
 import { PlanoContas } from '@/types/planoContas';
-import { formatarMoeda, parseMoeda, formatarData } from '@/utils/formatters';
-import { SectionHeader, FieldDisplay, LoadingSpinner, CurrencyInput } from './ModalComponents';
+import { formatarMoeda } from '@/utils/formatters';
 import { FornecedorSelector } from './FornecedorSelector';
 import { PlanoContasSelector } from './PlanoContasSelector';
+import LoadingSpinner from '@/components/ui/LoadingSkeleton';
+import { toast } from 'sonner';
 
 interface ContaEditarModalProps {
+  conta: (ContaPagar & {
+    fornecedor?: Fornecedor;
+    plano_conta?: PlanoContas;
+  }) | null;
   isOpen: boolean;
   onClose: () => void;
-  conta: (ContaPagar & {
-    fornecedor: Fornecedor;
-    plano_conta: PlanoContas;
-  }) | null;
-  onSalvar: (dadosEdicao: any) => void;
+  onSalvar: (dadosEdicao: any) => Promise<void>;
 }
 
-export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: ContaEditarModalProps) {
-  const [dadosEdicao, setDadosEdicao] = useState<any>({});
-  const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState('');
-  const [errosValidacao, setErrosValidacao] = useState<Record<string, string>>({});
+interface DadosEdicao {
+  descricao: string;
+  documento_referencia?: string;
+  data_vencimento: string;
+  fornecedor?: Fornecedor;
+  plano_conta?: PlanoContas;
+  valor_original: number;
+  percentual_juros?: number;
+  valor_juros?: number;
+  percentual_desconto?: number;
+  valor_desconto?: number;
+  valor_final: number;
+  observacoes?: string;
+}
 
+export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: ContaEditarModalProps) {
+  const [dadosEdicao, setDadosEdicao] = useState<DadosEdicao>({
+    descricao: '',
+    data_vencimento: '',
+    valor_original: 0,
+    valor_final: 0
+  });
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string>('');
+  const [errosValidacao, setErrosValidacao] = useState<Record<string, string>>({});
 
   // Inicializar dados quando a conta for carregada
   useEffect(() => {
-    if (conta) {
+    if (conta && isOpen) {
       setDadosEdicao({
-        ...conta,
+        descricao: conta.descricao || '',
+        documento_referencia: conta.documento_referencia || '',
+        data_vencimento: conta.data_vencimento || '',
         fornecedor: conta.fornecedor,
-        plano_conta: conta.plano_conta
+        plano_conta: conta.plano_conta,
+        valor_original: conta.valor_original || 0,
+        percentual_juros: conta.percentual_juros || 0,
+        valor_juros: conta.valor_juros || 0,
+        percentual_desconto: conta.percentual_desconto || 0,
+        valor_desconto: conta.valor_desconto || 0,
+        valor_final: conta.valor_final || 0,
+        observacoes: conta.observacoes || ''
       });
+      setErro('');
+      setErrosValidacao({});
     }
-  }, [conta]);
+  }, [conta, isOpen]);
 
-  // Recalcular valores automaticamente
+  // Calcular valores automaticamente
   useEffect(() => {
-    const valorOriginal = parseFloat(dadosEdicao.valor_original) || 0;
-    const percJuros = parseFloat(dadosEdicao.percentual_juros) || 0;
-    const percDesconto = parseFloat(dadosEdicao.percentual_desconto) || 0;
+    const valorOriginal = dadosEdicao.valor_original || 0;
+    const percentualJuros = dadosEdicao.percentual_juros || 0;
+    const percentualDesconto = dadosEdicao.percentual_desconto || 0;
     
-    const valorJuros = (valorOriginal * percJuros) / 100;
-    const valorDesconto = (valorOriginal * percDesconto) / 100;
+    const valorJuros = (valorOriginal * percentualJuros) / 100;
+    const valorDesconto = (valorOriginal * percentualDesconto) / 100;
     const valorFinal = valorOriginal + valorJuros - valorDesconto;
     
-    setDadosEdicao((prev: any) => ({
+    setDadosEdicao((prev) => ({
       ...prev,
       valor_juros: valorJuros,
       valor_desconto: valorDesconto,
@@ -68,36 +99,37 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
   };
 
   const handleSalvar = async () => {
+    if (loading || !conta) return;
+    
+    setLoading(true);
+    setErro('');
+    
     try {
-      setErro('');
-      setLoading(true);
-
-      // Validações básicas
-      if (!dadosEdicao.descricao?.trim()) {
-        setErro('Descrição é obrigatória');
-        return;
-      }
-      if (!dadosEdicao.fornecedor?.id) {
-        setErro('Credor é obrigatório');
-        return;
-      }
-      if (!dadosEdicao.plano_conta?.id) {
-        setErro('Categoria é obrigatória');
-        return;
-      }
-      if (!dadosEdicao.data_vencimento) {
-        setErro('Data de vencimento é obrigatória');
-        return;
-      }
-      if (!dadosEdicao.valor_original || dadosEdicao.valor_original <= 0) {
-        setErro('Valor original deve ser maior que zero');
+      // Validação completa antes de salvar
+      const { ValidationService } = await import('@/services/ValidationService');
+      const erros = ValidationService.validarContaPagar(dadosEdicao);
+      
+      if (Object.keys(erros).length > 0) {
+        setErrosValidacao(erros);
+        const primeiroErro = Object.values(erros)[0];
+        setErro(primeiroErro);
         return;
       }
 
-      await onSalvar(dadosEdicao);
+      // Preparar dados para salvar
+      const dadosParaSalvar = {
+        ...dadosEdicao,
+        fornecedor_id: dadosEdicao.fornecedor?.id,
+        plano_conta_id: dadosEdicao.plano_conta?.id
+      };
+
+      await onSalvar(dadosParaSalvar);
+      toast.success('Conta editada com sucesso!');
       onClose();
     } catch (error) {
-      setErro('Erro ao salvar conta. Tente novamente.');
+      console.error('Erro ao salvar:', error);
+      setErro('Erro ao salvar alterações. Tente novamente.');
+      toast.error('Erro ao salvar alterações');
     } finally {
       setLoading(false);
     }
@@ -144,66 +176,15 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
           {/* Conteúdo */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               
-              {/* Coluna 1: Dados Básicos */}
-              <div className="space-y-8">
-                <SectionHeader icon={User} title="Dados do Credor" color="blue" />
-                
-                 <div className="space-y-4">
-                   {/* Credor */}
-                   <div>
-                     <label className="text-sm font-medium text-gray-700 mb-2 block">
-                       Credor *
-                     </label>
-                      <FornecedorSelector
-                        value={dadosEdicao.fornecedor}
-                        onSelect={(fornecedor) => {
-                          setDadosEdicao((prev: any) => ({ ...prev, fornecedor }));
-
-                          // Auto-preencher categoria padrão do credor se existir
-                          if (fornecedor.categoria_padrao_id && !dadosEdicao.plano_conta) {
-                            // Mock: buscar categoria padrão
-                            const categoriaDefault: PlanoContas = {
-                              id: fornecedor.categoria_padrao_id,
-                              codigo: 'CATPADRAO',
-                              nome: 'Categoria Padrão',
-                              tipo_dre: 'despesa_pessoal',
-                              cor: '#6B7280',
-                              icone: 'Package',
-                              nivel: 1,
-                              plano_pai_id: null,
-                              aceita_lancamento: true,
-                              ativo: true,
-                              total_contas: 0,
-                              valor_total: 0,
-                              created_at: new Date().toISOString(),
-                              updated_at: new Date().toISOString()
-                            };
-                            
-                            setDadosEdicao((prev: any) => ({ ...prev, plano_conta: categoriaDefault }));
-                          }
-                        }}
-                        placeholder="Selecionar credor..."
-                        className="w-full"
-                      />
-                   </div>
-
-                   {/* Categoria */}
-                   <div>
-                     <label className="text-sm font-medium text-gray-700 mb-2 block">
-                       Categoria/Plano de Contas *
-                     </label>
-                     <PlanoContasSelector
-                       value={dadosEdicao.plano_conta}
-                       onSelect={(conta) => setDadosEdicao((prev: any) => ({ ...prev, plano_conta: conta }))}
-                       placeholder="Selecionar categoria..."
-                       className="w-full"
-                     />
-                   </div>
-                 </div>
-
-                <SectionHeader icon={FileText} title="Dados da Conta" color="purple" />
+              {/* Informações Principais */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">Dados da Conta</h3>
+                </div>
                 
                 <div className="space-y-4">
                   {/* Descrição */}
@@ -211,24 +192,21 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
                     <label className="text-sm font-medium text-gray-700 mb-2 block">
                       Descrição *
                     </label>
-                     <input
-                       type="text"
-                       value={dadosEdicao.descricao || ''}
-                        onChange={async (e) => {
-                          const valor = e.target.value;
-                          setDadosEdicao((prev: any) => ({ ...prev, descricao: valor }));
-                          await validarCampo('descricao', valor);
-                        }}
-                       className={`w-full bg-white border rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
-                         errosValidacao.descricao 
-                           ? 'border-red-300 focus:ring-red-500' 
-                           : 'border-gray-300 focus:ring-blue-500'
-                       }`}
-                       placeholder="Descrição da conta"
-                     />
-                     {errosValidacao.descricao && (
-                       <p className="text-red-500 text-sm mt-1">{errosValidacao.descricao}</p>
-                     )}
+                    <input
+                      type="text"
+                      value={dadosEdicao.descricao || ''}
+                      onChange={(e) => {
+                        setDadosEdicao((prev) => ({ ...prev, descricao: e.target.value }));
+                        validarCampo('descricao', e.target.value);
+                      }}
+                      className={`w-full bg-white border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        errosValidacao.descricao ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Digite a descrição da conta..."
+                    />
+                    {errosValidacao.descricao && (
+                      <p className="text-red-600 text-sm mt-1">{errosValidacao.descricao}</p>
+                    )}
                   </div>
 
                   {/* Documento/Referência */}
@@ -239,8 +217,8 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
                     <input
                       type="text"
                       value={dadosEdicao.documento_referencia || ''}
-                      onChange={(e) => setDadosEdicao((prev: any) => ({ ...prev, documento_referencia: e.target.value }))}
-                      className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      onChange={(e) => setDadosEdicao((prev) => ({ ...prev, documento_referencia: e.target.value }))}
+                      className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="NF 12345, Pedido 567, etc."
                     />
                   </div>
@@ -250,132 +228,214 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
                     <label className="text-sm font-medium text-gray-700 mb-2 block">
                       Data de Vencimento *
                     </label>
-                     <input
-                       type="date"
-                       value={dadosEdicao.data_vencimento || ''}
-                        onChange={async (e) => {
-                          const valor = e.target.value;
-                          setDadosEdicao((prev: any) => ({ ...prev, data_vencimento: valor }));
-                          await validarCampo('data_vencimento', valor);
-                        }}
-                       className={`w-full bg-white border rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
-                         errosValidacao.data_vencimento 
-                           ? 'border-red-300 focus:ring-red-500' 
-                           : 'border-gray-300 focus:ring-blue-500'
-                       }`}
-                     />
-                     {errosValidacao.data_vencimento && (
-                       <p className="text-red-500 text-sm mt-1">{errosValidacao.data_vencimento}</p>
-                     )}
+                    <input
+                      type="date"
+                      value={dadosEdicao.data_vencimento || ''}
+                      onChange={(e) => {
+                        setDadosEdicao((prev) => ({ ...prev, data_vencimento: e.target.value }));
+                        validarCampo('data_vencimento', e.target.value);
+                      }}
+                      className={`w-full bg-white border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        errosValidacao.data_vencimento ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    />
+                    {errosValidacao.data_vencimento && (
+                      <p className="text-red-600 text-sm mt-1">{errosValidacao.data_vencimento}</p>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Coluna 2: Valores */}
-              <div className="space-y-8">
-                <SectionHeader icon={DollarSign} title="Valores e Cálculos" color="green" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
-                <div className="space-y-4">
-                  {/* Valor Original */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Valor Original *
-                    </label>
-                     <CurrencyInput
-                       value={dadosEdicao.valor_original || 0}
-                        onChange={async (valor) => {
-                          setDadosEdicao((prev: any) => ({ ...prev, valor_original: valor }));
-                          await validarCampo('valor_original', valor);
+                {/* Coluna 1: Contato e Categoria */}
+                <div className="space-y-6">
+                  
+                  {/* Contato/Credor */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <User className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900">Contato</h4>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Credor *
+                      </label>
+                      <FornecedorSelector
+                        value={dadosEdicao.fornecedor}
+                        onSelect={(fornecedor) => {
+                          setDadosEdicao((prev) => ({ ...prev, fornecedor }));
+                          validarCampo('fornecedor_id', fornecedor?.id);
                         }}
-                       className={`bg-white border rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
-                         errosValidacao.valor_original 
-                           ? 'border-red-300 focus:ring-red-500' 
-                           : 'border-gray-300 focus:ring-blue-500'
-                       }`}
-                       placeholder="R$ 0,00"
-                     />
-                     {errosValidacao.valor_original && (
-                       <p className="text-red-500 text-sm mt-1">{errosValidacao.valor_original}</p>
-                     )}
-                  </div>
-
-                  {/* Juros */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Juros/Multa</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={dadosEdicao.percentual_juros || ''}
-                          onChange={(e) => setDadosEdicao((prev: any) => ({ ...prev, percentual_juros: parseFloat(e.target.value) || 0 }))}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-right text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                          placeholder="0,00"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Percentual (%)</p>
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          value={formatarMoeda(dadosEdicao.valor_juros || 0)}
-                          readOnly
-                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-right text-gray-600 font-medium"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Valor (R$)</p>
-                      </div>
+                        placeholder="Selecionar credor..."
+                        className="w-full"
+                      />
+                      {errosValidacao.fornecedor_id && (
+                        <p className="text-red-600 text-sm mt-1">{errosValidacao.fornecedor_id}</p>
+                      )}
                     </div>
                   </div>
 
-                  {/* Desconto */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Desconto</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={dadosEdicao.percentual_desconto || ''}
-                          onChange={(e) => setDadosEdicao((prev: any) => ({ ...prev, percentual_desconto: parseFloat(e.target.value) || 0 }))}
-                          className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-right text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                          placeholder="0,00"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Percentual (%)</p>
+                  {/* Categoria */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-purple-600" />
                       </div>
-                      <div>
-                        <input
-                          type="text"
-                          value={formatarMoeda(dadosEdicao.valor_desconto || 0)}
-                          readOnly
-                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-right text-gray-600 font-medium"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Valor (R$)</p>
-                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900">Categoria</h4>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Categoria/Plano de Contas *
+                      </label>
+                      <PlanoContasSelector
+                        value={dadosEdicao.plano_conta}
+                        onSelect={(conta) => {
+                          setDadosEdicao((prev) => ({ ...prev, plano_conta: conta }));
+                          validarCampo('plano_conta_id', conta?.id);
+                        }}
+                        placeholder="Selecionar categoria..."
+                        className="w-full"
+                      />
+                      {errosValidacao.plano_conta_id && (
+                        <p className="text-red-600 text-sm mt-1">{errosValidacao.plano_conta_id}</p>
+                      )}
                     </div>
                   </div>
+                </div>
+                
+                {/* Coluna 2: Valores e Cálculos */}
+                <div className="space-y-6">
+                  
+                  {/* Valores */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-green-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900">Valores e Cálculos</h4>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {/* Valor Original */}
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                          Valor Original *
+                        </label>
+                        <input
+                          type="text"
+                          value={formatarMoeda(dadosEdicao.valor_original || 0)}
+                          onChange={(e) => {
+                            const numbers = e.target.value.replace(/\D/g, '');
+                            const value = parseFloat(numbers) / 100 || 0;
+                            setDadosEdicao((prev) => ({ ...prev, valor_original: value }));
+                            validarCampo('valor_original', value);
+                          }}
+                          className={`w-full bg-white border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                            errosValidacao.valor_original ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          placeholder="R$ 0,00"
+                        />
+                        {errosValidacao.valor_original && (
+                          <p className="text-red-600 text-sm mt-1">{errosValidacao.valor_original}</p>
+                        )}
+                      </div>
 
-                  {/* Valor Final */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-800">Valor Final:</span>
-                      <span className="text-3xl font-bold text-blue-600">
-                        {formatarMoeda(dadosEdicao.valor_final || 0)}
-                      </span>
+                      {/* Juros/Multa */}
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                          Juros/Multa
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <input
+                              type="text"
+                              value={dadosEdicao.percentual_juros || ''}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^\d,]/g, '').replace(',', '.');
+                                setDadosEdicao((prev) => ({ ...prev, percentual_juros: parseFloat(value) || 0 }));
+                              }}
+                              className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-center"
+                              placeholder="0,00"
+                            />
+                            <p className="text-xs text-gray-500 mt-1 text-center">Percentual (%)</p>
+                          </div>
+                          <div>
+                            <input
+                              type="text"
+                              value={formatarMoeda(dadosEdicao.valor_juros || 0)}
+                              readOnly
+                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-right text-gray-600 font-medium"
+                            />
+                            <p className="text-xs text-gray-500 mt-1 text-center">Valor (R$)</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Desconto */}
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                          Desconto
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <input
+                              type="text"
+                              value={dadosEdicao.percentual_desconto || ''}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^\d,]/g, '').replace(',', '.');
+                                setDadosEdicao((prev) => ({ ...prev, percentual_desconto: parseFloat(value) || 0 }));
+                              }}
+                              className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-center"
+                              placeholder="0,00"
+                            />
+                            <p className="text-xs text-gray-500 mt-1 text-center">Percentual (%)</p>
+                          </div>
+                          <div>
+                            <input
+                              type="text"
+                              value={formatarMoeda(dadosEdicao.valor_desconto || 0)}
+                              readOnly
+                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-right text-gray-600 font-medium"
+                            />
+                            <p className="text-xs text-gray-500 mt-1 text-center">Valor (R$)</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Valor Final */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-bold text-gray-800">Valor Final:</span>
+                          <span className="text-3xl font-bold text-blue-600">
+                            {formatarMoeda(dadosEdicao.valor_final || 0)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Observações */}
-            <div className="mt-10">
-              <SectionHeader icon={MessageSquare} title="Observações" color="gray" />
-              <textarea
-                value={dadosEdicao.observacoes || ''}
-                onChange={(e) => setDadosEdicao((prev: any) => ({ ...prev, observacoes: e.target.value }))}
-                rows={4}
-                className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
-                placeholder="Observações sobre esta conta..."
-              />
+              {/* Observações */}
+              <div className="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-gray-600" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900">Observações</h4>
+                </div>
+                <textarea
+                  value={dadosEdicao.observacoes || ''}
+                  onChange={(e) => setDadosEdicao((prev) => ({ ...prev, observacoes: e.target.value }))}
+                  className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={4}
+                  placeholder="Adicione observações sobre esta conta..."
+                />
               </div>
             </div>
           </div>
@@ -394,14 +454,14 @@ export default function ContaEditarModal({ isOpen, onClose, conta, onSalvar }: C
               disabled={loading}
               className="flex items-center space-x-3 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              {loading && <LoadingSpinner size="sm" />}
+              {loading && <LoadingSpinner />}
+              <Save className="w-4 h-4" />
               <span>{loading ? 'Salvando...' : 'Salvar Alterações'}</span>
             </button>
             </div>
           </div>
         </div>
       </div>
-
     </>
   );
 }

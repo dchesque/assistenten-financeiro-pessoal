@@ -4,7 +4,7 @@ import { Fornecedor } from '@/types/fornecedor';
 import { PlanoContas } from '@/types/planoContas';
 import { Banco } from '@/types/banco';
 import { formatarMoeda, formatarData, formatarDataHora } from '@/utils/formatters';
-import { Edit, FileText, X, Info, Calendar, DollarSign, CreditCard, MessageSquare } from 'lucide-react';
+import { Edit, FileText, X, DollarSign, Calendar, CreditCard, MessageSquare, Building2 } from 'lucide-react';
 import { SectionHeader, FieldDisplay } from './ModalComponents';
 
 interface ContaVisualizarModalProps {
@@ -102,124 +102,199 @@ export default function ContaVisualizarModal({
         {/* Conteúdo */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6">
+            
+            {/* Descrição Destacada */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 mb-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Descrição</h3>
+              <p className="text-gray-800 text-base leading-relaxed">{conta.descricao}</p>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               
-              {/* Coluna 1: Informações Básicas */}
-              <div className="space-y-8">
-                <SectionHeader icon={Info} title="Informações Básicas" color="blue" />
+              {/* Coluna 1: Informações do Contato e Categoria */}
+              <div className="space-y-6">
                 
-                <div className="space-y-4">
-                  <FieldDisplay label="Descrição" value={conta.descricao} />
-                  {conta.documento_referencia && (
-                    <FieldDisplay label="Documento/Referência" value={conta.documento_referencia} />
-                  )}
-                  <FieldDisplay 
-                    label="Credor" 
-                    value={conta.fornecedor ? conta.fornecedor.nome : 'Sem fornecedor'} 
-                  />
-                  <FieldDisplay 
-                    label="Categoria" 
-                    value={conta.plano_conta ? conta.plano_conta.nome : 'Sem categoria'} 
-                  />
-                </div>
-                
-                <SectionHeader icon={Calendar} title="Datas e Prazos" color="purple" />
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FieldDisplay label="Data de Emissão" value={conta.data_emissao ? formatarData(conta.data_emissao) : '-'} />
-                    <FieldDisplay label="Data de Vencimento" value={formatarData(conta.data_vencimento)} />
-                  </div>
-                  <FieldDisplay label="Data de Vencimento" value={formatarData(conta.data_vencimento)} />
-                  
-                  {conta.status !== 'pago' && diasVencimento < 0 && (
-                    <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-xl">
-                      <p className="text-red-800 font-semibold">
-                        ⚠️ {Math.abs(diasVencimento)} dias em atraso
-                      </p>
+                {/* Contato/Credor */}
+                <div className="bg-white border border-gray-200 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-blue-600" />
                     </div>
-                  )}
-                  
-                  {conta.status === 'pago' && conta.data_pagamento && (
-                    <FieldDisplay 
-                      label="Data de Pagamento" 
-                      value={formatarData(conta.data_pagamento)} 
-                      valueClass="text-green-600 font-semibold"
-                    />
+                    <h4 className="text-lg font-semibold text-gray-900">Contato</h4>
+                  </div>
+                  <p className="text-gray-700 font-medium text-lg">
+                    {conta.fornecedor ? conta.fornecedor.nome : 'Sem contato vinculado'}
+                  </p>
+                </div>
+
+                {/* Categoria */}
+                <div className="bg-white border border-gray-200 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Categoria</h4>
+                  </div>
+                  {conta.plano_conta ? (
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: conta.plano_conta.cor || '#6B7280' }}
+                      />
+                      <p className="text-gray-700 font-medium text-lg">{conta.plano_conta.nome}</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">Sem categoria</p>
                   )}
                 </div>
+
+                {/* Documentos */}
+                {conta.documento_referencia && (
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-green-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900">Documento</h4>
+                    </div>
+                    <p className="text-gray-700 font-medium">{conta.documento_referencia}</p>
+                  </div>
+                )}
               </div>
               
-              {/* Coluna 2: Informações Financeiras */}
-              <div className="space-y-8">
-                <SectionHeader icon={DollarSign} title="Informações Financeiras" color="green" />
+              {/* Coluna 2: Informações Financeiras e Datas */}
+              <div className="space-y-6">
                 
-                <div className="space-y-4">
-                  <FieldDisplay label="Valor Original" value={formatarMoeda(conta.valor_original)} />
-                  
-                  {conta.valor_juros && conta.valor_juros > 0 && (
-                    <FieldDisplay 
-                      label="Juros" 
-                      value={`${conta.percentual_juros ? `${conta.percentual_juros}% - ` : ''}${formatarMoeda(conta.valor_juros)}`}
-                      valueClass="text-red-600 font-semibold"
-                    />
-                  )}
-                  
-                  {conta.valor_desconto && conta.valor_desconto > 0 && (
-                    <FieldDisplay 
-                      label="Desconto" 
-                      value={`${conta.percentual_desconto ? `${conta.percentual_desconto}% - ` : ''}${formatarMoeda(conta.valor_desconto)}`}
-                      valueClass="text-green-600 font-semibold"
-                    />
-                  )}
-                  
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-800">Valor Final:</span>
-                      <span className="text-3xl font-bold text-blue-600">
-                        {formatarMoeda(conta.valor_final)}
-                      </span>
+                {/* Informações Financeiras */}
+                <div className="bg-white border border-gray-200 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-green-600" />
                     </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Valores</h4>
                   </div>
                   
-                  {conta.status === 'pago' && conta.valor_pago && (
-                    <FieldDisplay 
-                      label="Valor Pago" 
-                      value={formatarMoeda(conta.valor_pago)} 
-                      valueClass="text-green-600 font-semibold" 
-                    />
-                  )}
-                </div>
-                
-                {conta.status === 'pago' && conta.banco && (
-                  <>
-                    <SectionHeader icon={CreditCard} title="Informações do Pagamento" color="emerald" />
-                    <div className="space-y-4">
-                      <FieldDisplay label="Banco" value={conta.banco.nome} />
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Valor Original:</span>
+                      <span className="font-semibold text-gray-900">{formatarMoeda(conta.valor_original)}</span>
                     </div>
-                  </>
+                    
+                    {conta.valor_juros && conta.valor_juros > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Juros/Multa:</span>
+                        <span className="font-semibold text-red-600">+{formatarMoeda(conta.valor_juros)}</span>
+                      </div>
+                    )}
+                    
+                    {conta.valor_desconto && conta.valor_desconto > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Desconto:</span>
+                        <span className="font-semibold text-green-600">-{formatarMoeda(conta.valor_desconto)}</span>
+                      </div>
+                    )}
+                    
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-gray-900">Valor Final:</span>
+                        <span className="text-2xl font-bold text-blue-600">{formatarMoeda(conta.valor_final)}</span>
+                      </div>
+                    </div>
+                    
+                    {conta.status === 'pago' && conta.valor_pago && (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-green-800 font-medium">Valor Pago:</span>
+                          <span className="font-bold text-green-600">{formatarMoeda(conta.valor_pago)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Datas */}
+                <div className="bg-white border border-gray-200 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Datas</h4>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {conta.data_emissao && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Data de Emissão:</span>
+                        <span className="font-medium text-gray-900">{formatarData(conta.data_emissao)}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Data de Vencimento:</span>
+                      <span className={`font-medium ${
+                        conta.status !== 'pago' && diasVencimento < 0 
+                          ? 'text-red-600' 
+                          : 'text-gray-900'
+                      }`}>
+                        {formatarData(conta.data_vencimento)}
+                      </span>
+                    </div>
+                    
+                    {conta.status !== 'pago' && diasVencimento < 0 && (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <p className="text-red-800 font-semibold text-center">
+                          ⚠️ {Math.abs(diasVencimento)} dias em atraso
+                        </p>
+                      </div>
+                    )}
+                    
+                    {conta.status === 'pago' && conta.data_pagamento && (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-green-800 font-medium">Data de Pagamento:</span>
+                          <span className="font-bold text-green-600">{formatarData(conta.data_pagamento)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Informações do Banco (se pago) */}
+                {conta.status === 'pago' && conta.banco && (
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900">Banco</h4>
+                    </div>
+                    <p className="text-gray-700 font-medium">{conta.banco.nome}</p>
+                  </div>
                 )}
               </div>
             </div>
             
             {/* Observações */}
             {conta.observacoes && (
-              <div className="mt-10">
-                <SectionHeader icon={MessageSquare} title="Observações" color="gray" />
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
-                  <p className="text-gray-800 leading-relaxed">{conta.observacoes}</p>
+              <div className="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-gray-600" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900">Observações</h4>
                 </div>
+                <p className="text-gray-800 leading-relaxed">{conta.observacoes}</p>
               </div>
             )}
             
             {/* Informações do Sistema */}
-            <div className="mt-10 pt-8 border-t border-gray-100">
-              <div className="grid grid-cols-2 gap-6 text-sm">
-                <div className="text-gray-600">
-                  <span className="font-semibold text-gray-800">Criado em:</span> {formatarDataHora(conta.created_at || '')}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-500">
+                <div>
+                  <span className="font-medium text-gray-700">Criado em:</span> {formatarDataHora(conta.created_at || '')}
                 </div>
-                <div className="text-gray-600">
-                  <span className="font-semibold text-gray-800">Última atualização:</span> {formatarDataHora(conta.updated_at || '')}
+                <div>
+                  <span className="font-medium text-gray-700">Última atualização:</span> {formatarDataHora(conta.updated_at || '')}
                 </div>
               </div>
             </div>
