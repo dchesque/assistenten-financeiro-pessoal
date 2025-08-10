@@ -137,8 +137,8 @@ export function ContaPreview({ conta, formaPagamento, credorSelecionado, contaSe
             <div className="flex items-start space-x-3">
               <Building2 className="h-5 w-5 text-primary mt-0.5" />
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900">{fornecedor.nome}</div>
-                <div className="text-xs text-gray-500">{fornecedor.documento}</div>
+                <div className="text-sm font-medium text-gray-900">{fornecedor.nome || fornecedor.name}</div>
+                <div className="text-xs text-gray-500">{fornecedor.documento || fornecedor.document}</div>
               </div>
             </div>
           ) : (
@@ -154,9 +154,8 @@ export function ContaPreview({ conta, formaPagamento, credorSelecionado, contaSe
               <FolderTree className="h-5 w-5 text-success mt-0.5" />
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-900">
-                  {planoContasItem.name}
+                  {planoContasItem.name || planoContasItem.nome}
                 </div>
-                <div className="text-xs text-gray-500">{planoContasItem.color}</div>
               </div>
             </div>
           ) : (
