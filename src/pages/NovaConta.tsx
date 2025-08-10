@@ -18,6 +18,8 @@ import { ContaPreview } from '@/components/contasPagar/ContaPreview';
 import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
 import { RecorrenciaSection, RecorrenciaData } from '@/components/contasPagar/RecorrenciaSection';
 import { BankAccountSelector } from '@/components/contasPagar/BankAccountSelector';
+import { BankAccountSelect } from '@/components/ui/BankAccountSelect';
+import { useBankAccountsAll } from '@/hooks/useBankAccountsAll';
 import { Button } from '@/components/ui/button';
 import { LoadingButton } from '@/components/ui/LoadingButton';
 import { Input } from '@/components/ui/input';
@@ -44,6 +46,19 @@ export default function NovaConta() {
   const { contatos } = useContatos();
   const { user } = useAuth();
   const { isSaving, setLoading } = useLoadingStates();
+  
+  // Hook para contas bancárias
+  const { accounts: allBankAccounts = [] } = useBankAccountsAll();
+  
+  // Formatar contas bancárias para o BankAccountSelect
+  const contasBancariasFormatadas = allBankAccounts.map(account => ({
+    id: account.id,
+    account_number: account.account_number || '',
+    agency: account.agency || '',
+    bank_name: (account as any).bank?.name || 'Banco não informado',
+    current_balance: (account as any).current_balance || 0,
+    type: (account as any).type || 'checking'
+  }));
 
   // Filtrar apenas credores (suppliers)
   const credores = contatos.filter(contato => contato.type === 'supplier');
@@ -682,9 +697,9 @@ export default function NovaConta() {
                   </div>
 
                   <RadioGroup value={conta.status} onValueChange={value => setConta(prev => ({
-                  ...prev,
-                  status: value as any
-                }))} className="flex space-x-8">
+                    ...prev,
+                    status: value as any
+                  }))} className="flex space-x-8">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="pendente" id="pendente" />
                       <Label htmlFor="pendente" className="text-sm font-medium text-gray-700">
@@ -699,124 +714,234 @@ export default function NovaConta() {
                     </div>
                   </RadioGroup>
 
-                  {/* Campos condicionais para pagamento */}
+                  {/* Campos expandidos quando pago */}
                   {conta.status === 'pago' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-green-50/50 rounded-lg border border-green-200/50">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Banco <span className="text-red-500">*</span>
-                        </Label>
-                        <Select value={conta.banco_id?.toString()} onValueChange={value => setConta(prev => ({
-                          ...prev,
-                          banco_id: parseInt(value)
-                        }))}>
-                          <SelectTrigger className="bg-white/80 backdrop-blur-sm border-gray-300/50">
-                            <SelectValue placeholder="Selecionar banco" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {bancos.filter(b => !b.deleted_at).map(banco => (
-                              <SelectItem key={banco.id} value={banco.id}>
-                                {banco.name} - {banco.type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Data de Pagamento
-                        </Label>
-                        <Input 
-                          type="date" 
-                          value={conta.data_pagamento || new Date().toISOString().split('T')[0]} 
-                          onChange={e => setConta(prev => ({
-                            ...prev,
-                            data_pagamento: e.target.value
-                          }))} 
-                          className="bg-white/80 backdrop-blur-sm border-gray-300/50" 
+                    <div className="space-y-6 p-6 bg-green-50/50 rounded-xl border border-green-200/50">
+                      {/* Banco e Conta */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <Building2 className="h-5 w-5 text-green-600" />
+                          <span className="font-medium text-green-900">Dados do Pagamento</span>
+                        </div>
+                        
+                        <BankAccountSelect
+                          value={contaBancaria.banco_id ? `${contaBancaria.banco_id}-${contaBancaria.conta_id}` : ''}
+                          onValueChange={(value) => {
+                            if (value) {
+                              const [bancoId, contaId] = value.split('-');
+                              setContaBancaria({
+                                banco_id: bancoId,
+                                conta_id: contaId
+                              });
+                              setConta(prev => ({ ...prev, banco_id: parseInt(bancoId) }));
+                            }
+                          }}
+                          accounts={contasBancariasFormatadas}
+                          placeholder="Selecione o banco e conta do pagamento"
                         />
                       </div>
 
-                       <div className="space-y-2">
-                         <Label className="text-sm font-medium text-gray-700 flex items-center justify-between">
-                           Valor Pago <span className="text-red-500">*</span>
-                           <Button
-                             type="button"
-                             variant="outline"
-                             size="sm"
-                             onClick={preencherValorOriginal}
-                             className="text-xs h-6 px-2 bg-blue-50/80 hover:bg-blue-100/80 text-blue-700"
-                           >
-                             Preencher Valor Original
-                           </Button>
-                         </Label>
-                         <Input 
-                           type="text" 
-                           placeholder="R$ 0,00" 
-                           value={valorPagoMask} 
-                           onChange={e => handleValorPago(e.target.value)} 
-                           className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right" 
-                         />
-                       </div>
+                      {/* Forma de Pagamento */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <CreditCard className="h-5 w-5 text-green-600" />
+                          <span className="font-medium text-green-900">Forma de Pagamento</span>
+                        </div>
+                        
+                        <RadioGroup value={formaPagamento.tipo} onValueChange={tipo => setFormaPagamento(prev => ({
+                          ...prev,
+                          tipo: tipo as any
+                        }))} className="flex space-x-6">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="dinheiro_pix" id="dinheiro_pix" />
+                            <Label htmlFor="dinheiro_pix" className="text-sm font-medium text-gray-700">
+                              💰 Dinheiro/PIX
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="cartao" id="cartao" />
+                            <Label htmlFor="cartao" className="text-sm font-medium text-gray-700">
+                              💳 Cartão
+                            </Label>
+                          </div>
+                        </RadioGroup>
 
-                       {/* Juros/Multa Calculados */}
-                       <div className="space-y-2">
-                         <Label className="text-sm font-medium text-gray-700">
-                           Juros/Multa Calculados
-                         </Label>
-                         <div className={`border rounded-lg p-3 ${
-                           (conta.valor_pago || 0) > (conta.valor_original || 0) 
-                             ? 'bg-red-50/80 border-red-200' 
-                             : (conta.valor_pago || 0) < (conta.valor_original || 0)
-                               ? 'bg-green-50/80 border-green-200'
-                               : 'bg-gray-50/80 border-gray-200'
-                         }`}>
-                           <span className={`text-lg font-bold ${
-                             (conta.valor_pago || 0) > (conta.valor_original || 0) 
-                               ? 'text-red-600' 
-                               : (conta.valor_pago || 0) < (conta.valor_original || 0)
-                                 ? 'text-green-600'
-                                 : 'text-gray-600'
-                           }`}>
-                             {((conta.valor_pago || 0) - (conta.valor_original || 0)) >= 0 
-                               ? `+ ${numeroParaMascaraMoeda((conta.valor_pago || 0) - (conta.valor_original || 0))}`
-                               : `- ${numeroParaMascaraMoeda(Math.abs((conta.valor_pago || 0) - (conta.valor_original || 0)))}`
-                             }
-                           </span>
-                           <p className="text-xs mt-1 text-gray-600">
-                             Diferença entre valor pago e valor original
-                           </p>
-                         </div>
-                       </div>
+                        {/* Tipo de cartão se for cartão */}
+                        {formaPagamento.tipo === 'cartao' && (
+                          <div className="pl-6 space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">Tipo de Cartão</Label>
+                            <RadioGroup value={formaPagamento.tipo_cartao} onValueChange={tipo => setFormaPagamento(prev => ({
+                              ...prev,
+                              tipo_cartao: tipo as any
+                            }))} className="flex space-x-4">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="debito" id="debito" />
+                                <Label htmlFor="debito" className="text-sm text-gray-600">Débito</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="credito" id="credito" />
+                                <Label htmlFor="credito" className="text-sm text-gray-600">Crédito</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Data e Valor do Pagamento */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Data de Pagamento
+                          </Label>
+                          <Input 
+                            type="date" 
+                            value={conta.data_pagamento || new Date().toISOString().split('T')[0]} 
+                            onChange={e => setConta(prev => ({
+                              ...prev,
+                              data_pagamento: e.target.value
+                            }))} 
+                            className="bg-white/80 backdrop-blur-sm border-gray-300/50" 
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700 flex items-center justify-between">
+                            Valor Pago <span className="text-red-500">*</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={preencherValorOriginal}
+                              className="text-xs h-6 px-2 bg-blue-50/80 hover:bg-blue-100/80 text-blue-700"
+                            >
+                              Preencher Valor Original
+                            </Button>
+                          </Label>
+                          <Input 
+                            type="text" 
+                            placeholder="R$ 0,00" 
+                            value={valorPagoMask} 
+                            onChange={e => handleValorPago(e.target.value)} 
+                            className="bg-white/80 backdrop-blur-sm border-gray-300/50 text-right" 
+                          />
+                        </div>
+                      </div>
+
+                      {/* Juros/Multa Calculados */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Juros/Multa Calculados
+                        </Label>
+                        <div className={`border rounded-lg p-3 ${
+                          (conta.valor_pago || 0) > (conta.valor_original || 0) 
+                            ? 'bg-red-50/80 border-red-200' 
+                            : (conta.valor_pago || 0) < (conta.valor_original || 0)
+                              ? 'bg-green-50/80 border-green-200'
+                              : 'bg-gray-50/80 border-gray-200'
+                        }`}>
+                          <span className={`text-lg font-bold ${
+                            (conta.valor_pago || 0) > (conta.valor_original || 0) 
+                              ? 'text-red-600' 
+                              : (conta.valor_pago || 0) < (conta.valor_original || 0)
+                                ? 'text-green-600'
+                                : 'text-gray-600'
+                          }`}>
+                            {((conta.valor_pago || 0) - (conta.valor_original || 0)) >= 0 
+                              ? `+ ${numeroParaMascaraMoeda((conta.valor_pago || 0) - (conta.valor_original || 0))}`
+                              : `- ${numeroParaMascaraMoeda(Math.abs((conta.valor_pago || 0) - (conta.valor_original || 0)))}`
+                            }
+                          </span>
+                          <p className="text-xs mt-1 text-gray-600">
+                            Diferença entre valor pago e valor original
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
 
                 <Separator />
 
-                <FormaPagamentoSection 
-                  value={formaPagamento}
-                  onChange={setFormaPagamento}
-                  numeroParcelas={1}
-                  bancos={bancos as any}
-                />
-
-                {/* Seletor de Banco e Conta (apenas para DDA ou contas pagas) */}
-                {(conta.dda || conta.status === 'pago') && (
-                  <div className="space-y-4 p-4 bg-blue-50/80 border border-blue-200 rounded-xl">
+                {/* Seção: Forma de Pagamento (apenas se pendente) */}
+                {conta.status === 'pendente' && (
+                  <div className="space-y-6">
                     <div className="flex items-center space-x-2">
-                      <Building2 className="h-5 w-5 text-blue-600" />
-                      <span className="font-medium text-blue-900">
-                        {conta.dda ? 'Conta para Débito Automático (DDA)' : 'Conta de Pagamento'}
-                      </span>
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">5</span>
+                      </div>
+                      <h2 className="text-xl font-semibold text-gray-900">Forma de Pagamento</h2>
                     </div>
-                    
-                    <BankAccountSelector
-                      value={contaBancaria}
-                      onChange={setContaBancaria}
-                    />
+
+                    <div className="space-y-4">
+                      <RadioGroup value={formaPagamento.tipo} onValueChange={tipo => setFormaPagamento(prev => ({
+                        ...prev,
+                        tipo: tipo as any
+                      }))} className="flex space-x-6">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="dinheiro_pix" id="forma_dinheiro_pix" />
+                          <Label htmlFor="forma_dinheiro_pix" className="text-sm font-medium text-gray-700">
+                            💰 Dinheiro/PIX
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="cartao" id="forma_cartao" />
+                          <Label htmlFor="forma_cartao" className="text-sm font-medium text-gray-700">
+                            💳 Cartão
+                          </Label>
+                        </div>
+                      </RadioGroup>
+
+                      {/* Tipo de cartão se for cartão */}
+                      {formaPagamento.tipo === 'cartao' && (
+                        <div className="pl-6 space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">Tipo de Cartão</Label>
+                          <RadioGroup value={formaPagamento.tipo_cartao} onValueChange={tipo => setFormaPagamento(prev => ({
+                            ...prev,
+                            tipo_cartao: tipo as any
+                          }))} className="flex space-x-4">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="debito" id="tipo_debito" />
+                              <Label htmlFor="tipo_debito" className="text-sm text-gray-600">Débito</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="credito" id="tipo_credito" />
+                              <Label htmlFor="tipo_credito" className="text-sm text-gray-600">Crédito</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                )}
+
+                {/* Seletor de Banco e Conta (apenas para DDA) */}
+                {conta.dda && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4 p-4 bg-blue-50/80 border border-blue-200 rounded-xl">
+                      <div className="flex items-center space-x-2">
+                        <Building2 className="h-5 w-5 text-blue-600" />
+                        <span className="font-medium text-blue-900">
+                          Conta para Débito Automático (DDA)
+                        </span>
+                      </div>
+                      
+                      <BankAccountSelect
+                        value={contaBancaria.banco_id ? `${contaBancaria.banco_id}-${contaBancaria.conta_id}` : ''}
+                        onValueChange={(value) => {
+                          if (value) {
+                            const [bancoId, contaId] = value.split('-');
+                            setContaBancaria({
+                              banco_id: bancoId,
+                              conta_id: contaId
+                            });
+                          }
+                        }}
+                        accounts={contasBancariasFormatadas}
+                        placeholder="Selecione a conta para débito automático"
+                      />
+                    </div>
+                  </>
                 )}
 
                 <Separator />
@@ -825,7 +950,7 @@ export default function NovaConta() {
                 <div className="space-y-6">
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">7</span>
+                      <span className="text-white font-bold text-sm">{conta.status === 'pendente' ? '6' : '5'}</span>
                     </div>
                     <h2 className="text-xl font-semibold text-gray-900">Observações</h2>
                   </div>
