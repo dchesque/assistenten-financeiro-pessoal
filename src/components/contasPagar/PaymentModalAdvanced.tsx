@@ -159,20 +159,15 @@ export function PaymentModalAdvanced({
                     Nenhuma conta cadastrada
                   </SelectItem>
                   ) : (
-                    allBankAccounts.map(account => (
-                      <SelectItem key={account.id} value={account.id}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{account.bank_name}</span>
-                          <span className="text-sm text-gray-500">
-                            {account.agency && account.account_number 
-                              ? `Ag: ${account.agency} | CC: ${account.account_number}`
-                              : account.pix_key 
-                              ? `PIX: ${account.pix_key}`
-                              : 'Conta bancária'}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))
+                     allBankAccounts.map(account => (
+                       <SelectItem key={account.id} value={account.id}>
+                         {account.bank_name} - {account.agency && account.account_number 
+                           ? `Ag: ${account.agency} | CC: ${account.account_number}`
+                           : account.pix_key 
+                           ? `PIX: ${account.pix_key}`
+                           : 'Conta bancária'}
+                       </SelectItem>
+                     ))
                   )}
                 </SelectContent>
               </Select>
