@@ -35,10 +35,7 @@ export function PaymentModalAdvanced({
   const [formData, setFormData] = useState({
     bank_account_id: '',
     paid_at: new Date().toISOString().split('T')[0],
-    percentual_juros: 0,
-    valor_juros: 0,
-    percentual_desconto: 0,
-    valor_desconto: 0,
+    valor_pago: 0,
     observacoes_pagamento: ''
   });
 
@@ -51,10 +48,7 @@ export function PaymentModalAdvanced({
       setFormData({
         bank_account_id: '',
         paid_at: new Date().toISOString().split('T')[0],
-        percentual_juros: 0,
-        valor_juros: 0,
-        percentual_desconto: 0,
-        valor_desconto: 0,
+        valor_pago: conta.amount,
         observacoes_pagamento: ''
       });
       setErrors({});
@@ -73,75 +67,24 @@ export function PaymentModalAdvanced({
 
   // Cálculos automáticos
   const valorOriginal = conta.amount;
-  const valorJuros = formData.valor_juros || (valorOriginal * formData.percentual_juros / 100);
-  const valorDesconto = formData.valor_desconto || (valorOriginal * formData.percentual_desconto / 100);
-  const valorFinal = valorOriginal + valorJuros - valorDesconto;
+  const valorPago = formData.valor_pago;
+  const diferenca = valorPago - valorOriginal;
+  const jurosCalculado = diferenca > 0 ? diferenca : 0;
+  const descontoCalculado = diferenca < 0 ? Math.abs(diferenca) : 0;
 
-  const handlePercentualJurosChange = (value: string) => {
-    const percentual = parseFloat(value) || 0;
-    const valor = valorOriginal * percentual / 100;
-    setFormData(prev => ({ 
-      ...prev, 
-      percentual_juros: percentual,
-      valor_juros: valor,
-      // Limpar desconto quando aplicar juros
-      percentual_desconto: 0,
-      valor_desconto: 0
-    }));
-  };
-
-  const handleValorJurosChange = (value: string) => {
-    const valor = parseFloat(value) || 0;
-    const percentual = valorOriginal > 0 ? (valor / valorOriginal) * 100 : 0;
-    setFormData(prev => ({ 
-      ...prev, 
-      valor_juros: valor,
-      percentual_juros: percentual,
-      // Limpar desconto quando aplicar juros
-      percentual_desconto: 0,
-      valor_desconto: 0
-    }));
-  };
-
-  const handlePercentualDescontoChange = (value: string) => {
-    const percentual = parseFloat(value) || 0;
-    const valor = valorOriginal * percentual / 100;
-    setFormData(prev => ({ 
-      ...prev, 
-      percentual_desconto: percentual,
-      valor_desconto: valor,
-      // Limpar juros quando aplicar desconto
-      percentual_juros: 0,
-      valor_juros: 0
-    }));
-  };
-
-  const handleValorDescontoChange = (value: string) => {
-    const valor = parseFloat(value) || 0;
-    const percentual = valorOriginal > 0 ? (valor / valorOriginal) * 100 : 0;
-    setFormData(prev => ({ 
-      ...prev, 
-      valor_desconto: valor,
-      percentual_desconto: percentual,
-      // Limpar juros quando aplicar desconto
-      percentual_juros: 0,
-      valor_juros: 0
-    }));
+  const preencherValorOriginal = () => {
+    setFormData(prev => ({ ...prev, valor_pago: valorOriginal }));
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.bank_account_id) {
-      newErrors.bank_account_id = 'Conta bancária é obrigatória';
-    }
-
     if (!formData.paid_at) {
       newErrors.paid_at = 'Data de pagamento é obrigatória';
     }
 
-    if (valorFinal <= 0) {
-      newErrors.valor_final = 'Valor final deve ser maior que zero';
+    if (!formData.valor_pago || formData.valor_pago <= 0) {
+      newErrors.valor_pago = 'Valor pago deve ser maior que zero';
     }
 
     setErrors(newErrors);
@@ -155,11 +98,19 @@ export function PaymentModalAdvanced({
 
     try {
       const paymentData = {
-        ...formData,
+        bank_account_id: formData.bank_account_id || undefined,
+        paid_at: formData.paid_at,
+        valor_pago: formData.valor_pago,
         valor_original: valorOriginal,
-        valor_juros: valorJuros,
-        valor_desconto: valorDesconto,
-        valor_final: valorFinal
+        observacoes: formData.observacoes_pagamento,
+        juros: {
+          percentual: valorOriginal > 0 ? (jurosCalculado / valorOriginal) * 100 : 0,
+          valor: jurosCalculado
+        },
+        desconto: {
+          percentual: valorOriginal > 0 ? (descontoCalculado / valorOriginal) * 100 : 0,
+          valor: descontoCalculado
+        }
       };
       
       await onConfirm(paymentData);
@@ -190,18 +141,19 @@ export function PaymentModalAdvanced({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Conta Bancária e Data */}
+          {/* Informações de Pagamento */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="bank_account_id">Conta Bancária *</Label>
+              <Label htmlFor="bank_account_id">Conta Bancária (Opcional)</Label>
               <Select 
                 value={formData.bank_account_id} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, bank_account_id: value }))}
               >
-                <SelectTrigger className={errors.bank_account_id ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Selecione a conta" />
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a conta (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">Não informar conta</SelectItem>
                   {allBankAccounts.length === 0 ? (
                   <SelectItem value="nenhuma" disabled>
                     Nenhuma conta cadastrada
@@ -224,7 +176,6 @@ export function PaymentModalAdvanced({
                   )}
                 </SelectContent>
               </Select>
-              {errors.bank_account_id && <p className="text-sm text-red-600">{errors.bank_account_id}</p>}
             </div>
 
             <div className="space-y-2">
@@ -240,93 +191,30 @@ export function PaymentModalAdvanced({
             </div>
           </div>
 
-          <Separator />
-
-          {/* Juros e Descontos */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-gray-900 flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
-              Ajustes de Valor
-            </h4>
-
-            {/* Tipo de Cálculo */}
-            <div className="flex gap-2">
+          {/* Valor Pago */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="valor_pago">Valor Pago *</Label>
               <Button
                 type="button"
-                variant={calculationType === 'juros' ? 'default' : 'outline'}
+                variant="outline"
                 size="sm"
-                onClick={() => setCalculationType('juros')}
-                className="flex items-center gap-1"
+                onClick={preencherValorOriginal}
+                className="text-xs"
               >
-                <Percent className="w-3 h-3" />
-                Aplicar Juros
-              </Button>
-              <Button
-                type="button"
-                variant={calculationType === 'desconto' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCalculationType('desconto')}
-                className="flex items-center gap-1"
-              >
-                <Percent className="w-3 h-3" />
-                Aplicar Desconto
+                Preencher Valor Original
               </Button>
             </div>
-
-            {calculationType === 'juros' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-red-50/30 rounded-lg border border-red-200/50">
-                <div className="space-y-2">
-                  <Label>Juros (%)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.percentual_juros}
-                    onChange={(e) => handlePercentualJurosChange(e.target.value)}
-                    placeholder="0,00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Valor dos Juros (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.valor_juros}
-                    onChange={(e) => handleValorJurosChange(e.target.value)}
-                    placeholder="0,00"
-                  />
-                </div>
-              </div>
-            )}
-
-            {calculationType === 'desconto' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-green-50/30 rounded-lg border border-green-200/50">
-                <div className="space-y-2">
-                  <Label>Desconto (%)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={formData.percentual_desconto}
-                    onChange={(e) => handlePercentualDescontoChange(e.target.value)}
-                    placeholder="0,00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Valor do Desconto (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.valor_desconto}
-                    onChange={(e) => handleValorDescontoChange(e.target.value)}
-                    placeholder="0,00"
-                  />
-                </div>
-              </div>
-            )}
+            <Input
+              id="valor_pago"
+              type="number"
+              step="0.01"
+              value={formData.valor_pago}
+              onChange={(e) => setFormData(prev => ({ ...prev, valor_pago: parseFloat(e.target.value) || 0 }))}
+              className={errors.valor_pago ? 'border-red-500' : ''}
+              placeholder="0,00"
+            />
+            {errors.valor_pago && <p className="text-sm text-red-600">{errors.valor_pago}</p>}
           </div>
 
           <Separator />
@@ -339,27 +227,30 @@ export function PaymentModalAdvanced({
                 <span>Valor Original:</span>
                 <span className="font-medium">{formatCurrency(valorOriginal)}</span>
               </div>
-              {valorJuros > 0 && (
+              <div className="flex justify-between">
+                <span>Valor a Pagar:</span>
+                <span className="font-medium">{formatCurrency(formData.valor_pago)}</span>
+              </div>
+              {jurosCalculado > 0 && (
                 <div className="flex justify-between text-red-600">
-                  <span>+ Juros ({formData.percentual_juros.toFixed(2)}%):</span>
-                  <span className="font-medium">+{formatCurrency(valorJuros)}</span>
+                  <span>+ Juros/Multa:</span>
+                  <span className="font-medium">+{formatCurrency(jurosCalculado)}</span>
                 </div>
               )}
-              {valorDesconto > 0 && (
+              {descontoCalculado > 0 && (
                 <div className="flex justify-between text-green-600">
-                  <span>- Desconto ({formData.percentual_desconto.toFixed(2)}%):</span>
-                  <span className="font-medium">-{formatCurrency(valorDesconto)}</span>
+                  <span>- Desconto:</span>
+                  <span className="font-medium">-{formatCurrency(descontoCalculado)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between text-lg font-semibold">
-                <span>Valor Final:</span>
-                <span className={valorFinal !== valorOriginal ? 'text-primary' : ''}>
-                  {formatCurrency(valorFinal)}
+                <span>Total a Pagar:</span>
+                <span className="text-primary">
+                  {formatCurrency(formData.valor_pago)}
                 </span>
               </div>
             </div>
-            {errors.valor_final && <p className="text-sm text-red-600 mt-2">{errors.valor_final}</p>}
           </div>
 
           {/* Observações */}
@@ -388,7 +279,7 @@ export function PaymentModalAdvanced({
               disabled={loading}
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
             >
-              {loading ? 'Processando...' : `Confirmar Pagamento - ${formatCurrency(valorFinal)}`}
+              {loading ? 'Processando...' : `Confirmar Pagamento - ${formatCurrency(formData.valor_pago)}`}
             </Button>
           </DialogFooter>
         </form>

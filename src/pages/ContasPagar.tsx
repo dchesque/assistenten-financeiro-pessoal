@@ -14,27 +14,39 @@ import { useLoadingState } from '@/hooks/useLoadingStates';
 import { AccountPayable } from '@/types/accounts';
 import { formatCurrency } from '@/utils/currency';
 import { showMessage } from '@/utils/messages';
+import { ConfirmacaoModal } from '@/components/ui/ConfirmacaoModal';
+import ContaVisualizarModal from '@/components/contasPagar/ContaVisualizarModal';
+import ContaEditarModal from '@/components/contasPagar/ContaEditarModal';
+import { accountPayableToContaPagar } from '@/utils/typeAdapters';
 
 export default function ContasPagar() {
   const navigate = useNavigate();
+  const filtrosIniciais = {
+    status: 'pendente',
+    mes: new Date().toISOString().slice(0, 7) // Mês atual (YYYY-MM)
+  };
+
   const { 
     contas: accounts, 
     loading, 
     criarConta: createAccount, 
     baixarConta: markAsPaid, 
     excluirConta: deleteAccount,
+    atualizarConta: updateAccount,
     filtros,
     setFiltros,
     filtroRapido,
     setFiltroRapido,
     limparFiltros
-  } = useContasPagarOtimizado();
+  } = useContasPagarOtimizado(filtrosIniciais);
   const { categories } = useCategories();
   const { contatos: contacts } = useContatos();
   const { isLoading, setLoading } = useLoadingState();
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<AccountPayable | null>(null);
 
   // Converter accounts para ContaListItem
@@ -89,8 +101,7 @@ export default function ContasPagar() {
 
   const handleEditAccount = (conta: ContaListItem) => {
     setSelectedAccount(accounts.find(acc => acc.id === conta.id) || null);
-    // TODO: Implementar modal de edição
-    console.log('Modal de edição será implementado em breve');
+    setEditModalOpen(true);
   };
 
   const handlePayAccount = (conta: ContaListItem) => {
@@ -98,14 +109,20 @@ export default function ContasPagar() {
     setPaymentModalOpen(true);
   };
 
-  const handleDeleteAccount = async (conta: ContaListItem) => {
-    if (confirm(`Tem certeza que deseja excluir a conta "${conta.description}"?`)) {
-      try {
-        await deleteAccount(conta.id);
-        showMessage.deleteSuccess('Conta excluída com sucesso!');
-      } catch (error) {
-        showMessage.deleteError('Erro ao excluir conta');
-      }
+  const handleDeleteAccount = (conta: ContaListItem) => {
+    setSelectedAccount(accounts.find(acc => acc.id === conta.id) || null);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedAccount) return;
+    try {
+      await deleteAccount(selectedAccount.id);
+      setDeleteModalOpen(false);
+      setSelectedAccount(null);
+      showMessage.deleteSuccess('Conta excluída com sucesso!');
+    } catch (error) {
+      showMessage.deleteError('Erro ao excluir conta');
     }
   };
 
@@ -235,6 +252,73 @@ export default function ContasPagar() {
           due_date: selectedAccount.due_date
         } : null}
         loading={isLoading('saving')}
+      />
+
+      {/* Modal de Visualização */}
+      <ContaVisualizarModal
+        isOpen={viewModalOpen}
+        onClose={() => {
+          setViewModalOpen(false);
+          setSelectedAccount(null);
+        }}
+        conta={selectedAccount ? accountPayableToContaPagar(selectedAccount) as any : null}
+        onEditar={(conta) => {
+          setViewModalOpen(false);
+          setEditModalOpen(true);
+        }}
+        onBaixar={(conta) => {
+          setViewModalOpen(false);
+          setPaymentModalOpen(true);
+        }}
+        onDuplicar={(conta) => {
+          // TODO: Implementar duplicação
+          console.log('Duplicar conta:', conta);
+        }}
+        onExcluir={(conta) => {
+          setViewModalOpen(false);
+          setDeleteModalOpen(true);
+        }}
+      />
+
+      {/* Modal de Edição */}
+      <ContaEditarModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedAccount(null);
+        }}
+        conta={selectedAccount ? accountPayableToContaPagar(selectedAccount) as any : null}
+        onSalvar={async (dadosEdicao) => {
+          if (!selectedAccount) return;
+          try {
+            await updateAccount(selectedAccount.id, {
+              description: dadosEdicao.descricao,
+              amount: dadosEdicao.valor_final,
+              due_date: dadosEdicao.data_vencimento,
+              notes: dadosEdicao.observacoes
+            });
+            setEditModalOpen(false);
+            setSelectedAccount(null);
+            showMessage.saveSuccess('Conta atualizada com sucesso!');
+          } catch (error) {
+            showMessage.saveError('Erro ao atualizar conta');
+          }
+        }}
+      />
+
+      {/* Modal de Confirmação de Exclusão */}
+      <ConfirmacaoModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setSelectedAccount(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        titulo="Confirmar Exclusão"
+        mensagem={`Tem certeza que deseja excluir a conta "${selectedAccount?.description}"? Esta ação não pode ser desfeita.`}
+        tipo="danger"
+        textoConfirmar="Excluir Conta"
+        textoCancelar="Cancelar"
       />
     </div>
   );

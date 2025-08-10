@@ -233,15 +233,18 @@ export function ContasPagarList({ contas, loading, onEdit, onDelete, onView, onP
                       </Button>
                       
                       {conta.status === 'pending' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onPay(conta)}
-                          className="h-8 w-8 p-0 hover:bg-green-50"
-                          title="Pagar conta"
-                        >
-                          <CreditCard className="w-4 h-4 text-green-600" />
-                        </Button>
+                        <div className="relative">
+                          <Button
+                            size="sm"
+                            onClick={() => onPay(conta)}
+                            className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium px-3 py-1 text-xs"
+                            title="Pagar conta"
+                          >
+                            <CreditCard className="w-3 h-3 mr-1" />
+                            PAGAR
+                          </Button>
+                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        </div>
                       )}
                       
                       <Button

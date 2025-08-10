@@ -14,6 +14,7 @@ export interface FiltrosContas {
   data_fim?: string;
   valor_min?: number;
   valor_max?: number;
+  mes?: string; // Formato YYYY-MM
 }
 
 export interface EstatisticasContas {
@@ -55,6 +56,14 @@ export function useContasPagarOtimizado(filtrosIniciais?: FiltrosContas) {
         };
         const statusPortugues = statusMap[conta.status] || conta.status;
         if (statusPortugues !== filtros.status) {
+          return false;
+        }
+      }
+
+      // Filtro por mês
+      if (filtros.mes && filtros.mes !== 'todos') {
+        const contaMes = conta.due_date.slice(0, 7); // YYYY-MM
+        if (contaMes !== filtros.mes) {
           return false;
         }
       }
