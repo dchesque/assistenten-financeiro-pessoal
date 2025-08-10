@@ -823,18 +823,31 @@ export default function NovaConta() {
                               ? 'bg-green-50/80 border-green-200'
                               : 'bg-gray-50/80 border-gray-200'
                         }`}>
-                          <span className={`text-lg font-bold ${
-                            (conta.valor_pago || 0) > (conta.valor_original || 0) 
-                              ? 'text-red-600' 
-                              : (conta.valor_pago || 0) < (conta.valor_original || 0)
-                                ? 'text-green-600'
-                                : 'text-gray-600'
-                          }`}>
-                            {((conta.valor_pago || 0) - (conta.valor_original || 0)) >= 0 
-                              ? `+ ${numeroParaMascaraMoeda((conta.valor_pago || 0) - (conta.valor_original || 0))}`
-                              : `- ${numeroParaMascaraMoeda(Math.abs((conta.valor_pago || 0) - (conta.valor_original || 0)))}`
-                            }
-                          </span>
+                          <div className="flex justify-between items-center">
+                            <span className={`text-lg font-bold ${
+                              (conta.valor_pago || 0) > (conta.valor_original || 0) 
+                                ? 'text-red-600' 
+                                : (conta.valor_pago || 0) < (conta.valor_original || 0)
+                                  ? 'text-green-600'
+                                  : 'text-gray-600'
+                            }`}>
+                              {((conta.valor_pago || 0) - (conta.valor_original || 0)) >= 0 
+                                ? `+ ${numeroParaMascaraMoeda((conta.valor_pago || 0) - (conta.valor_original || 0))}`
+                                : `- ${numeroParaMascaraMoeda(Math.abs((conta.valor_pago || 0) - (conta.valor_original || 0)))}`
+                              }
+                            </span>
+                            {(conta.valor_original || 0) > 0 && (
+                              <span className={`text-sm font-medium ${
+                                (conta.valor_pago || 0) > (conta.valor_original || 0) 
+                                  ? 'text-red-600' 
+                                  : (conta.valor_pago || 0) < (conta.valor_original || 0)
+                                    ? 'text-green-600'
+                                    : 'text-gray-600'
+                              }`}>
+                                {(((conta.valor_pago || 0) - (conta.valor_original || 0)) / (conta.valor_original || 1) * 100).toFixed(2)}%
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs mt-1 text-gray-600">
                             Diferença entre valor pago e valor original
                           </p>

@@ -19,12 +19,10 @@ export function BankAccountSelector({
   disabled = false
 }: BankAccountSelectorProps) {
   const { bancos } = useBancos();
-  const { accounts: bankAccounts } = useBankAccounts();
+  const { accounts: bankAccounts } = useBankAccounts(value?.banco_id);
   
   // Filtrar contas do banco selecionado
-  const contasDisponiveis = value?.banco_id 
-    ? bankAccounts.filter(conta => conta.bank_id === value.banco_id)
-    : [];
+  const contasDisponiveis = bankAccounts;
 
   const handleBancoChange = (bancoId: string) => {
     onChange({

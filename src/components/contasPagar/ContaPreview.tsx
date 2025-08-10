@@ -23,11 +23,11 @@ export function ContaPreview({ conta, formaPagamento, className = "" }: ContaPre
   const { bancos } = useBancosSupabase();
   
   const fornecedor = conta.fornecedor_id 
-    ? fornecedores.find(f => f.id === conta.fornecedor_id)
+    ? fornecedores.find(f => f.id.toString() === conta.fornecedor_id?.toString())
     : null;
 
   const planoContasItem = conta.plano_conta_id
-    ? planoContas.find(p => p.id === conta.plano_conta_id)
+    ? planoContas.find(p => p.id.toString() === conta.plano_conta_id?.toString())
     : null;
 
   const banco = conta.banco_id
