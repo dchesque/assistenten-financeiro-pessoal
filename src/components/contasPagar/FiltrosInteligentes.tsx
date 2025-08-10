@@ -146,7 +146,7 @@ export function FiltrosInteligentes({
                 <SelectValue placeholder="Fornecedor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os fornecedores</SelectItem>
+                <SelectItem value="todos">Todos os fornecedores</SelectItem>
                 {fornecedores.map((fornecedor) => (
                   <SelectItem key={fornecedor.id} value={fornecedor.id}>
                     {fornecedor.name}
@@ -165,7 +165,7 @@ export function FiltrosInteligentes({
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as categorias</SelectItem>
+                <SelectItem value="todos">Todas as categorias</SelectItem>
                 {categorias.map((categoria) => (
                   <SelectItem key={categoria.id} value={categoria.id}>
                     <div className="flex items-center gap-2">

@@ -203,9 +203,9 @@ export function PaymentModalAdvanced({
                 </SelectTrigger>
                 <SelectContent>
                   {allBankAccounts.length === 0 ? (
-                    <SelectItem value="" disabled>
-                      Nenhuma conta cadastrada
-                    </SelectItem>
+                  <SelectItem value="nenhuma" disabled>
+                    Nenhuma conta cadastrada
+                  </SelectItem>
                   ) : (
                     allBankAccounts.map(account => (
                       <SelectItem key={account.id} value={account.id}>
