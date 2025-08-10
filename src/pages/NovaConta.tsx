@@ -83,34 +83,32 @@ export default function NovaConta() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isFormValid, setIsFormValid] = useState(false);
 
-  const validateStep = useCallback((step: number) => {
+  const validateStep = (step: number, data = formData) => {
     const newErrors: Record<string, string> = {};
     
     switch (step) {
       case 1:
-        if (!formData.descricao.trim()) newErrors.descricao = 'Descrição é obrigatória';
-        if (formData.valor_original <= 0) newErrors.valor_original = 'Valor deve ser maior que zero';
-        if (!formData.forma_pagamento) newErrors.forma_pagamento = 'Forma de pagamento é obrigatória';
+        if (!data.descricao.trim()) newErrors.descricao = 'Descrição é obrigatória';
+        if (data.valor_original <= 0) newErrors.valor_original = 'Valor deve ser maior que zero';
+        if (!data.forma_pagamento) newErrors.forma_pagamento = 'Forma de pagamento é obrigatória';
         break;
       case 2:
-        if (!formData.data_vencimento) newErrors.data_vencimento = 'Data de vencimento é obrigatória';
+        if (!data.data_vencimento) newErrors.data_vencimento = 'Data de vencimento é obrigatória';
         break;
       case 3:
-        if (formData.parcela_atual > formData.total_parcelas) {
+        if (data.parcela_atual > data.total_parcelas) {
           newErrors.parcela_atual = 'Parcela atual não pode ser maior que o total';
         }
         break;
     }
     
-    setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData]);
+  };
 
-  const validateForm = useCallback(() => {
-    return validateStep(1) && validateStep(2) && validateStep(3);
-  }, [validateStep]);
+  const validateForm = (data = formData) => {
+    return validateStep(1, data) && validateStep(2, data) && validateStep(3, data);
+  };
 
   const calcularValorFinal = useCallback(() => {
     let valor = formData.valor_original;
@@ -183,7 +181,27 @@ export default function NovaConta() {
   }, []);
 
   const nextStep = () => {
-    if (validateStep(currentStep)) {
+    const newErrors: Record<string, string> = {};
+    
+    switch (currentStep) {
+      case 1:
+        if (!formData.descricao.trim()) newErrors.descricao = 'Descrição é obrigatória';
+        if (formData.valor_original <= 0) newErrors.valor_original = 'Valor deve ser maior que zero';
+        if (!formData.forma_pagamento) newErrors.forma_pagamento = 'Forma de pagamento é obrigatória';
+        break;
+      case 2:
+        if (!formData.data_vencimento) newErrors.data_vencimento = 'Data de vencimento é obrigatória';
+        break;
+      case 3:
+        if (formData.parcela_atual > formData.total_parcelas) {
+          newErrors.parcela_atual = 'Parcela atual não pode ser maior que o total';
+        }
+        break;
+    }
+    
+    setErrors(newErrors);
+    
+    if (Object.keys(newErrors).length === 0) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
     }
   };
