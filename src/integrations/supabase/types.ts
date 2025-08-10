@@ -21,12 +21,18 @@ export type Database = {
           category_id: string | null
           contact_id: string | null
           created_at: string
+          dda_enabled: boolean | null
           deleted_at: string | null
           description: string
           due_date: string
+          final_amount: number | null
           id: string
+          issue_date: string | null
           notes: string | null
+          original_amount: number | null
+          paid_amount: number | null
           paid_at: string | null
+          reference_document: string | null
           status: Database["public"]["Enums"]["account_status"]
           supplier_id: string | null
           updated_at: string
@@ -38,12 +44,18 @@ export type Database = {
           category_id?: string | null
           contact_id?: string | null
           created_at?: string
+          dda_enabled?: boolean | null
           deleted_at?: string | null
           description: string
           due_date: string
+          final_amount?: number | null
           id?: string
+          issue_date?: string | null
           notes?: string | null
+          original_amount?: number | null
+          paid_amount?: number | null
           paid_at?: string | null
+          reference_document?: string | null
           status?: Database["public"]["Enums"]["account_status"]
           supplier_id?: string | null
           updated_at?: string
@@ -55,12 +67,18 @@ export type Database = {
           category_id?: string | null
           contact_id?: string | null
           created_at?: string
+          dda_enabled?: boolean | null
           deleted_at?: string | null
           description?: string
           due_date?: string
+          final_amount?: number | null
           id?: string
+          issue_date?: string | null
           notes?: string | null
+          original_amount?: number | null
+          paid_amount?: number | null
           paid_at?: string | null
+          reference_document?: string | null
           status?: Database["public"]["Enums"]["account_status"]
           supplier_id?: string | null
           updated_at?: string
