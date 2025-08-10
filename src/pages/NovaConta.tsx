@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { ArrowLeft, Save, CreditCard, Calendar, AlertTriangle, FileText, CheckCircle, Repeat, Building2 } from 'lucide-react';
 import { ContaPagar } from '@/types/contaPagar';
-import { Fornecedor } from '@/types/fornecedor';
+import { FornecedorCompat } from '@/hooks/useFornecedoresAlias';
 import { Category } from '@/types/category';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
@@ -76,7 +76,7 @@ export default function NovaConta() {
   const [percentualDescontoMask, setPercentualDescontoMask] = useState('');
   const [valorDescontoMask, setValorDescontoMask] = useState('');
   const [valorPagoMask, setValorPagoMask] = useState('');
-  const [credorSelecionado, setCredorSelecionado] = useState<Fornecedor | null>(null);
+  const [credorSelecionado, setCredorSelecionado] = useState<FornecedorCompat | null>(null);
   const [contaSelecionada, setContaSelecionada] = useState<Category | null>(null);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
     tipo: 'dinheiro_pix'

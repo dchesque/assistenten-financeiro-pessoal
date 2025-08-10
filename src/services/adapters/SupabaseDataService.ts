@@ -172,13 +172,13 @@ export class SupabaseDataService implements IDataService {
         }
       }
 
-      // Verificar se a categoria existe
+      // Verificar se a categoria existe (aceitar categorias do usuário e categorias do sistema)
       if (data.plano_conta_id) {
         const { data: category, error: categoryError } = await supabase
           .from('categories')
-          .select('id')
+          .select('id, user_id, is_system')
           .eq('id', data.plano_conta_id)
-          .eq('user_id', data.user_id)
+          .or(`user_id.eq.${data.user_id},and(user_id.is.null,is_system.eq.true)`)
           .maybeSingle();
         
         if (categoryError) {

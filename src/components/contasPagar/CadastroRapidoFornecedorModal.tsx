@@ -4,16 +4,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFornecedores } from '@/hooks/useFornecedores';
-import { usePlanoContas } from '@/hooks/usePlanoContas';
+import { useContatos } from '@/hooks/useContatos';
+import { useCategorias } from '@/hooks/useCategorias';
 import { useToast } from '@/hooks/use-toast';
-import { Fornecedor } from '@/types/fornecedor';
+// Interface temporária até que Supabase types seja atualizada
+interface Contact {
+  id: string;
+  name: string;
+  type: string;
+  document?: string;
+  document_type?: string;
+  email?: string;
+  phone?: string;
+  category_id?: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 import { Building2, User, Save, X } from 'lucide-react';
 
 interface CadastroRapidoFornecedorModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onFornecedorCriado: (fornecedor: Fornecedor) => void;
+  onFornecedorCriado: (fornecedor: Contact) => void;
 }
 
 export function CadastroRapidoFornecedorModal({
@@ -28,16 +41,16 @@ export function CadastroRapidoFornecedorModal({
     documento: '',
     email: '',
     telefone: '',
-    categoria_padrao_id: undefined as number | undefined
+    categoria_padrao_id: undefined as string | undefined
   });
 
-  const { criarFornecedor } = useFornecedores();
-  const { planoContas } = usePlanoContas();
+  const { criarContato } = useContatos();
+  const { categorias } = useCategorias();
   const { toast } = useToast();
 
   // Categorias de despesa para seleção
-  const categoriasDespesa = planoContas.filter(p => 
-    p.tipo_dre?.includes('despesa') && p.aceita_lancamento && p.ativo
+  const categoriasDespesa = categorias.filter(c => 
+    c.type === 'expense'
   );
 
   const resetForm = () => {
@@ -97,26 +110,18 @@ export function CadastroRapidoFornecedorModal({
 
     setLoading(true);
     try {
-      const novoFornecedor: Omit<Fornecedor, 'id' | 'created_at' | 'updated_at'> = {
-        nome: formData.nome.trim(),
-        tipo: formData.tipo,
-        documento: formData.documento.replace(/\D/g, ''),
+      const novoContato = {
+        name: formData.nome.trim(),
+        type: 'supplier',
+        document: formData.documento.replace(/\D/g, ''),
+        document_type: formData.tipo === 'pessoa_fisica' ? 'cpf' : 'cnpj',
         email: formData.email.trim() || undefined,
-        telefone: formData.telefone.trim() || undefined,
-        categoria_padrao_id: formData.categoria_padrao_id,
-        tipo_fornecedor: 'despesa',
-        ativo: true,
-        totalCompras: 0,
-        valorTotal: 0,
-        endereco: '',
-        cidade: '',
-        estado: '',
-        cep: '',
-        observacoes: '',
-        dataCadastro: new Date().toISOString().split('T')[0]
+        phone: formData.telefone.trim() || undefined,
+        category_id: formData.categoria_padrao_id,
+        active: true
       };
 
-      const fornecedorCriado = await criarFornecedor(novoFornecedor);
+      const fornecedorCriado = await criarContato(novoContato);
       
       if (fornecedorCriado) {
         toast({
@@ -272,10 +277,10 @@ export function CadastroRapidoFornecedorModal({
           <div className="space-y-2">
             <Label>Categoria Padrão</Label>
             <Select 
-              value={formData.categoria_padrao_id?.toString()} 
+              value={formData.categoria_padrao_id} 
               onValueChange={(value) => setFormData(prev => ({ 
                 ...prev, 
-                categoria_padrao_id: value ? parseInt(value) : undefined 
+                categoria_padrao_id: value || undefined 
               }))}
             >
               <SelectTrigger className="bg-white/80 backdrop-blur-sm border-gray-300/50">
@@ -283,8 +288,8 @@ export function CadastroRapidoFornecedorModal({
               </SelectTrigger>
               <SelectContent>
                 {categoriasDespesa.map((categoria) => (
-                  <SelectItem key={categoria.id} value={categoria.id.toString()}>
-                    {categoria.codigo} - {categoria.nome}
+                  <SelectItem key={categoria.id} value={categoria.id}>
+                    {categoria.name}
                   </SelectItem>
                 ))}
               </SelectContent>

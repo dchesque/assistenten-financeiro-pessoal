@@ -1,15 +1,15 @@
 // Hook para credores com terminologia de finanças pessoais
 import { useFornecedores } from './useFornecedores';
-import type { Fornecedor as Credor } from '@/types/fornecedor';
+import type { FornecedorCompat } from './useFornecedoresAlias';
 
 export interface UseCredoresReturn {
-  credores: Credor[];
+  credores: FornecedorCompat[];
   loading: boolean;
   error: string | null;
-  criarCredor: (credor: Omit<Credor, 'id' | 'dataCadastro' | 'totalCompras' | 'valorTotal'>) => Promise<Credor>;
-  atualizarCredor: (id: string, credor: Partial<Credor>) => Promise<Credor>;
+  criarCredor: (credor: Partial<FornecedorCompat>) => Promise<any>;
+  atualizarCredor: (id: string, credor: Partial<FornecedorCompat>) => Promise<any>;
   excluirCredor: (id: string) => Promise<void>;
-  buscarPorDocumento: (documento: string) => Credor | null;
+  buscarPorDocumento: (documento: string) => FornecedorCompat | null;
   atualizarEstatisticas: (credorId: string) => Promise<void>;
   recarregar: () => Promise<void>;
 }

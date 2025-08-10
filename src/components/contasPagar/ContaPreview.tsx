@@ -1,5 +1,5 @@
 import { ContaPagar } from '@/types/contaPagar';
-import { Fornecedor } from '@/types/fornecedor';
+import { FornecedorCompat } from '@/hooks/useFornecedoresAlias';
 import { PlanoContas } from '@/types/planoContas';
 import { Category } from '@/types/category';
 import { Card } from '@/components/ui/card';
@@ -14,7 +14,7 @@ import { formatarMoedaExibicao } from '@/utils/masks';
 interface ContaPreviewProps {
   conta: Partial<ContaPagar>;
   formaPagamento?: FormaPagamento;
-  credorSelecionado?: Fornecedor | null;
+  credorSelecionado?: FornecedorCompat | null;
   contaSelecionada?: Category | null;
   className?: string;
 }
@@ -137,8 +137,8 @@ export function ContaPreview({ conta, formaPagamento, credorSelecionado, contaSe
             <div className="flex items-start space-x-3">
               <Building2 className="h-5 w-5 text-primary mt-0.5" />
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900">{fornecedor.nome || fornecedor.name}</div>
-                <div className="text-xs text-gray-500">{fornecedor.documento || fornecedor.document}</div>
+                <div className="text-sm font-medium text-gray-900">{fornecedor.nome}</div>
+                <div className="text-xs text-gray-500">{fornecedor.documento}</div>
               </div>
             </div>
           ) : (

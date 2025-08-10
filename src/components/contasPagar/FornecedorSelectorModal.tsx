@@ -5,15 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useFornecedores } from '@/hooks/useFornecedores';
-import { useValidacoesFornecedor } from '@/hooks/useValidacoesFornecedor';
-import { useMascaras } from '@/hooks/useMascaras';
-import { Fornecedor } from '@/types/fornecedor';
+import { FornecedorCompat } from '@/hooks/useFornecedoresAlias';
 import { Building2, User, Plus, Search, Check } from 'lucide-react';
 
 interface FornecedorSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (fornecedor: Fornecedor) => void;
+  onSelect: (fornecedor: FornecedorCompat) => void;
   onCreateNew: () => void;
 }
 
@@ -35,7 +33,7 @@ export const FornecedorSelectorModal: React.FC<FornecedorSelectorModalProps> = (
     )
   );
 
-  const handleSelect = (fornecedor: Fornecedor) => {
+  const handleSelect = (fornecedor: FornecedorCompat) => {
     onSelect(fornecedor);
     onClose();
   };
