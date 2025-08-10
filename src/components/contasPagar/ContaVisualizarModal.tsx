@@ -101,47 +101,47 @@ export default function ContaVisualizarModal({
 
         {/* Conteúdo */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
+          <div className="p-4">
             
             {/* Descrição Destacada */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 mb-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Descrição</h3>
-              <p className="text-gray-800 text-base leading-relaxed">{conta.descricao}</p>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <h3 className="text-base font-bold text-gray-900 mb-1">Descrição</h3>
+              <p className="text-gray-800 text-sm leading-relaxed">{conta.descricao}</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               
               {/* Coluna 1: Informações do Contato e Categoria */}
-              <div className="space-y-6">
+              <div className="space-y-4">
                 
                 {/* Contato/Credor */}
-                <div className="bg-white border border-gray-200 rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-blue-600" />
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-blue-600" />
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Contato</h4>
+                    <h4 className="text-base font-semibold text-gray-900">Contato</h4>
                   </div>
-                  <p className="text-gray-700 font-medium text-lg">
+                  <p className="text-gray-700 font-medium">
                     {conta.fornecedor ? conta.fornecedor.nome : 'Sem contato vinculado'}
                   </p>
                 </div>
 
                 {/* Categoria */}
-                <div className="bg-white border border-gray-200 rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-purple-600" />
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-purple-600" />
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Categoria</h4>
+                    <h4 className="text-base font-semibold text-gray-900">Categoria</h4>
                   </div>
                   {conta.plano_conta ? (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <div 
-                        className="w-4 h-4 rounded-full"
+                        className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: conta.plano_conta.cor || '#6B7280' }}
                       />
-                      <p className="text-gray-700 font-medium text-lg">{conta.plano_conta.nome}</p>
+                      <p className="text-gray-700 font-medium">{conta.plano_conta.nome}</p>
                     </div>
                   ) : (
                     <p className="text-gray-500">Sem categoria</p>
@@ -150,12 +150,12 @@ export default function ContaVisualizarModal({
 
                 {/* Documentos */}
                 {conta.documento_referencia && (
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-green-600" />
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-green-600" />
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">Documento</h4>
+                      <h4 className="text-base font-semibold text-gray-900">Documento</h4>
                     </div>
                     <p className="text-gray-700 font-medium">{conta.documento_referencia}</p>
                   </div>
@@ -163,49 +163,49 @@ export default function ContaVisualizarModal({
               </div>
               
               {/* Coluna 2: Informações Financeiras e Datas */}
-              <div className="space-y-6">
+              <div className="space-y-4">
                 
                 {/* Informações Financeiras */}
-                <div className="bg-white border border-gray-200 rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-green-600" />
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <DollarSign className="w-4 h-4 text-green-600" />
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Valores</h4>
+                    <h4 className="text-base font-semibold text-gray-900">Valores</h4>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Valor Original:</span>
-                      <span className="font-semibold text-gray-900">{formatarMoeda(conta.valor_original)}</span>
+                      <span className="text-gray-600 text-sm">Valor Original:</span>
+                      <span className="font-semibold text-gray-900 text-sm">{formatarMoeda(conta.valor_original)}</span>
                     </div>
                     
                     {conta.valor_juros && conta.valor_juros > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Juros/Multa:</span>
-                        <span className="font-semibold text-red-600">+{formatarMoeda(conta.valor_juros)}</span>
+                        <span className="text-gray-600 text-sm">Juros/Multa:</span>
+                        <span className="font-semibold text-red-600 text-sm">+{formatarMoeda(conta.valor_juros)}</span>
                       </div>
                     )}
                     
                     {conta.valor_desconto && conta.valor_desconto > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Desconto:</span>
-                        <span className="font-semibold text-green-600">-{formatarMoeda(conta.valor_desconto)}</span>
+                        <span className="text-gray-600 text-sm">Desconto:</span>
+                        <span className="font-semibold text-green-600 text-sm">-{formatarMoeda(conta.valor_desconto)}</span>
                       </div>
                     )}
                     
-                    <div className="border-t border-gray-200 pt-4">
+                    <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-lg font-bold text-gray-900">Valor Final:</span>
-                        <span className="text-2xl font-bold text-blue-600">{formatarMoeda(conta.valor_final)}</span>
+                        <span className="text-base font-bold text-gray-900">Valor Final:</span>
+                        <span className="text-xl font-bold text-blue-600">{formatarMoeda(conta.valor_final)}</span>
                       </div>
                     </div>
                     
                     {conta.status === 'pago' && conta.valor_pago && (
-                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-green-800 font-medium">Valor Pago:</span>
-                          <span className="font-bold text-green-600">{formatarMoeda(conta.valor_pago)}</span>
+                          <span className="text-green-800 font-medium text-sm">Valor Pago:</span>
+                          <span className="font-bold text-green-600 text-sm">{formatarMoeda(conta.valor_pago)}</span>
                         </div>
                       </div>
                     )}
@@ -213,25 +213,25 @@ export default function ContaVisualizarModal({
                 </div>
 
                 {/* Datas */}
-                <div className="bg-white border border-gray-200 rounded-xl p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-purple-600" />
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Calendar className="w-4 h-4 text-purple-600" />
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Datas</h4>
+                    <h4 className="text-base font-semibold text-gray-900">Datas</h4>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {conta.data_emissao && (
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Data de Emissão:</span>
-                        <span className="font-medium text-gray-900">{formatarData(conta.data_emissao)}</span>
+                        <span className="text-gray-600 text-sm">Data de Emissão:</span>
+                        <span className="font-medium text-gray-900 text-sm">{formatarData(conta.data_emissao)}</span>
                       </div>
                     )}
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Data de Vencimento:</span>
-                      <span className={`font-medium ${
+                      <span className="text-gray-600 text-sm">Data de Vencimento:</span>
+                      <span className={`font-medium text-sm ${
                         conta.status !== 'pago' && diasVencimento < 0 
                           ? 'text-red-600' 
                           : 'text-gray-900'
@@ -241,18 +241,18 @@ export default function ContaVisualizarModal({
                     </div>
                     
                     {conta.status !== 'pago' && diasVencimento < 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                        <p className="text-red-800 font-semibold text-center">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-red-800 font-semibold text-center text-sm">
                           ⚠️ {Math.abs(diasVencimento)} dias em atraso
                         </p>
                       </div>
                     )}
                     
                     {conta.status === 'pago' && conta.data_pagamento && (
-                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-green-800 font-medium">Data de Pagamento:</span>
-                          <span className="font-bold text-green-600">{formatarData(conta.data_pagamento)}</span>
+                          <span className="text-green-800 font-medium text-sm">Data de Pagamento:</span>
+                          <span className="font-bold text-green-600 text-sm">{formatarData(conta.data_pagamento)}</span>
                         </div>
                       </div>
                     )}
@@ -261,14 +261,14 @@ export default function ContaVisualizarModal({
 
                 {/* Informações do Banco (se pago) */}
                 {conta.status === 'pago' && conta.banco && (
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                        <CreditCard className="w-5 h-5 text-emerald-600" />
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <CreditCard className="w-4 h-4 text-emerald-600" />
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">Banco</h4>
+                      <h4 className="text-base font-semibold text-gray-900">Banco</h4>
                     </div>
-                    <p className="text-gray-700 font-medium">{conta.banco.nome}</p>
+                    <p className="text-gray-700 font-medium text-sm">{conta.banco.nome}</p>
                   </div>
                 )}
               </div>
@@ -276,20 +276,20 @@ export default function ContaVisualizarModal({
             
             {/* Observações */}
             {conta.observacoes && (
-              <div className="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-gray-600" />
+              <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-gray-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Observações</h4>
+                  <h4 className="text-base font-semibold text-gray-900">Observações</h4>
                 </div>
-                <p className="text-gray-800 leading-relaxed">{conta.observacoes}</p>
+                <p className="text-gray-800 leading-relaxed text-sm">{conta.observacoes}</p>
               </div>
             )}
             
             {/* Informações do Sistema */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-500">
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-500">
                 <div>
                   <span className="font-medium text-gray-700">Criado em:</span> {formatarDataHora(conta.created_at || '')}
                 </div>
@@ -302,28 +302,28 @@ export default function ContaVisualizarModal({
         </div>
         
         {/* Footer */}
-        <div className="flex-shrink-0 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <button 
               onClick={onClose}
-              className="px-6 py-3 text-gray-700 font-medium hover:text-gray-900 transition-colors"
+              className="px-4 py-2 text-gray-700 font-medium hover:text-gray-900 transition-colors text-sm"
             >
               Fechar
             </button>
-            <div className="flex space-x-3">
+            <div className="flex space-x-2">
               <button
                 onClick={() => onEditar(conta)}
-                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg text-sm"
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="w-3 h-3" />
                 <span>Editar</span>
               </button>
               {conta.status === 'pendente' && (
                 <button
                   onClick={() => onBaixar(conta)}
-                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-medium rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-md hover:shadow-lg text-sm"
                 >
-                  <DollarSign className="w-4 h-4" />
+                  <DollarSign className="w-3 h-3" />
                   <span>Baixar</span>
                 </button>
               )}

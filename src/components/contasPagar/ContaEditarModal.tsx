@@ -175,21 +175,21 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
 
           {/* Conteúdo */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-6">
+            <div className="p-4">
               
               {/* Informações Principais */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-blue-600" />
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">Dados da Conta</h3>
+                  <h3 className="text-base font-bold text-gray-900">Dados da Conta</h3>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {/* Descrição */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    <label className="text-xs font-medium text-gray-700 mb-1 block">
                       Descrição *
                     </label>
                     <input
@@ -199,33 +199,33 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                         setDadosEdicao((prev) => ({ ...prev, descricao: e.target.value }));
                         validarCampo('descricao', e.target.value);
                       }}
-                      className={`w-full bg-white border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full bg-white border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
                         errosValidacao.descricao ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Digite a descrição da conta..."
                     />
                     {errosValidacao.descricao && (
-                      <p className="text-red-600 text-sm mt-1">{errosValidacao.descricao}</p>
+                      <p className="text-red-600 text-xs mt-1">{errosValidacao.descricao}</p>
                     )}
                   </div>
 
                   {/* Documento/Referência */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    <label className="text-xs font-medium text-gray-700 mb-1 block">
                       Documento/Referência
                     </label>
                     <input
                       type="text"
                       value={dadosEdicao.documento_referencia || ''}
                       onChange={(e) => setDadosEdicao((prev) => ({ ...prev, documento_referencia: e.target.value }))}
-                      className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       placeholder="NF 12345, Pedido 567, etc."
                     />
                   </div>
 
                   {/* Data de Vencimento */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    <label className="text-xs font-medium text-gray-700 mb-1 block">
                       Data de Vencimento *
                     </label>
                     <input
@@ -235,33 +235,33 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                         setDadosEdicao((prev) => ({ ...prev, data_vencimento: e.target.value }));
                         validarCampo('data_vencimento', e.target.value);
                       }}
-                      className={`w-full bg-white border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full bg-white border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
                         errosValidacao.data_vencimento ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
                     {errosValidacao.data_vencimento && (
-                      <p className="text-red-600 text-sm mt-1">{errosValidacao.data_vencimento}</p>
+                      <p className="text-red-600 text-xs mt-1">{errosValidacao.data_vencimento}</p>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 
                 {/* Coluna 1: Contato e Categoria */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                   
                   {/* Contato/Credor */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                        <User className="w-5 h-5 text-blue-600" />
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <User className="w-4 h-4 text-blue-600" />
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">Contato</h4>
+                      <h4 className="text-base font-semibold text-gray-900">Contato</h4>
                     </div>
                     
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      <label className="text-xs font-medium text-gray-700 mb-1 block">
                         Credor *
                       </label>
                       <FornecedorSelector
@@ -274,22 +274,22 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                         className="w-full"
                       />
                       {errosValidacao.fornecedor_id && (
-                        <p className="text-red-600 text-sm mt-1">{errosValidacao.fornecedor_id}</p>
+                        <p className="text-red-600 text-xs mt-1">{errosValidacao.fornecedor_id}</p>
                       )}
                     </div>
                   </div>
 
                   {/* Categoria */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-purple-600" />
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-purple-600" />
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">Categoria</h4>
+                      <h4 className="text-base font-semibold text-gray-900">Categoria</h4>
                     </div>
                     
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      <label className="text-xs font-medium text-gray-700 mb-1 block">
                         Categoria/Plano de Contas *
                       </label>
                       <PlanoContasSelector
@@ -302,28 +302,28 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                         className="w-full"
                       />
                       {errosValidacao.plano_conta_id && (
-                        <p className="text-red-600 text-sm mt-1">{errosValidacao.plano_conta_id}</p>
+                        <p className="text-red-600 text-xs mt-1">{errosValidacao.plano_conta_id}</p>
                       )}
                     </div>
                   </div>
                 </div>
                 
                 {/* Coluna 2: Valores e Cálculos */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                   
                   {/* Valores */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                        <DollarSign className="w-5 h-5 text-green-600" />
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <DollarSign className="w-4 h-4 text-green-600" />
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">Valores e Cálculos</h4>
+                      <h4 className="text-base font-semibold text-gray-900">Valores e Cálculos</h4>
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {/* Valor Original */}
                       <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">
                           Valor Original *
                         </label>
                         <input
@@ -335,22 +335,22 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                             setDadosEdicao((prev) => ({ ...prev, valor_original: value }));
                             validarCampo('valor_original', value);
                           }}
-                          className={`w-full bg-white border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          className={`w-full bg-white border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
                             errosValidacao.valor_original ? 'border-red-500' : 'border-gray-300'
                           }`}
                           placeholder="R$ 0,00"
                         />
                         {errosValidacao.valor_original && (
-                          <p className="text-red-600 text-sm mt-1">{errosValidacao.valor_original}</p>
+                          <p className="text-red-600 text-xs mt-1">{errosValidacao.valor_original}</p>
                         )}
                       </div>
 
                       {/* Juros/Multa */}
                       <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">
                           Juros/Multa
                         </label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-2">
                           <div>
                             <input
                               type="text"
@@ -359,7 +359,7 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                                 const value = e.target.value.replace(/[^\d,]/g, '').replace(',', '.');
                                 setDadosEdicao((prev) => ({ ...prev, percentual_juros: parseFloat(value) || 0 }));
                               }}
-                              className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-center"
+                              className="w-full bg-white border border-gray-300 rounded-lg px-2 py-1 text-center text-sm"
                               placeholder="0,00"
                             />
                             <p className="text-xs text-gray-500 mt-1 text-center">Percentual (%)</p>
@@ -369,7 +369,7 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                               type="text"
                               value={formatarMoeda(dadosEdicao.valor_juros || 0)}
                               readOnly
-                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-right text-gray-600 font-medium"
+                              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-right text-gray-600 font-medium text-sm"
                             />
                             <p className="text-xs text-gray-500 mt-1 text-center">Valor (R$)</p>
                           </div>
@@ -378,10 +378,10 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
 
                       {/* Desconto */}
                       <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">
                           Desconto
                         </label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-2">
                           <div>
                             <input
                               type="text"
@@ -390,7 +390,7 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                                 const value = e.target.value.replace(/[^\d,]/g, '').replace(',', '.');
                                 setDadosEdicao((prev) => ({ ...prev, percentual_desconto: parseFloat(value) || 0 }));
                               }}
-                              className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-center"
+                              className="w-full bg-white border border-gray-300 rounded-lg px-2 py-1 text-center text-sm"
                               placeholder="0,00"
                             />
                             <p className="text-xs text-gray-500 mt-1 text-center">Percentual (%)</p>
@@ -400,7 +400,7 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                               type="text"
                               value={formatarMoeda(dadosEdicao.valor_desconto || 0)}
                               readOnly
-                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-right text-gray-600 font-medium"
+                              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-right text-gray-600 font-medium text-sm"
                             />
                             <p className="text-xs text-gray-500 mt-1 text-center">Valor (R$)</p>
                           </div>
@@ -408,10 +408,10 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                       </div>
 
                       {/* Valor Final */}
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6">
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-lg font-bold text-gray-800">Valor Final:</span>
-                          <span className="text-3xl font-bold text-blue-600">
+                          <span className="text-base font-bold text-gray-800">Valor Final:</span>
+                          <span className="text-xl font-bold text-blue-600">
                             {formatarMoeda(dadosEdicao.valor_final || 0)}
                           </span>
                         </div>
@@ -422,18 +422,18 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
               </div>
 
               {/* Observações */}
-              <div className="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-gray-600" />
+              <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-gray-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Observações</h4>
+                  <h4 className="text-base font-semibold text-gray-900">Observações</h4>
                 </div>
                 <textarea
                   value={dadosEdicao.observacoes || ''}
                   onChange={(e) => setDadosEdicao((prev) => ({ ...prev, observacoes: e.target.value }))}
-                  className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={4}
+                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+                  rows={3}
                   placeholder="Adicione observações sobre esta conta..."
                 />
               </div>
@@ -441,21 +441,21 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
           </div>
 
           {/* Footer */}
-          <div className="flex-shrink-0 p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between">
             <button 
               onClick={onClose}
-              className="px-6 py-3 text-gray-700 font-medium hover:text-gray-900 transition-colors"
+              className="px-4 py-2 text-gray-700 font-medium hover:text-gray-900 transition-colors text-sm"
             >
               Cancelar
             </button>
             <button 
               onClick={handleSalvar}
               disabled={loading}
-              className="flex items-center space-x-3 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg text-sm"
             >
               {loading && <LoadingSpinner />}
-              <Save className="w-4 h-4" />
+              <Save className="w-3 h-3" />
               <span>{loading ? 'Salvando...' : 'Salvar Alterações'}</span>
             </button>
             </div>
