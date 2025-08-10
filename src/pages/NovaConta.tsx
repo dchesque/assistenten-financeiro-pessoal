@@ -18,7 +18,6 @@ import { ContaPreview } from '@/components/contasPagar/ContaPreview';
 import { FormaPagamentoSection } from '@/components/contasPagar/FormaPagamentoSection';
 import { RecorrenciaSection, RecorrenciaData } from '@/components/contasPagar/RecorrenciaSection';
 import { BankAccountSelector } from '@/components/contasPagar/BankAccountSelector';
-import { BankAccountSelect } from '@/components/ui/BankAccountSelect';
 import { useBankAccountsAll } from '@/hooks/useBankAccountsAll';
 import { Button } from '@/components/ui/button';
 import { LoadingButton } from '@/components/ui/LoadingButton';
@@ -49,16 +48,6 @@ export default function NovaConta() {
   
   // Hook para contas bancárias
   const { accounts: allBankAccounts = [] } = useBankAccountsAll();
-  
-  // Formatar contas bancárias para o BankAccountSelect
-  const contasBancariasFormatadas = allBankAccounts.map(account => ({
-    id: account.id,
-    account_number: account.account_number || '',
-    agency: account.agency || '',
-    bank_name: (account as any).bank?.name || 'Banco não informado',
-    current_balance: (account as any).current_balance || 0,
-    type: (account as any).type || 'checking'
-  }));
 
   // Filtrar apenas credores (suppliers)
   const credores = contatos.filter(contato => contato.type === 'supplier');
@@ -724,20 +713,15 @@ export default function NovaConta() {
                           <span className="font-medium text-green-900">Dados do Pagamento</span>
                         </div>
                         
-                        <BankAccountSelect
-                          value={contaBancaria.banco_id ? `${contaBancaria.banco_id}-${contaBancaria.conta_id}` : ''}
-                          onValueChange={(value) => {
-                            if (value) {
-                              const [bancoId, contaId] = value.split('-');
-                              setContaBancaria({
-                                banco_id: bancoId,
-                                conta_id: contaId
-                              });
-                              setConta(prev => ({ ...prev, banco_id: parseInt(bancoId) }));
+                        <BankAccountSelector
+                          value={contaBancaria}
+                          onChange={(value) => {
+                            setContaBancaria(value);
+                            if (value.banco_id) {
+                              setConta(prev => ({ ...prev, banco_id: value.banco_id }));
                             }
                           }}
-                          accounts={contasBancariasFormatadas}
-                          placeholder="Selecione o banco e conta do pagamento"
+                          className="w-full"
                         />
                       </div>
 
@@ -926,19 +910,12 @@ export default function NovaConta() {
                         </span>
                       </div>
                       
-                      <BankAccountSelect
-                        value={contaBancaria.banco_id ? `${contaBancaria.banco_id}-${contaBancaria.conta_id}` : ''}
-                        onValueChange={(value) => {
-                          if (value) {
-                            const [bancoId, contaId] = value.split('-');
-                            setContaBancaria({
-                              banco_id: bancoId,
-                              conta_id: contaId
-                            });
-                          }
+                      <BankAccountSelector
+                        value={contaBancaria}
+                        onChange={(value) => {
+                          setContaBancaria(value);
                         }}
-                        accounts={contasBancariasFormatadas}
-                        placeholder="Selecione a conta para débito automático"
+                        className="w-full"
                       />
                     </div>
                   </>

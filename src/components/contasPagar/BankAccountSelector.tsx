@@ -47,29 +47,29 @@ export function BankAccountSelector({
     <div className={`space-y-4 ${className}`}>
       {/* Seletor de Banco */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-gray-700">
-          Banco <span className="text-red-500">*</span>
+        <Label className="text-sm font-medium text-foreground">
+          Banco <span className="text-destructive">*</span>
         </Label>
         <Select 
           value={value?.banco_id || ''} 
           onValueChange={handleBancoChange}
           disabled={disabled}
         >
-          <SelectTrigger className="bg-white/80 backdrop-blur-sm border-gray-300/50">
+          <SelectTrigger className="glassmorphism-input">
             <SelectValue placeholder="Selecionar banco">
               {bancoSelecionado && (
                 <div className="flex items-center space-x-2">
-                  <Building2 className="h-4 w-4 text-blue-600" />
+                  <Building2 className="h-4 w-4 text-primary" />
                   <span>{bancoSelecionado.name}</span>
                 </div>
               )}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="bg-white border-gray-200 shadow-lg">
+          <SelectContent className="z-50 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
             {bancos.filter(b => !b.deleted_at).map((banco) => (
               <SelectItem key={banco.id} value={banco.id}>
                 <div className="flex items-center space-x-2">
-                  <Building2 className="h-4 w-4 text-blue-600" />
+                  <Building2 className="h-4 w-4 text-primary" />
                   <span>{banco.name}</span>
                 </div>
               </SelectItem>
@@ -81,19 +81,19 @@ export function BankAccountSelector({
       {/* Seletor de Conta Bancária */}
       {value?.banco_id && (
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">
-            Conta Bancária <span className="text-red-500">*</span>
+          <Label className="text-sm font-medium text-foreground">
+            Conta Bancária <span className="text-destructive">*</span>
           </Label>
           <Select 
             value={value?.conta_id || ''} 
             onValueChange={handleContaChange}
             disabled={disabled || contasDisponiveis.length === 0}
           >
-            <SelectTrigger className="bg-white/80 backdrop-blur-sm border-gray-300/50">
+            <SelectTrigger className="glassmorphism-input">
               <SelectValue placeholder="Selecionar conta">
                 {contaSelecionada && (
                   <div className="flex items-center space-x-2">
-                    <CreditCard className="h-4 w-4 text-green-600" />
+                    <CreditCard className="h-4 w-4 text-success" />
                     <span>
                       Ag: {contaSelecionada.agency} - CC: {contaSelecionada.account_number}
                     </span>
@@ -101,11 +101,11 @@ export function BankAccountSelector({
                 )}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-white border-gray-200 shadow-lg">
+            <SelectContent className="z-50 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
               {contasDisponiveis.map((conta) => (
                 <SelectItem key={conta.id} value={conta.id}>
                   <div className="flex items-center space-x-2">
-                    <CreditCard className="h-4 w-4 text-green-600" />
+                    <CreditCard className="h-4 w-4 text-success" />
                     <span>
                       Ag: {conta.agency} - CC: {conta.account_number}
                       {conta.pix_key && ` - PIX: ${conta.pix_key.slice(0, 10)}...`}
@@ -117,7 +117,7 @@ export function BankAccountSelector({
           </Select>
           
           {contasDisponiveis.length === 0 && value?.banco_id && (
-            <p className="text-sm text-amber-600">
+            <p className="text-sm text-warning">
               Nenhuma conta cadastrada para este banco. Cadastre uma conta primeiro.
             </p>
           )}
