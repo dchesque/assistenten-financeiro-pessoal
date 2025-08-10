@@ -122,7 +122,7 @@ export function PaymentModalAdvanced({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-white/95 backdrop-blur-xl border border-white/20">
+      <DialogContent className="sm:max-w-2xl bg-white/95 backdrop-blur-xl border border-white/20 z-[9999]">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Calculator className="w-5 h-5" />

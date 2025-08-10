@@ -76,10 +76,10 @@ export function ContasPagarList({ contas, loading, onEdit, onDelete, onView, onP
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      pending: { label: 'Pendente', className: 'bg-blue-100/80 text-blue-700' },
-      paid: { label: 'Pago', className: 'bg-green-100/80 text-green-700' },
-      overdue: { label: 'Vencido', className: 'bg-red-100/80 text-red-700' },
-      cancelled: { label: 'Cancelado', className: 'bg-gray-100/80 text-gray-700' }
+      pending: { label: 'Pendente', className: 'bg-blue-100/80 text-blue-700 px-3 py-1.5' },
+      paid: { label: 'Pago', className: 'bg-green-100/80 text-green-700 px-3 py-1.5' },
+      overdue: { label: 'Vencido', className: 'bg-red-100/80 text-red-700 px-3 py-1.5' },
+      cancelled: { label: 'Cancelado', className: 'bg-gray-100/80 text-gray-700 px-3 py-1.5' }
     };
 
     const statusInfo = statusMap[status as keyof typeof statusMap] || statusMap.pending;
@@ -221,52 +221,49 @@ export function ContasPagarList({ contas, loading, onEdit, onDelete, onView, onP
                   </TableCell>
                   
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onView(conta)}
-                        className="h-8 w-8 p-0 hover:bg-blue-50"
-                        title="Visualizar"
-                      >
-                        <Eye className="w-4 h-4 text-blue-600" />
-                      </Button>
-                      
-                      {conta.status === 'pending' && (
-                        <div className="relative">
-                          <Button
-                            size="sm"
-                            onClick={() => onPay(conta)}
-                            className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium px-3 py-1 text-xs"
-                            title="Pagar conta"
-                          >
-                            <CreditCard className="w-3 h-3 mr-1" />
-                            PAGAR
-                          </Button>
-                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        </div>
-                      )}
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(conta)}
-                        className="h-8 w-8 p-0 hover:bg-orange-50"
-                        title="Editar"
-                      >
-                        <Edit className="w-4 h-4 text-orange-600" />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(conta)}
-                        className="h-8 w-8 p-0 hover:bg-red-50"
-                        title="Excluir"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </Button>
-                    </div>
+                     <div className="flex items-center gap-1">
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         onClick={() => onView(conta)}
+                         className="h-7 w-7 p-0 hover:bg-blue-50"
+                         title="Visualizar"
+                       >
+                         <Eye className="w-3.5 h-3.5 text-blue-600" />
+                       </Button>
+                       
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         onClick={() => onEdit(conta)}
+                         className="h-7 w-7 p-0 hover:bg-orange-50"
+                         title="Editar"
+                       >
+                         <Edit className="w-3.5 h-3.5 text-orange-600" />
+                       </Button>
+                       
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         onClick={() => onDelete(conta)}
+                         className="h-7 w-7 p-0 hover:bg-red-50"
+                         title="Excluir"
+                       >
+                         <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                       </Button>
+
+                       {conta.status === 'pending' && (
+                         <Button
+                           size="sm"
+                           onClick={() => onPay(conta)}
+                           className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium px-3 py-1 text-xs ml-1"
+                           title="Pagar conta"
+                         >
+                           <CreditCard className="w-3 h-3 mr-1" />
+                           PAGAR
+                         </Button>
+                       )}
+                     </div>
                   </TableCell>
                 </TableRow>
               ))}

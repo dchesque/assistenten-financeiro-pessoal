@@ -53,6 +53,7 @@ export function ConfirmacaoModal({
       icon={icones[tipo]}
       size="md"
       loading={loading}
+      className="z-[9999]"
       footer={
         <div className="flex justify-end space-x-3">
           <Button variant="outline" onClick={onClose} disabled={loading}>
