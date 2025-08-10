@@ -9,12 +9,19 @@ export interface AccountPayable {
   due_date: string;
   status: AccountStatus;
   category_id?: string;
-  supplier_id?: string;
+  contact_id?: string;
   bank_account_id?: string;
   paid_at?: string;
   notes?: string;
+  reference_document?: string;
+  paid_amount?: number;
+  final_amount?: number;
+  original_amount?: number;
+  issue_date?: string;
+  dda_enabled?: boolean;
   created_at: string;
   updated_at: string;
+  deleted_at?: string;
   
   // Joined data
   category?: {
@@ -22,9 +29,10 @@ export interface AccountPayable {
     name: string;
     color?: string;
   };
-  supplier?: {
+  contact?: {
     id: string;
     name: string;
+    type: string;
   };
   bank_account?: {
     id: string;
@@ -44,18 +52,30 @@ export interface AccountReceivable {
   due_date: string;
   status: ReceivableStatus;
   category_id?: string;
+  customer_id?: string;
   customer_name?: string;
+  contact_id?: string;
   bank_account_id?: string;
   received_at?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
+  deleted_at?: string;
   
   // Joined data
   category?: {
     id: string;
     name: string;
     color?: string;
+  };
+  contact?: {
+    id: string;
+    name: string;
+    type: string;
+  };
+  customer?: {
+    id: string;
+    name: string;
   };
   bank_account?: {
     id: string;

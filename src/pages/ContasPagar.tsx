@@ -52,7 +52,7 @@ export default function ContasPagar() {
     return accounts.filter(account => {
       const matchesSearch = !searchTerm || 
         account.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        account.supplier?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        account.contact?.name?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesStatus = statusFilter === 'all' || account.status === statusFilter;
       
@@ -282,9 +282,9 @@ export default function ContasPagar() {
                         <span>Venc: {format(new Date(account.due_date), 'dd/MM/yyyy', { locale: ptBR })}</span>
                       </div>
                       
-                      {account.supplier?.name && (
+                      {account.contact?.name && (
                         <div className="flex items-center text-gray-600">
-                          <span>Fornecedor: {account.supplier.name}</span>
+                          <span>Fornecedor: {account.contact.name}</span>
                         </div>
                       )}
                     </div>

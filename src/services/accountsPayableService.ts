@@ -8,7 +8,7 @@ export const accountsPayableService = {
       .select(`
         *,
         category:categories(id, name, color),
-        supplier:suppliers(id, name),
+        contact:contacts(id, name, type),
         bank_account:bank_accounts(
           id,
           agency,
@@ -28,7 +28,7 @@ export const accountsPayableService = {
       .select(`
         *,
         category:categories(id, name, color),
-        supplier:suppliers(id, name),
+        contact:contacts(id, name, type),
         bank_account:bank_accounts(
           id,
           agency,
@@ -56,7 +56,7 @@ export const accountsPayableService = {
       .select(`
         *,
         category:categories(id, name, color),
-        supplier:suppliers(id, name),
+        contact:contacts(id, name, type),
         bank_account:bank_accounts(
           id,
           agency,
@@ -87,7 +87,7 @@ export const accountsPayableService = {
       .select(`
         *,
         category:categories(id, name, color),
-        supplier:suppliers(id, name),
+        contact:contacts(id, name, type),
         bank_account:bank_accounts(
           id,
           agency,
@@ -113,7 +113,7 @@ export const accountsPayableService = {
       .select(`
         *,
         category:categories(id, name, color),
-        supplier:suppliers(id, name),
+        contact:contacts(id, name, type),
         bank_account:bank_accounts(
           id,
           agency,
