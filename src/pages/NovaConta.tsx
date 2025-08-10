@@ -32,6 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLoadingStates } from '@/hooks/useLoadingStates';
 import { aplicarMascaraMoeda, aplicarMascaraPercentual, converterMoedaParaNumero, converterPercentualParaNumero, numeroParaMascaraMoeda, numeroParaMascaraPercentual, validarValorMonetario, validarPercentual, formatarMoedaExibicao } from '@/utils/masks';
 import { ValidationService } from '@/services/ValidationService';
+import { categoriesService } from '@/services/categoriesService';
 // Supabase removido - usando dados mock
 import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
 import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
@@ -182,7 +183,7 @@ export default function NovaConta() {
   }, [conta.valor_original, conta.valor_juros, conta.valor_desconto, recorrencia.ativo, recorrencia.quantidade_parcelas]);
 
   // Função para selecionar credor e auto-preencher categoria
-  const handleCredorSelect = (credor: any) => {
+  const handleCredorSelect = async (credor: any) => {
     setCredorSelecionado(credor);
     setConta(prev => ({
       ...prev,
@@ -191,13 +192,20 @@ export default function NovaConta() {
 
     // Auto-preencher categoria padrão do credor se existir
     if (credor.category_id) {
-      // Buscar categoria do credor via API
-      // Por enquanto, limpar seleção para o usuário escolher
-      setContaSelecionada(null);
-      setConta(prev => ({
-        ...prev,
-        plano_conta_id: undefined
-      }));
+      try {
+        // Buscar categoria do credor via API para auto-preencher
+        const categoria = await categoriesService.getById(credor.category_id);
+        if (categoria) {
+          setContaSelecionada(categoria);
+          setConta(prev => ({
+            ...prev,
+            plano_conta_id: categoria.id
+          }));
+        }
+      } catch (error) {
+        console.warn('Erro ao buscar categoria do credor:', error);
+        // Se der erro, deixar para o usuário selecionar manualmente
+      }
     }
   };
 
@@ -542,16 +550,16 @@ export default function NovaConta() {
                       <Label className="text-sm font-medium text-gray-700">
                         Categoria/Plano de Contas <span className="text-red-500">*</span>
                       </Label>
-                      <CategoriaSelectorNovo 
-                        value={contaSelecionada as any} 
-                        onSelect={(categoria) => {
-                          setContaSelecionada(categoria as any);
-                          setConta(prev => ({
-                            ...prev,
-                            plano_conta_id: categoria.id
-                          }));
-                        }} 
-                        placeholder="Selecionar categoria..." 
+                       <CategoriaSelectorNovo 
+                         value={contaSelecionada} 
+                         onSelect={(categoria) => {
+                           setContaSelecionada(categoria);
+                           setConta(prev => ({
+                             ...prev,
+                             plano_conta_id: categoria.id
+                           }));
+                         }} 
+                         placeholder="Selecionar categoria..."
                         className="w-full" 
                         tipo="expense"
                       />

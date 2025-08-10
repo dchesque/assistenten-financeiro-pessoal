@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Search, FolderTree, Plus } from 'lucide-react';
-import { Category } from '@/types/category';
-import { useCategories } from '@/hooks/useCategories';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Search, Plus, FolderTree } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+import { useCategories } from '@/hooks/useCategories';
+import { Category } from '@/types/category';
+import { cn } from '@/lib/utils';
 
 interface CategoriaSelectorNovoProps {
   value?: Category | null;
@@ -20,154 +20,144 @@ interface CategoriaSelectorNovoProps {
 export function CategoriaSelectorNovo({ 
   value, 
   onSelect, 
-  placeholder = "Selecionar categoria...",
+  placeholder = "Selecione uma categoria",
   className = "",
   tipo = 'expense'
 }: CategoriaSelectorNovoProps) {
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState('');
+  const [categoriasCarregadas, setCategoriasCarregadas] = useState(false);
   
   const { categories, loading, loadCategories } = useCategories();
-  const buscaDebounced = useDebounce(busca, 300);
 
-  // Carregar categorias quando abrir o modal
+  // Carregar categorias apenas uma vez quando o modal abrir
   useEffect(() => {
-    if (open) {
+    if (open && !categoriasCarregadas) {
       const filters = tipo !== 'all' ? { type: tipo } : undefined;
       loadCategories(filters);
+      setCategoriasCarregadas(true);
     }
-  }, [open, tipo, buscaDebounced, loadCategories]);
+  }, [open, categoriasCarregadas, loadCategories, tipo]);
 
-  const handleSelect = (categoria: Category) => {
+  const handleSelect = useCallback((categoria: Category) => {
     onSelect(categoria);
     setOpen(false);
     setBusca('');
-  };
+  }, [onSelect]);
 
-  const getIcon = (iconName?: string) => {
-    if (!iconName) return <FolderTree className="h-4 w-4" />;
+  const getIcon = useCallback((iconName?: string) => {
+    if (!iconName) return <FolderTree className="w-3 h-3" />;
     const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<any>;
-    return IconComponent ? <IconComponent className="h-4 w-4" /> : <FolderTree className="h-4 w-4" />;
-  };
+    return IconComponent ? <IconComponent className="w-3 h-3" /> : <FolderTree className="w-3 h-3" />;
+  }, []);
 
-  const getTipoColor = (tipo: string) => {
-    return tipo === 'income' 
+  const getTipoColor = useCallback((type: string) => {
+    return type === 'income' 
       ? 'bg-green-100/80 text-green-700' 
       : 'bg-red-100/80 text-red-700';
-  };
+  }, []);
 
-  // Filtrar categorias pela busca
-  const categoriasFiltradas = categories.filter(categoria => {
-    if (!buscaDebounced) return true;
-    return categoria.name.toLowerCase().includes(buscaDebounced.toLowerCase());
-  });
+  // Filtrar categorias localmente após carregamento
+  const categoriasFiltradas = useMemo(() => {
+    if (!categories) return [];
+    
+    return categories.filter(categoria => 
+      categoria.name.toLowerCase().includes(busca.toLowerCase())
+    );
+  }, [categories, busca]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className={`h-10 justify-start text-left font-normal bg-white/80 backdrop-blur-sm border-gray-300/50 ${className}`}
-          role="combobox"
-          aria-expanded={open}
-        >
-          {value ? (
-            <div className="flex items-center space-x-2">
-              <div style={{ color: value.color }}>
-                {getIcon(value.icon)}
-              </div>
-              <span className="truncate">{value.name}</span>
-              <Badge variant="outline" className={getTipoColor(value.type)}>
-                {value.type === 'income' ? 'Receita' : 'Despesa'}
-              </Badge>
-            </div>
-          ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
+          className={cn(
+            "w-full justify-between bg-white/80 backdrop-blur-sm border border-gray-300/50 hover:bg-white/90",
+            className
           )}
-          <Search className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+        >
+          <div className="flex items-center gap-2">
+            {value ? (
+              <>
+                <div 
+                  className="w-3 h-3 rounded-full flex items-center justify-center text-white"
+                  style={{ backgroundColor: value.color }}
+                >
+                  {value.icon && getIcon(value.icon)}
+                </div>
+                <span>{value.name}</span>
+                <Badge variant="secondary" className={getTipoColor(value.type)}>
+                  {value.type === 'income' ? 'Receita' : 'Despesa'}
+                </Badge>
+              </>
+            ) : (
+              <span className="text-muted-foreground">{placeholder}</span>
+            )}
+          </div>
+          <Search className="w-4 h-4 text-muted-foreground" />
         </Button>
       </DialogTrigger>
-
-      <DialogContent className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <FolderTree className="h-5 w-5" />
-            <span>Selecionar Categoria</span>
-          </DialogTitle>
-        </DialogHeader>
-
+      
+      <DialogContent className="max-w-md bg-white/95 backdrop-blur-xl border border-white/20">
         <div className="space-y-4">
-          {/* Campo de busca */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar categoria..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="pl-10 bg-white/80 backdrop-blur-sm border-gray-300/50"
-              autoFocus
+              className="bg-white/80 backdrop-blur-sm border border-gray-300/50"
             />
           </div>
 
-          {/* Lista de categorias */}
-          <div className="max-h-96 overflow-y-auto space-y-2">
-            {loading ? (
-              <div className="p-6 text-center text-gray-500">
+          <div className="max-h-64 overflow-y-auto space-y-1">
+            {loading && !categoriasCarregadas ? (
+              <div className="p-4 text-center text-muted-foreground">
                 Carregando categorias...
               </div>
-            ) : categoriasFiltradas.length > 0 ? (
+            ) : categoriasFiltradas.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">
+                {busca ? 'Nenhuma categoria encontrada' : 'Nenhuma categoria disponível'}
+              </div>
+            ) : (
               categoriasFiltradas.map((categoria) => (
-                <div
+                <Button
                   key={categoria.id}
-                  className="p-3 rounded-lg border border-gray-200/50 hover:bg-gray-50/80 cursor-pointer transition-all duration-200"
+                  variant="ghost"
+                  className="w-full justify-start p-2 h-auto hover:bg-gray-50/50"
                   onClick={() => handleSelect(categoria)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1">
-                      <div style={{ color: categoria.color }}>
-                        {getIcon(categoria.icon)}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900">
-                            {categoria.name}
-                          </span>
-                          <Badge variant="outline" className={getTipoColor(categoria.type)}>
-                            {categoria.type === 'income' ? 'Receita' : 'Despesa'}
-                          </Badge>
-                          {categoria.is_system && (
-                            <Badge variant="outline" className="bg-blue-100/80 text-blue-700">
-                              Sistema
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                  <div className="flex items-center gap-3 w-full">
+                    <div 
+                      className="w-3 h-3 rounded-full flex items-center justify-center text-white text-xs"
+                      style={{ backgroundColor: categoria.color }}
+                    >
+                      {categoria.icon && getIcon(categoria.icon)}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">{categoria.name}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className={getTipoColor(categoria.type)}>
+                        {categoria.type === 'income' ? 'Receita' : 'Despesa'}
+                      </Badge>
+                      {categoria.is_system && (
+                        <Badge variant="outline" className="bg-blue-100/80 text-blue-700 text-xs">
+                          Sistema
+                        </Badge>
+                      )}
                     </div>
                   </div>
-                </div>
+                </Button>
               ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <FolderTree className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>Nenhuma categoria encontrada</p>
-                <p className="text-sm">Tente ajustar os filtros de busca</p>
-              </div>
             )}
           </div>
 
-          {/* Informações adicionais */}
-          <div className="border-t pt-4 text-sm text-gray-600">
-            <p className="mb-2">ℹ️ Categorias ajudam a organizar e controlar seus gastos</p>
-            <Button 
-              className="w-full btn-primary"
-              onClick={() => {
-                // TODO: Implementar modal de criação de categoria
-                console.log('Abrir modal de criação de categoria');
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Nova Categoria
+          <div className="flex justify-center pt-2 border-t border-gray-200/50">
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              <Plus className="w-4 h-4 mr-2" />
+              {/* TODO: Implementar criação rápida de categoria */}
+              Nova Categoria
             </Button>
           </div>
         </div>
