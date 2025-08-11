@@ -47,7 +47,6 @@ export function useFormulario<T extends Record<string, any>>(
   }, [validarCampoInterno]);
 
   const alterarCampos = useCallback((novosValues: Partial<T>) => {
-    console.log('📝 Alterando campos do formulário:', novosValues);
     setDados(prev => ({ ...prev, ...novosValues }));
   }, []);
 
@@ -68,23 +67,15 @@ export function useFormulario<T extends Record<string, any>>(
     // Garantir que sempre usamos os dados do formulário quando dadosParaSalvar não for válido
     const dadosFinais = (dadosParaSalvar && typeof dadosParaSalvar === 'object' && !dadosParaSalvar.type) ? dadosParaSalvar : dados;
     
-    console.log('🔄 Iniciando salvamento do formulário');
-    console.log('📋 Dados atuais do formulário:', dados);
-    console.log('📋 Dados finais para salvar:', dadosFinais);
-    
     if (validacao && !validarTodos()) {
-      console.log('❌ Validação falhou, não salvando');
-      console.log('❌ Erros de validação:', erros);
       return;
     }
-    
+
     setCarregando(true);
     try {
-      console.log('💾 Chamando função de salvamento...');
       await onSalvar(dadosFinais);
-      console.log('✅ Salvamento concluído com sucesso');
     } catch (error) {
-      console.error('❌ Erro no salvamento:', error);
+      // Error handling without console logs
       throw error;
     } finally {
       setCarregando(false);

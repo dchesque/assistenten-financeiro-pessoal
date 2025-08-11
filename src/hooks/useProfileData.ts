@@ -55,7 +55,6 @@ export function useProfileData() {
   // Carregar dados do perfil ao montar o componente
   useEffect(() => {
     if (user?.id && !authLoading) {
-      console.log('🔄 Carregando dados do perfil para usuário:', user.id);
       carregarDadosPerfil();
     }
   }, [user?.id, authLoading]);
@@ -63,12 +62,10 @@ export function useProfileData() {
   // Carregar dados do perfil
   const carregarDadosPerfil = async () => {
     if (!user?.id) {
-      console.log('⚠️ Usuário não identificado, não carregando perfil');
       return;
     }
 
     setCarregando(true);
-    console.log('🔄 Carregando perfil do banco para user_id:', user.id);
     
     try {
       const { data, error } = await supabase
@@ -78,11 +75,8 @@ export function useProfileData() {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ Erro ao buscar perfil:', error);
         throw error;
       }
-
-      console.log('📄 Dados do perfil carregados:', data);
 
       const dadosCarregados: DadosPerfil = {
         nome: data?.name || '',
@@ -108,10 +102,8 @@ export function useProfileData() {
         });
       }
 
-      console.log('✅ Dados processados para o formulário:', dadosCarregados);
       setDadosPerfil(dadosCarregados);
     } catch (error: any) {
-      console.error('❌ Erro ao carregar dados do perfil:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar dados do perfil',
@@ -124,13 +116,9 @@ export function useProfileData() {
 
   // Função para buscar endereço pelo CEP
   const buscarEnderecoPorCEP = async (cep: string) => {
-    console.log('🔍 Iniciando busca de CEP:', cep);
-    
     if (cep.replace(/\D/g, '').length === 8) {
       const endereco = await buscarCEP(cep);
       if (endereco) {
-        console.log('📍 CEP encontrado:', endereco);
-        
         toast({
           title: 'Endereço encontrado',
           description: 'Dados preenchidos automaticamente'
@@ -138,7 +126,6 @@ export function useProfileData() {
         
         return endereco;
       } else {
-        console.log('⚠️ CEP não encontrado');
         return null;
       }
     }
@@ -209,7 +196,6 @@ export function useProfileData() {
 
       return null;
     } catch (error) {
-      console.error('Erro no upload:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao fazer upload da imagem',
@@ -233,7 +219,6 @@ export function useProfileData() {
     }
 
     setSalvando(true);
-    console.log('🔄 Salvando perfil:', dados);
     
     try {
       // Usar a função RPC correta
@@ -250,11 +235,8 @@ export function useProfileData() {
       });
 
       if (error) {
-        console.error('❌ Erro RPC:', error);
         throw error;
       }
-
-      console.log('✅ Dados salvos no Supabase:', data);
 
       // Recarregar dados do Supabase para garantir sincronização
       await carregarDadosPerfil();
@@ -266,7 +248,6 @@ export function useProfileData() {
 
       return true;
     } catch (error: any) {
-      console.error('❌ Erro ao salvar perfil:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao salvar alterações: ' + error.message,
@@ -303,7 +284,6 @@ export function useProfileData() {
 
       return true;
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao salvar configurações',
@@ -334,7 +314,6 @@ export function useProfileData() {
 
       return true;
     } catch (error) {
-      console.error('Erro ao alterar senha:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao alterar senha. Verifique a senha atual.',

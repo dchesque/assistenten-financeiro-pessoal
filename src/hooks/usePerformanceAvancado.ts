@@ -29,11 +29,18 @@ export function usePerformanceAvancado() {
     // Simular coleta de métricas
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    // Generate secure random performance metrics for simulation
+    const secureRandom = () => {
+      const array = new Uint32Array(1);
+      crypto.getRandomValues(array);
+      return array[0] / (0xFFFFFFFF + 1);
+    };
+    
     setMetricas({
-      carregamento: Math.random() * 1000 + 500,
-      renderizacao: Math.random() * 100 + 16,
-      memoria: Math.random() * 100 + 20,
-      cpu: Math.random() * 100 + 10
+      carregamento: secureRandom() * 1000 + 500,
+      renderizacao: secureRandom() * 100 + 16,
+      memoria: secureRandom() * 100 + 20,
+      cpu: secureRandom() * 100 + 10
     });
     
     setLoading(false);

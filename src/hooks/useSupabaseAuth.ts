@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/userProfile';
 import { logService } from '@/services/logService';
 import { toast } from 'sonner';
+import { generateSecurePassword } from '@/utils/cryptoUtils';
 
 export function useSupabaseAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -176,7 +177,7 @@ export function useSupabaseAuth() {
       // Criar conta via Supabase
       const { error } = await supabase.auth.signUp({
         phone: formattedPhone,
-        password: Math.random().toString(36), // Password aleatório (não usado para OTP)
+        password: generateSecurePassword(), // Password aleatório seguro (não usado para OTP)
         options: {
           data: {
             name: userData?.nome || '',

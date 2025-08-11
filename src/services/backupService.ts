@@ -164,11 +164,7 @@ class BackupService {
       };
 
       // Log da exportação - criar uma versão simples
-      console.log('Backup exportado:', {
-        feature: 'export',
-        recordCounts: counts,
-        size: JSON.stringify(backup).length
-      });
+      // Backup exported successfully
 
       // Criar blob
       const jsonString = JSON.stringify(backup, null, 2);
@@ -447,11 +443,7 @@ class BackupService {
       }
 
       // Log da importação - criar uma versão simples  
-      console.log('Backup importado:', {
-        feature: 'import',
-        strategy: options.strategy,
-        summary: result.summary
-      });
+      // Backup imported successfully
 
       result.success = result.errors.length === 0;
       result.duration = Date.now() - startTime;

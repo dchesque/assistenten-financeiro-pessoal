@@ -142,7 +142,6 @@ export class SupabaseDataService implements IDataService {
     },
 
     create: async (data: any): Promise<any> => {
-      console.log('🔥 Dados recebidos para criação:', data);
       
       // Validar campos obrigatórios
       if (!data.descricao || !data.valor_original || !data.data_vencimento) {
@@ -213,7 +212,7 @@ export class SupabaseDataService implements IDataService {
         dda_enabled: data.dda || false
       };
 
-      console.log('🔥 Dados mapeados para inserção:', mappedData);
+      
 
       const { data: result, error } = await supabase
         .from('accounts_payable')
@@ -232,7 +231,7 @@ export class SupabaseDataService implements IDataService {
         throw new Error(`Erro ao criar conta: ${error.message}`);
       }
       
-      console.log('✅ Conta criada com sucesso:', result);
+      
       return result;
     },
 

@@ -82,7 +82,9 @@ export const validacoesFornecedores = {
 
     // Simular verificação de unicidade
     // TODO: Implementar consulta real ao banco
-    const existeOutroFornecedor = Math.random() < 0.1; // 10% chance de conflito para teste
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const existeOutroFornecedor = (array[0] / (0xFFFFFFFF + 1)) < 0.1; // 10% chance de conflito para teste
     
     if (existeOutroFornecedor && !fornecedorId) {
       toast.error('CNPJ/CPF já cadastrado para outro fornecedor');
@@ -121,7 +123,9 @@ export const validacoesCategorias = {
     }
 
     // Simular verificação de unicidade
-    const existeOutraCategoria = Math.random() < 0.15; // 15% chance de conflito para teste
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const existeOutraCategoria = (array[0] / (0xFFFFFFFF + 1)) < 0.15; // 15% chance de conflito para teste
     
     if (existeOutraCategoria && !categoriaId) {
       toast.error('Já existe uma categoria com este nome');
@@ -133,7 +137,9 @@ export const validacoesCategorias = {
 
   validarExclusao: async (categoriaId: number): Promise<boolean> => {
     // Simular verificação de vínculos
-    const temContasVinculadas = Math.random() < 0.3; // 30% chance de ter vínculos para teste
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const temContasVinculadas = (array[0] / (0xFFFFFFFF + 1)) < 0.3; // 30% chance de ter vínculos para teste
     
     if (temContasVinculadas) {
       toast.error('Categoria possui vínculos', {

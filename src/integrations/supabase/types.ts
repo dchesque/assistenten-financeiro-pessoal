@@ -86,6 +86,13 @@ export type Database = {
             foreignKeyName: "accounts_payable_bank_account_id_fkey"
             columns: ["bank_account_id"]
             isOneToOne: false
+            referencedRelation: "active_bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
             referencedRelation: "bank_accounts"
             referencedColumns: ["id"]
           },
@@ -182,6 +189,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "accounts_receivable_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "active_bank_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "accounts_receivable_bank_account_id_fkey"
             columns: ["bank_account_id"]
@@ -975,7 +989,21 @@ export type Database = {
             foreignKeyName: "transactions_from_account_id_fkey"
             columns: ["from_account_id"]
             isOneToOne: false
+            referencedRelation: "active_bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_from_account_id_fkey"
+            columns: ["from_account_id"]
+            isOneToOne: false
             referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_to_account_id_fkey"
+            columns: ["to_account_id"]
+            isOneToOne: false
+            referencedRelation: "active_bank_accounts"
             referencedColumns: ["id"]
           },
           {
@@ -1064,6 +1092,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "accounts_payable_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "active_bank_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "accounts_payable_bank_account_id_fkey"
             columns: ["bank_account_id"]
@@ -1168,6 +1203,13 @@ export type Database = {
             foreignKeyName: "accounts_receivable_bank_account_id_fkey"
             columns: ["bank_account_id"]
             isOneToOne: false
+            referencedRelation: "active_bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_receivable_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
             referencedRelation: "bank_accounts"
             referencedColumns: ["id"]
           },
@@ -1219,6 +1261,54 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      active_bank_accounts: {
+        Row: {
+          account_number: string | null
+          agency: string | null
+          bank_id: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string | null
+          pix_key: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_number?: string | null
+          agency?: string | null
+          bank_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          pix_key?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_number?: string | null
+          agency?: string | null
+          bank_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          pix_key?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "active_banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_accounts_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1477,6 +1567,66 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      active_suppliers: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          city: string | null
+          created_at: string | null
+          deleted_at: string | null
+          document: string | null
+          document_type: string | null
+          email: string | null
+          id: string | null
+          name: string | null
+          notes: string | null
+          phone: string | null
+          state: string | null
+          type: string | null
+          updated_at: string | null
+          user_id: string | null
+          zip: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          document?: string | null
+          document_type?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {

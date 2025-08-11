@@ -91,7 +91,6 @@ export const banksService = {
   },
 
   async createBankAccount(account: Omit<BankAccount, 'id' | 'created_at' | 'updated_at'>): Promise<BankAccount> {
-    console.log('🔧 createBankAccount - Dados recebidos:', account);
     
     const { data, error } = await supabase
       .from('bank_accounts')
@@ -104,7 +103,7 @@ export const banksService = {
       throw error;
     }
     
-    console.log('✅ Conta criada com sucesso:', data);
+    
     return data;
   },
 

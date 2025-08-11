@@ -1,6 +1,7 @@
 /**
  * Serviço de auditoria para rastreamento de ações do usuário
  */
+import { generateSecureId } from '@/utils/cryptoUtils';
 
 export interface AuditLog {
   id: string;
@@ -48,7 +49,7 @@ class AuditService {
   ): Promise<void> {
     try {
       const auditLog: AuditLog = {
-        id: `audit_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        id: generateSecureId('audit_'),
         userId,
         userEmail,
         action,

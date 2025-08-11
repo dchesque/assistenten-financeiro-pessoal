@@ -120,7 +120,10 @@ class MockDataService {
 
   // Simulação de latência de rede
   private async simulateLatency(min = 100, max = 500): Promise<void> {
-    const delay = Math.random() * (max - min) + min;
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const secureRandom = array[0] / (0xFFFFFFFF + 1);
+    const delay = secureRandom * (max - min) + min;
     return new Promise(resolve => setTimeout(resolve, delay));
   }
 

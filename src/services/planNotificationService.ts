@@ -45,10 +45,13 @@ export const checkPlanNotifications = (userProfile?: UserProfile | null) => {
 // Mock function para calcular uso atual
 const calculateMockUsage = (userProfile: UserProfile): Record<string, number> => {
   // Em produção, isso viria de consultas reais ao banco
+  const array = new Uint32Array(3);
+  crypto.getRandomValues(array);
+  
   return {
-    contas_pagar: Math.random() * 100,
-    fornecedores: Math.random() * 100,
-    categorias: Math.random() * 100
+    contas_pagar: (array[0] / (0xFFFFFFFF + 1)) * 100,
+    fornecedores: (array[1] / (0xFFFFFFFF + 1)) * 100,
+    categorias: (array[2] / (0xFFFFFFFF + 1)) * 100
   };
 };
 

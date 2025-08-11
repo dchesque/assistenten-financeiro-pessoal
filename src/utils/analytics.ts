@@ -2,6 +2,7 @@
  * 📊 SISTEMA DE ANALYTICS PREMIUM
  * Monitoramento completo e inteligente de todas as interações do usuário
  */
+import { generateSecureSessionId } from '@/utils/cryptoUtils';
 
 interface AnalyticsEvent {
   action: string;
@@ -251,7 +252,7 @@ export class Analytics {
 
   // 🔧 MÉTODOS PRIVADOS
   private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return generateSecureSessionId();
   }
 
   private initializeOnlineDetection() {

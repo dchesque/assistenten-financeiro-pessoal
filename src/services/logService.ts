@@ -1,3 +1,5 @@
+import { generateSecureId } from '@/utils/cryptoUtils';
+
 /* Serviço de logs estruturados da aplicação (frontend)
  * - Mantém os últimos 50 logs no sessionStorage
  * - Suporta exportação para debugging
@@ -38,7 +40,7 @@ function writeLogs(logs: AppLog[]) {
 function addLog(entry: Omit<AppLog, 'id' | 'timestamp'>) {
   const logs = readLogs();
   const newEntry: AppLog = {
-    id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    id: generateSecureId(),
     timestamp: new Date().toISOString(),
     ...entry,
   };
@@ -55,12 +57,12 @@ export const logService = {
   logError(error: any, context?: string, severity: LogSeverity = 'error') {
     const message = error?.message || String(error);
     addLog({ severity, message, context, data: error });
-    console.error(`[ERRO] ${context || 'app'}: ${message}`); // permitido pelas regras ESLint
+    // Error logged to internal system only (no console.log in production)
   },
 
   logWarn(message: string, data?: any, context?: string) {
     addLog({ severity: 'warn', message, context, data });
-    console.warn(`[WARN] ${context || 'app'}: ${message}`);
+    // Warning logged to internal system only
   },
 
   logInfo(message: string, data?: any, context?: string) {

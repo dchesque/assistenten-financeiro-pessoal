@@ -192,9 +192,9 @@ export class BackupService {
       // Salvar backup automático no localStorage (temporário)
       localStorage.setItem('auto_backup', JSON.stringify(autoBackupData));
       
-      console.log('Backup automático criado antes da importação');
+      // Backup automático criado antes da importação
     } catch (error) {
-      console.error('Erro ao criar backup automático:', error);
+      // Erro ao criar backup automático
     }
   }
 
