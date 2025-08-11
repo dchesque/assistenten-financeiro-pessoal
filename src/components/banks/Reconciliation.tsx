@@ -100,7 +100,7 @@ export function Reconciliation() {
       // Adicionar campo reconciled mock
       const transacoesComStatus = transacoesData.map(t => ({
         ...t,
-        reconciled: Math.random() > 0.3
+        reconciled: crypto.getRandomValues(new Uint8Array(1))[0] / 255 > 0.3
       }));
       
       setTransactions(transacoesComStatus);

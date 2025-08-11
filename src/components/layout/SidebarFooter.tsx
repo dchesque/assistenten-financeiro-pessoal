@@ -45,14 +45,17 @@ export function SidebarFooter({ expanded, mobile = false }: SidebarFooterProps) 
                 alt={profile.name || 'Avatar do usuário'}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  // Fallback para iniciais se imagem falhar
+                  // Fallback seguro para iniciais se imagem falhar
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement!.innerHTML = `
-                    <span class="text-white font-medium ${expanded || mobile ? 'text-sm' : 'text-xs'}">
-                      ${(profile?.name || user?.email || 'U').charAt(0).toUpperCase()}
-                    </span>
-                  `;
-                  e.currentTarget.parentElement!.className += ' bg-gradient-to-r from-pink-500 to-purple-600';
+                  const parent = e.currentTarget.parentElement!;
+                  
+                  // Remover imagem e criar span seguro
+                  const span = document.createElement('span');
+                  span.className = `text-white font-medium ${expanded || mobile ? 'text-sm' : 'text-xs'}`;
+                  span.textContent = (profile?.name || user?.email || 'U').charAt(0).toUpperCase();
+                  
+                  parent.appendChild(span);
+                  parent.className += ' bg-gradient-to-r from-pink-500 to-purple-600';
                 }}
               />
             ) : (

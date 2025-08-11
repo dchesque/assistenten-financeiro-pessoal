@@ -1268,8 +1268,12 @@ export type Database = {
           color: string | null
           created_at: string | null
           deleted_at: string | null
+          group_name: string | null
+          icon: string | null
           id: string | null
+          is_system: boolean | null
           name: string | null
+          type: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -1277,8 +1281,12 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           deleted_at?: string | null
+          group_name?: string | null
+          icon?: string | null
           id?: string | null
+          is_system?: boolean | null
           name?: string | null
+          type?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -1286,8 +1294,12 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           deleted_at?: string | null
+          group_name?: string | null
+          icon?: string | null
           id?: string | null
+          is_system?: boolean | null
           name?: string | null
+          type?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -1305,6 +1317,7 @@ export type Database = {
         Row: {
           active: boolean | null
           address: string | null
+          category_id: string | null
           city: string | null
           created_at: string | null
           deleted_at: string | null
@@ -1326,6 +1339,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           address?: string | null
+          category_id?: string | null
           city?: string | null
           created_at?: string | null
           deleted_at?: string | null
@@ -1347,6 +1361,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           address?: string | null
+          category_id?: string | null
           city?: string | null
           created_at?: string | null
           deleted_at?: string | null
@@ -1366,6 +1381,20 @@ export type Database = {
           zip?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "contacts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "active_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contacts_user_id_fkey"
             columns: ["user_id"]

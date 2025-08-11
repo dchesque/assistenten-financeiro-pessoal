@@ -25,10 +25,7 @@ export function ContaPreview({ conta, formaPagamento, credorSelecionado, contaSe
   const { planoContas } = usePlanoContas();
   const { bancos } = useBancosSupabase();
   
-  // Debug logs
-  console.log('ContaPreview - credorSelecionado:', credorSelecionado);
-  console.log('ContaPreview - contaSelecionada:', contaSelecionada);
-  console.log('ContaPreview - conta:', conta);
+  // Dados recebidos para preview da conta
   
   // Usar os objetos passados diretamente ao invés de buscar pelos IDs
   const fornecedor = credorSelecionado || (conta.fornecedor_id 

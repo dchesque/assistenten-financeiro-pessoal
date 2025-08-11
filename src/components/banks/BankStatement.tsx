@@ -128,18 +128,15 @@ export function BankStatement() {
   };
 
   const exportarPDF = () => {
-    console.log('Exportar PDF do extrato');
-    // Implementar exportação para PDF
+    // TODO: Implementar exportação para PDF
   };
 
   const imprimirExtrato = () => {
-    console.log('Imprimir extrato');
-    // Implementar funcionalidade de impressão
+    // TODO: Implementar funcionalidade de impressão
   };
 
   const exportarExcel = () => {
-    console.log('Exportar Excel do extrato');
-    // Implementar exportação para Excel
+    // TODO: Implementar exportação para Excel
   };
 
   return (

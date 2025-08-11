@@ -268,8 +268,7 @@ export default function ContasPagar() {
           setPaymentModalOpen(true);
         }}
         onDuplicar={(conta) => {
-          // TODO: Implementar duplicação
-          console.log('Duplicar conta:', conta);
+          // TODO: Implementar duplicação de conta
         }}
         onExcluir={(conta) => {
           setViewModalOpen(false);

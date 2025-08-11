@@ -66,7 +66,7 @@ export default function MeuPerfil() {
   // Sincronizar dados do perfil com o formulário APENAS na inicialização
   useEffect(() => {
     if (dadosPerfil && !inicializado && (dadosPerfil.email || Object.keys(dadosPerfil).some(key => dadosPerfil[key as keyof DadosPerfil]))) {
-      console.log('🔄 Sincronização inicial dos dados do perfil:', dadosPerfil);
+      // Sincronização inicial dos dados do perfil
       alterarCampos(dadosPerfil);
       setInicializado(true);
     }
@@ -86,26 +86,23 @@ export default function MeuPerfil() {
   // Busca automática de endereço por CEP
   const handleCEPChange = async (value: string) => {
     const cepFormatado = aplicarMascaraCEP(value);
-    console.log('🔍 Buscando CEP:', cepFormatado);
     
     // Atualizar o campo CEP no formulário imediatamente
     alterarCampo('cep', cepFormatado);
     
     if (cepFormatado.replace(/\D/g, '').length === 8) {
-      console.log('🔍 CEP completo, iniciando busca...');
+      // CEP completo, iniciando busca
       const endereco = await buscarEnderecoPorCEP(cepFormatado);
       
       if (endereco) {
-        console.log('📍 Endereço encontrado, atualizando formulário:', endereco);
-        // Atualizar apenas os campos de endereço, mantendo o CEP atual
+        // Endereço encontrado, atualizando formulário
         alterarCampos({
           endereco: endereco.logradouro || '',
           cidade: endereco.cidade || '',
           estado: endereco.estado || ''
         });
-      } else {
-        console.log('❌ Endereço não encontrado para CEP:', cepFormatado);
       }
+      // Silenciosamente falhar se endereço não encontrado
     }
   };
 

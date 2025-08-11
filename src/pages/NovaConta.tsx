@@ -357,43 +357,34 @@ export default function NovaConta() {
   };
 
   const criarContaSimples = async (marcarComoPago: boolean) => {
-    console.log('🔧 Criando conta simples...');
-    console.log('📋 Dados do credor selecionado:', credorSelecionado);
-    console.log('📋 Dados da categoria selecionada:', contaSelecionada);
-    console.log('📋 Dados da conta:', conta);
-    
-    if (!credorSelecionado) {
-      throw new Error('Selecione um credor antes de salvar');
-    }
-    
-    if (!contaSelecionada) {
-      throw new Error('Selecione uma categoria antes de salvar');
+    // Validação simplificada - dados obrigatórios
+    if (!contaSelecionada || !conta.descricao || !conta.valor_original || !conta.data_vencimento) {
+      toast({ title: 'Erro', description: 'Preencha todos os campos obrigatórios', variant: 'destructive' });
+      return;
     }
 
     const contaParaSalvar = {
       user_id: user!.id,
-      fornecedor_id: credorSelecionado.id.toString(),
-      plano_conta_id: contaSelecionada.id.toString(),
-      banco_id: marcarComoPago && contaBancaria.conta_id ? contaBancaria.conta_id : undefined,
-      documento_referencia: conta.documento_referencia,
-      descricao: conta.descricao!,
-      data_emissao: conta.data_emissao || new Date().toISOString().split('T')[0],
-      data_vencimento: conta.data_vencimento!,
-      valor_original: conta.valor_original!,
-      valor_final: conta.valor_final!,
+      fornecedor_id: credorSelecionado?.id || null,
+      plano_conta_id: contaSelecionada.id,
+      documento_referencia: conta.documento_referencia || null,
+      descricao: conta.descricao,
+      data_emissao: conta.data_emissao,
+      data_vencimento: conta.data_vencimento,
+      valor_original: conta.valor_original,
+      valor_final: conta.valor_final || conta.valor_original,
       status: marcarComoPago ? 'pago' : 'pendente',
-      data_pagamento: marcarComoPago ? (conta.data_pagamento || new Date().toISOString().split('T')[0]) : undefined,
-      valor_pago: marcarComoPago ? conta.valor_final : undefined,
+      data_pagamento: marcarComoPago ? new Date().toISOString().split('T')[0] : null,
+      valor_pago: marcarComoPago ? conta.valor_final || conta.valor_original : null,
       dda: conta.dda || false,
-      observacoes: conta.observacoes,
+      observacoes: conta.observacoes || '',
       // Campos obrigatórios da interface ContaPagar
       parcela_atual: 1,
       total_parcelas: 1,
       forma_pagamento: formaPagamento.tipo
     } as any;
 
-    console.log('💾 Dados preparados para salvar:', contaParaSalvar);
-    
+    // Salvar a conta
     await criarConta(contaParaSalvar);
   };
 

@@ -67,10 +67,10 @@ export default function Relatorios() {
       // Mock data para demonstração
       const mockData: DadosRelatorio = {
         resumo: {
-          totalReceitas: 25000 + Math.random() * 10000,
-          totalDespesas: 18000 + Math.random() * 8000,
-          saldoLiquido: 7000 + Math.random() * 3000,
-          contasPendentes: Math.floor(Math.random() * 20) + 5
+          totalReceitas: 25000 + crypto.getRandomValues(new Uint32Array(1))[0] % 10000,
+          totalDespesas: 18000 + crypto.getRandomValues(new Uint32Array(1))[0] % 8000,
+          saldoLiquido: 7000 + crypto.getRandomValues(new Uint32Array(1))[0] % 3000,
+          contasPendentes: (crypto.getRandomValues(new Uint8Array(1))[0] % 20) + 5
         },
         porCategoria: [
           { categoria: 'Vendas', valor: 15000, percentual: 45 },
@@ -79,8 +79,8 @@ export default function Relatorios() {
         ],
         evolucaoMensal: Array.from({ length: 6 }, (_, i) => ({
           mes: format(subMonths(new Date(), 5 - i), 'MMM', { locale: ptBR }),
-          receitas: 20000 + Math.random() * 10000,
-          despesas: 15000 + Math.random() * 8000
+          receitas: 20000 + crypto.getRandomValues(new Uint32Array(1))[0] % 10000,
+          despesas: 15000 + crypto.getRandomValues(new Uint32Array(1))[0] % 8000
         }))
       };
       

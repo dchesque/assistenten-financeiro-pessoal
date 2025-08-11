@@ -18,7 +18,10 @@ export const toast = {
 };
 
 const addToast = (type: Toast['type'], message: string) => {
-  const id = Math.random().toString(36).substr(2, 9);
+  // Use crypto for secure ID generation
+  const randomBytes = new Uint8Array(9);
+  crypto.getRandomValues(randomBytes);
+  const id = Array.from(randomBytes, byte => byte.toString(36)).join('').substr(0, 9);
   const newToast = { id, type, message };
   toasts = [newToast, ...toasts];
   notifyListeners();
