@@ -8,7 +8,7 @@ import * as LucideIcons from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { Category } from '@/types/category';
 import { cn } from '@/lib/utils';
-import { CadastroRapidoCategoriaSimples } from './CadastroRapidoCategoriaSimples';
+import { CategoryModal } from '@/components/categorias/CategoryModal';
 
 interface CategoriaSelectorNovoProps {
   value?: Category | null;
@@ -187,10 +187,11 @@ export function CategoriaSelectorNovo({
       </DialogContent>
 
       {/* Modal de Cadastro Rápido */}
-      <CadastroRapidoCategoriaSimples
+      <CategoryModal
         open={cadastroModalOpen}
         onOpenChange={setCadastroModalOpen}
-        onCategoryClosed={handleCategoriaCriada}
+        onCategoryCreated={handleCategoriaCriada}
+        fixedType="expense"
       />
     </Dialog>
   );
