@@ -8,6 +8,7 @@ import * as LucideIcons from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { Category } from '@/types/category';
 import { cn } from '@/lib/utils';
+import { CadastroRapidoCategoriaSimples } from './CadastroRapidoCategoriaSimples';
 
 interface CategoriaSelectorNovoProps {
   value?: Category | null;
@@ -27,6 +28,7 @@ export function CategoriaSelectorNovo({
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState('');
   const [categoriasCarregadas, setCategoriasCarregadas] = useState(false);
+  const [cadastroModalOpen, setCadastroModalOpen] = useState(false);
   
   const { categories, loading, loadCategories } = useCategories();
 
@@ -53,9 +55,26 @@ export function CategoriaSelectorNovo({
 
   const getTipoColor = useCallback((type: string) => {
     return type === 'income' 
-      ? 'bg-green-100/80 text-green-700' 
-      : 'bg-red-100/80 text-red-700';
+      ? 'bg-green-100/80 text-green-700 px-3 py-1' 
+      : 'bg-red-100/80 text-red-700 px-3 py-1';
   }, []);
+
+  const handleNovaCategoria = () => {
+    setOpen(false);
+    setCadastroModalOpen(true);
+  };
+
+  const handleCategoriaCriada = (novaCategoria: Category | null) => {
+    if (novaCategoria) {
+      // Recarregar categorias para incluir a nova
+      setCategoriasCarregadas(false);
+      loadCategories(tipo !== 'all' ? { type: tipo } : undefined);
+      
+      // Selecionar automaticamente a nova categoria
+      onSelect(novaCategoria);
+    }
+    setCadastroModalOpen(false);
+  };
 
   // Filtrar categorias localmente após carregamento
   const categoriasFiltradas = useMemo(() => {
@@ -142,7 +161,7 @@ export function CategoriaSelectorNovo({
                         {categoria.type === 'income' ? 'Receita' : 'Despesa'}
                       </Badge>
                       {categoria.is_system && (
-                        <Badge variant="outline" className="bg-blue-100/80 text-blue-700 text-xs">
+                        <Badge variant="outline" className="bg-blue-100/80 text-blue-700 text-xs px-2 py-1">
                           Sistema
                         </Badge>
                       )}
@@ -154,14 +173,25 @@ export function CategoriaSelectorNovo({
           </div>
 
           <div className="flex justify-center pt-2 border-t border-gray-200/50">
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+              onClick={handleNovaCategoria}
+            >
               <Plus className="w-4 h-4 mr-2" />
-              {/* TODO: Implementar criação rápida de categoria */}
               Nova Categoria
             </Button>
           </div>
         </div>
       </DialogContent>
+
+      {/* Modal de Cadastro Rápido */}
+      <CadastroRapidoCategoriaSimples
+        open={cadastroModalOpen}
+        onOpenChange={setCadastroModalOpen}
+        onCategoryClosed={handleCategoriaCriada}
+      />
     </Dialog>
   );
 }
