@@ -1,4 +1,4 @@
-export type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeMode = 'light';
 
 export interface NotificationSettings {
   email: boolean;
@@ -37,7 +37,7 @@ export interface SettingsUpdateData {
 }
 
 export const DEFAULT_SETTINGS: Omit<Settings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
-  theme: 'system',
+  theme: 'light',
   timezone: 'America/Sao_Paulo',
   locale: 'pt-BR',
   currency: 'BRL',

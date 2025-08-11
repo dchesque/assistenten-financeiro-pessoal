@@ -1749,6 +1749,7 @@ export type Database = {
       receivable_status: "pending" | "received" | "overdue" | "canceled"
       subscription_status: "active" | "inactive" | "cancelled" | "expired"
       theme_mode: "system" | "light" | "dark"
+      theme_type: "light"
       transaction_type: "income" | "expense" | "transfer"
       user_plan: "trial" | "free" | "premium"
     }
@@ -1905,6 +1906,7 @@ export const Constants = {
       receivable_status: ["pending", "received", "overdue", "canceled"],
       subscription_status: ["active", "inactive", "cancelled", "expired"],
       theme_mode: ["system", "light", "dark"],
+      theme_type: ["light"],
       transaction_type: ["income", "expense", "transfer"],
       user_plan: ["trial", "free", "premium"],
     },
