@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, Save, FolderTree } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
-import { Category, CreateCategory, EXPENSE_GROUPS, GROUP_ICONS, CATEGORY_COLORS } from '@/types/category';
+import { Category, CreateCategory, CATEGORY_COLORS } from '@/types/category';
 import { toast } from 'sonner';
 
 interface CadastroRapidoCategoriaModalProps {
@@ -33,7 +33,12 @@ export function CadastroRapidoCategoriaSimples({
     icon: 'FolderTree'
   });
   
-  const [grupoSelecionado, setGrupoSelecionado] = useState<string>('');
+  // Ícones comuns para categorias de despesa
+  const iconesDisponiveis = [
+    'FolderTree', 'Zap', 'Car', 'Home', 'ShoppingCart', 'Utensils',
+    'Gamepad2', 'Shirt', 'Heart', 'GraduationCap', 'Plane', 'Gift',
+    'Coffee', 'Smartphone', 'Wrench', 'Building', 'CreditCard', 'Receipt'
+  ];
 
   const handleClose = () => {
     setFormData({
@@ -42,7 +47,6 @@ export function CadastroRapidoCategoriaSimples({
       color: CATEGORY_COLORS[0],
       icon: 'FolderTree'
     });
-    setGrupoSelecionado('');
     onOpenChange(false);
   };
 
@@ -69,34 +73,10 @@ export function CadastroRapidoCategoriaSimples({
     }
   };
 
-  const handleGrupoChange = (grupo: string) => {
-    setGrupoSelecionado(grupo);
-    
-    // Auto-preencher nome baseado no grupo
-    if (grupo && EXPENSE_GROUPS[grupo as keyof typeof EXPENSE_GROUPS]) {
-      setFormData(prev => ({
-        ...prev,
-        name: EXPENSE_GROUPS[grupo as keyof typeof EXPENSE_GROUPS]
-      }));
-      
-      // Auto-selecionar primeiro ícone do grupo
-      const icones = GROUP_ICONS[grupo];
-      if (icones && icones.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          icon: icones[0]
-        }));
-      }
-    }
-  };
-
   const getIconComponent = (iconName: string) => {
     const IconComponent = (LucideIcons as any)[iconName];
     return IconComponent ? <IconComponent className="w-4 h-4" /> : <FolderTree className="w-4 h-4" />;
   };
-
-  const gruposDisponiveis = Object.keys(EXPENSE_GROUPS);
-  const iconesDoGrupo = grupoSelecionado ? GROUP_ICONS[grupoSelecionado] || [] : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -109,23 +89,6 @@ export function CadastroRapidoCategoriaSimples({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Grupo da Categoria */}
-          <div className="space-y-2">
-            <Label htmlFor="grupo">Grupo da Categoria</Label>
-            <Select value={grupoSelecionado} onValueChange={handleGrupoChange}>
-              <SelectTrigger className="bg-white/80 backdrop-blur-sm border border-gray-300/50">
-                <SelectValue placeholder="Selecione um grupo..." />
-              </SelectTrigger>
-              <SelectContent>
-                {gruposDisponiveis.map((grupo) => (
-                  <SelectItem key={grupo} value={grupo}>
-                    {EXPENSE_GROUPS[grupo as keyof typeof EXPENSE_GROUPS]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Nome da Categoria */}
           <div className="space-y-2">
             <Label htmlFor="name">Nome da Categoria *</Label>
@@ -160,27 +123,25 @@ export function CadastroRapidoCategoriaSimples({
           </div>
 
           {/* Ícone */}
-          {iconesDoGrupo.length > 0 && (
-            <div className="space-y-2">
-              <Label>Ícone da Categoria</Label>
-              <div className="grid grid-cols-6 gap-2">
-                {iconesDoGrupo.map((iconName) => (
-                  <button
-                    key={iconName}
-                    type="button"
-                    className={`p-2 rounded-lg border transition-all duration-200 ${
-                      formData.icon === iconName
-                        ? 'border-purple-300 bg-purple-50 text-purple-600'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setFormData(prev => ({ ...prev, icon: iconName }))}
-                  >
-                    {getIconComponent(iconName)}
-                  </button>
-                ))}
-              </div>
+          <div className="space-y-2">
+            <Label>Ícone da Categoria</Label>
+            <div className="grid grid-cols-6 gap-2">
+              {iconesDisponiveis.map((iconName) => (
+                <button
+                  key={iconName}
+                  type="button"
+                  className={`p-2 rounded-lg border transition-all duration-200 ${
+                    formData.icon === iconName
+                      ? 'border-purple-300 bg-purple-50 text-purple-600'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setFormData(prev => ({ ...prev, icon: iconName }))}
+                >
+                  {getIconComponent(iconName)}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Preview */}
           <div className="p-3 rounded-lg bg-gray-50/80 border border-gray-200/50">
