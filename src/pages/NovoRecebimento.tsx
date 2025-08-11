@@ -3,17 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { ArrowLeft, Save, CreditCard, Calendar, AlertTriangle, FileText, CheckCircle, Repeat } from 'lucide-react';
-import { ContaPagar } from '@/types/contaPagar';
-import { Fornecedor } from '@/types/fornecedor';
-import { PlanoContas } from '@/types/planoContas';
+import { AccountReceivable, ReceivableStatus } from '@/types/accounts';
+import { Pagador } from '@/types/pagador';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
 import { useBancosSupabase } from '@/hooks/useBancosReal';
-import { useContasPagar } from '@/hooks/useContasPagar';
-import { useCredores } from '@/hooks/useCredores';
-import { FornecedorSelector as PagadorSelector } from '@/components/contasPagar/FornecedorSelector';
-import { PlanoContasSelector } from '@/components/contasPagar/PlanoContasSelector';
-import { ContaPreview } from '@/components/contasPagar/ContaPreview';
+import { useContasReceber } from '@/hooks/useContasReceber';
+import { usePagadores } from '@/hooks/usePagadores';
+import { useCategories } from '@/hooks/useCategories';
+import { PagadorSelector } from '@/components/contasPagar/PagadorSelector';
+import { CategoriaSelectorNovo } from '@/components/contasPagar/CategoriaSelectorNovo';
+import { RecebimentoPreview } from '@/components/contasPagar/RecebimentoPreview';
 import { FormaRecebimentoSection } from '@/components/contasPagar/FormaRecebimentoSection';
 import { Button } from '@/components/ui/button';
 import { LoadingButton } from '@/components/ui/LoadingButton';
@@ -27,45 +27,36 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useLoadingStates } from '@/hooks/useLoadingStates';
-import { aplicarMascaraMoeda, aplicarMascaraPercentual, converterMoedaParaNumero, converterPercentualParaNumero, numeroParaMascaraMoeda, numeroParaMascaraPercentual, validarValorMonetario, validarPercentual, formatarMoedaExibicao } from '@/utils/masks';
-import { ValidationService } from '@/services/ValidationService';
-// Supabase removido - usando dados mock
-import { CampoComValidacao } from '@/components/ui/CampoComValidacao';
-import { validarValor, validarDescricao, validarDocumento, validarDataVencimento, validarObservacoes } from '@/utils/validacoesTempoReal';
-import { toast } from '@/hooks/use-toast';
+import { aplicarMascaraMoeda, converterMoedaParaNumero, formatarMoedaExibicao } from '@/utils/masks';
+import { useFormatacao } from '@/hooks/useFormatacao';
+
 export default function NovoRecebimento() {
   const navigate = useNavigate();
-  const { criarConta, estados } = useContasPagar();
+  const { criarConta, loading: contaLoading } = useContasReceber();
   const { bancos } = useBancosSupabase();
-  const { credores } = useCredores();
+  const { pagadores } = usePagadores();
+  const { categories, loading: categoriesLoading } = useCategories();
   const { isSaving, setLoading } = useLoadingStates();
+  const { toast } = useToast();
+  const { formatarMoedaInput, converterMoedaParaNumero: converterMoeda } = useFormatacao();
 
   // Estados do formulário
-  const [conta, setConta] = useState<Partial<ContaPagar>>({
-    documento_referencia: '',
-    descricao: '',
-    data_emissao: new Date().toISOString().split('T')[0],
-    data_vencimento: '',
-    valor_original: 0,
-    percentual_juros: 0,
-    valor_juros: 0,
-    percentual_desconto: 0,
-    valor_desconto: 0,
-    valor_final: 0,
-    status: 'pendente' as 'pendente' | 'pago' | 'vencido' | 'cancelado',
-    dda: false,
-    observacoes: ''
+  const [conta, setConta] = useState<Partial<AccountReceivable>>({
+    description: '',
+    amount: 0,
+    due_date: '',
+    status: 'pending' as ReceivableStatus,
+    notes: ''
   });
 
   // Estados para controlar valores com máscara
-  const [valorOriginalMask, setValorOriginalMask] = useState('');
+  const [valorMask, setValorMask] = useState('');
+  const [valorRecebidoMask, setValorRecebidoMask] = useState('');
   const [percentualJurosMask, setPercentualJurosMask] = useState('');
-  const [valorJurosMask, setValorJurosMask] = useState('');
   const [percentualDescontoMask, setPercentualDescontoMask] = useState('');
-  const [valorDescontoMask, setValorDescontoMask] = useState('');
-  const [valorPagoMask, setValorPagoMask] = useState('');
-  const [pagadorSelecionado, setPagadorSelecionado] = useState<Fornecedor | null>(null);
-  const [contaSelecionada, setContaSelecionada] = useState<PlanoContas | null>(null);
+  
+  const [pagadorSelecionado, setPagadorSelecionado] = useState<Pagador | null>(null);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<any>(null);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
     tipo: 'dinheiro_pix'
   });
@@ -83,35 +74,20 @@ export default function NovoRecebimento() {
   const [quantidadeParcelas, setQuantidadeParcelas] = useState(1);
   const [dataInicioRecorrencia, setDataInicioRecorrencia] = useState(new Date().toISOString().split('T')[0]);
   
-  // Usar loading do hook
-  const loading = estados.salvandoEdicao;
-
-  // Função de validação em tempo real
-  const validarCampoTempoReal = async (campo: string, valor: any) => {
-    const { ValidationService } = await import('@/services/ValidationService');
-    const erro = ValidationService.validarContaPagar({ 
-      [campo]: valor,
-      // Passar contexto completo para validações mais precisas
-      fornecedor_id: pagadorSelecionado?.id,
-      plano_conta_id: contaSelecionada?.id,
-      data_emissao: conta.data_emissao
-    });
-    
-    setErrosValidacao(prev => ({ 
-      ...prev, 
-      [campo]: erro[campo] || '' 
-    }));
-  };
+  // Estados para juros e desconto (apenas quando status = received)
+  const [percentualJuros, setPercentualJuros] = useState(0);
+  const [percentualDesconto, setPercentualDesconto] = useState(0);
+  const [valorRecebido, setValorRecebido] = useState<number | undefined>();
+  const [diferenca, setDiferenca] = useState({ valor: 0, percentual: 0 });
 
   // Auto-save automático
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Só salva se há dados preenchidos
-      if (conta.descricao || conta.valor_original > 0 || pagadorSelecionado || contaSelecionada) {
+      if (conta.description || conta.amount || pagadorSelecionado || categoriaSelecionada) {
         const rascunho = {
           conta,
           pagador: pagadorSelecionado,
-          categoria: contaSelecionada,
+          categoria: categoriaSelecionada,
           formaPagamento,
           timestamp: Date.now(),
           versao: '1.0'
@@ -119,14 +95,12 @@ export default function NovoRecebimento() {
         
         localStorage.setItem('rascunho_recebimento', JSON.stringify(rascunho));
         setRascunhoSalvo(true);
-        
-        // Mostrar feedback sutil
         setTimeout(() => setRascunhoSalvo(false), 2000);
       }
-    }, 3000); // Salva após 3 segundos de inatividade
+    }, 3000);
     
     return () => clearTimeout(timer);
-  }, [conta, pagadorSelecionado, contaSelecionada, formaPagamento]);
+  }, [conta, pagadorSelecionado, categoriaSelecionada, formaPagamento]);
 
   // Recuperar rascunho ao carregar página
   useEffect(() => {
@@ -134,16 +108,12 @@ export default function NovoRecebimento() {
     if (rascunhoSalvo) {
       try {
         const dados = JSON.parse(rascunhoSalvo);
-        
-        // Verificar se não é muito antigo (24 horas)
         const agora = Date.now();
         const horasPassadas = (agora - dados.timestamp) / (1000 * 60 * 60);
         
         if (horasPassadas < 24) {
           setTemRascunho(true);
-          // Não aplicar automaticamente, perguntar ao usuário
         } else {
-          // Rascunho muito antigo, remover
           localStorage.removeItem('rascunho_recebimento');
         }
       } catch (error) {
@@ -153,198 +123,82 @@ export default function NovoRecebimento() {
     }
   }, []);
 
-  // Cálculo automático do valor final
+  // Cálculo automático da diferença quando status = received
   useEffect(() => {
-    const original = conta.valor_original || 0;
-    const juros = conta.valor_juros || 0;
-    const desconto = conta.valor_desconto || 0;
-    const final = original + juros - desconto;
-    setConta(prev => ({
-      ...prev,
-      valor_final: final
-    }));
-  }, [conta.valor_original, conta.valor_juros, conta.valor_desconto]);
+    if (conta.status === 'received' && valorRecebido !== undefined && conta.amount) {
+      const diff = valorRecebido - conta.amount;
+      const percent = conta.amount > 0 ? (diff / conta.amount) * 100 : 0;
+      setDiferenca({ valor: diff, percentual: percent });
+    }
+  }, [valorRecebido, conta.amount, conta.status]);
 
   // Função para selecionar pagador e auto-preencher categoria
-  const handlePagadorSelect = (pagador: Fornecedor) => {
+  const handlePagadorSelect = (pagador: Pagador) => {
     setPagadorSelecionado(pagador);
     setConta(prev => ({
       ...prev,
-      fornecedor_id: pagador.id
+      customer_id: pagador.id?.toString()
     }));
 
     // Auto-preencher categoria padrão do pagador se existir
-    if (pagador.categoria_padrao_id) {
-      // Mock: categoria padrão
-      const categoriaDefault: PlanoContas = {
-        id: pagador.categoria_padrao_id,
-        codigo: 'CATPADRAO',
-        nome: 'Categoria Padrão',
-        tipo_dre: 'despesa_pessoal',
-        cor: '#6B7280',
-        icone: 'Package',
-        nivel: 1,
-        plano_pai_id: null,
-        aceita_lancamento: true,
-        ativo: true,
-        total_contas: 0,
-        valor_total: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      setContaSelecionada(categoriaDefault);
-      setConta(prev => ({
-        ...prev,
-        plano_conta_id: categoriaDefault.id
-      }));
-    } else {
-      // Pagador sem categoria padrão - não alterar seleção atual
-      if (!contaSelecionada) {
-        setConta(prev => ({
-          ...prev,
-          plano_conta_id: undefined
-        }));
-      }
+    // TODO: Implementar lógica real de categoria padrão
+  };
+
+  // Handler para valor principal
+  const handleValor = (valor: string) => {
+    const mascarado = formatarMoedaInput(valor);
+    const numero = converterMoeda(mascarado);
+    setValorMask(mascarado);
+    setConta(prev => ({
+      ...prev,
+      amount: numero
+    }));
+  };
+
+  // Handler para valor recebido (quando status = received)
+  const handleValorRecebido = (valor: string) => {
+    const mascarado = formatarMoedaInput(valor);
+    const numero = converterMoeda(mascarado);
+    setValorRecebidoMask(mascarado);
+    setValorRecebido(numero);
+  };
+
+  // Função para preencher valor original no campo recebido
+  const preencherValorOriginal = () => {
+    if (conta.amount) {
+      const mascarado = formatarMoedaInput(conta.amount.toString());
+      setValorRecebidoMask(mascarado);
+      setValorRecebido(conta.amount);
     }
   };
 
-  // Handlers para campos com máscara
-  const handleValorOriginal = (valor: string) => {
-    const mascarado = aplicarMascaraMoeda(valor);
-    const numero = converterMoedaParaNumero(mascarado);
-    setValorOriginalMask(mascarado);
-    setConta(prev => ({
-      ...prev,
-      valor_original: numero
-    }));
-  };
-  const handlePercentualJuros = (valor: string) => {
-    const mascarado = aplicarMascaraPercentual(valor);
-    const numero = converterPercentualParaNumero(mascarado);
-    setPercentualJurosMask(mascarado);
-
-    // Recalcular valor em reais
-    const valorJuros = (conta.valor_original || 0) * (numero / 100);
-    const mascaraJuros = numeroParaMascaraMoeda(valorJuros);
-    setValorJurosMask(mascaraJuros);
-    setConta(prev => ({
-      ...prev,
-      percentual_juros: numero,
-      valor_juros: valorJuros
-    }));
-  };
-  const handleValorJuros = (valor: string) => {
-    const mascarado = aplicarMascaraMoeda(valor);
-    const numero = converterMoedaParaNumero(mascarado);
-    setValorJurosMask(mascarado);
-
-    // Recalcular percentual
-    const percentual = conta.valor_original ? numero / conta.valor_original * 100 : 0;
-    const mascaraPercentual = numeroParaMascaraPercentual(percentual);
-    setPercentualJurosMask(mascaraPercentual);
-    setConta(prev => ({
-      ...prev,
-      valor_juros: numero,
-      percentual_juros: percentual
-    }));
-  };
-  const handlePercentualDesconto = (valor: string) => {
-    const mascarado = aplicarMascaraPercentual(valor);
-    const numero = converterPercentualParaNumero(mascarado);
-    setPercentualDescontoMask(mascarado);
-
-    // Recalcular valor em reais
-    const valorDesconto = (conta.valor_original || 0) * (numero / 100);
-    const mascaraDesconto = numeroParaMascaraMoeda(valorDesconto);
-    setValorDescontoMask(mascaraDesconto);
-    setConta(prev => ({
-      ...prev,
-      percentual_desconto: numero,
-      valor_desconto: valorDesconto
-    }));
-  };
-  const handleValorDesconto = (valor: string) => {
-    const mascarado = aplicarMascaraMoeda(valor);
-    const numero = converterMoedaParaNumero(mascarado);
-    setValorDescontoMask(mascarado);
-
-    // Recalcular percentual
-    const percentual = conta.valor_original ? numero / conta.valor_original * 100 : 0;
-    const mascaraPercentual = numeroParaMascaraPercentual(percentual);
-    setPercentualDescontoMask(mascaraPercentual);
-    setConta(prev => ({
-      ...prev,
-      valor_desconto: numero,
-      percentual_desconto: percentual
-    }));
-  };
-  const handleValorPago = (valor: string) => {
-    const mascarado = aplicarMascaraMoeda(valor);
-    const numero = converterMoedaParaNumero(mascarado);
-    setValorPagoMask(mascarado);
-    setConta(prev => ({
-      ...prev,
-      valor_pago: numero
-    }));
-  };
   const validarFormulario = (): boolean => {
     const errors: string[] = [];
     
-    // Validações obrigatórias
-    if (!pagadorSelecionado || !pagadorSelecionado.id) {
+    if (!pagadorSelecionado) {
       errors.push('Selecione um pagador');
     }
     
-    if (!conta.descricao || conta.descricao.trim() === '') {
+    if (!conta.description?.trim()) {
       errors.push('Descrição é obrigatória');
-    } else if (conta.descricao.length < 3) {
-      errors.push('Descrição deve ter pelo menos 3 caracteres');
-    } else if (conta.descricao.length > 500) {
-      errors.push('Descrição deve ter no máximo 500 caracteres');
     }
     
-    if (!conta.valor_original || conta.valor_original <= 0) {
+    if (!conta.amount || conta.amount <= 0) {
       errors.push('Valor deve ser maior que zero');
-    } else if (conta.valor_original > 999999.99) {
-      errors.push('Valor máximo excedido (R$ 999.999,99)');
     }
     
-    if (!conta.data_emissao) {
-      errors.push('Data de emissão é obrigatória');
-    }
-    
-    if (!conta.data_vencimento) {
+    if (!conta.due_date) {
       errors.push('Data de vencimento é obrigatória');
     }
     
-    // Validações de lógica de negócio
-    if (conta.data_emissao && conta.data_vencimento) {
-      const emissao = new Date(conta.data_emissao);
-      const vencimento = new Date(conta.data_vencimento);
-      
-      if (vencimento < emissao) {
-        errors.push('Data de vencimento não pode ser anterior à emissão');
-      }
-      
-      // Validar se não é muito no futuro (ex: máximo 5 anos)
-      const maxFutureDate = new Date();
-      maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 5);
-      if (vencimento > maxFutureDate) {
-        errors.push('Data de vencimento não pode ser superior a 5 anos');
-      }
-    }
-    
-    if (!contaSelecionada || !contaSelecionada.id) {
+    if (!categoriaSelecionada) {
       errors.push('Selecione uma categoria');
     }
     
-    // Validações específicas de status
-    if (conta.status === 'pago' && !formaPagamento.tipo) {
+    if (conta.status === 'received' && !formaPagamento.tipo) {
       errors.push('Defina a forma de recebimento');
     }
     
-    // Mostrar erros se houver
     if (errors.length > 0) {
       errors.forEach(error => {
         toast({ title: 'Atenção', description: error });
@@ -354,14 +208,15 @@ export default function NovoRecebimento() {
     
     return true;
   };
+
   // Função para aplicar rascunho
   const aplicarRascunho = () => {
     const rascunhoSalvo = localStorage.getItem('rascunho_recebimento');
     if (rascunhoSalvo) {
       const dados = JSON.parse(rascunhoSalvo);
       setConta(dados.conta);
-      setPagadorSelecionado(dados.pagador || dados.credor); // Retrocompatibilidade
-      setContaSelecionada(dados.categoria);
+      setPagadorSelecionado(dados.pagador);
+      setCategoriaSelecionada(dados.categoria);
       setFormaPagamento(dados.formaPagamento);
       setTemRascunho(false);
       
@@ -373,53 +228,34 @@ export default function NovoRecebimento() {
   const descartarRascunho = () => {
     localStorage.removeItem('rascunho_recebimento');
     setTemRascunho(false);
-    
     toast({ title: 'Sucesso', description: 'Rascunho descartado' });
   };
 
-  const salvarConta = async (marcarComoPago = false) => {
+  const salvarConta = async (marcarComoRecebido = false) => {
     if (!validarFormulario()) return;
     
     try {
-      // ✅ OBRIGATÓRIO: Obter user_id
-      // Mock user - Supabase removido
-      const user = { id: '1' };
-      if (!user) throw new Error('Usuário não autenticado');
+      setLoading('saving', true);
 
-      const contaParaSalvar: Omit<ContaPagar, 'id' | 'created_at' | 'updated_at'> = {
-        fornecedor_id: pagadorSelecionado!.id!,
-        plano_conta_id: contaSelecionada!.id!,
-        banco_id: marcarComoPago && formaPagamento.banco_id ? formaPagamento.banco_id : conta.banco_id,
-        documento_referencia: conta.documento_referencia,
-        descricao: conta.descricao!,
-        data_emissao: conta.data_emissao,
-        data_vencimento: conta.data_vencimento!,
-        valor_original: conta.valor_original!,
-        // Novos campos obrigatórios
-        parcela_atual: 1,
-        total_parcelas: 1,
-        forma_pagamento: formaPagamento.tipo || 'dinheiro_pix',
-        percentual_juros: conta.percentual_juros,
-        valor_juros: conta.valor_juros || 0,
-        percentual_desconto: conta.percentual_desconto,
-        valor_desconto: conta.valor_desconto || 0,
-        valor_final: conta.valor_final!,
-        status: marcarComoPago ? 'pago' : (conta.status as 'pendente' | 'pago' | 'vencido' | 'cancelado'),
-        data_pagamento: marcarComoPago ? new Date().toISOString().split('T')[0] : conta.data_pagamento,
-        valor_pago: marcarComoPago ? conta.valor_final : conta.valor_pago,
-        dda: false,
-        observacoes: null,
-        user_id: user.id  // 🔥 ADICIONAR USER_ID
+      const contaParaSalvar: Omit<AccountReceivable, 'id' | 'created_at' | 'updated_at' | 'user_id'> = {
+        description: conta.description!,
+        amount: conta.amount!,
+        due_date: conta.due_date!,
+        status: marcarComoRecebido ? 'received' : conta.status!,
+        category_id: categoriaSelecionada?.id,
+        customer_id: pagadorSelecionado?.id?.toString(),
+        customer_name: pagadorSelecionado?.nome,
+        bank_account_id: marcarComoRecebido && formaPagamento.banco_id ? formaPagamento.banco_id.toString() : undefined,
+        received_at: marcarComoRecebido ? new Date().toISOString().split('T')[0] : undefined,
+        notes: conta.notes
       };
 
       await criarConta(contaParaSalvar);
       
-      // Após salvar com sucesso, limpar rascunho
       localStorage.removeItem('rascunho_recebimento');
       setRascunhoSalvo(false);
       
-      // ✅ MELHORAR TOAST DE SUCESSO
-      toast({ title: 'Sucesso', description: `Recebimento "${conta.descricao}" criado com sucesso!` });
+      toast({ title: 'Sucesso', description: `Recebimento "${conta.description}" criado com sucesso!` });
       navigate('/contas-receber');
     } catch (error: any) {
       toast({ title: 'Erro', description: error.message || 'Erro ao salvar recebimento. Tente novamente.', variant: 'destructive' });
@@ -427,6 +263,7 @@ export default function NovoRecebimento() {
       setLoading('saving', false);
     }
   };
+
   return (
     <>
       <PageHeader
@@ -492,16 +329,17 @@ export default function NovoRecebimento() {
                   />
 
                   {/* Seletor de Categoria */}
-                  <PlanoContasSelector
-                    value={contaSelecionada}
-                    onSelect={(conta) => {
-                      setContaSelecionada(conta);
+                  <CategoriaSelectorNovo
+                    value={categoriaSelecionada}
+                    onSelect={(categoria) => {
+                      setCategoriaSelecionada(categoria);
                       setConta(prev => ({
                         ...prev,
-                        plano_conta_id: conta?.id
+                        category_id: categoria?.id
                       }));
                     }}
                     className="w-full"
+                    tipo="income"
                   />
                 </div>
               </div>
@@ -522,51 +360,29 @@ export default function NovoRecebimento() {
 
                 <div className="grid gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="documento_referencia">Documento / Referência</Label>
-                    <Input
-                      id="documento_referencia"
-                      value={conta.documento_referencia}
-                      onChange={(e) => {
-                        setConta(prev => ({ ...prev, documento_referencia: e.target.value }));
-                        validarCampoTempoReal('documento_referencia', e.target.value);
-                      }}
-                      placeholder="Ex: NF 001234, Fatura #567"
-                      className="input-base"
-                      maxLength={50}
-                    />
-                    {errosValidacao.documento_referencia && (
-                      <p className="text-sm text-red-600">{errosValidacao.documento_referencia}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
                     <Label htmlFor="descricao">Descrição do Recebimento *</Label>
                     <Input
                       id="descricao"
-                      value={conta.descricao}
-                      onChange={(e) => {
-                        setConta(prev => ({ ...prev, descricao: e.target.value }));
-                        validarCampoTempoReal('descricao', e.target.value);
-                      }}
+                      value={conta.description || ''}
+                      onChange={(e) => setConta(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Descreva o recebimento..."
                       className="input-base"
                       maxLength={255}
                       required
                     />
-                    {errosValidacao.descricao && (
-                      <p className="text-sm text-red-600">{errosValidacao.descricao}</p>
-                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="data_emissao">Data de Emissão</Label>
+                      <Label htmlFor="valor">Valor *</Label>
                       <Input
-                        id="data_emissao"
-                        type="date"
-                        value={conta.data_emissao}
-                        onChange={(e) => setConta(prev => ({ ...prev, data_emissao: e.target.value }))}
+                        id="valor"
+                        value={valorMask}
+                        onChange={(e) => handleValor(e.target.value)}
+                        placeholder="R$ 0,00"
                         className="input-base"
+                        maxLength={15}
+                        required
                       />
                     </div>
 
@@ -575,196 +391,18 @@ export default function NovoRecebimento() {
                       <Input
                         id="data_vencimento"
                         type="date"
-                        value={conta.data_vencimento}
-                        onChange={(e) => {
-                          setConta(prev => ({ ...prev, data_vencimento: e.target.value }));
-                          validarCampoTempoReal('data_vencimento', e.target.value);
-                        }}
+                        value={conta.due_date || ''}
+                        onChange={(e) => setConta(prev => ({ ...prev, due_date: e.target.value }))}
                         className="input-base"
                         required
                       />
-                      {errosValidacao.data_vencimento && (
-                        <p className="text-sm text-red-600">{errosValidacao.data_vencimento}</p>
-                      )}
                     </div>
                   </div>
                 </div>
               </div>
             </Card>
 
-            {/* Seção 3: Valores e Vencimento */}
-            <Card className="card-base">
-              <div className="p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-semibold">3</span>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Valores e Cálculos</h3>
-                    <p className="text-sm text-gray-600">Configure valores, juros e descontos</p>
-                  </div>
-                </div>
-
-                <div className="grid gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="valor_original">Valor Original *</Label>
-                    <Input
-                      id="valor_original"
-                      value={valorOriginalMask}
-                      onChange={(e) => handleValorOriginal(e.target.value)}
-                      placeholder="R$ 0,00"
-                      className="input-base"
-                      maxLength={15}
-                      required
-                    />
-                    {errosValidacao.valor_original && (
-                      <p className="text-sm text-red-600">{errosValidacao.valor_original}</p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-4">
-                      <Label className="text-sm font-medium text-gray-700">Juros</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-2">
-                          <Label className="text-xs text-gray-500">Percentual</Label>
-                          <Input
-                            value={percentualJurosMask}
-                            onChange={(e) => handlePercentualJuros(e.target.value)}
-                            placeholder="0,00%"
-                            className="input-base text-sm"
-                            maxLength={8}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs text-gray-500">Valor em R$</Label>
-                          <Input
-                            value={valorJurosMask}
-                            onChange={(e) => handleValorJuros(e.target.value)}
-                            placeholder="R$ 0,00"
-                            className="input-base text-sm"
-                            maxLength={15}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <Label className="text-sm font-medium text-gray-700">Desconto</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-2">
-                          <Label className="text-xs text-gray-500">Percentual</Label>
-                          <Input
-                            value={percentualDescontoMask}
-                            onChange={(e) => handlePercentualDesconto(e.target.value)}
-                            placeholder="0,00%"
-                            className="input-base text-sm"
-                            maxLength={8}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs text-gray-500">Valor em R$</Label>
-                          <Input
-                            value={valorDescontoMask}
-                            onChange={(e) => handleValorDesconto(e.target.value)}
-                            placeholder="R$ 0,00"
-                            className="input-base text-sm"
-                            maxLength={15}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50/50 border border-blue-200/50 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">Valor Final:</span>
-                      <span className="text-xl font-bold text-blue-600">
-                        {formatarMoedaExibicao(conta.valor_final || 0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Seção 4: Recorrência (Opcional) */}
-            <Card className="card-base">
-              <div className="p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                    <Repeat className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Recorrência</h3>
-                    <p className="text-sm text-gray-600">Configure repetições automáticas</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="conta_recorrente"
-                      checked={contaRecorrente}
-                      onCheckedChange={(checked) => setContaRecorrente(checked as boolean)}
-                    />
-                    <Label htmlFor="conta_recorrente" className="text-sm">
-                      Este é um recebimento recorrente
-                    </Label>
-                  </div>
-
-                  {contaRecorrente && (
-                    <div className="grid gap-4 p-4 bg-purple-50/50 border border-purple-200/50 rounded-xl">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="periodicidade">Periodicidade</Label>
-                          <Select value={periodicidade} onValueChange={(value: any) => setPeriodicidade(value)}>
-                            <SelectTrigger className="input-base">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="semanal">Semanal</SelectItem>
-                              <SelectItem value="quinzenal">Quinzenal</SelectItem>
-                              <SelectItem value="mensal">Mensal</SelectItem>
-                              <SelectItem value="bimestral">Bimestral</SelectItem>
-                              <SelectItem value="trimestral">Trimestral</SelectItem>
-                              <SelectItem value="semestral">Semestral</SelectItem>
-                              <SelectItem value="anual">Anual</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="quantidade_parcelas">Qtd. Parcelas</Label>
-                          <Input
-                            id="quantidade_parcelas"
-                            type="number"
-                            min="1"
-                            max="360"
-                            value={quantidadeParcelas}
-                            onChange={(e) => setQuantidadeParcelas(Number(e.target.value))}
-                            className="input-base"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="data_inicio">Data de Início</Label>
-                          <Input
-                            id="data_inicio"
-                            type="date"
-                            value={dataInicioRecorrencia}
-                            onChange={(e) => setDataInicioRecorrencia(e.target.value)}
-                            className="input-base"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* Seção 5: Status da Conta */}
+            {/* Seção 3: Status do Recebimento */}
             <Card className="card-base">
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-3">
@@ -779,12 +417,12 @@ export default function NovoRecebimento() {
 
                 <RadioGroup
                   value={conta.status}
-                  onValueChange={(value) => setConta(prev => ({ ...prev, status: value as 'pendente' | 'pago' | 'vencido' | 'cancelado' }))}
+                  onValueChange={(value) => setConta(prev => ({ ...prev, status: value as ReceivableStatus }))}
                   className="grid grid-cols-1 md:grid-cols-2 gap-4"
                 >
                   <div className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <RadioGroupItem value="pendente" id="pendente" />
-                    <Label htmlFor="pendente" className="flex-1 cursor-pointer">
+                    <RadioGroupItem value="pending" id="pending" />
+                    <Label htmlFor="pending" className="flex-1 cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-blue-500" />
                         <span>Pendente</span>
@@ -794,42 +432,64 @@ export default function NovoRecebimento() {
                   </div>
 
                   <div className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <RadioGroupItem value="pago" id="pago" />
-                    <Label htmlFor="pago" className="flex-1 cursor-pointer">
+                    <RadioGroupItem value="received" id="received" />
+                    <Label htmlFor="received" className="flex-1 cursor-pointer">
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span>Pago</span>
+                        <span>Recebido</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Já foi pago</p>
+                      <p className="text-xs text-gray-500 mt-1">Já foi recebido</p>
                     </Label>
                   </div>
                 </RadioGroup>
 
-                {/* Campo de valor pago quando status é "pago" */}
-                {conta.status === 'pago' && (
+                {/* Campos específicos quando status = received */}
+                {conta.status === 'received' && (
                   <div className="space-y-4 p-4 bg-green-50/50 border border-green-200/50 rounded-xl">
                     <div className="space-y-2">
-                      <Label htmlFor="valor_pago">Valor Pago</Label>
-                      <Input
-                        id="valor_pago"
-                        value={valorPagoMask}
-                        onChange={(e) => handleValorPago(e.target.value)}
-                        placeholder="R$ 0,00"
-                        className="input-base"
-                        maxLength={15}
-                      />
-                      <p className="text-xs text-gray-500">
-                        Valor final: {formatarMoedaExibicao(conta.valor_final || 0)}
-                      </p>
+                      <Label htmlFor="valor_recebido">Valor Recebido</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="valor_recebido"
+                          value={valorRecebidoMask}
+                          onChange={(e) => handleValorRecebido(e.target.value)}
+                          placeholder="R$ 0,00"
+                          className="input-base flex-1"
+                          maxLength={15}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={preencherValorOriginal}
+                          className="px-3"
+                        >
+                          Valor Original
+                        </Button>
+                      </div>
+                      {valorRecebido !== undefined && conta.amount && (
+                        <div className="text-sm">
+                          <p className="text-gray-600">
+                            Valor original: {formatarMoedaExibicao(conta.amount)}
+                          </p>
+                          {diferenca.valor !== 0 && (
+                            <p className={`font-medium ${diferenca.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              Diferença: {formatarMoedaExibicao(Math.abs(diferenca.valor))} 
+                              ({diferenca.valor > 0 ? '+' : '-'}{Math.abs(diferenca.percentual).toFixed(2)}%)
+                              {diferenca.valor > 0 ? ' (Juros)' : ' (Desconto)'}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="data_pagamento">Data do Pagamento</Label>
+                      <Label htmlFor="data_recebimento">Data do Recebimento</Label>
                       <Input
-                        id="data_pagamento"
+                        id="data_recebimento"
                         type="date"
-                        value={conta.data_pagamento || new Date().toISOString().split('T')[0]}
-                        onChange={(e) => setConta(prev => ({ ...prev, data_pagamento: e.target.value }))}
+                        value={conta.received_at || new Date().toISOString().split('T')[0]}
+                        onChange={(e) => setConta(prev => ({ ...prev, received_at: e.target.value }))}
                         className="input-base"
                       />
                     </div>
@@ -838,24 +498,53 @@ export default function NovoRecebimento() {
               </div>
             </Card>
 
-            {/* Seção 6: Forma de Recebimento */}
+            {/* Seção 4: Forma de Recebimento */}
+            {(conta.status === 'received' || !conta.status) && (
+              <Card className="card-base">
+                <div className="p-6 space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Forma de Recebimento</h3>
+                      <p className="text-sm text-gray-600">Como será recebido</p>
+                    </div>
+                  </div>
+
+                  <FormaRecebimentoSection
+                    value={formaPagamento}
+                    onChange={setFormaPagamento}
+                    bancos={bancos}
+                  />
+                </div>
+              </Card>
+            )}
+
+            {/* Seção 5: Observações */}
             <Card className="card-base">
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Forma de Recebimento</h3>
-                    <p className="text-sm text-gray-600">Como será recebido</p>
+                    <h3 className="text-lg font-semibold text-gray-900">Observações</h3>
+                    <p className="text-sm text-gray-600">Informações adicionais</p>
                   </div>
                 </div>
 
-                <FormaRecebimentoSection
-                  value={formaPagamento}
-                  onChange={setFormaPagamento}
-                  bancos={bancos}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="observacoes">Observações</Label>
+                  <Textarea
+                    id="observacoes"
+                    value={conta.notes || ''}
+                    onChange={(e) => setConta(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Observações adicionais sobre o recebimento..."
+                    className="input-base"
+                    rows={3}
+                  />
+                </div>
               </div>
             </Card>
 
@@ -865,10 +554,10 @@ export default function NovoRecebimento() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     onClick={() => salvarConta(false)}
-                    disabled={loading}
+                    disabled={isSaving}
                     className="btn-primary flex-1"
                   >
-                    {loading ? (
+                    {isSaving ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                         Salvando...
@@ -881,10 +570,10 @@ export default function NovoRecebimento() {
                     )}
                   </Button>
 
-                  {conta.status !== 'pago' && (
+                  {conta.status !== 'received' && (
                     <Button
                       onClick={() => salvarConta(true)}
-                      disabled={loading}
+                      disabled={isSaving}
                       variant="outline"
                       className="flex-1 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
                     >
@@ -900,9 +589,10 @@ export default function NovoRecebimento() {
           {/* Sidebar direita - Preview */}
           <div className="lg:col-span-2">
             <div className="sticky top-8">
-              <ContaPreview
+              <RecebimentoPreview
                 conta={conta}
-                formaPagamento={formaPagamento}
+                pagador={pagadorSelecionado}
+                categoria={categoriaSelecionada}
               />
             </div>
           </div>
