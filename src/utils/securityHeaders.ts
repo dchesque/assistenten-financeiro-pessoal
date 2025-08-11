@@ -3,8 +3,36 @@
  * Para uso em produção com Vite/Vercel/Netlify
  */
 
-export const SECURITY_HEADERS = {
-  // Content Security Policy - previne XSS e outros ataques
+// Detecta se está no ambiente Lovable ou desenvolvimento
+const isLovableEnvironment = () => {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname.includes('lovable.dev') || 
+         hostname.includes('localhost') || 
+         hostname.includes('127.0.0.1');
+};
+
+// Headers para desenvolvimento/Lovable (mais permissivos)
+const DEVELOPMENT_HEADERS = {
+  'Content-Security-Policy': [
+    "default-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:",
+    "style-src 'self' 'unsafe-inline' https:",
+    "font-src 'self' https: data:",
+    "img-src 'self' data: https: blob:",
+    "connect-src 'self' https: wss: ws:",
+    "frame-src 'self' https: data:",
+    "object-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self'"
+  ].join('; '),
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin'
+};
+
+// Headers para produção (mais restritivos)
+const PRODUCTION_HEADERS = {
   'Content-Security-Policy': [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com",
@@ -17,23 +45,11 @@ export const SECURITY_HEADERS = {
     "base-uri 'self'",
     "form-action 'self'"
   ].join('; '),
-  
-  // Previne clickjacking - permite same origin
   'X-Frame-Options': 'SAMEORIGIN',
-  
-  // Força HTTPS
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-  
-  // Previne MIME sniffing
   'X-Content-Type-Options': 'nosniff',
-  
-  // Previne XSS (backup para navegadores antigos)
   'X-XSS-Protection': '1; mode=block',
-  
-  // Controla informações do referrer
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  
-  // Previne acesso a APIs sensíveis
   'Permissions-Policy': [
     'camera=()',
     'microphone=()',
@@ -43,10 +59,17 @@ export const SECURITY_HEADERS = {
   ].join(', ')
 };
 
+// Exporta headers baseado no ambiente
+export const SECURITY_HEADERS = isLovableEnvironment() ? DEVELOPMENT_HEADERS : PRODUCTION_HEADERS;
+
 /**
  * Configuração para meta tags de segurança no HTML
  */
-export const SECURITY_META_TAGS = [
+export const SECURITY_META_TAGS = isLovableEnvironment() ? [
+  { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
+  { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
+  { name: 'referrer', content: 'strict-origin-when-cross-origin' }
+] : [
   { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
   { httpEquiv: 'X-Frame-Options', content: 'SAMEORIGIN' },
   { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
@@ -58,9 +81,9 @@ export const SECURITY_META_TAGS = [
  */
 export const VITE_SECURITY_CONFIG = {
   server: {
-    headers: SECURITY_HEADERS
+    headers: DEVELOPMENT_HEADERS // Sempre usar headers de desenvolvimento no server
   },
   preview: {
-    headers: SECURITY_HEADERS
+    headers: DEVELOPMENT_HEADERS // Sempre usar headers de desenvolvimento no preview
   }
 };
