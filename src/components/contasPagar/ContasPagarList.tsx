@@ -243,17 +243,21 @@ export function ContasPagarList({ contas, loading, onEdit, onDelete, onView, onP
                          <Trash2 className="w-3.5 h-3.5 text-red-600" />
                        </Button>
 
-                       {conta.status === 'pending' && (
-                         <Button
-                           size="sm"
-                           onClick={() => onPay(conta)}
-                           className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all duration-200 font-medium px-3 py-1 text-xs ml-1"
-                           title="Pagar conta"
-                         >
-                           <CreditCard className="w-3 h-3 mr-1" />
-                           PAGAR
-                         </Button>
-                       )}
+                        {(conta.status === 'pending' || conta.status === 'overdue') && (
+                          <Button
+                            size="sm"
+                            onClick={() => onPay(conta)}
+                            className={`${
+                              conta.status === 'overdue' 
+                                ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' 
+                                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                            } text-white shadow-lg hover:shadow-xl transition-all duration-200 font-medium px-3 py-1 text-xs ml-1`}
+                            title={conta.status === 'overdue' ? 'Pagar conta vencida' : 'Pagar conta'}
+                          >
+                            <CreditCard className="w-3 h-3 mr-1" />
+                            PAGAR
+                          </Button>
+                        )}
                      </div>
                   </TableCell>
                 </TableRow>

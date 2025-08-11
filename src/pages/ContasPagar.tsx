@@ -21,10 +21,7 @@ import { accountPayableToContaPagar } from '@/utils/typeAdapters';
 
 export default function ContasPagar() {
   const navigate = useNavigate();
-  const filtrosIniciais = {
-    status: 'pendente',
-    mes: new Date().toISOString().slice(0, 7) // Mês atual (YYYY-MM)
-  };
+  const filtrosIniciais = {};
 
   const { 
     contas: accounts, 
