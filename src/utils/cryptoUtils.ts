@@ -12,15 +12,18 @@ export const generateSecureRandomString = (length: number = 36): string => {
     return Array.from(array, byte => byte.toString(36)).join('').slice(0, length);
   }
   
-  // Fallback para Node.js (se necessário)
+  // SECURITY FIX: Remove insecure Math.random() fallback in production
+  if (import.meta.env.PROD) {
+    throw new Error('Crypto API não disponível em produção - não é possível gerar valores seguros');
+  }
+  
+  // Fallback apenas para desenvolvimento/testes
   if (typeof require !== 'undefined') {
     try {
       const crypto = require('crypto');
       return crypto.randomBytes(length).toString('hex').slice(0, length);
     } catch (e) {
-      // Fallback final (não recomendado para produção)
-      console.warn('Crypto não disponível, usando fallback inseguro');
-      return Math.random().toString(36).slice(2, length + 2);
+      throw new Error('Crypto não disponível');
     }
   }
   
@@ -47,6 +50,11 @@ export const generateSecureSessionId = (): string => {
  * Gera uma senha temporária segura
  */
 export const generateSecurePassword = (length: number = 12): string => {
+  // SECURITY FIX: Add crypto availability check
+  if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
+    throw new Error('Crypto API não disponível - não é possível gerar senha segura');
+  }
+  
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
   const array = new Uint8Array(length);
   crypto.getRandomValues(array);

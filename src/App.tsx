@@ -6,6 +6,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Layout } from '@/components/layout/Layout';
 import { Loader2 } from 'lucide-react';
 import { StartupInitializer } from '@/components/layout/StartupInitializer';
+import { SecurityGuard } from '@/components/auth/SecurityGuard';
 
 // Páginas críticas (carregamento imediato)
 import Index from '@/pages/Index';
@@ -54,9 +55,10 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <StartupInitializer>
-          <Router>
+      <SecurityGuard>
+        <QueryClientProvider client={queryClient}>
+          <StartupInitializer>
+            <Router>
             <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -100,7 +102,8 @@ function App() {
             </Router>
           </StartupInitializer>
         </QueryClientProvider>
-      </ErrorBoundary>
+      </SecurityGuard>
+    </ErrorBoundary>
   );
 }
 

@@ -131,6 +131,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "accounts_payable_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       accounts_receivable: {
@@ -252,6 +259,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "accounts_receivable_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       audit_logs: {
@@ -303,6 +317,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
             referencedColumns: ["user_id"]
           },
         ]
@@ -394,6 +415,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "banks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       categories: {
@@ -442,6 +470,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
             referencedColumns: ["user_id"]
           },
         ]
@@ -535,6 +570,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       customers: {
@@ -607,6 +649,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "customers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
             referencedColumns: ["user_id"]
           },
         ]
@@ -842,6 +891,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       suppliers: {
@@ -1020,6 +1076,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
     }
@@ -1139,6 +1202,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
             referencedColumns: ["user_id"]
           },
         ]
@@ -1262,6 +1332,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "accounts_receivable_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       active_bank_accounts: {
@@ -1351,6 +1428,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "banks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       active_categories: {
@@ -1399,6 +1483,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
             referencedColumns: ["user_id"]
           },
         ]
@@ -1492,6 +1583,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       active_customers: {
@@ -1566,6 +1664,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "customers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_summary_stats"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       active_suppliers: {
@@ -1625,6 +1730,30 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           zip?: string | null
+        }
+        Relationships: []
+      }
+      user_summary_stats: {
+        Row: {
+          total_accounts_payable: number | null
+          total_accounts_receivable: number | null
+          total_categories: number | null
+          total_suppliers: number | null
+          user_id: string | null
+        }
+        Insert: {
+          total_accounts_payable?: never
+          total_accounts_receivable?: never
+          total_categories?: never
+          total_suppliers?: never
+          user_id?: string | null
+        }
+        Update: {
+          total_accounts_payable?: never
+          total_accounts_receivable?: never
+          total_categories?: never
+          total_suppliers?: never
+          user_id?: string | null
         }
         Relationships: []
       }
