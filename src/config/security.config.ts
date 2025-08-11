@@ -54,7 +54,7 @@ export const SECURITY_CONFIG = {
 export const PRODUCTION_SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
   'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY', 
+  'X-Frame-Options': 'SAMEORIGIN',
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
@@ -65,7 +65,7 @@ export const PRODUCTION_SECURITY_HEADERS = {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-    "frame-src 'none'",
+    "frame-src 'self' https://*.lovable.dev https://*.netlify.app https://*.vercel.app",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'"

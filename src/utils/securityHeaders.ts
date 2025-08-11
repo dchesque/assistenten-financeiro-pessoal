@@ -12,14 +12,14 @@ export const SECURITY_HEADERS = {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.whatsapp.com",
-    "frame-src 'none'",
+    "frame-src 'self' https://*.lovable.dev https://*.netlify.app https://*.vercel.app",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'"
   ].join('; '),
   
-  // Previne clickjacking
-  'X-Frame-Options': 'DENY',
+  // Previne clickjacking - permite same origin
+  'X-Frame-Options': 'SAMEORIGIN',
   
   // Força HTTPS
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
@@ -48,7 +48,7 @@ export const SECURITY_HEADERS = {
  */
 export const SECURITY_META_TAGS = [
   { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
-  { httpEquiv: 'X-Frame-Options', content: 'DENY' },
+  { httpEquiv: 'X-Frame-Options', content: 'SAMEORIGIN' },
   { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
   { name: 'referrer', content: 'strict-origin-when-cross-origin' }
 ];
