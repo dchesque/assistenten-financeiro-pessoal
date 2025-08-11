@@ -1793,6 +1793,10 @@ export type Database = {
         Args: { _user_id: string; _feature: string; _current_count: number }
         Returns: boolean
       }
+      cleanup_old_deleted_records: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_notification: {
         Args: {
           p_user_id: string
