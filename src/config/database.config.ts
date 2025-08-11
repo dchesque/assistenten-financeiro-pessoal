@@ -1,11 +1,11 @@
 // Configuração centralizada para alternância entre Mock e Supabase
 export const DATABASE_CONFIG = {
-  // Controle principal - alternar entre mock e Supabase
-  USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA === 'true' || !import.meta.env.VITE_SUPABASE_URL,
+  // Controle principal - alternar entre mock e Supabase com fallback seguro
+  USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA === 'true' && import.meta.env.DEV === true,
   
-  // Configurações Supabase
-  SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || '',
-  SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+  // Configurações Supabase com fallback para Lovable
+  SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || 'https://wrxosfdirgdlvfkzvcuh.supabase.co',
+  SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyeG9zZmRpcmdkbHZma3p2Y3VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODY4OTUsImV4cCI6MjA3MDA2Mjg5NX0.1SBE-f-f5lLEc_7rzv87sbVv3WYLLBLi8wsblDwUSCc',
   
   // Configurações de desenvolvimento
   ENABLE_LOGGING: import.meta.env.VITE_ENABLE_DB_LOGGING === 'true',
@@ -15,12 +15,16 @@ export const DATABASE_CONFIG = {
 
 // Validação de configuração
 export function validateDatabaseConfig(): void {
-  if (!DATABASE_CONFIG.USE_MOCK_DATA) {
-    if (!DATABASE_CONFIG.SUPABASE_URL || !DATABASE_CONFIG.SUPABASE_ANON_KEY) {
-      throw new Error(
-        'Supabase está habilitado mas as variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY não estão configuradas'
-      );
-    }
+  // Sempre validar URLs em produção
+  if (!DATABASE_CONFIG.SUPABASE_URL || !DATABASE_CONFIG.SUPABASE_ANON_KEY) {
+    console.error('🚨 Configuração Supabase:', {
+      hasUrl: !!DATABASE_CONFIG.SUPABASE_URL,
+      hasKey: !!DATABASE_CONFIG.SUPABASE_ANON_KEY,
+      useMock: DATABASE_CONFIG.USE_MOCK_DATA
+    });
+    throw new Error(
+      'Configuração do Supabase inválida. Em projetos Lovable, as chaves são configuradas automaticamente.'
+    );
   }
   
   if (DATABASE_CONFIG.ENABLE_LOGGING) {
