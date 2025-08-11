@@ -6,7 +6,7 @@ import { BlurBackground } from '@/components/ui/BlurBackground';
 import { StatusIndicators } from './StatusIndicators';
 import { NotificationBell } from './NotificationBell';
 import { useSEO } from '@/hooks/useSEO';
-import { ThemeController } from './ThemeController';
+
 
 interface LayoutProps {
   children: ReactNode;
@@ -17,7 +17,6 @@ export function Layout({ children }: LayoutProps) {
   useSEO(); // Aplicar SEO dinâmico
 
   return (
-    <ThemeController>
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
       
       {/* Background blur abstrato */}
@@ -99,6 +98,5 @@ export function Layout({ children }: LayoutProps) {
         </div>
         
       </div>
-    </ThemeController>
   );
 }
