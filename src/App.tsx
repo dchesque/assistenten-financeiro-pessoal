@@ -7,6 +7,7 @@ import { Layout } from '@/components/layout/Layout';
 import { Loader2 } from 'lucide-react';
 import { StartupInitializer } from '@/components/layout/StartupInitializer';
 import { SecurityGuard } from '@/components/auth/SecurityGuard';
+import { FormSecurityProvider } from '@/components/ui/FormSecurityProvider';
 
 // Páginas críticas (carregamento imediato)
 import Index from '@/pages/Index';
@@ -56,9 +57,10 @@ function App() {
   return (
     <ErrorBoundary>
       <SecurityGuard>
-        <QueryClientProvider client={queryClient}>
-          <StartupInitializer>
-            <Router>
+        <FormSecurityProvider>
+          <QueryClientProvider client={queryClient}>
+            <StartupInitializer>
+              <Router>
             <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -100,8 +102,9 @@ function App() {
               }}
             />
             </Router>
-          </StartupInitializer>
-        </QueryClientProvider>
+            </StartupInitializer>
+          </QueryClientProvider>
+        </FormSecurityProvider>
       </SecurityGuard>
     </ErrorBoundary>
   );
