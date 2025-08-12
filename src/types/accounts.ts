@@ -59,6 +59,10 @@ export interface AccountReceivable {
   bank_account_id?: string;
   received_at?: string;
   notes?: string;
+  reference_document?: string;
+  original_amount?: number;
+  received_amount?: number;
+  final_amount?: number;
   created_at: string;
   updated_at: string;
   deleted_at?: string;

@@ -152,9 +152,14 @@ export type Database = {
           deleted_at: string | null
           description: string
           due_date: string
+          final_amount: number | null
           id: string
+          issue_date: string | null
           notes: string | null
+          original_amount: number | null
+          received_amount: number | null
           received_at: string | null
+          reference_document: string | null
           status: Database["public"]["Enums"]["receivable_status"]
           updated_at: string
           user_id: string
@@ -170,9 +175,14 @@ export type Database = {
           deleted_at?: string | null
           description: string
           due_date: string
+          final_amount?: number | null
           id?: string
+          issue_date?: string | null
           notes?: string | null
+          original_amount?: number | null
+          received_amount?: number | null
           received_at?: string | null
+          reference_document?: string | null
           status?: Database["public"]["Enums"]["receivable_status"]
           updated_at?: string
           user_id: string
@@ -188,9 +198,14 @@ export type Database = {
           deleted_at?: string | null
           description?: string
           due_date?: string
+          final_amount?: number | null
           id?: string
+          issue_date?: string | null
           notes?: string | null
+          original_amount?: number | null
+          received_amount?: number | null
           received_at?: string | null
+          reference_document?: string | null
           status?: Database["public"]["Enums"]["receivable_status"]
           updated_at?: string
           user_id?: string

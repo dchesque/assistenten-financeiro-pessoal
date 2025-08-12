@@ -45,6 +45,7 @@ export default function NovoRecebimento() {
     description: '',
     amount: 0,
     due_date: '',
+    issue_date: new Date().toISOString().split('T')[0],
     status: 'pending' as ReceivableStatus,
     notes: ''
   });
@@ -194,6 +195,10 @@ export default function NovoRecebimento() {
       errors.push('Descrição é obrigatória');
     }
     
+    if (!conta.issue_date) {
+      errors.push('Data de emissão é obrigatória');
+    }
+    
     if (!conta.amount || conta.amount <= 0) {
       errors.push('Valor deve ser maior que zero');
     }
@@ -253,12 +258,16 @@ export default function NovoRecebimento() {
         description: conta.description!,
         amount: conta.amount!,
         due_date: conta.due_date!,
+        issue_date: conta.issue_date!,
         status: marcarComoRecebido ? 'received' : conta.status!,
         category_id: categoriaSelecionada?.id,
         customer_id: pagadorSelecionado?.id?.toString(),
         customer_name: pagadorSelecionado?.nome,
         bank_account_id: marcarComoRecebido && formaPagamento.banco_id ? formaPagamento.banco_id.toString() : undefined,
         received_at: marcarComoRecebido ? new Date().toISOString().split('T')[0] : undefined,
+        original_amount: conta.amount,
+        received_amount: marcarComoRecebido ? valorRecebido || conta.amount : undefined,
+        final_amount: marcarComoRecebido ? valorRecebido || conta.amount : undefined,
         notes: conta.notes
       };
 
@@ -392,7 +401,7 @@ export default function NovoRecebimento() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="valor">Valor *</Label>
                       <Input
@@ -406,6 +415,18 @@ export default function NovoRecebimento() {
                       />
                     </div>
 
+
+                    <div className="space-y-2">
+                      <Label htmlFor="data_emissao">Data de Emissão *</Label>
+                      <Input
+                        id="data_emissao"
+                        type="date"
+                        value={conta.issue_date || ''}
+                        onChange={(e) => setConta(prev => ({ ...prev, issue_date: e.target.value }))}
+                        className="input-base"
+                        required
+                      />
+                    </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="data_vencimento">Data de Vencimento *</Label>
