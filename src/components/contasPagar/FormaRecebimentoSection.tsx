@@ -43,7 +43,7 @@ export function FormaRecebimentoSection({
     });
   };
 
-  const bancosAtivos = bancos.filter(b => b.ativo);
+  const bancosAtivos = bancos.filter(b => b.ativo || (b as any).active);
 
   return (
     <div className={`space-y-6 ${className}`}>

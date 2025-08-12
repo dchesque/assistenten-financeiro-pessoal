@@ -44,6 +44,8 @@ export const accountsReceivableService = {
   async createAccountReceivable(
     account: Omit<AccountReceivable, 'id' | 'created_at' | 'updated_at' | 'user_id'>
   ): Promise<AccountReceivable> {
+    console.log('Creating account receivable:', account);
+    
     // Update status based on due date
     const today = new Date().toISOString().split('T')[0];
     const status = account.due_date < today ? 'overdue' : account.status;
@@ -63,7 +65,10 @@ export const accountsReceivableService = {
       `)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating account receivable:', error);
+      throw error;
+    }
     return data;
   },
 
