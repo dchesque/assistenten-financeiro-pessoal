@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { customersService, Customer, CreateCustomerData, UpdateCustomerData, CustomerFilters } from '@/services/customersService';
+import { supabase } from '@/integrations/supabase/client';
 import { showMessage } from '@/utils/messages';
 import { useErrorHandler } from './useErrorHandler';
+import { toast } from '@/hooks/use-toast';
 
 export interface Pagador {
   id: string;
@@ -56,33 +57,33 @@ export interface EstatisticasPagador {
   valorTotal: number;
 }
 
-// Converter Customer para Pagador
-const customerToPagador = (customer: Customer): Pagador => ({
-  id: customer.id,
-  nome: customer.name,
-  documento: customer.document,
-  tipo: customer.type,
-  email: customer.email,
-  telefone: customer.phone,
-  endereco: customer.address,
-  cidade: customer.city,
-  estado: customer.state,
-  cep: customer.zip,
-  observacoes: customer.notes,
-  ativo: customer.active,
-  total_recebimentos: customer.metadata?.total_recebimentos || 0,
-  valor_total: customer.metadata?.valor_total || 0,
-  ultimo_recebimento: customer.metadata?.ultimo_recebimento,
-  created_at: customer.created_at,
-  updated_at: customer.updated_at
+// Converter Contact para Pagador
+const contactToPagador = (contact: any): Pagador => ({
+  id: contact.id,
+  nome: contact.name,
+  documento: contact.document || '',
+  tipo: contact.type,
+  email: contact.email || '',
+  telefone: contact.phone || '',
+  endereco: contact.address || '',
+  cidade: contact.city || '',
+  estado: contact.state || '',
+  cep: contact.zip || '',
+  observacoes: contact.notes || '',
+  ativo: contact.active,
+  total_recebimentos: contact.metadata?.total_recebimentos || 0,
+  valor_total: contact.metadata?.valor_total || 0,
+  ultimo_recebimento: contact.metadata?.ultimo_recebimento,
+  created_at: contact.created_at,
+  updated_at: contact.updated_at
 });
 
-// Converter Pagador para Customer (Create)
-const pagadorToCreateCustomer = (pagador: CriarPagador): CreateCustomerData => ({
+// Converter Pagador para Contact (Create)
+const pagadorToCreateContact = (pagador: CriarPagador) => ({
   name: pagador.nome,
   document: pagador.documento,
   document_type: pagador.tipo === 'pessoa_fisica' ? 'cpf' : pagador.tipo === 'pessoa_juridica' ? 'cnpj' : 'other',
-  type: pagador.tipo,
+  type: 'customer', // Sempre customer para pagadores
   email: pagador.email,
   phone: pagador.telefone,
   address: pagador.endereco,
@@ -93,12 +94,12 @@ const pagadorToCreateCustomer = (pagador: CriarPagador): CreateCustomerData => (
   active: pagador.ativo ?? true
 });
 
-// Converter Pagador para Customer (Update)
-const pagadorToUpdateCustomer = (pagador: Omit<AtualizarPagador, 'id'>): UpdateCustomerData => ({
+// Converter Pagador para Contact (Update)
+const pagadorToUpdateContact = (pagador: Omit<AtualizarPagador, 'id'>) => ({
   name: pagador.nome,
   document: pagador.documento,
   document_type: pagador.tipo === 'pessoa_fisica' ? 'cpf' : pagador.tipo === 'pessoa_juridica' ? 'cnpj' : 'other',
-  type: pagador.tipo,
+  type: 'customer', // Sempre customer para pagadores
   email: pagador.email,
   phone: pagador.telefone,
   address: pagador.endereco,
@@ -123,22 +124,34 @@ export function usePagadores() {
     setError(null);
     
     try {
-      const customerFilters: CustomerFilters = {};
+      let query = supabase
+        .from('contacts')
+        .select('*')
+        .eq('type', 'customer') // Apenas pagadores (customers)
+        .is('deleted_at', null); // Apenas registros não excluídos
       
       if (filtros?.busca) {
-        customerFilters.search = filtros.busca;
+        query = query.or(`name.ilike.%${filtros.busca}%,document.ilike.%${filtros.busca}%,email.ilike.%${filtros.busca}%`);
       }
       
       if (filtros?.tipo && filtros.tipo !== 'todos') {
-        customerFilters.type = filtros.tipo;
+        // Mapear os tipos para o formato do banco
+        if (filtros.tipo === 'pessoa_fisica') {
+          query = query.eq('document_type', 'cpf');
+        } else if (filtros.tipo === 'pessoa_juridica') {
+          query = query.eq('document_type', 'cnpj');
+        }
       }
       
       if (filtros?.ativo !== undefined) {
-        customerFilters.active = filtros.ativo;
+        query = query.eq('active', filtros.ativo);
       }
       
-      const customers = await customersService.getCustomers(customerFilters);
-      const pagadoresData = customers.map(customerToPagador);
+      const { data: contacts, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      const pagadoresData = contacts.map(contactToPagador);
       setPagadores(pagadoresData);
     } catch (err) {
       const appError = handleError(err, 'usePagadores.carregarPagadores');
@@ -151,8 +164,15 @@ export function usePagadores() {
 
   const criarPagador = async (dados: CriarPagador): Promise<boolean> => {
     try {
-      const customerData = pagadorToCreateCustomer(dados);
-      await customersService.createCustomer(customerData);
+      const contactData = pagadorToCreateContact(dados);
+      const { data, error } = await supabase
+        .from('contacts')
+        .insert(contactData)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
       await carregarPagadores(); // Refresh the list
       showMessage.saveSuccess('Pagador criado com sucesso!');
       return true;
@@ -166,8 +186,14 @@ export function usePagadores() {
   const atualizarPagador = async (dados: AtualizarPagador): Promise<boolean> => {
     try {
       const { id, ...updateData } = dados;
-      const customerData = pagadorToUpdateCustomer(updateData);
-      await customersService.updateCustomer(id, customerData);
+      const contactData = pagadorToUpdateContact(updateData);
+      const { error } = await supabase
+        .from('contacts')
+        .update(contactData)
+        .eq('id', id);
+        
+      if (error) throw error;
+      
       await carregarPagadores(); // Refresh the list
       showMessage.saveSuccess('Pagador atualizado com sucesso!');
       return true;
@@ -180,7 +206,14 @@ export function usePagadores() {
 
   const excluirPagador = async (id: string): Promise<boolean> => {
     try {
-      await customersService.deleteCustomer(id);
+      // Soft delete - marcar como excluído
+      const { error } = await supabase
+        .from('contacts')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
       await carregarPagadores(); // Refresh the list
       showMessage.deleteSuccess('Pagador excluído com sucesso!');
       return true;
