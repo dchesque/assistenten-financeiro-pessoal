@@ -11,7 +11,7 @@ import { formatarMoedaExibicao } from '@/utils/masks';
 interface RecebimentoPreviewProps {
   conta: Partial<AccountReceivable>;
   pagador?: Pagador | null;
-  categoria?: { id: string; nome: string; cor?: string } | null;
+  categoria?: { id: string; nome?: string; name?: string; cor?: string; color?: string } | null;
   onEdit?: () => void;
   onView?: () => void;
   onDelete?: () => void;
@@ -101,9 +101,9 @@ export const RecebimentoPreview: React.FC<RecebimentoPreviewProps> = ({
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
               <div 
                 className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: categoria.cor || '#6B7280' }}
+                style={{ backgroundColor: categoria.cor || categoria.color || '#6B7280' }}
               />
-              <span className="font-medium text-gray-900">{categoria.nome}</span>
+              <span className="font-medium text-gray-900">{categoria.nome || categoria.name}</span>
             </div>
           </div>
         )}

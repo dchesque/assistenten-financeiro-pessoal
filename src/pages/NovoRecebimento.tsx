@@ -141,8 +141,8 @@ export default function NovoRecebimento() {
       customer_id: pagador.id?.toString()
     }));
 
-    // Auto-preencher categoria padrão do pagador se existir
-    // TODO: Implementar lógica real de categoria padrão
+    // Auto-carregar categoria do pagador se disponível (implementar quando campo categoria_id existir)
+    // TODO: Implementar quando o modelo Pagador incluir categoria_id
   };
 
   // Handler para valor principal
@@ -248,6 +248,7 @@ export default function NovoRecebimento() {
         description: conta.description!,
         amount: conta.amount!,
         due_date: conta.due_date!,
+        issue_date: conta.issue_date!,
         status: marcarComoRecebido ? 'received' : conta.status!,
         category_id: categoriaSelecionada?.id,
         customer_id: pagadorSelecionado?.id?.toString(),
