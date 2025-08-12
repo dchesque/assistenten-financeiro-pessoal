@@ -261,7 +261,7 @@ export default function NovoRecebimento() {
         issue_date: conta.issue_date!,
         status: marcarComoRecebido ? 'received' : conta.status!,
         category_id: categoriaSelecionada?.id,
-        customer_id: pagadorSelecionado?.id?.toString(),
+        contact_id: pagadorSelecionado?.id?.toString(),
         customer_name: pagadorSelecionado?.nome,
         bank_account_id: marcarComoRecebido && formaPagamento.banco_id ? formaPagamento.banco_id.toString() : undefined,
         received_at: marcarComoRecebido ? new Date().toISOString().split('T')[0] : undefined,
