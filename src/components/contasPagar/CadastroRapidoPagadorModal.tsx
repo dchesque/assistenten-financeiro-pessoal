@@ -8,10 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 
 import { LoadingButton } from '@/components/ui/LoadingButton';
-import { usePagadores } from '@/hooks/usePagadores';
+import { useContatos } from '@/hooks/useContatos';
 import { useCategories } from '@/hooks/useCategories';
 import { CategoriaSelectorNovo } from '@/components/contasPagar/CategoriaSelectorNovo';
-import { CriarPagador, Pagador } from '@/types/pagador';
+import { Pagador } from '@/hooks/usePagadores';
 import { User, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,7 +37,7 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
   onClose,
   onPagadorCriado
 }) => {
-  const { criarPagador } = usePagadores();
+  const { criarContato, recarregar } = useContatos();
   const { categories } = useCategories();
   const { toast } = useToast();
   const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -51,41 +51,46 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
 
   const onSubmit = async (data: FormData) => {
     try {
-      const dadosPagador: CriarPagador = {
-        nome: data.nome,
-        tipo: data.tipo,
-        documento: data.documento || '',
+      // Estrutura compatível com a tabela contacts
+      const dadosContato = {
+        name: data.nome,
+        document_type: data.tipo === 'pessoa_fisica' ? 'cpf' : 'cnpj',
+        document: data.documento || '',
         email: data.email || '',
-        telefone: data.telefone || '',
-        endereco: data.endereco,
-        observacoes: data.observacoes,
-        ativo: true
+        phone: data.telefone || '',
+        address: data.endereco || '',
+        notes: data.observacoes || '',
+        type: 'customer' as const,
+        category_id: categoriaSelecionada?.id || null,
+        active: true
       };
 
-      await criarPagador(dadosPagador);
+      const novoContato = await criarContato(dadosContato);
       
       toast({
         title: 'Sucesso',
         description: `Pagador "${data.nome}" criado com sucesso!`
       });
 
-      // Criar objeto mock do pagador criado para o callback
+      // Converter contato para formato Pagador para o callback
       const novoPagador: Pagador = {
-        id: Date.now(),
-        nome: data.nome,
-        tipo: data.tipo,
-        documento: data.documento || '',
-        email: data.email || '',
-        telefone: data.telefone || '',
-        endereco: data.endereco,
-        observacoes: data.observacoes,
-        ativo: true,
-        user_id: 'mock-user',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        id: novoContato.id,
+        nome: novoContato.name,
+        tipo: novoContato.document_type === 'cpf' ? 'pessoa_fisica' : 'pessoa_juridica',
+        documento: novoContato.document || '',
+        email: novoContato.email || '',
+        telefone: novoContato.phone || '',
+        endereco: novoContato.address || '',
+        observacoes: novoContato.notes || '',
+        ativo: novoContato.active,
+        total_recebimentos: 0,
+        valor_total: 0,
+        created_at: novoContato.created_at,
+        updated_at: novoContato.updated_at
       };
 
       onPagadorCriado(novoPagador);
+      await recarregar(); // Recarregar lista de contatos
       setCategoriaSelecionada(null);
       reset();
       onClose();

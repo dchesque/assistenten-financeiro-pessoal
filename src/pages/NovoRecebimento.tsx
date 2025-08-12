@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { createBreadcrumb } from '@/utils/breadcrumbUtils';
 import { ArrowLeft, Save, CreditCard, Calendar, AlertTriangle, FileText, CheckCircle, Repeat } from 'lucide-react';
 import { AccountReceivable, ReceivableStatus } from '@/types/accounts';
-import { Pagador } from '@/types/pagador';
+import { Pagador } from '@/hooks/usePagadores';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
 import { useBancosSupabase } from '@/hooks/useBancosReal';
@@ -56,7 +56,7 @@ export default function NovoRecebimento() {
   const [percentualJurosMask, setPercentualJurosMask] = useState('');
   const [percentualDescontoMask, setPercentualDescontoMask] = useState('');
   
-  const [pagadorSelecionado, setPagadorSelecionado] = useState<import('@/hooks/usePagadores').Pagador | null>(null);
+  const [pagadorSelecionado, setPagadorSelecionado] = useState<Pagador | null>(null);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<any>(null);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
     tipo: 'dinheiro_pix'
@@ -134,15 +134,15 @@ export default function NovoRecebimento() {
   }, [valorRecebido, conta.amount, conta.status]);
 
   // Função para selecionar pagador e auto-preencher categoria
-  const handlePagadorSelect = (pagador: import('@/hooks/usePagadores').Pagador) => {
+  const handlePagadorSelect = (pagador: Pagador) => {
     setPagadorSelecionado(pagador);
     setConta(prev => ({
       ...prev,
       customer_id: pagador.id?.toString()
     }));
 
-    // Auto-carregar categoria do pagador se disponível (implementar quando campo categoria_id existir)
-    // TODO: Implementar quando o modelo Pagador incluir categoria_id
+    // Auto-carregar categoria do pagador se disponível
+    // A implementação de categoria será feita quando os pagadores incluírem dados de categoria
   };
 
   // Handler para valor principal

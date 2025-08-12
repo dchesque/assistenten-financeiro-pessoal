@@ -11,6 +11,12 @@ export interface Pagador {
   user_id: string;
   created_at: string;
   updated_at?: string;
+  category?: {
+    id: string;
+    name: string;
+    color?: string;
+    type?: string;
+  };
 }
 
 export interface CriarPagador {
