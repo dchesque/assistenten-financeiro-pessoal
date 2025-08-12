@@ -55,7 +55,7 @@ export default function NovoRecebimento() {
   const [percentualJurosMask, setPercentualJurosMask] = useState('');
   const [percentualDescontoMask, setPercentualDescontoMask] = useState('');
   
-  const [pagadorSelecionado, setPagadorSelecionado] = useState<Pagador | null>(null);
+  const [pagadorSelecionado, setPagadorSelecionado] = useState<import('@/hooks/usePagadores').Pagador | null>(null);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<any>(null);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>({
     tipo: 'dinheiro_pix'
@@ -133,7 +133,7 @@ export default function NovoRecebimento() {
   }, [valorRecebido, conta.amount, conta.status]);
 
   // Função para selecionar pagador e auto-preencher categoria
-  const handlePagadorSelect = (pagador: Pagador) => {
+  const handlePagadorSelect = (pagador: import('@/hooks/usePagadores').Pagador) => {
     setPagadorSelecionado(pagador);
     setConta(prev => ({
       ...prev,

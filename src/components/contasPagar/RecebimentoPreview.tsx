@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { AccountReceivable, RECEIVABLE_STATUS_LABELS, RECEIVABLE_STATUS_COLORS } from '@/types/accounts';
-import { Pagador } from '@/types/pagador';
+import { Pagador } from '@/hooks/usePagadores';
 import { User, Building2, Calendar, CreditCard, Eye, Edit3, Trash2 } from 'lucide-react';
 import { formatarMoedaExibicao } from '@/utils/masks';
 
