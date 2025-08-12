@@ -1,4 +1,4 @@
-export type TipoPagamento = 'dinheiro_pix' | 'cartao';
+export type TipoPagamento = 'dinheiro_pix' | 'cartao' | 'transferencia' | 'deposito';
 
 export interface FormaPagamento {
   tipo: TipoPagamento;

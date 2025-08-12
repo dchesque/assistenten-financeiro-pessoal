@@ -35,7 +35,7 @@ export function FormaRecebimentoSection({
   const handleTipoChange = (tipo: string) => {
     onChange({
       ...value,
-      tipo: 'dinheiro_pix', // Sempre usar dinheiro_pix para recebimentos
+      tipo: tipo as TipoPagamento,
       banco_id: undefined,
       numero_cheque: undefined,
       numeros_cheques: undefined,
@@ -77,13 +77,13 @@ export function FormaRecebimentoSection({
         </RadioGroup>
       </div>
 
-      {/* Seleção de Banco - sempre desabilitada para simplicidade */}
-      {false && (
+      {/* Seleção de Banco - visível apenas para transferência e depósito */}
+      {(value.tipo === 'transferencia' || value.tipo === 'deposito') && (
         <div className="space-y-4 p-4 bg-green-50/50 border border-green-200/50 rounded-xl">
           <div className="flex items-center space-x-2">
             <Building2 className="w-5 h-5 text-green-600" />
             <Label className="text-sm font-medium text-gray-700">
-              Banco de Recebimento <span className="text-red-500">*</span>
+              Banco de Recebimento <span className="text-gray-400">(opcional)</span>
             </Label>
           </div>
           

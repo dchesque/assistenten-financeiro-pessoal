@@ -191,7 +191,7 @@ export function CategoriaSelectorNovo({
         open={cadastroModalOpen}
         onOpenChange={setCadastroModalOpen}
         onCategoryCreated={handleCategoriaCriada}
-        fixedType={tipo === 'income' ? 'income' : 'expense'}
+        fixedType={tipo === 'income' ? 'income' : tipo === 'expense' ? 'expense' : 'income'}
       />
     </Dialog>
   );

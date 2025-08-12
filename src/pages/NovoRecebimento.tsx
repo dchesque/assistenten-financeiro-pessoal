@@ -166,8 +166,10 @@ export default function NovoRecebimento() {
   // Função para preencher valor original no campo recebido
   const preencherValorOriginal = () => {
     if (conta.amount) {
-      const mascarado = formatarMoedaInput(conta.amount.toString());
-      setValorRecebidoMask(mascarado);
+      // Converte o valor numérico diretamente para a máscara de moeda
+      const valorCentavos = Math.round(conta.amount * 100).toString();
+      const valorFormatado = formatarMoedaInput(valorCentavos);
+      setValorRecebidoMask(valorFormatado);
       setValorRecebido(conta.amount);
     }
   };
@@ -321,11 +323,10 @@ export default function NovoRecebimento() {
                   </div>
                 </div>
 
-                <div className="grid gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <PagadorSelector
                     value={pagadorSelecionado}
                     onSelect={handlePagadorSelect}
-                    className="w-full"
                   />
 
                   {/* Seletor de Categoria */}
@@ -338,7 +339,6 @@ export default function NovoRecebimento() {
                         category_id: categoria?.id
                       }));
                     }}
-                    className="w-full"
                     tipo="income"
                   />
                 </div>
