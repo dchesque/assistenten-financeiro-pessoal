@@ -46,13 +46,17 @@ export const accountsReceivableService = {
   ): Promise<AccountReceivable> {
     console.log('Creating account receivable:', account);
     
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuário não autenticado');
+    
     // Update status based on due date
     const today = new Date().toISOString().split('T')[0];
     const status = account.due_date < today ? 'overdue' : account.status;
 
     const { data, error } = await supabase
       .from('accounts_receivable')
-      .insert([{ ...account, status }])
+      .insert([{ ...account, status, user_id: user.id }])
       .select(`
         *,
         category:categories(id, name, color),
