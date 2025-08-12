@@ -32,14 +32,16 @@ export function CategoriaSelectorNovo({
   
   const { categories, loading, loadCategories } = useCategories();
 
-  // Carregar categorias apenas uma vez quando o modal abrir
+  // Carregar categorias sempre que o modal abrir ou tipo mudar
   useEffect(() => {
-    if (open && !categoriasCarregadas) {
+    if (open) {
+      console.log('🔍 Carregando categorias com tipo:', tipo);
       const filters = tipo !== 'all' ? { type: tipo } : undefined;
+      console.log('🔍 Filtros aplicados:', filters);
       loadCategories(filters);
       setCategoriasCarregadas(true);
     }
-  }, [open, categoriasCarregadas, loadCategories, tipo]);
+  }, [open, loadCategories, tipo]);
 
   const handleSelect = useCallback((categoria: Category) => {
     onSelect(categoria);
@@ -79,6 +81,9 @@ export function CategoriaSelectorNovo({
   // Filtrar categorias localmente após carregamento
   const categoriasFiltradas = useMemo(() => {
     if (!categories) return [];
+    
+    console.log('🔍 Total de categorias carregadas:', categories.length);
+    console.log('🔍 Categorias:', categories.map(c => ({ name: c.name, type: c.type })));
     
     return categories.filter(categoria => 
       categoria.name.toLowerCase().includes(busca.toLowerCase())

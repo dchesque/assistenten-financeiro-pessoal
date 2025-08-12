@@ -324,23 +324,30 @@ export default function NovoRecebimento() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <PagadorSelector
-                    value={pagadorSelecionado}
-                    onSelect={handlePagadorSelect}
-                  />
+                  <div className="space-y-2">
+                    <PagadorSelector
+                      value={pagadorSelecionado}
+                      onSelect={handlePagadorSelect}
+                    />
+                  </div>
 
-                  {/* Seletor de Categoria */}
-                  <CategoriaSelectorNovo
-                    value={categoriaSelecionada}
-                    onSelect={(categoria) => {
-                      setCategoriaSelecionada(categoria);
-                      setConta(prev => ({
-                        ...prev,
-                        category_id: categoria?.id
-                      }));
-                    }}
-                    tipo="income"
-                  />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Categoria <span className="text-red-500">*</span>
+                    </label>
+                    <CategoriaSelectorNovo
+                      value={categoriaSelecionada}
+                      onSelect={(categoria) => {
+                        setCategoriaSelecionada(categoria);
+                        setConta(prev => ({
+                          ...prev,
+                          category_id: categoria?.id
+                        }));
+                      }}
+                      tipo="income"
+                      placeholder="Selecione uma categoria"
+                    />
+                  </div>
                 </div>
               </div>
             </Card>
