@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { LoadingButton } from '@/components/ui/LoadingButton';
 import { usePagadores } from '@/hooks/usePagadores';
+import { useCategories } from '@/hooks/useCategories';
+import { CategoriaSelectorNovo } from '@/components/contasPagar/CategoriaSelectorNovo';
 import { CriarPagador, Pagador } from '@/types/pagador';
 import { User, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -22,9 +24,10 @@ interface CadastroRapidoPagadorModalProps {
 interface FormData {
   nome: string;
   tipo: 'pessoa_fisica' | 'pessoa_juridica';
-  documento: string;
-  email: string;
-  telefone: string;
+  categoria_id?: number;
+  documento?: string;
+  email?: string;
+  telefone?: string;
   endereco?: string;
   observacoes?: string;
 }
@@ -35,6 +38,7 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
   onPagadorCriado
 }) => {
   const { criarPagador } = usePagadores();
+  const { categories } = useCategories();
   const { toast } = useToast();
   const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: {
@@ -42,6 +46,7 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
     }
   });
 
+  const [categoriaSelecionada, setCategoriaSelecionada] = React.useState(null);
   const tipoSelecionado = watch('tipo');
 
   const onSubmit = async (data: FormData) => {
@@ -49,9 +54,9 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
       const dadosPagador: CriarPagador = {
         nome: data.nome,
         tipo: data.tipo,
-        documento: data.documento,
-        email: data.email,
-        telefone: data.telefone,
+        documento: data.documento || '',
+        email: data.email || '',
+        telefone: data.telefone || '',
         endereco: data.endereco,
         observacoes: data.observacoes,
         ativo: true
@@ -69,9 +74,9 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
         id: Date.now(),
         nome: data.nome,
         tipo: data.tipo,
-        documento: data.documento,
-        email: data.email,
-        telefone: data.telefone,
+        documento: data.documento || '',
+        email: data.email || '',
+        telefone: data.telefone || '',
         endereco: data.endereco,
         observacoes: data.observacoes,
         ativo: true,
@@ -81,6 +86,7 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
       };
 
       onPagadorCriado(novoPagador);
+      setCategoriaSelecionada(null);
       reset();
       onClose();
     } catch (error: any) {
@@ -93,6 +99,7 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
   };
 
   const handleClose = () => {
+    setCategoriaSelecionada(null);
     reset();
     onClose();
   };
@@ -135,46 +142,59 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
             </Select>
           </div>
 
-          {/* Nome */}
-          <div className="space-y-2">
-            <Label htmlFor="nome">
-              {tipoSelecionado === 'pessoa_fisica' ? 'Nome Completo' : 'Razão Social'} *
-            </Label>
-            <Input
-              id="nome"
-              {...register('nome', { required: 'Nome é obrigatório' })}
-              placeholder={tipoSelecionado === 'pessoa_fisica' ? 'Ex: João Silva' : 'Ex: Empresa LTDA'}
-              className="bg-white/80 backdrop-blur-sm border-white/20"
-            />
-            {errors.nome && (
-              <p className="text-sm text-red-600">{errors.nome.message}</p>
-            )}
+          {/* Nome e Categoria */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">
+                {tipoSelecionado === 'pessoa_fisica' ? 'Nome Completo' : 'Razão Social'} *
+              </Label>
+              <Input
+                id="nome"
+                {...register('nome', { required: 'Nome é obrigatório' })}
+                placeholder={tipoSelecionado === 'pessoa_fisica' ? 'Ex: João Silva' : 'Ex: Empresa LTDA'}
+                className="bg-white/80 backdrop-blur-sm border-white/20"
+              />
+              {errors.nome && (
+                <p className="text-sm text-red-600">{errors.nome.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Categoria <span className="text-red-500">*</span>
+              </Label>
+              <CategoriaSelectorNovo
+                value={categoriaSelecionada}
+                onSelect={(categoria) => {
+                  setCategoriaSelecionada(categoria);
+                  setValue('categoria_id', Number(categoria?.id) || undefined);
+                }}
+                tipo="income"
+                placeholder="Selecione uma categoria"
+              />
+            </div>
           </div>
 
           {/* Documento */}
           <div className="space-y-2">
             <Label htmlFor="documento">
-              {tipoSelecionado === 'pessoa_fisica' ? 'CPF' : 'CNPJ'} *
+              {tipoSelecionado === 'pessoa_fisica' ? 'CPF' : 'CNPJ'}
             </Label>
               <Input
-                {...register('documento', { required: 'Documento é obrigatório' })}
+                {...register('documento')}
                 placeholder={tipoSelecionado === 'pessoa_fisica' ? '000.000.000-00' : '00.000.000/0000-00'}
                 className="bg-white/80 backdrop-blur-sm border-white/20"
               />
-            {errors.documento && (
-              <p className="text-sm text-red-600">{errors.documento.message}</p>
-            )}
           </div>
 
           {/* Email e Telefone */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 {...register('email', { 
-                  required: 'Email é obrigatório',
                   pattern: {
                     value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                     message: 'Email inválido'
@@ -189,15 +209,12 @@ export const CadastroRapidoPagadorModal: React.FC<CadastroRapidoPagadorModalProp
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone *</Label>
+              <Label htmlFor="telefone">Telefone</Label>
               <Input
-                {...register('telefone', { required: 'Telefone é obrigatório' })}
+                {...register('telefone')}
                 placeholder="(00) 00000-0000"
                 className="bg-white/80 backdrop-blur-sm border-white/20"
               />
-              {errors.telefone && (
-                <p className="text-sm text-red-600">{errors.telefone.message}</p>
-              )}
             </div>
           </div>
 

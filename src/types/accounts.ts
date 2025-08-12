@@ -50,6 +50,7 @@ export interface AccountReceivable {
   description: string;
   amount: number;
   due_date: string;
+  issue_date?: string;
   status: ReceivableStatus;
   category_id?: string;
   customer_id?: string;

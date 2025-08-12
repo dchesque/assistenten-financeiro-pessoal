@@ -45,6 +45,7 @@ export default function NovoRecebimento() {
     description: '',
     amount: 0,
     due_date: '',
+    issue_date: new Date().toISOString().split('T')[0],
     status: 'pending' as ReceivableStatus,
     notes: ''
   });
@@ -189,6 +190,10 @@ export default function NovoRecebimento() {
       errors.push('Valor deve ser maior que zero');
     }
     
+    if (!conta.issue_date) {
+      errors.push('Data de emissão é obrigatória');
+    }
+    
     if (!conta.due_date) {
       errors.push('Data de vencimento é obrigatória');
     }
@@ -325,6 +330,9 @@ export default function NovoRecebimento() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Pagador <span className="text-red-500">*</span>
+                    </Label>
                     <PagadorSelector
                       value={pagadorSelecionado}
                       onSelect={handlePagadorSelect}
@@ -379,7 +387,7 @@ export default function NovoRecebimento() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="valor">Valor *</Label>
                       <Input
@@ -389,6 +397,18 @@ export default function NovoRecebimento() {
                         placeholder="R$ 0,00"
                         className="input-base"
                         maxLength={15}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="data_emissao">Data de Emissão *</Label>
+                      <Input
+                        id="data_emissao"
+                        type="date"
+                        value={conta.issue_date || ''}
+                        onChange={(e) => setConta(prev => ({ ...prev, issue_date: e.target.value }))}
+                        className="input-base"
                         required
                       />
                     </div>
