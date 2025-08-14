@@ -7,7 +7,7 @@ import { useContasReceberOtimizado } from '@/hooks/useContasReceberOtimizado';
 import { formatCurrency } from '@/utils/currency';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import { ConfirmacaoModal } from '@/components/ui/ConfirmacaoModal';
 import { FiltrosInteligentesReceber } from '@/components/contasReceber/FiltrosInteligentesReceber';
 import { ContasReceberList, ContaReceberListItem } from '@/components/contasReceber/ContasReceberList';
@@ -126,7 +126,7 @@ const ContasReceber: React.FC = () => {
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Contas a Receber' }
         ]}
-        action={
+        actions={
           <Button onClick={handleCreateAccount} className="btn-primary">
             <Plus className="h-4 w-4 mr-2" />
             Nova Receita
@@ -211,7 +211,7 @@ const ContasReceber: React.FC = () => {
         setFiltros={setFiltros}
         filtroRapido={filtroRapido}
         setFiltroRapido={setFiltroRapido}
-        clientes={clientes}
+        clientes={clientes.map(c => ({ id: c.id, nome: c.name }))}
         categorias={categorias}
         estatisticas={estatisticas}
         onLimparFiltros={limparFiltros}
@@ -246,11 +246,11 @@ const ContasReceber: React.FC = () => {
           setContaSelecionada(null);
         }}
         onConfirm={confirmDelete}
-        title="Excluir Conta a Receber"
-        message={`Tem certeza que deseja excluir a conta "${contaSelecionada?.description}"? Esta ação não pode ser desfeita.`}
-        confirmText="Excluir"
-        cancelText="Cancelar"
-        variant="destructive"
+        titulo="Excluir Conta a Receber"
+        mensagem={`Tem certeza que deseja excluir a conta "${contaSelecionada?.description}"? Esta ação não pode ser desfeita.`}
+        textoConfirmar="Excluir"
+        textoCancelar="Cancelar"
+        tipo="danger"
       />
     </PageContainer>
   );
