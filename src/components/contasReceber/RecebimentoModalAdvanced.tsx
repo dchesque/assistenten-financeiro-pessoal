@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -169,11 +170,22 @@ export const RecebimentoModalAdvanced: React.FC<RecebimentoModalAdvancedProps> =
                     <SelectValue placeholder="Selecione a conta bancária" />
                   </SelectTrigger>
                   <SelectContent>
-                    {bankAccounts?.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        Conta {account.agency}/{account.account_number}
+                    {bankAccounts && bankAccounts.length > 0 ? (
+                      bankAccounts
+                        .filter(account => account.id && account.id.trim() !== '') // Filtrar contas com ID válido
+                        .map((account) => (
+                          <SelectItem key={account.id} value={account.id}>
+                            {account.agency && account.account_number 
+                              ? `Conta ${account.agency}/${account.account_number}`
+                              : `Conta ${account.id.substring(0, 8)}...`
+                            }
+                          </SelectItem>
+                        ))
+                    ) : (
+                      <SelectItem value="no-accounts" disabled>
+                        Nenhuma conta bancária encontrada
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
