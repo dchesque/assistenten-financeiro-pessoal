@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, DollarSign, TrendingUp, Clock, AlertTriangle, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, DollarSign, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
 import { useContasReceberOtimizado } from '@/hooks/useContasReceberOtimizado';
 import { formatCurrency } from '@/utils/currency';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
@@ -16,37 +16,24 @@ import ContaReceberEditarModal from '@/components/contasReceber/ContaReceberEdit
 import { AccountReceivable } from '@/types/accounts';
 
 const ContasReceber: React.FC = () => {
-  console.log('🔍 ContasReceber: Componente iniciando...');
-  
   const navigate = useNavigate();
   
-  try {
-    console.log('🔍 ContasReceber: Chamando hook useContasReceberOtimizado...');
-    
-    const {
-      contasFiltradas,
-      categorias,
-      clientes,
-      filtros,
-      setFiltros,
-      filtroRapido,
-      setFiltroRapido,
-      limparFiltros,
-      estatisticas,
-      estados,
-      baixarConta,
-      excluirConta,
-      atualizarConta,
-      duplicarConta
-    } = useContasReceberOtimizado();
-
-    console.log('🔍 ContasReceber: Hook executado com sucesso', {
-      contasCount: contasFiltradas?.length || 0,
-      categoriasCount: categorias?.length || 0,
-      clientesCount: clientes?.length || 0,
-      loading: estados?.loading,
-      error: estados?.error
-    });
+  const {
+    contasFiltradas,
+    categorias,
+    clientes,
+    filtros,
+    setFiltros,
+    filtroRapido,
+    setFiltroRapido,
+    limparFiltros,
+    estatisticas,
+    estados,
+    baixarConta,
+    excluirConta,
+    atualizarConta,
+    duplicarConta
+  } = useContasReceberOtimizado();
 
   const [modalRecebimentoAberto, setModalRecebimentoAberto] = useState(false);
   const [modalVisualizarAberto, setModalVisualizarAberto] = useState(false);
@@ -54,12 +41,9 @@ const ContasReceber: React.FC = () => {
   const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false);
   const [contaSelecionada, setContaSelecionada] = useState<AccountReceivable | null>(null);
 
-  // Transformar contas para o formato da lista
+  // Transformar contas para o formato da lista - memoizado para evitar re-renders
   const contasListadas = useMemo((): ContaReceberListItem[] => {
-    console.log('🔍 ContasReceber: Transformando contas para lista...', contasFiltradas?.length);
-    
     if (!contasFiltradas || !Array.isArray(contasFiltradas)) {
-      console.warn('⚠️ ContasReceber: contasFiltradas não é um array válido', contasFiltradas);
       return [];
     }
     
@@ -78,90 +62,79 @@ const ContasReceber: React.FC = () => {
     }));
   }, [contasFiltradas]);
 
-  console.log('🔍 ContasReceber: contasListadas geradas', contasListadas?.length);
+  // Handlers memoizados
+  const handlers = useMemo(() => ({
+    handleCreateAccount: () => navigate('/novo-recebimento'),
+    
+    handleView: (conta: ContaReceberListItem) => {
+      const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
+      setContaSelecionada(contaCompleta || null);
+      setModalVisualizarAberto(true);
+    },
 
-  const handleCreateAccount = () => {
-    navigate('/novo-recebimento');
-  };
+    handleEdit: (conta: ContaReceberListItem) => {
+      const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
+      setContaSelecionada(contaCompleta || null);
+      setModalEditarAberto(true);
+    },
 
-  const handleView = (conta: ContaReceberListItem) => {
-    const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
-    setContaSelecionada(contaCompleta || null);
-    setModalVisualizarAberto(true);
-  };
+    handleMarkAsReceived: (conta: ContaReceberListItem) => {
+      const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
+      setContaSelecionada(contaCompleta || null);
+      setModalRecebimentoAberto(true);
+    },
 
-  const handleEdit = (conta: ContaReceberListItem) => {
-    const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
-    setContaSelecionada(contaCompleta || null);
-    setModalEditarAberto(true);
-  };
+    handleDelete: (conta: ContaReceberListItem) => {
+      const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
+      setContaSelecionada(contaCompleta || null);
+      setModalConfirmacaoAberto(true);
+    },
 
-  const handleMarkAsReceived = (conta: ContaReceberListItem) => {
-    const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
-    setContaSelecionada(contaCompleta || null);
-    setModalRecebimentoAberto(true);
-  };
+    confirmMarkAsReceived: async (dadosRecebimento: any) => {
+      if (!contaSelecionada) return;
+      try {
+        await baixarConta(contaSelecionada.id, dadosRecebimento);
+        setModalRecebimentoAberto(false);
+        setContaSelecionada(null);
+      } catch (error) {
+        console.error('Erro ao marcar como recebido:', error);
+      }
+    },
 
-  const confirmMarkAsReceived = async (dadosRecebimento: any) => {
-    if (!contaSelecionada) return;
+    confirmDelete: async () => {
+      if (!contaSelecionada) return;
+      try {
+        await excluirConta(contaSelecionada.id);
+        setModalConfirmacaoAberto(false);
+        setContaSelecionada(null);
+      } catch (error) {
+        console.error('Erro ao excluir conta:', error);
+      }
+    },
 
-    try {
-      await baixarConta(contaSelecionada.id, dadosRecebimento);
-      setModalRecebimentoAberto(false);
-      setContaSelecionada(null);
-    } catch (error) {
-      console.error('Erro ao marcar como recebido:', error);
+    handleSaveEdit: async (dadosAtualizacao: any) => {
+      if (!contaSelecionada) return;
+      try {
+        await atualizarConta(contaSelecionada.id, dadosAtualizacao);
+        setModalEditarAberto(false);
+        setContaSelecionada(null);
+      } catch (error) {
+        console.error('Erro ao atualizar conta:', error);
+      }
+    },
+
+    handleDuplicate: async (conta: any) => {
+      try {
+        await duplicarConta(conta);
+        setModalVisualizarAberto(false);
+        setContaSelecionada(null);
+      } catch (error) {
+        console.error('Erro ao duplicar conta:', error);
+      }
     }
-  };
-
-  const handleDelete = (conta: ContaReceberListItem) => {
-    const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
-    setContaSelecionada(contaCompleta || null);
-    setModalConfirmacaoAberto(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!contaSelecionada) return;
-
-    try {
-      await excluirConta(contaSelecionada.id);
-      setModalConfirmacaoAberto(false);
-      setContaSelecionada(null);
-    } catch (error) {
-      console.error('Erro ao excluir conta:', error);
-    }
-  };
-
-  const handleSaveEdit = async (dadosAtualizacao: any) => {
-    if (!contaSelecionada) return;
-
-    try {
-      await atualizarConta(contaSelecionada.id, dadosAtualizacao);
-      setModalEditarAberto(false);
-      setContaSelecionada(null);
-    } catch (error) {
-      console.error('Erro ao atualizar conta:', error);
-    }
-  };
-
-  const handleDuplicate = async (conta: any) => {
-    try {
-      await duplicarConta(conta);
-      setModalVisualizarAberto(false);
-      setContaSelecionada(null);
-    } catch (error) {
-      console.error('Erro ao duplicar conta:', error);
-    }
-  };
-
-  console.log('🔍 ContasReceber: Verificando estados...', {
-    loading: estados?.loading,
-    error: estados?.error,
-    estadosObj: estados
-  });
+  }), [navigate, contasFiltradas, baixarConta, excluirConta, atualizarConta, duplicarConta, contaSelecionada]);
 
   if (estados.loading) {
-    console.log('🔍 ContasReceber: Renderizando loading...');
     return (
       <div className="p-4 lg:p-8">
         <div className="space-y-6">
@@ -178,7 +151,6 @@ const ContasReceber: React.FC = () => {
   }
 
   if (estados.error) {
-    console.error('🔍 ContasReceber: Erro detectado:', estados.error);
     return (
       <div className="p-4 lg:p-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
@@ -193,12 +165,6 @@ const ContasReceber: React.FC = () => {
     );
   }
 
-  console.log('🔍 ContasReceber: Renderizando componente principal...', {
-    estatisticas,
-    filtros,
-    contasCount: contasListadas.length
-  });
-
   return (
     <div className="p-4 lg:p-8">
       {/* Header */}
@@ -208,7 +174,7 @@ const ContasReceber: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">Contas a Receber</h1>
             <p className="text-gray-600 mt-1">Gerencie suas receitas e recebimentos</p>
           </div>
-          <Button onClick={handleCreateAccount} className="btn-primary">
+          <Button onClick={handlers.handleCreateAccount} className="btn-primary">
             <Plus className="h-4 w-4 mr-2" />
             Nova Receita
           </Button>
@@ -313,13 +279,13 @@ const ContasReceber: React.FC = () => {
       <ContasReceberList
         contas={contasListadas}
         loading={estados.loading}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onView={handleView}
-        onReceive={handleMarkAsReceived}
+        onEdit={handlers.handleEdit}
+        onDelete={handlers.handleDelete}
+        onView={handlers.handleView}
+        onReceive={handlers.handleMarkAsReceived}
       />
 
-      {/* Modal de Visualização */}
+      {/* Modals */}
       <ContaReceberVisualizarModal
         isOpen={modalVisualizarAberto}
         onClose={() => {
@@ -337,7 +303,7 @@ const ContasReceber: React.FC = () => {
           setContaSelecionada(conta);
           setModalRecebimentoAberto(true);
         }}
-        onDuplicar={handleDuplicate}
+        onDuplicar={handlers.handleDuplicate}
         onExcluir={(conta) => {
           setModalVisualizarAberto(false);
           setContaSelecionada(conta);
@@ -345,7 +311,6 @@ const ContasReceber: React.FC = () => {
         }}
       />
 
-      {/* Modal de Edição */}
       <ContaReceberEditarModal
         isOpen={modalEditarAberto}
         onClose={() => {
@@ -353,12 +318,11 @@ const ContasReceber: React.FC = () => {
           setContaSelecionada(null);
         }}
         conta={contaSelecionada}
-        onSalvar={handleSaveEdit}
+        onSalvar={handlers.handleSaveEdit}
         categorias={categorias || []}
         clientes={clientes || []}
       />
 
-      {/* Modal de Recebimento */}
       <RecebimentoModalAdvanced
         isOpen={modalRecebimentoAberto}
         onClose={() => {
@@ -366,17 +330,16 @@ const ContasReceber: React.FC = () => {
           setContaSelecionada(null);
         }}
         conta={contaSelecionada}
-        onConfirm={confirmMarkAsReceived}
+        onConfirm={handlers.confirmMarkAsReceived}
       />
 
-      {/* Modal de Confirmação de Exclusão */}
       <ConfirmacaoModal
         isOpen={modalConfirmacaoAberto}
         onClose={() => {
           setModalConfirmacaoAberto(false);
           setContaSelecionada(null);
         }}
-        onConfirm={confirmDelete}
+        onConfirm={handlers.confirmDelete}
         titulo="Excluir Conta a Receber"
         mensagem={`Tem certeza que deseja excluir a conta "${contaSelecionada?.description}"? Esta ação não pode ser desfeita.`}
         textoConfirmar="Excluir"
@@ -385,25 +348,6 @@ const ContasReceber: React.FC = () => {
       />
     </div>
   );
-
-  } catch (error) {
-    console.error('🚨 ContasReceber: Erro crítico no componente:', error);
-    return (
-      <div className="p-4 lg:p-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-red-800 mb-2">
-            Erro Crítico
-          </h3>
-          <p className="text-red-600">
-            Ocorreu um erro inesperado ao carregar a página. Verifique o console para mais detalhes.
-          </p>
-          <pre className="mt-4 text-xs text-red-500 bg-red-100 p-2 rounded">
-            {error instanceof Error ? error.message : 'Erro desconhecido'}
-          </pre>
-        </div>
-      </div>
-    );
-  }
 };
 
 export default ContasReceber;
