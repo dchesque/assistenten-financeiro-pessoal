@@ -303,7 +303,8 @@ const ContasReceber: React.FC = () => {
           valor_vencido: 0,
           recebidas: 0,
           valor_recebido: 0,
-          vencendoProximo: 0
+          vencendoProximo: 0,
+          valorVencendoProximo: 0
         }}
         onLimparFiltros={limparFiltros}
       />
