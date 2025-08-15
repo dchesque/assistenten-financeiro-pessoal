@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,8 +10,8 @@ import { ConfirmacaoModal } from '@/components/ui/ConfirmacaoModal';
 import { FiltrosInteligentesReceber } from '@/components/contasReceber/FiltrosInteligentesReceber';
 import { ContasReceberList, ContaReceberListItem } from '@/components/contasReceber/ContasReceberList';
 import { RecebimentoModalAdvanced } from '@/components/contasReceber/RecebimentoModalAdvanced';
-import { ContaReceberVisualizarModal } from '@/components/contasReceber/ContaReceberVisualizarModal';
-import { ContaReceberEditarModal } from '@/components/contasReceber/ContaReceberEditarModal';
+import ContaReceberVisualizarModal from '@/components/contasReceber/ContaReceberVisualizarModal';
+import ContaReceberEditarModal from '@/components/contasReceber/ContaReceberEditarModal';
 import { AccountReceivable } from '@/types/accounts';
 
 const ContasReceber: React.FC = () => {
@@ -291,7 +290,7 @@ const ContasReceber: React.FC = () => {
           setContaSelecionada(null);
         }}
         conta={contaSelecionada}
-        onSave={handleSaveEdit}
+        onSalvar={handleSaveEdit}
         categorias={categorias}
         clientes={clientes}
       />
