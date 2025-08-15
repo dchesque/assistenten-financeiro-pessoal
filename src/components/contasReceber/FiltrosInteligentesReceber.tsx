@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Search, Calendar, Building2, Tag } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { FiltrosContasReceber, EstatisticasContasReceber } from '@/hooks/useContasReceberOtimizado';
 
@@ -45,6 +46,12 @@ export const FiltrosInteligentesReceber: React.FC<FiltrosInteligentesReceberProp
       className: 'bg-yellow-100/80 text-yellow-700 hover:bg-yellow-200/80'
     },
     {
+      id: 'vencendo',
+      label: 'Vencendo (7 dias)',
+      count: estatisticas.vencendoProximo || 0,
+      className: 'bg-orange-100/80 text-orange-700 hover:bg-orange-200/80'
+    },
+    {
       id: 'vencido',
       label: 'Vencidas',
       count: estatisticas.vencidas,
@@ -61,16 +68,48 @@ export const FiltrosInteligentesReceber: React.FC<FiltrosInteligentesReceberProp
   const handleFiltroRapido = (novoFiltro: string) => {
     setFiltroRapido(novoFiltro);
     
-    // Atualizar filtros baseado no filtro rápido
     const novosFiltros = { ...filtros };
     
     if (novoFiltro === 'todos') {
       novosFiltros.status = 'todos';
+      novosFiltros.vencendo_em = '';
+    } else if (novoFiltro === 'vencendo') {
+      novosFiltros.status = 'pendente';
+      novosFiltros.vencendo_em = '7';
     } else {
       novosFiltros.status = novoFiltro as 'pendente' | 'recebido' | 'vencido';
+      novosFiltros.vencendo_em = '';
     }
     
     setFiltros(novosFiltros);
+  };
+
+  const gerarOpcoesAno = () => {
+    const anoAtual = new Date().getFullYear();
+    const anos = [];
+    for (let ano = anoAtual - 1; ano <= anoAtual + 1; ano++) {
+      anos.push(ano);
+    }
+    return anos;
+  };
+
+  const gerarOpcoesMes = () => {
+    const meses = [];
+    const anos = gerarOpcoesAno();
+    
+    anos.forEach(ano => {
+      for (let mes = 1; mes <= 12; mes++) {
+        const mesFormatado = mes.toString().padStart(2, '0');
+        const valor = `${ano}-${mesFormatado}`;
+        const label = new Date(ano, mes - 1).toLocaleDateString('pt-BR', {
+          month: 'long',
+          year: 'numeric'
+        });
+        meses.push({ valor, label: label.charAt(0).toUpperCase() + label.slice(1) });
+      }
+    });
+    
+    return meses;
   };
 
   const temFiltrosAtivos = () => {
@@ -83,7 +122,8 @@ export const FiltrosInteligentesReceber: React.FC<FiltrosInteligentesReceberProp
       filtros.data_fim !== '' ||
       filtros.valor_min !== '' ||
       filtros.valor_max !== '' ||
-      filtros.mes_referencia !== ''
+      filtros.mes_referencia !== '' ||
+      filtros.vencendo_em !== ''
     );
   };
 
@@ -114,71 +154,81 @@ export const FiltrosInteligentesReceber: React.FC<FiltrosInteligentesReceberProp
 
         {/* Filtros Principais */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <Input
-            placeholder="Buscar por descrição, cliente ou referência..."
-            value={filtros.busca}
-            onChange={(e) => setFiltros({ ...filtros, busca: e.target.value })}
-            className="input-base"
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar por descrição, cliente..."
+              value={filtros.busca}
+              onChange={(e) => setFiltros({ ...filtros, busca: e.target.value })}
+              className="input-base pl-10"
+            />
+          </div>
 
-          <Select
-            value={filtros.mes_referencia}
-            onValueChange={(value) => setFiltros({ ...filtros, mes_referencia: value })}
-          >
-            <SelectTrigger className="input-base">
-              <SelectValue placeholder="Mês de referência" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Todos os meses</SelectItem>
-              <SelectItem value={new Date().toISOString().slice(0, 7)}>Mês atual</SelectItem>
-              <SelectItem value={new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().slice(0, 7)}>
-                Próximo mês
-              </SelectItem>
-              <SelectItem value={new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().slice(0, 7)}>
-                Mês anterior
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
+            <Select
+              value={filtros.mes_referencia}
+              onValueChange={(value) => setFiltros({ ...filtros, mes_referencia: value })}
+            >
+              <SelectTrigger className="input-base pl-10">
+                <SelectValue placeholder="Mês de referência" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os meses</SelectItem>
+                {gerarOpcoesMes().map(({ valor, label }) => (
+                  <SelectItem key={valor} value={valor}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Select
-            value={filtros.cliente_id}
-            onValueChange={(value) => setFiltros({ ...filtros, cliente_id: value })}
-          >
-            <SelectTrigger className="input-base">
-              <SelectValue placeholder="Cliente" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Todos os clientes</SelectItem>
-              {clientes.map((cliente) => (
-                <SelectItem key={cliente.id} value={cliente.id}>
-                  {cliente.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="relative">
+            <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
+            <Select
+              value={filtros.cliente_id}
+              onValueChange={(value) => setFiltros({ ...filtros, cliente_id: value })}
+            >
+              <SelectTrigger className="input-base pl-10">
+                <SelectValue placeholder="Cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os clientes</SelectItem>
+                {clientes.map((cliente) => (
+                  <SelectItem key={cliente.id} value={cliente.id}>
+                    {cliente.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Select
-            value={filtros.categoria_id}
-            onValueChange={(value) => setFiltros({ ...filtros, categoria_id: value })}
-          >
-            <SelectTrigger className="input-base">
-              <SelectValue placeholder="Categoria" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Todas as categorias</SelectItem>
-              {categorias.map((categoria) => (
-                <SelectItem key={categoria.id} value={categoria.id}>
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: categoria.color || '#6b7280' }}
-                    />
-                    <span>{categoria.name}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="relative">
+            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
+            <Select
+              value={filtros.categoria_id}
+              onValueChange={(value) => setFiltros({ ...filtros, categoria_id: value })}
+            >
+              <SelectTrigger className="input-base pl-10">
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas as categorias</SelectItem>
+                {categorias.map((categoria) => (
+                  <SelectItem key={categoria.id} value={categoria.id}>
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: categoria.color || '#6b7280' }}
+                      />
+                      <span>{categoria.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Filtros Avançados */}

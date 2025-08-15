@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { AccountReceivable } from '@/types/accounts';
 import { useAccountsReceivable } from './useAccountsReceivable';
@@ -15,6 +16,7 @@ export interface FiltrosContasReceber {
   valor_min: string;
   valor_max: string;
   mes_referencia: string;
+  vencendo_em: string;
 }
 
 export interface EstatisticasContasReceber {
@@ -26,6 +28,8 @@ export interface EstatisticasContasReceber {
   valor_recebido: number;
   vencidas: number;
   valor_vencido: number;
+  vencendoProximo: number;
+  valorVencendoProximo: number;
 }
 
 export const useContasReceberOtimizado = () => {
@@ -42,7 +46,8 @@ export const useContasReceberOtimizado = () => {
     data_fim: '',
     valor_min: '',
     valor_max: '',
-    mes_referencia: ''
+    mes_referencia: '',
+    vencendo_em: ''
   });
 
   const [filtroRapido, setFiltroRapido] = useState<string>('todos');
@@ -79,6 +84,17 @@ export const useContasReceberOtimizado = () => {
         }
       }
 
+      // Filtro de vencendo em X dias
+      if (filtros.vencendo_em) {
+        const diasVencimento = parseInt(filtros.vencendo_em);
+        const diffTime = dataVencimento.getTime() - hoje.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (conta.status !== 'pending' || diffDays < 0 || diffDays > diasVencimento) {
+          return false;
+        }
+      }
+
       // Filtro de cliente
       if (filtros.cliente_id && conta.contact_id !== filtros.cliente_id) {
         return false;
@@ -109,11 +125,11 @@ export const useContasReceberOtimizado = () => {
 
       // Filtro de mês de referência
       if (filtros.mes_referencia) {
-        const mesReferencia = new Date(filtros.mes_referencia);
+        const [ano, mes] = filtros.mes_referencia.split('-');
         const mesVencimento = new Date(conta.due_date);
         
-        if (mesVencimento.getMonth() !== mesReferencia.getMonth() || 
-            mesVencimento.getFullYear() !== mesReferencia.getFullYear()) {
+        if (mesVencimento.getMonth() !== (parseInt(mes) - 1) || 
+            mesVencimento.getFullYear() !== parseInt(ano)) {
           return false;
         }
       }
@@ -125,10 +141,12 @@ export const useContasReceberOtimizado = () => {
   // Calcular estatísticas
   const estatisticas = useMemo((): EstatisticasContasReceber => {
     const hoje = new Date();
+    const proximosSete = new Date(hoje.getTime() + 7 * 24 * 60 * 60 * 1000);
     
     const stats = contasFiltradas.reduce((acc, conta) => {
       const dataVencimento = new Date(conta.due_date);
       const isVencida = dataVencimento < hoje && conta.status === 'pending';
+      const isVencendoProximo = conta.status === 'pending' && dataVencimento >= hoje && dataVencimento <= proximosSete;
 
       acc.total++;
       acc.total_valor += conta.amount;
@@ -144,6 +162,11 @@ export const useContasReceberOtimizado = () => {
         acc.valor_pendente += conta.amount;
       }
 
+      if (isVencendoProximo) {
+        acc.vencendoProximo++;
+        acc.valorVencendoProximo += conta.amount;
+      }
+
       return acc;
     }, {
       total: 0,
@@ -153,7 +176,9 @@ export const useContasReceberOtimizado = () => {
       recebidas: 0,
       valor_recebido: 0,
       vencidas: 0,
-      valor_vencido: 0
+      valor_vencido: 0,
+      vencendoProximo: 0,
+      valorVencendoProximo: 0
     });
 
     return stats;
@@ -216,6 +241,33 @@ export const useContasReceberOtimizado = () => {
     }
   }, [markAsReceived, refetch]);
 
+  const duplicarConta = useCallback(async (conta: AccountReceivable) => {
+    try {
+      const contaDuplicada = {
+        ...conta,
+        description: `${conta.description} (Cópia)`,
+        status: 'pending' as const,
+        received_at: undefined,
+        received_amount: undefined,
+        bank_account_id: undefined
+      };
+      
+      // Remove campos que não devem ser duplicados
+      delete (contaDuplicada as any).id;
+      delete (contaDuplicada as any).created_at;
+      delete (contaDuplicada as any).updated_at;
+      delete (contaDuplicada as any).user_id;
+
+      await createAccount(contaDuplicada);
+      toast.success('Conta duplicada com sucesso!');
+      await refetch();
+    } catch (error) {
+      console.error('Erro ao duplicar conta:', error);
+      toast.error('Erro ao duplicar conta');
+      throw error;
+    }
+  }, [createAccount, refetch]);
+
   const limparFiltros = useCallback(() => {
     setFiltros({
       busca: '',
@@ -226,26 +278,11 @@ export const useContasReceberOtimizado = () => {
       data_fim: '',
       valor_min: '',
       valor_max: '',
-      mes_referencia: ''
+      mes_referencia: '',
+      vencendo_em: ''
     });
     setFiltroRapido('todos');
   }, []);
-
-  // Resumos adicionais
-  const resumos = useMemo(() => {
-    const hoje = new Date();
-    const proximosSete = new Date(hoje.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
-    const vencendoProximo = contasFiltradas.filter(conta => {
-      const vencimento = new Date(conta.due_date);
-      return conta.status === 'pending' && vencimento >= hoje && vencimento <= proximosSete;
-    });
-
-    return {
-      vencendoProximo: vencendoProximo.length,
-      valorVencendoProximo: vencendoProximo.reduce((sum, conta) => sum + conta.amount, 0)
-    };
-  }, [contasFiltradas]);
 
   // Estados auxiliares
   const estados = {
@@ -275,7 +312,6 @@ export const useContasReceberOtimizado = () => {
     
     // Estatísticas
     estatisticas,
-    resumos,
     
     // Estados
     estados,
@@ -286,6 +322,7 @@ export const useContasReceberOtimizado = () => {
     atualizarConta,
     excluirConta,
     baixarConta,
+    duplicarConta,
     
     // Aliases para compatibilidade
     recarregar: carregarContas,

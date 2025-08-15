@@ -1,17 +1,18 @@
+
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, DollarSign, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
+import { Plus, DollarSign, TrendingUp, Clock, AlertTriangle, Eye, Edit, Trash2 } from 'lucide-react';
 import { useContasReceberOtimizado } from '@/hooks/useContasReceberOtimizado';
 import { formatCurrency } from '@/utils/currency';
-import { PageContainer } from '@/components/layout/PageContainer';
-import { PageHeader } from '@/components/layout/PageHeader';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import { ConfirmacaoModal } from '@/components/ui/ConfirmacaoModal';
 import { FiltrosInteligentesReceber } from '@/components/contasReceber/FiltrosInteligentesReceber';
 import { ContasReceberList, ContaReceberListItem } from '@/components/contasReceber/ContasReceberList';
 import { RecebimentoModalAdvanced } from '@/components/contasReceber/RecebimentoModalAdvanced';
+import { ContaReceberVisualizarModal } from '@/components/contasReceber/ContaReceberVisualizarModal';
+import { ContaReceberEditarModal } from '@/components/contasReceber/ContaReceberEditarModal';
 import { AccountReceivable } from '@/types/accounts';
 
 const ContasReceber: React.FC = () => {
@@ -29,10 +30,14 @@ const ContasReceber: React.FC = () => {
     estatisticas,
     estados,
     baixarConta,
-    excluirConta
+    excluirConta,
+    atualizarConta,
+    duplicarConta
   } = useContasReceberOtimizado();
 
   const [modalRecebimentoAberto, setModalRecebimentoAberto] = useState(false);
+  const [modalVisualizarAberto, setModalVisualizarAberto] = useState(false);
+  const [modalEditarAberto, setModalEditarAberto] = useState(false);
   const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false);
   const [contaSelecionada, setContaSelecionada] = useState<AccountReceivable | null>(null);
 
@@ -55,6 +60,18 @@ const ContasReceber: React.FC = () => {
 
   const handleCreateAccount = () => {
     navigate('/novo-recebimento');
+  };
+
+  const handleView = (conta: ContaReceberListItem) => {
+    const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
+    setContaSelecionada(contaCompleta || null);
+    setModalVisualizarAberto(true);
+  };
+
+  const handleEdit = (conta: ContaReceberListItem) => {
+    const contaCompleta = contasFiltradas.find(c => c.id === conta.id);
+    setContaSelecionada(contaCompleta || null);
+    setModalEditarAberto(true);
   };
 
   const handleMarkAsReceived = (conta: ContaReceberListItem) => {
@@ -93,17 +110,31 @@ const ContasReceber: React.FC = () => {
     }
   };
 
-  const handleEdit = (conta: ContaReceberListItem) => {
-    console.log('Editar conta:', conta);
+  const handleSaveEdit = async (dadosAtualizacao: any) => {
+    if (!contaSelecionada) return;
+
+    try {
+      await atualizarConta(contaSelecionada.id, dadosAtualizacao);
+      setModalEditarAberto(false);
+      setContaSelecionada(null);
+    } catch (error) {
+      console.error('Erro ao atualizar conta:', error);
+    }
   };
 
-  const handleView = (conta: ContaReceberListItem) => {
-    console.log('Visualizar conta:', conta);
+  const handleDuplicate = async (conta: any) => {
+    try {
+      await duplicarConta(conta);
+      setModalVisualizarAberto(false);
+      setContaSelecionada(null);
+    } catch (error) {
+      console.error('Erro ao duplicar conta:', error);
+    }
   };
 
   if (estados.loading) {
     return (
-      <PageContainer>
+      <div className="p-4 lg:p-8">
         <div className="space-y-6">
           <LoadingSkeleton className="h-8 w-64" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -113,26 +144,25 @@ const ContasReceber: React.FC = () => {
           </div>
           <LoadingSkeleton className="h-96" />
         </div>
-      </PageContainer>
+      </div>
     );
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Contas a Receber"
-        subtitle="Gerencie suas receitas e recebimentos"
-        breadcrumb={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Contas a Receber' }
-        ]}
-        actions={
+    <div className="p-4 lg:p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Contas a Receber</h1>
+            <p className="text-gray-600 mt-1">Gerencie suas receitas e recebimentos</p>
+          </div>
           <Button onClick={handleCreateAccount} className="btn-primary">
             <Plus className="h-4 w-4 mr-2" />
             Nova Receita
           </Button>
-        }
-      />
+        </div>
+      </div>
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -227,6 +257,45 @@ const ContasReceber: React.FC = () => {
         onReceive={handleMarkAsReceived}
       />
 
+      {/* Modal de Visualização */}
+      <ContaReceberVisualizarModal
+        isOpen={modalVisualizarAberto}
+        onClose={() => {
+          setModalVisualizarAberto(false);
+          setContaSelecionada(null);
+        }}
+        conta={contaSelecionada}
+        onEditar={(conta) => {
+          setModalVisualizarAberto(false);
+          setContaSelecionada(conta);
+          setModalEditarAberto(true);
+        }}
+        onReceber={(conta) => {
+          setModalVisualizarAberto(false);
+          setContaSelecionada(conta);
+          setModalRecebimentoAberto(true);
+        }}
+        onDuplicar={handleDuplicate}
+        onExcluir={(conta) => {
+          setModalVisualizarAberto(false);
+          setContaSelecionada(conta);
+          setModalConfirmacaoAberto(true);
+        }}
+      />
+
+      {/* Modal de Edição */}
+      <ContaReceberEditarModal
+        isOpen={modalEditarAberto}
+        onClose={() => {
+          setModalEditarAberto(false);
+          setContaSelecionada(null);
+        }}
+        conta={contaSelecionada}
+        onSave={handleSaveEdit}
+        categorias={categorias}
+        clientes={clientes}
+      />
+
       {/* Modal de Recebimento */}
       <RecebimentoModalAdvanced
         isOpen={modalRecebimentoAberto}
@@ -252,7 +321,7 @@ const ContasReceber: React.FC = () => {
         textoCancelar="Cancelar"
         tipo="danger"
       />
-    </PageContainer>
+    </div>
   );
 };
 

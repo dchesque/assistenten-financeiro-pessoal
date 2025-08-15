@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Eye, Edit, Trash2, MoreHorizontal, DollarSign, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Eye, Edit, Trash2, DollarSign, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { AccountReceivable } from '@/types/accounts';
 import { formatCurrency } from '@/utils/currency';
 import { format } from 'date-fns';
@@ -141,7 +141,7 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
                 <TableHead className="font-semibold text-gray-700">Categoria</TableHead>
                 <TableHead className="font-semibold text-gray-700 text-right">Valor</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
-                <TableHead className="font-semibold text-gray-700 w-20">Ações</TableHead>
+                <TableHead className="font-semibold text-gray-700 text-center w-48">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -210,52 +210,44 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
                     </TableCell>
                     
                     <TableCell className="py-4">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-center space-x-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onView(conta)}
+                          className="h-8 w-8 p-0 hover:bg-blue-100 text-blue-600 hover:text-blue-700"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onEdit(conta)}
+                          className="h-8 w-8 p-0 hover:bg-green-100 text-green-600 hover:text-green-700"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onDelete(conta)}
+                          className="h-8 w-8 p-0 hover:bg-red-100 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+
                         {(conta.status === 'pending' || isVencida) && (
                           <Button
                             size="sm"
                             onClick={() => onReceive(conta)}
-                            className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200"
+                            className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200 text-xs px-2 py-1 h-7"
                           >
-                            <DollarSign className="h-4 w-4 mr-1" />
+                            <DollarSign className="h-3 w-3 mr-1" />
                             RECEBER
                           </Button>
                         )}
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 hover:bg-gray-100"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem 
-                              onClick={() => onView(conta)}
-                              className="flex items-center space-x-2 cursor-pointer"
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span>Visualizar</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => onEdit(conta)}
-                              className="flex items-center space-x-2 cursor-pointer"
-                            >
-                              <Edit className="h-4 w-4" />
-                              <span>Editar</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => onDelete(conta)}
-                              className="flex items-center space-x-2 cursor-pointer text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span>Excluir</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>
