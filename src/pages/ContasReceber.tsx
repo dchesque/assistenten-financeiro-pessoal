@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,24 +16,37 @@ import ContaReceberEditarModal from '@/components/contasReceber/ContaReceberEdit
 import { AccountReceivable } from '@/types/accounts';
 
 const ContasReceber: React.FC = () => {
+  console.log('🔍 ContasReceber: Componente iniciando...');
+  
   const navigate = useNavigate();
   
-  const {
-    contasFiltradas,
-    categorias,
-    clientes,
-    filtros,
-    setFiltros,
-    filtroRapido,
-    setFiltroRapido,
-    limparFiltros,
-    estatisticas,
-    estados,
-    baixarConta,
-    excluirConta,
-    atualizarConta,
-    duplicarConta
-  } = useContasReceberOtimizado();
+  try {
+    console.log('🔍 ContasReceber: Chamando hook useContasReceberOtimizado...');
+    
+    const {
+      contasFiltradas,
+      categorias,
+      clientes,
+      filtros,
+      setFiltros,
+      filtroRapido,
+      setFiltroRapido,
+      limparFiltros,
+      estatisticas,
+      estados,
+      baixarConta,
+      excluirConta,
+      atualizarConta,
+      duplicarConta
+    } = useContasReceberOtimizado();
+
+    console.log('🔍 ContasReceber: Hook executado com sucesso', {
+      contasCount: contasFiltradas?.length || 0,
+      categoriasCount: categorias?.length || 0,
+      clientesCount: clientes?.length || 0,
+      loading: estados?.loading,
+      error: estados?.error
+    });
 
   const [modalRecebimentoAberto, setModalRecebimentoAberto] = useState(false);
   const [modalVisualizarAberto, setModalVisualizarAberto] = useState(false);
@@ -42,6 +56,13 @@ const ContasReceber: React.FC = () => {
 
   // Transformar contas para o formato da lista
   const contasListadas = useMemo((): ContaReceberListItem[] => {
+    console.log('🔍 ContasReceber: Transformando contas para lista...', contasFiltradas?.length);
+    
+    if (!contasFiltradas || !Array.isArray(contasFiltradas)) {
+      console.warn('⚠️ ContasReceber: contasFiltradas não é um array válido', contasFiltradas);
+      return [];
+    }
+    
     return contasFiltradas.map(conta => ({
       id: conta.id,
       description: conta.description,
@@ -56,6 +77,8 @@ const ContasReceber: React.FC = () => {
       created_at: conta.created_at
     }));
   }, [contasFiltradas]);
+
+  console.log('🔍 ContasReceber: contasListadas geradas', contasListadas?.length);
 
   const handleCreateAccount = () => {
     navigate('/novo-recebimento');
@@ -131,7 +154,14 @@ const ContasReceber: React.FC = () => {
     }
   };
 
+  console.log('🔍 ContasReceber: Verificando estados...', {
+    loading: estados?.loading,
+    error: estados?.error,
+    estadosObj: estados
+  });
+
   if (estados.loading) {
+    console.log('🔍 ContasReceber: Renderizando loading...');
     return (
       <div className="p-4 lg:p-8">
         <div className="space-y-6">
@@ -146,6 +176,28 @@ const ContasReceber: React.FC = () => {
       </div>
     );
   }
+
+  if (estados.error) {
+    console.error('🔍 ContasReceber: Erro detectado:', estados.error);
+    return (
+      <div className="p-4 lg:p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">
+            Erro ao carregar dados
+          </h3>
+          <p className="text-red-600">
+            {estados.error}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('🔍 ContasReceber: Renderizando componente principal...', {
+    estatisticas,
+    filtros,
+    contasCount: contasListadas.length
+  });
 
   return (
     <div className="p-4 lg:p-8">
@@ -174,10 +226,10 @@ const ContasReceber: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {formatCurrency(estatisticas.total_valor)}
+              {formatCurrency(estatisticas?.total_valor || 0)}
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              {estatisticas.total} conta(s)
+              {estatisticas?.total || 0} conta(s)
             </p>
           </CardContent>
         </Card>
@@ -191,10 +243,10 @@ const ContasReceber: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-700">
-              {formatCurrency(estatisticas.valor_pendente)}
+              {formatCurrency(estatisticas?.valor_pendente || 0)}
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              {estatisticas.pendentes} conta(s)
+              {estatisticas?.pendentes || 0} conta(s)
             </p>
           </CardContent>
         </Card>
@@ -208,10 +260,10 @@ const ContasReceber: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-700">
-              {formatCurrency(estatisticas.valor_vencido)}
+              {formatCurrency(estatisticas?.valor_vencido || 0)}
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              {estatisticas.vencidas} conta(s)
+              {estatisticas?.vencidas || 0} conta(s)
             </p>
           </CardContent>
         </Card>
@@ -225,10 +277,10 @@ const ContasReceber: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-700">
-              {formatCurrency(estatisticas.valor_recebido)}
+              {formatCurrency(estatisticas?.valor_recebido || 0)}
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              {estatisticas.recebidas} conta(s)
+              {estatisticas?.recebidas || 0} conta(s)
             </p>
           </CardContent>
         </Card>
@@ -240,9 +292,19 @@ const ContasReceber: React.FC = () => {
         setFiltros={setFiltros}
         filtroRapido={filtroRapido}
         setFiltroRapido={setFiltroRapido}
-        clientes={clientes.map(c => ({ id: c.id, nome: c.name }))}
-        categorias={categorias}
-        estatisticas={estatisticas}
+        clientes={clientes?.map(c => ({ id: c.id, nome: c.name })) || []}
+        categorias={categorias || []}
+        estatisticas={estatisticas || {
+          total: 0,
+          total_valor: 0,
+          pendentes: 0,
+          valor_pendente: 0,
+          vencidas: 0,
+          valor_vencido: 0,
+          recebidas: 0,
+          valor_recebido: 0,
+          vencendoProximo: 0
+        }}
         onLimparFiltros={limparFiltros}
       />
 
@@ -291,8 +353,8 @@ const ContasReceber: React.FC = () => {
         }}
         conta={contaSelecionada}
         onSalvar={handleSaveEdit}
-        categorias={categorias}
-        clientes={clientes}
+        categorias={categorias || []}
+        clientes={clientes || []}
       />
 
       {/* Modal de Recebimento */}
@@ -322,6 +384,25 @@ const ContasReceber: React.FC = () => {
       />
     </div>
   );
+
+  } catch (error) {
+    console.error('🚨 ContasReceber: Erro crítico no componente:', error);
+    return (
+      <div className="p-4 lg:p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">
+            Erro Crítico
+          </h3>
+          <p className="text-red-600">
+            Ocorreu um erro inesperado ao carregar a página. Verifique o console para mais detalhes.
+          </p>
+          <pre className="mt-4 text-xs text-red-500 bg-red-100 p-2 rounded">
+            {error instanceof Error ? error.message : 'Erro desconhecido'}
+          </pre>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default ContasReceber;
