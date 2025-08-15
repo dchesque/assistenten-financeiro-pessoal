@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Edit, User, FileText, DollarSign, Calendar, Save } from 'lucide-react';
 import { AccountReceivable } from '@/types/accounts';
+import { Category } from '@/types/category';
 import { formatCurrency } from '@/utils/currency';
 import { toast } from 'sonner';
 
@@ -13,6 +15,8 @@ interface ContaReceberEditarModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSalvar: (dadosEdicao: any) => Promise<void>;
+  categorias?: Category[];
+  clientes?: { id: string; name: string }[];
 }
 
 interface DadosEdicao {
@@ -24,7 +28,7 @@ interface DadosEdicao {
   observacoes?: string;
 }
 
-export default function ContaReceberEditarModal({ conta, isOpen, onClose, onSalvar }: ContaReceberEditarModalProps) {
+export default function ContaReceberEditarModal({ conta, isOpen, onClose, onSalvar, categorias, clientes }: ContaReceberEditarModalProps) {
   const [dadosEdicao, setDadosEdicao] = useState<DadosEdicao>({
     descricao: '',
     data_vencimento: '',
