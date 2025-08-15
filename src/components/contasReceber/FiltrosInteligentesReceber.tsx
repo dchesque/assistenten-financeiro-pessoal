@@ -168,13 +168,13 @@ export const FiltrosInteligentesReceber: React.FC<FiltrosInteligentesReceberProp
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
             <Select
               value={filtros.mes_referencia}
-              onValueChange={(value) => setFiltros({ ...filtros, mes_referencia: value })}
+              onValueChange={(value) => setFiltros({ ...filtros, mes_referencia: value === 'todos' ? '' : value })}
             >
               <SelectTrigger className="input-base pl-10">
                 <SelectValue placeholder="Mês de referência" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os meses</SelectItem>
+                <SelectItem value="todos">Todos os meses</SelectItem>
                 {gerarOpcoesMes().map(({ valor, label }) => (
                   <SelectItem key={valor} value={valor}>
                     {label}
@@ -188,13 +188,13 @@ export const FiltrosInteligentesReceber: React.FC<FiltrosInteligentesReceberProp
             <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
             <Select
               value={filtros.cliente_id}
-              onValueChange={(value) => setFiltros({ ...filtros, cliente_id: value })}
+              onValueChange={(value) => setFiltros({ ...filtros, cliente_id: value === 'todos' ? '' : value })}
             >
               <SelectTrigger className="input-base pl-10">
                 <SelectValue placeholder="Cliente" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os clientes</SelectItem>
+                <SelectItem value="todos">Todos os clientes</SelectItem>
                 {clientes.map((cliente) => (
                   <SelectItem key={cliente.id} value={cliente.id}>
                     {cliente.nome}
@@ -208,13 +208,13 @@ export const FiltrosInteligentesReceber: React.FC<FiltrosInteligentesReceberProp
             <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
             <Select
               value={filtros.categoria_id}
-              onValueChange={(value) => setFiltros({ ...filtros, categoria_id: value })}
+              onValueChange={(value) => setFiltros({ ...filtros, categoria_id: value === 'todos' ? '' : value })}
             >
               <SelectTrigger className="input-base pl-10">
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as categorias</SelectItem>
+                <SelectItem value="todos">Todas as categorias</SelectItem>
                 {categorias.map((categoria) => (
                   <SelectItem key={categoria.id} value={categoria.id}>
                     <div className="flex items-center space-x-2">
@@ -307,3 +307,4 @@ export const FiltrosInteligentesReceber: React.FC<FiltrosInteligentesReceberProp
     </Card>
   );
 };
+
