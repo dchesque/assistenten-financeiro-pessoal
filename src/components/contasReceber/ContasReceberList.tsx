@@ -92,8 +92,13 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
 
   // Verificar se a conta pode receber baixa
   const canReceive = (conta: ContaReceberListItem) => {
-    return conta.status === 'pending' || isOverdue(conta);
+    return conta.status === 'pending' || conta.status === 'overdue' || isOverdue(conta);
   };
+
+  // Log para debug
+  console.log('ContasReceberList - onReceive function:', typeof onReceive);
+  console.log('ContasReceberList - contas count:', contas.length);
+  console.log('ContasReceberList - contas with canReceive:', contas.filter(conta => canReceive(conta)).length);
 
   if (loading) {
     return (
@@ -146,12 +151,16 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
                 <TableHead className="font-semibold text-gray-700">Categoria</TableHead>
                 <TableHead className="font-semibold text-gray-700 text-right">Valor</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
-                <TableHead className="font-semibold text-gray-700 text-center w-56">Ações</TableHead>
+                <TableHead className="font-semibold text-gray-700 text-center w-64">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {contas.map((conta) => {
                 const isVencida = isOverdue(conta);
+                const podeReceber = canReceive(conta);
+                
+                // Log para debug de cada conta
+                console.log(`Conta ${conta.id} - Status: ${conta.status}, Vencida: ${isVencida}, Pode receber: ${podeReceber}`);
                 
                 return (
                   <TableRow 
@@ -246,15 +255,15 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
                           <Trash2 className="h-4 w-4" />
                         </Button>
 
-                        {canReceive(conta) && (
-                          <Badge
+                        {podeReceber && onReceive && (
+                          <div 
                             onClick={() => onReceive(conta)}
-                            className="cursor-pointer bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 font-medium px-3 py-1 text-xs ml-1"
+                            className="cursor-pointer bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 font-medium px-3 py-1 text-xs ml-2 rounded-full inline-flex items-center"
                             title={isVencida ? 'Baixar conta vencida' : 'Baixar recebimento'}
                           >
                             <DollarSign className="h-3 w-3 mr-1" />
                             BAIXAR
-                          </Badge>
+                          </div>
                         )}
                       </div>
                     </TableCell>
