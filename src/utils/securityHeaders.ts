@@ -1,3 +1,4 @@
+
 /**
  * Configurações de segurança para headers HTTP
  * Para uso em produção com Vite/Vercel/Netlify
@@ -8,6 +9,7 @@ const isLovableEnvironment = () => {
   if (typeof window === 'undefined') return false;
   const hostname = window.location.hostname;
   return hostname.includes('lovable.dev') || 
+         hostname.includes('lovable.app') ||
          hostname.includes('localhost') || 
          hostname.includes('127.0.0.1');
 };
@@ -22,6 +24,7 @@ const DEVELOPMENT_HEADERS = {
     "img-src 'self' data: https: blob:",
     "connect-src 'self' https: wss: ws:",
     "frame-src 'self' https: data:",
+    "frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev http://localhost:* http://127.0.0.1:*",
     "object-src 'self'",
     "base-uri 'self'",
     "form-action 'self'"
@@ -39,8 +42,9 @@ const PRODUCTION_HEADERS = {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.whatsapp.com",
-    "frame-src 'self' https://*.lovable.dev https://*.netlify.app https://*.vercel.app",
+    `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.whatsapp.com`,
+    "frame-src 'self' https://*.lovable.dev https://*.lovable.app https://*.netlify.app https://*.vercel.app",
+    "frame-ancestors 'self'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'"
