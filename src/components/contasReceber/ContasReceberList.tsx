@@ -90,6 +90,11 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
     return <DollarSign className="h-4 w-4 text-gray-600" />;
   };
 
+  // Verificar se a conta pode receber baixa
+  const canReceive = (conta: ContaReceberListItem) => {
+    return conta.status === 'pending' || isOverdue(conta);
+  };
+
   if (loading) {
     return (
       <Card className="card-base">
@@ -141,7 +146,7 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
                 <TableHead className="font-semibold text-gray-700">Categoria</TableHead>
                 <TableHead className="font-semibold text-gray-700 text-right">Valor</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
-                <TableHead className="font-semibold text-gray-700 text-center w-48">Ações</TableHead>
+                <TableHead className="font-semibold text-gray-700 text-center w-56">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -216,6 +221,7 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
                           variant="ghost"
                           onClick={() => onView(conta)}
                           className="h-8 w-8 p-0 hover:bg-blue-100 text-blue-600 hover:text-blue-700"
+                          title="Visualizar"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -225,6 +231,7 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
                           variant="ghost"
                           onClick={() => onEdit(conta)}
                           className="h-8 w-8 p-0 hover:bg-green-100 text-green-600 hover:text-green-700"
+                          title="Editar"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -234,19 +241,20 @@ export const ContasReceberList: React.FC<ContasReceberListProps> = ({
                           variant="ghost"
                           onClick={() => onDelete(conta)}
                           className="h-8 w-8 p-0 hover:bg-red-100 text-red-600 hover:text-red-700"
+                          title="Excluir"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
 
-                        {(conta.status === 'pending' || isVencida) && (
-                          <Button
-                            size="sm"
+                        {canReceive(conta) && (
+                          <Badge
                             onClick={() => onReceive(conta)}
-                            className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200 text-xs px-2 py-1 h-7"
+                            className="cursor-pointer bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 font-medium px-3 py-1 text-xs ml-1"
+                            title={isVencida ? 'Baixar conta vencida' : 'Baixar recebimento'}
                           >
                             <DollarSign className="h-3 w-3 mr-1" />
-                            RECEBER
-                          </Button>
+                            BAIXAR
+                          </Badge>
                         )}
                       </div>
                     </TableCell>
