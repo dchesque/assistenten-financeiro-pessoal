@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/userProfile';
 import { logService } from '@/services/logService';
 import { toast } from 'sonner';
 import { generateSecurePassword } from '@/utils/cryptoUtils';
+import { SECURITY_CONFIG } from '@/config/security.config';
 
 export function useSupabaseAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -14,8 +15,12 @@ export function useSupabaseAuth() {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockoutEndTime, setLockoutEndTime] = useState<number | null>(null);
 
-  // Calcular se está bloqueado
-  const isLocked = lockoutEndTime && lockoutEndTime > Date.now();
+  // Timeout de sessão por inatividade (minutos vindos da config)
+  const SESSION_TIMEOUT_MINUTES = SECURITY_CONFIG.auth.sessionTimeoutMinutes || 60;
+  const sessionTimeoutRef = useRef<number | null>(null);
+
+  // Calcular se está bloqueado (forçar boolean)
+  const isLocked = !!lockoutEndTime && lockoutEndTime > Date.now();
 
   // Função para carregar perfil do usuário
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -40,7 +45,25 @@ export function useSupabaseAuth() {
 
   // Função para resetar timeout de sessão
   const resetSessionTimeout = () => {
-    // Implementar timeout de sessão se necessário
+    // Limpar timer anterior
+    if (sessionTimeoutRef.current) {
+      window.clearTimeout(sessionTimeoutRef.current);
+      sessionTimeoutRef.current = null;
+    }
+    // Só arma o timer se houver usuário autenticado
+    if (!user) return;
+
+    const ms = SESSION_TIMEOUT_MINUTES * 60 * 1000;
+    sessionTimeoutRef.current = window.setTimeout(async () => {
+      console.warn('Sessão encerrada por inatividade');
+      toast.info('Sua sessão foi encerrada por inatividade.');
+      try {
+        await supabase.auth.signOut();
+      } finally {
+        // Forçar limpeza de estados locais e redirecionar
+        window.location.href = '/auth';
+      }
+    }, ms);
   };
 
   // Carregar tentativas de login do localStorage
@@ -64,15 +87,18 @@ export function useSupabaseAuth() {
     }
   }, []);
 
-  // Função para incrementar tentativas de login
+  // Função para incrementar tentativas de login (usar SECURITY_CONFIG)
   const incrementLoginAttempts = () => {
-    const newAttempts = loginAttempts + 1;
+    const maxAttempts = SECURITY_CONFIG.auth.maxLoginAttempts || 5;
+    const lockoutMinutes = SECURITY_CONFIG.auth.lockoutDurationMinutes || 15;
+
+    const newAttempts = (loginAttempts || 0) + 1;
     setLoginAttempts(newAttempts);
     localStorage.setItem('login_attempts', newAttempts.toString());
 
-    if (newAttempts >= 5) {
-      // Bloquear por 15 minutos
-      const lockoutEnd = Date.now() + 15 * 60 * 1000;
+    if (newAttempts >= maxAttempts) {
+      // Bloquear pelo tempo configurado
+      const lockoutEnd = Date.now() + lockoutMinutes * 60 * 1000;
       setLockoutEndTime(lockoutEnd);
       localStorage.setItem('lockout_end_time', lockoutEnd.toString());
     }
@@ -90,11 +116,18 @@ export function useSupabaseAuth() {
         if (session?.user) {
           // Carregar perfil do usuário
           setTimeout(async () => {
-            const userProfile = await loadUserProfile(session.user.id);
+            const userProfile = await loadUserProfile(session.user!.id);
             setProfile(userProfile);
+            // Armar/Resetar o timeout de sessão ao autenticar ou atualizar sessão
+            resetSessionTimeout();
           }, 0);
         } else {
           setProfile(null);
+          // Limpar timer se deslogar
+          if (sessionTimeoutRef.current) {
+            window.clearTimeout(sessionTimeoutRef.current);
+            sessionTimeoutRef.current = null;
+          }
         }
       }
     );
@@ -107,8 +140,10 @@ export function useSupabaseAuth() {
 
       if (session?.user) {
         setTimeout(async () => {
-          const userProfile = await loadUserProfile(session.user.id);
+          const userProfile = await loadUserProfile(session.user!.id);
           setProfile(userProfile);
+          // Armar/Resetar o timeout ao inicializar com sessão válida
+          resetSessionTimeout();
         }, 0);
       }
     });
@@ -131,8 +166,13 @@ export function useSupabaseAuth() {
       events.forEach(event => {
         document.removeEventListener(event, handleActivity);
       });
+      // Limpar timer ao desmontar
+      if (sessionTimeoutRef.current) {
+        window.clearTimeout(sessionTimeoutRef.current);
+        sessionTimeoutRef.current = null;
+      }
     };
-  }, []);
+  }, [user]); // resetar quando usuário muda
 
   // Função para login via WhatsApp/OTP
   const signInWithWhatsApp = async (whatsapp: string) => {

@@ -1,12 +1,10 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.53.1';
 import { validateAuth, logSecurityEvent } from '../_shared/security.ts';
 import { applyRateLimit, apiRateLimiter } from '../_shared/rateLimit.ts';
 import { withMonitoring } from '../_shared/monitoring.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/middleware.ts';
+import { getSecurityHeaders, validateOrigin } from '../_shared/utils.ts';
 
 function getSupabaseClient() {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -18,7 +16,16 @@ Deno.serve(withMonitoring('security-metrics', async (monitor) => {
   return async (req: Request): Promise<Response> => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
+      return new Response(null, { headers: { ...corsHeaders, ...getSecurityHeaders('security-metrics') } });
+    }
+
+    // Origin validation (endurecimento contra CSRF/abuso)
+    const origin = req.headers.get('origin');
+    if (origin && !validateOrigin(origin)) {
+      return new Response(
+        JSON.stringify({ error: 'Origin não permitido' }),
+        { status: 403, headers: { ...corsHeaders, ...getSecurityHeaders('security-metrics'), 'Content-Type': 'application/json' } }
+      );
     }
 
     // Apply rate limiting
@@ -30,7 +37,7 @@ Deno.serve(withMonitoring('security-metrics', async (monitor) => {
     if (!securityContext) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...corsHeaders, ...getSecurityHeaders('security-metrics'), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -45,7 +52,7 @@ Deno.serve(withMonitoring('security-metrics', async (monitor) => {
       
       return new Response(
         JSON.stringify({ error: 'Forbidden' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: { ...corsHeaders, ...getSecurityHeaders('security-metrics'), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -121,6 +128,7 @@ Deno.serve(withMonitoring('security-metrics', async (monitor) => {
         { 
           headers: { 
             ...corsHeaders, 
+            ...getSecurityHeaders('security-metrics'),
             'Content-Type': 'application/json',
             'Cache-Control': 'no-cache, no-store, must-revalidate'
           } 
@@ -137,7 +145,7 @@ Deno.serve(withMonitoring('security-metrics', async (monitor) => {
         }),
         { 
           status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, ...getSecurityHeaders('security-metrics'), 'Content-Type': 'application/json' } 
         }
       );
     }

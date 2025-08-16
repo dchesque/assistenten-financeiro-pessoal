@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -285,7 +285,7 @@ export type Database = {
       }
       audit_logs: {
         Row: {
-          action: Database["public"]["Enums"]["audit_action"]
+          action: string
           created_at: string
           deleted_at: string | null
           id: string
@@ -299,7 +299,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          action: Database["public"]["Enums"]["audit_action"]
+          action: string
           created_at?: string
           deleted_at?: string | null
           id?: string
@@ -313,7 +313,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          action?: Database["public"]["Enums"]["audit_action"]
+          action?: string
           created_at?: string
           deleted_at?: string | null
           id?: string
@@ -1300,9 +1300,14 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           due_date: string | null
+          final_amount: number | null
           id: string | null
+          issue_date: string | null
           notes: string | null
+          original_amount: number | null
+          received_amount: number | null
           received_at: string | null
+          reference_document: string | null
           status: Database["public"]["Enums"]["receivable_status"] | null
           updated_at: string | null
           user_id: string | null
@@ -1318,9 +1323,14 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           due_date?: string | null
+          final_amount?: number | null
           id?: string | null
+          issue_date?: string | null
           notes?: string | null
+          original_amount?: number | null
+          received_amount?: number | null
           received_at?: string | null
+          reference_document?: string | null
           status?: Database["public"]["Enums"]["receivable_status"] | null
           updated_at?: string | null
           user_id?: string | null
@@ -1336,9 +1346,14 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           due_date?: string | null
+          final_amount?: number | null
           id?: string | null
+          issue_date?: string | null
           notes?: string | null
+          original_amount?: number | null
+          received_amount?: number | null
           received_at?: string | null
+          reference_document?: string | null
           status?: Database["public"]["Enums"]["receivable_status"] | null
           updated_at?: string | null
           user_id?: string | null
@@ -1835,7 +1850,7 @@ export type Database = {
     }
     Functions: {
       check_feature_limit: {
-        Args: { _user_id: string; _feature: string; _current_count: number }
+        Args: { _current_count: number; _feature: string; _user_id: string }
         Returns: boolean
       }
       cleanup_old_deleted_records: {
@@ -1844,13 +1859,13 @@ export type Database = {
       }
       create_notification: {
         Args: {
-          p_user_id: string
-          p_type: string
-          p_title: string
-          p_message: string
           p_data?: Json
+          p_message: string
           p_scheduled_for?: string
           p_severity?: string
+          p_title: string
+          p_type: string
+          p_user_id: string
         }
         Returns: {
           channel: string
@@ -1959,19 +1974,19 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
       log_audit: {
         Args: {
           p_action: Database["public"]["Enums"]["audit_action"]
-          p_table_name?: string
-          p_record_id?: string
-          p_old_data?: Json
-          p_new_data?: Json
           p_metadata?: Json
+          p_new_data?: Json
+          p_old_data?: Json
+          p_record_id?: string
+          p_table_name?: string
         }
         Returns: string
       }
@@ -2013,7 +2028,7 @@ export type Database = {
         }
       }
       restore_deleted_record: {
-        Args: { p_table_name: string; p_record_id: string; p_user_id?: string }
+        Args: { p_record_id: string; p_table_name: string; p_user_id?: string }
         Returns: boolean
       }
       set_limit: {
@@ -2029,7 +2044,7 @@ export type Database = {
         Returns: string[]
       }
       soft_delete_record: {
-        Args: { p_table_name: string; p_record_id: string; p_user_id?: string }
+        Args: { p_record_id: string; p_table_name: string; p_user_id?: string }
         Returns: boolean
       }
       update_security_config: {
@@ -2064,14 +2079,14 @@ export type Database = {
       }
       update_user_profile: {
         Args: {
+          p_avatar_url?: string
+          p_bio?: string
+          p_cep?: string
+          p_cidade?: string
+          p_endereco?: string
+          p_estado?: string
           p_name?: string
           p_phone?: string
-          p_bio?: string
-          p_avatar_url?: string
-          p_endereco?: string
-          p_cidade?: string
-          p_estado?: string
-          p_cep?: string
           p_whatsapp?: string
         }
         Returns: {
@@ -2104,10 +2119,10 @@ export type Database = {
       }
       upsert_profile: {
         Args: {
-          p_user_id: string
-          p_phone: string
-          p_name?: string
           p_email?: string
+          p_name?: string
+          p_phone: string
+          p_user_id: string
         }
         Returns: {
           ativo: boolean
