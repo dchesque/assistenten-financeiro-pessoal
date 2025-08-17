@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Settings, SettingsUpdateData, DEFAULT_SETTINGS } from '@/types/settings';
 import { auditService } from './auditService';
@@ -56,7 +57,9 @@ class SettingsService {
       localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
       return data;
     } catch (error) {
-      console.error('Erro ao buscar configurações:', error);
+      if (import.meta.env.DEV) {
+        console.error('Erro ao buscar configurações:', error);
+      }
       
       // Fallback para defaults
       const { data: user } = await supabase.auth.getUser();
@@ -105,12 +108,16 @@ class SettingsService {
           );
         }
       } catch (auditError) {
-        console.warn('Erro ao registrar auditoria:', auditError);
+        if (import.meta.env.DEV) {
+          console.warn('Erro ao registrar auditoria:', auditError);
+        }
       }
 
       return data;
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
+      if (import.meta.env.DEV) {
+        console.error('Erro ao salvar configurações:', error);
+      }
       throw error;
     }
   }
@@ -140,8 +147,10 @@ class SettingsService {
         }
       }
     } catch (error) {
-      // Falha silenciosa na revalidação
-      console.debug('Falha na revalidação em background:', error);
+      // Falha silenciosa na revalidação (log apenas em desenvolvimento)
+      if (import.meta.env.DEV) {
+        console.debug('Falha na revalidação em background:', error);
+      }
     }
   }
 }

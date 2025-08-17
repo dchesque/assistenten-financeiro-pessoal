@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useCallback, useState } from 'react';
 import { sanitizeObject } from '@/utils/sanitization';
 import { toast } from 'sonner';
@@ -39,9 +40,12 @@ export const FormSecurityProvider: React.FC<FormSecurityProviderProps> = ({
     
     try {
       return sanitizeObject(data);
-    } catch (error) {
-      console.error('Erro na sanitização de dados:', error);
-      reportSecurityViolation('sanitization_error', { error: error.message });
+    } catch (error: any) {
+      // Em produção não poluir o console
+      if (import.meta.env.DEV) {
+        console.error('Erro na sanitização de dados:', error);
+      }
+      reportSecurityViolation('sanitization_error', { error: error?.message });
       return data; // Retorna dados originais em caso de erro na sanitização
     }
   }, [isSecureMode]);
@@ -103,20 +107,21 @@ export const FormSecurityProvider: React.FC<FormSecurityProviderProps> = ({
     };
 
     // Log local para desenvolvimento
-    console.warn('🔒 Security Violation:', violationData);
+    if (import.meta.env.DEV) {
+      console.warn('🔒 Security Violation:', violationData);
+    }
 
     // Adicionar à lista de violações
     setSecurityViolations(prev => [...prev.slice(-9), violation]); // Manter últimas 10
 
     // Mostrar toast para desenvolvedores (apenas em desenvolvimento)
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       toast.error(`Violação de segurança: ${violation}`);
     }
 
-    // Em produção, enviar para serviço de monitoramento
-    if (process.env.NODE_ENV === 'production') {
-      // Aqui você pode enviar para um serviço de monitoramento
-      // como Sentry, LogRocket, etc.
+    // Em produção, aqui poderíamos enviar para um serviço de monitoramento (Sentry, etc)
+    if (import.meta.env.PROD) {
+      // Envio assíncrono opcional
     }
   }, [enableSecurityLogging]);
 
@@ -132,7 +137,7 @@ export const FormSecurityProvider: React.FC<FormSecurityProviderProps> = ({
     <FormSecurityContext.Provider value={value}>
       {children}
       {/* Indicador de modo seguro (apenas em desenvolvimento) */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <div className="fixed bottom-4 right-4 z-50">
           <div className={`px-3 py-1 rounded-full text-xs font-medium ${
             isSecureMode 

@@ -1,5 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { AccountReceivable, ReceiptData } from '@/types/accounts';
+import { logService } from '@/services/logService';
 
 export const accountsReceivableService = {
   async getAccountsReceivable(): Promise<AccountReceivable[]> {
@@ -44,7 +46,10 @@ export const accountsReceivableService = {
   async createAccountReceivable(
     account: Omit<AccountReceivable, 'id' | 'created_at' | 'updated_at' | 'user_id'>
   ): Promise<AccountReceivable> {
-    console.log('Creating account receivable:', account);
+    // Log somente em desenvolvimento
+    if (import.meta.env.DEV) {
+      console.log('Creating account receivable:', account);
+    }
     
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -70,7 +75,8 @@ export const accountsReceivableService = {
       .single();
 
     if (error) {
-      console.error('Error creating account receivable:', error);
+      // Direcionar erro para o serviço de logs e não para o console
+      logService.logError(error, 'accountsReceivableService.createAccountReceivable');
       throw error;
     }
     return data;

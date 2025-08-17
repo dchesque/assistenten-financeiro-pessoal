@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Configuração segura com fallback para Lovable
@@ -6,14 +7,16 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 
 // Validação das variáveis de ambiente
 function validateSupabaseConfig(): void {
-  // Log das variáveis para debugging (sem mostrar chaves completas)
-  console.log('🔧 Configuração Supabase:', {
-    hasUrl: !!supabaseUrl,
-    urlPrefix: supabaseUrl?.substring(0, 20) + '...',
-    hasKey: !!supabaseAnonKey,
-    keyPrefix: supabaseAnonKey?.substring(0, 20) + '...',
-    source: import.meta.env.VITE_SUPABASE_URL ? 'env' : 'fallback'
-  });
+  // Log das variáveis para debugging (apenas em desenvolvimento; sem mostrar chaves completas)
+  if (import.meta.env.DEV) {
+    console.log('🔧 Configuração Supabase:', {
+      hasUrl: !!supabaseUrl,
+      urlPrefix: supabaseUrl?.substring(0, 20) + '...',
+      hasKey: !!supabaseAnonKey,
+      keyPrefix: supabaseAnonKey?.substring(0, 20) + '...',
+      source: import.meta.env.VITE_SUPABASE_URL ? 'env' : 'fallback'
+    });
+  }
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(

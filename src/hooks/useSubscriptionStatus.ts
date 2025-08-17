@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { logService } from '@/services/logService';
 
 export interface SubscriptionData {
   status: 'trial' | 'premium' | 'inactive' | 'admin';
@@ -76,7 +78,7 @@ export function useSubscriptionStatus() {
         }
         
       } catch (error) {
-        console.error('Erro ao buscar dados de assinatura:', error);
+        logService.logError(error, 'useSubscriptionStatus.fetchSubscriptionData');
         setSubscriptionData({
           status: 'inactive',
           role: 'user'
