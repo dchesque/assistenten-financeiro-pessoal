@@ -18,10 +18,7 @@ export function StatusIndicators() {
         {/* Status Online/Offline */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge variant={isOnline ? "default" : "destructive"} className="flex items-center space-x-1">
-              {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-              
-            </Badge>
+            
           </TooltipTrigger>
           <TooltipContent>
             <p>{isOnline ? 'Conectado à internet' : 'Sem conexão com a internet'}</p>
