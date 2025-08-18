@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Crown, Clock, AlertTriangle, User } from 'lucide-react';
@@ -23,7 +24,9 @@ export function SubscriptionStatus({ expanded, mobile = false }: SubscriptionSta
     if (isPremium) {
       return {
         icon: Crown,
-        label: `Premium${daysRemaining > 0 ? ` - ${daysRemaining}d` : ''}`,
+        label: daysRemaining > 0 
+          ? `Premium Ativo - ${daysRemaining} dias`
+          : 'Premium Ativo',
         bgColor: 'from-yellow-500/20 to-yellow-600/20',
         textColor: 'text-yellow-400',
         borderColor: 'border-yellow-500/30'
@@ -33,7 +36,7 @@ export function SubscriptionStatus({ expanded, mobile = false }: SubscriptionSta
     if (isTrial) {
       return {
         icon: Clock,
-        label: `Trial - ${daysRemaining}d`,
+        label: `Período de Teste - ${daysRemaining} dias`,
         bgColor: 'from-blue-500/20 to-blue-600/20',
         textColor: 'text-blue-400',
         borderColor: 'border-blue-500/30'
@@ -42,7 +45,7 @@ export function SubscriptionStatus({ expanded, mobile = false }: SubscriptionSta
     
     return {
       icon: AlertTriangle,
-      label: 'Plano Gratuito',
+      label: 'Versão Gratuita',
       bgColor: 'from-gray-500/20 to-gray-600/20',
       textColor: 'text-gray-400',
       borderColor: 'border-gray-500/30'
@@ -92,7 +95,7 @@ export function SubscriptionStatus({ expanded, mobile = false }: SubscriptionSta
         {/* Indicador de upgrade se não for premium */}
         {!isPremium && (
           <div className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            Upgrade →
+            Fazer Upgrade →
           </div>
         )}
       </button>
