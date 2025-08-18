@@ -3,12 +3,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Wifi, WifiOff, Database, AlertTriangle, Info } from 'lucide-react';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
 import { SubscriptionBadge } from './SubscriptionBadge';
-
 export function StatusIndicators() {
-  const { isOnline, isDemoMode, lastSync, appVersion } = useSystemStatus();
-
-  return (
-    <TooltipProvider>
+  const {
+    isOnline,
+    isDemoMode,
+    lastSync,
+    appVersion
+  } = useSystemStatus();
+  return <TooltipProvider>
       <div className="flex items-center space-x-2">
         {/* Badge de Assinatura */}
         <SubscriptionBadge />
@@ -17,12 +19,8 @@ export function StatusIndicators() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Badge variant={isOnline ? "default" : "destructive"} className="flex items-center space-x-1">
-              {isOnline ? (
-                <Wifi className="w-3 h-3" />
-              ) : (
-                <WifiOff className="w-3 h-3" />
-              )}
-              <span>{isOnline ? 'Online' : 'Offline'}</span>
+              {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              
             </Badge>
           </TooltipTrigger>
           <TooltipContent>
@@ -31,8 +29,7 @@ export function StatusIndicators() {
         </Tooltip>
 
         {/* Modo Demo */}
-        {isDemoMode && (
-          <Tooltip>
+        {isDemoMode && <Tooltip>
             <TooltipTrigger asChild>
               <Badge variant="outline" className="flex items-center space-x-1 bg-orange-100 border-orange-300 text-orange-700">
                 <AlertTriangle className="w-3 h-3" />
@@ -42,31 +39,24 @@ export function StatusIndicators() {
             <TooltipContent>
               <p>Modo demonstração ativo - dados simulados</p>
             </TooltipContent>
-          </Tooltip>
-        )}
+          </Tooltip>}
 
         {/* Última Sincronização */}
-        {lastSync && (
-          <Tooltip>
+        {lastSync && <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className="flex items-center space-x-1">
-                <Database className="w-3 h-3" />
-                <span className="hidden md:inline">Sync: {lastSync.split(' ')[1]}</span>
-                <span className="md:hidden">Sync</span>
-              </Badge>
+              
             </TooltipTrigger>
             <TooltipContent>
               <p>Última sincronização: {lastSync}</p>
             </TooltipContent>
-          </Tooltip>
-        )}
+          </Tooltip>}
 
         {/* Versão do App */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Badge variant="outline" className="flex items-center space-x-1">
-              <Info className="w-3 h-3" />
-              <span>v{appVersion}</span>
+              
+              
             </Badge>
           </TooltipTrigger>
           <TooltipContent>
@@ -74,6 +64,5 @@ export function StatusIndicators() {
           </TooltipContent>
         </Tooltip>
       </div>
-    </TooltipProvider>
-  );
+    </TooltipProvider>;
 }
