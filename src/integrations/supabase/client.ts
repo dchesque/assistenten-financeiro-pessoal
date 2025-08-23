@@ -7,15 +7,25 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 
 // Validação das variáveis de ambiente
 function validateSupabaseConfig(): void {
-  // Log das variáveis para debugging (apenas em desenvolvimento; sem mostrar chaves completas)
-  if (import.meta.env.DEV) {
-    console.log('🔧 Configuração Supabase:', {
-      hasUrl: !!supabaseUrl,
-      urlPrefix: supabaseUrl?.substring(0, 20) + '...',
-      hasKey: !!supabaseAnonKey,
-      keyPrefix: supabaseAnonKey?.substring(0, 20) + '...',
-      source: import.meta.env.VITE_SUPABASE_URL ? 'env' : 'fallback'
-    });
+  // Log das variáveis para debugging (sempre mostrar para facilitar debug)
+  console.log('🔧 🔧 🔧 CONFIGURAÇÃO SUPABASE CLIENT 🔧 🔧 🔧');
+  console.log('  Environment mode:', import.meta.env.MODE);
+  console.log('  Environment DEV:', import.meta.env.DEV);
+  console.log('  Environment PROD:', import.meta.env.PROD);
+  console.log('  Has URL?:', !!supabaseUrl);
+  console.log('  URL prefix:', supabaseUrl?.substring(0, 30) + '...');
+  console.log('  URL completa:', supabaseUrl);
+  console.log('  Has Key?:', !!supabaseAnonKey);
+  console.log('  Key prefix:', supabaseAnonKey?.substring(0, 30) + '...');
+  console.log('  Source:', import.meta.env.VITE_SUPABASE_URL ? 'environment vars' : 'hardcoded fallback');
+  console.log('  VITE_SUPABASE_URL exists:', !!import.meta.env.VITE_SUPABASE_URL);
+  console.log('  VITE_SUPABASE_ANON_KEY exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+  
+  if (import.meta.env.VITE_SUPABASE_URL) {
+    console.log('  ENV URL:', import.meta.env.VITE_SUPABASE_URL);
+  }
+  if (import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    console.log('  ENV KEY prefix:', import.meta.env.VITE_SUPABASE_ANON_KEY.substring(0, 30) + '...');
   }
 
   if (!supabaseUrl || !supabaseAnonKey) {
@@ -56,3 +66,27 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
   },
 });
+
+// Log final da criação do cliente
+console.log('✅ Cliente Supabase criado com sucesso');
+console.log('  URL final:', supabase.supabaseUrl);
+console.log('  Key final prefix:', supabase.supabaseKey?.substring(0, 30) + '...');
+
+// Testar conexão básica ao carregar
+if (typeof window !== 'undefined') {
+  // Só executar no browser, não no SSR
+  setTimeout(async () => {
+    try {
+      console.log('🔍 Testando conexão básica com Supabase...');
+      const { data, error } = await supabase.auth.getSession();
+      console.log('📡 Teste de conexão:', error ? '❌ ERRO' : '✅ OK');
+      if (error) {
+        console.error('  Erro de conexão:', error);
+      } else {
+        console.log('  Sessão atual:', data.session ? 'Existe' : 'Nenhuma');
+      }
+    } catch (err) {
+      console.error('💥 Exceção no teste de conexão:', err);
+    }
+  }, 100);
+}

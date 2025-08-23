@@ -284,44 +284,129 @@ export function useSupabaseAuth() {
   };
 
   // Função para cadastro via email/senha
-  const signUpWithEmail = async (email: string, password: string, userData?: { nome?: string }) => {
+  const signUpWithEmail = async (email: string, password: string, phone: string, userData?: { nome?: string }) => {
+    console.log('=====================================');
+    console.log('INICIANDO SIGNUP');
+    console.log('Email:', email);
+    console.log('Password length:', password?.length);
+    console.log('Phone:', phone);
+    console.log('Phone length:', phone?.length);
+    console.log('UserData:', userData);
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('Location origin:', window.location.origin);
+    console.log('=====================================');
+
     try {
-      console.log('🚀 [AUTH] Iniciando cadastro via email para:', email);
-      
-      const { data, error } = await supabase.auth.signUp({
+      // Verificar conexão com Supabase antes de prosseguir
+      console.log('🔍 [AUTH] Verificando conexão com Supabase...');
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('✅ [AUTH] Conexão Supabase OK, sessão atual:', session ? 'Existe' : 'Nenhuma');
+        if (sessionError) {
+          console.warn('⚠️ [AUTH] Warning na sessão:', sessionError);
+        }
+      } catch (connError) {
+        console.error('❌ [AUTH] Erro de conexão Supabase:', connError);
+      }
+
+      // Montar dados de cadastro
+      const signUpData = {
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/confirm`,
           data: {
             name: userData?.nome || '',
+            phone: phone,
             email
           }
         }
-      });
+      };
+      
+      console.log('📤 [AUTH] Dados enviados para signUp:', JSON.stringify(signUpData, (key, value) => {
+        if (key === 'password') return '[HIDDEN]';
+        return value;
+      }, 2));
+      
+      console.log('🚀 [AUTH] Chamando supabase.auth.signUp...');
+      console.time('supabase.auth.signUp');
+      
+      const { data, error } = await supabase.auth.signUp(signUpData);
+      
+      console.timeEnd('supabase.auth.signUp');
+      console.log('📥 [AUTH] RESPOSTA COMPLETA DO SUPABASE:');
+      console.log('  Data:', data);
+      console.log('  Error:', error);
+      console.log('  Data.user:', data?.user);
+      console.log('  Data.session:', data?.session);
 
       if (error) {
-        console.error('❌ [AUTH] Erro no signup:', error);
+        console.error('❌ ❌ ❌ ERRO DETALHADO DO SUPABASE ❌ ❌ ❌');
+        console.error('  Message:', error.message);
+        console.error('  Status:', error.status);
+        console.error('  Code:', error.code);
+        console.error('  Name:', error.name);
+        console.error('  Stack:', error.stack);
+        console.error('  Error typeof:', typeof error);
+        console.error('  Error constructor:', error.constructor?.name);
+        console.error('  Full error object:', JSON.stringify(error, null, 2));
+        
+        // Análise específica do erro
+        if (error.message) {
+          if (error.message.includes('already registered') || error.message.includes('already been registered')) {
+            console.log('🔍 [AUTH] Tipo de erro identificado: Email já registrado');
+          } else if (error.message.includes('weak_password')) {
+            console.log('🔍 [AUTH] Tipo de erro identificado: Senha fraca');
+          } else if (error.message.includes('invalid_credentials')) {
+            console.log('🔍 [AUTH] Tipo de erro identificado: Credenciais inválidas');
+          } else if (error.message.includes('email_not_confirmed')) {
+            console.log('🔍 [AUTH] Tipo de erro identificado: Email não confirmado');
+          } else if (error.message.includes('signup_disabled')) {
+            console.log('🔍 [AUTH] Tipo de erro identificado: Cadastro desabilitado');
+          } else {
+            console.log('🔍 [AUTH] Tipo de erro: Desconhecido/Genérico');
+          }
+        }
+        
         logService.logError(error, 'useSupabaseAuth.signUpWithEmail');
         throw error;
       }
 
-      console.log('✅ [AUTH] Signup realizado com sucesso. User ID:', data.user?.id);
-      console.log('📧 [AUTH] Email confirmation needed:', !data.session);
+      console.log('✅ ✅ ✅ SIGNUP BEM-SUCEDIDO ✅ ✅ ✅');
+      console.log('  User ID:', data.user?.id);
+      console.log('  User email:', data.user?.email);
+      console.log('  Email confirmado?:', data.user?.email_confirmed_at ? 'SIM' : 'NÃO');
+      console.log('  Session existe?:', data.session ? 'SIM' : 'NÃO');
+      console.log('  Precisa confirmar email?:', !data.session ? 'SIM' : 'NÃO');
+      console.log('  User metadata:', data.user?.user_metadata);
+      console.log('  Created at:', data.user?.created_at);
       
       // REMOVIDO: Chamadas RPC duplicadas
       // O trigger handle_new_user já cria automaticamente o perfil e trial
-      // quando um novo usuário é inserido na tabela auth.users
+      console.log('🔄 [AUTH] Trigger automático handle_new_user criará o perfil automaticamente');
 
       return { 
         error: null, 
         user: data.user,
         needsEmailConfirmation: !data.session // Se não tem session, precisa confirmar email
       };
+      
     } catch (error: any) {
-      console.error('💥 [AUTH] Erro crítico no signup:', error);
-      logService.logError(error, 'useSupabaseAuth.signUpWithEmail');
+      console.error('💥 💥 💥 EXCEÇÃO CAPTURADA NO SIGNUP 💥 💥 💥');
+      console.error('  Tipo do erro:', typeof error);
+      console.error('  Nome:', error.name);
+      console.error('  Mensagem:', error.message);
+      console.error('  Stack trace:', error.stack);
+      console.error('  Objeto completo:', error);
+      console.error('  JSON stringify:', JSON.stringify(error, null, 2));
+      
+      logService.logError(error, 'useSupabaseAuth.signUpWithEmail.catch');
       return { error };
+    } finally {
+      console.log('=====================================');
+      console.log('FIM DO SIGNUP');
+      console.log('Timestamp final:', new Date().toISOString());
+      console.log('=====================================');
     }
   };
 

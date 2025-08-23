@@ -132,6 +132,76 @@ export const debugSupabaseAuth = {
     console.log('Criando usuário:', testEmail);
     
     return await debugSupabaseAuth.testSignUp(testEmail, testPassword, testName);
+  },
+
+  // Teste direto com Supabase (sem hooks)
+  directSupabaseTest: async () => {
+    console.log('🧪 === TESTE DIRETO SUPABASE (SEM HOOKS) ===');
+    
+    const testEmail = `direct_${Date.now()}@test.com`;
+    const testPassword = 'TesteDirecto123!';
+    
+    console.log('Email de teste:', testEmail);
+    
+    try {
+      // Importar cliente Supabase diretamente
+      const supabaseModule = await import('@/integrations/supabase/client');
+      const supabase = supabaseModule.supabase;
+      
+      console.log('📡 Cliente Supabase importado');
+      console.log('URL:', supabase.supabaseUrl);
+      console.log('Key prefix:', supabase.supabaseKey?.substring(0, 20) + '...');
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: testEmail,
+        password: testPassword,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
+          data: {
+            name: 'Teste Direto Console'
+          }
+        }
+      });
+      
+      console.log('📊 RESULTADO DIRETO:');
+      console.log('Data:', data);
+      console.log('Error:', error);
+      
+      if (error) {
+        console.error('❌ ERRO:', error);
+        return { success: false, error };
+      } else {
+        console.log('✅ SUCESSO DIRETO!');
+        return { success: true, data };
+      }
+      
+    } catch (err) {
+      console.error('💥 EXCEÇÃO NO TESTE DIRETO:', err);
+      return { success: false, exception: err };
+    }
+  },
+
+  // Executar todos os testes
+  runAllTests: async () => {
+    console.log('🚀 === EXECUTANDO TODOS OS TESTES ===');
+    
+    console.log('\n1. Verificando configuração...');
+    debugSupabaseAuth.checkSupabaseConfig();
+    
+    console.log('\n2. Teste direto Supabase...');
+    const directResult = await debugSupabaseAuth.directSupabaseTest();
+    
+    console.log('\n3. Teste via hook...');
+    const hookResult = await debugSupabaseAuth.quickTest();
+    
+    console.log('\n4. Verificando usuários recentes...');
+    await debugSupabaseAuth.checkRecentUsers();
+    
+    console.log('\n📊 RESUMO DOS TESTES:');
+    console.log('Teste direto:', directResult.success ? '✅' : '❌');
+    console.log('Teste via hook:', hookResult.success ? '✅' : '❌');
+    
+    return { directResult, hookResult };
   }
 };
 
@@ -141,7 +211,32 @@ export const debugSupabaseAuth = {
 console.log('🔧 Debug tools carregados! Use debugSupabaseAuth no console.');
 console.log('Comandos disponíveis:');
 console.log('- debugSupabaseAuth.quickTest()');
+console.log('- debugSupabaseAuth.directSupabaseTest()');
+console.log('- debugSupabaseAuth.runAllTests()');
 console.log('- debugSupabaseAuth.testSignUp(email, password, name)');
 console.log('- debugSupabaseAuth.checkSupabaseConfig()');
 console.log('- debugSupabaseAuth.checkRecentUsers()');
 console.log('- debugSupabaseAuth.checkTriggers()');
+
+// Criar função global de teste simples
+(window as any).testSignUp = async (email?: string) => {
+  const testEmail = email || `quick_${Date.now()}@test.com`;
+  console.log(`🚀 Teste rápido com: ${testEmail}`);
+  
+  try {
+    const module = await import('@/integrations/supabase/client');
+    const { data, error } = await module.supabase.auth.signUp({
+      email: testEmail,
+      password: 'Teste123456',
+      options: { data: { name: 'Quick Test' } }
+    });
+    
+    console.log('Resultado:', { data, error });
+    return { data, error };
+  } catch (err) {
+    console.error('Erro:', err);
+    return { error: err };
+  }
+};
+
+console.log('💡 Teste super rápido: testSignUp() ou testSignUp("seu@email.com")');

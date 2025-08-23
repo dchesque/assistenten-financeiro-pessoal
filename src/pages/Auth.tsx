@@ -33,6 +33,7 @@ export default function Auth() {
   const [formData, setFormData] = useState({
     whatsapp: '',
     nome: '',
+    telefone: '',
     codigo: '',
     email: '',
     senha: '',
@@ -75,6 +76,22 @@ export default function Auth() {
     return value;
   };
 
+  const formatTelefone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4,5})(\d)/, '$1-$2')
+        .replace(/(-\d{4})\d+?$/, '$1');
+    }
+    return value;
+  };
+
+  const handleTelefoneChange = (value: string) => {
+    const formatted = formatTelefone(value);
+    setFormData(prev => ({ ...prev, telefone: formatted }));
+  };
+
   // WhatsApp removido da FASE 1 - será implementado futuramente
 
   // Função para autenticação via email
@@ -101,6 +118,21 @@ export default function Auth() {
         toast.error('Por favor, digite seu nome');
         return;
       }
+      
+      if (!formData.telefone.trim()) {
+        console.warn('❌ Validação falhou: Telefone vazio');
+        toast.error('Por favor, digite seu telefone');
+        return;
+      }
+      
+      // Validar telefone
+      const cleanPhone = formData.telefone.replace(/\D/g, '');
+      if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+        console.warn('❌ Validação falhou: Telefone inválido (tamanho:', cleanPhone.length, ')');
+        toast.error('Telefone deve ter 10 ou 11 dígitos');
+        return;
+      }
+      
       if (formData.senha !== formData.confirmarSenha) {
         console.warn('❌ Validação falhou: Senhas não coincidem');
         toast.error('As senhas não coincidem');
@@ -113,6 +145,7 @@ export default function Auth() {
       }
       
       console.log('✅ Todas as validações passaram para cadastro');
+      console.log('  Telefone limpo:', cleanPhone);
     } else {
       console.log('🔐 Modo: Login - Validações básicas passaram');
     }
@@ -123,19 +156,33 @@ export default function Auth() {
       let result;
       
       if (mode === 'signup') {
-        console.log('🚀 Chamando signUpWithEmail...');
+        console.log('🚀 🚀 🚀 INICIANDO CHAMADA PARA signUpWithEmail 🚀 🚀 🚀');
+        console.log('  Parâmetros enviados:');
+        console.log('    Email:', formData.email);
+        console.log('    Senha length:', formData.senha?.length);
+        console.log('    Nome:', formData.nome);
+        console.log('    Timestamp:', new Date().toISOString());
         console.time('signUpWithEmail');
         
-        result = await signUpWithEmail(formData.email, formData.senha, {
+        const cleanPhone = formData.telefone.replace(/\D/g, '');
+        result = await signUpWithEmail(formData.email, formData.senha, cleanPhone, {
           nome: formData.nome
         });
         
         console.timeEnd('signUpWithEmail');
-        console.log('📤 Resposta do signUpWithEmail recebida:');
-        console.log('Result completo:', result);
-        console.log('Tem erro?', !!result.error);
-        console.log('User criado?', !!result.user);
-        console.log('Precisa confirmação?', result.needsEmailConfirmation);
+        console.log('📤 📤 📤 RESPOSTA DE signUpWithEmail RECEBIDA 📤 📤 📤');
+        console.log('  Result tipo:', typeof result);
+        console.log('  Result completo:', result);
+        console.log('  Tem erro?', !!result.error);
+        console.log('  User criado?', !!result.user);
+        console.log('  User ID:', result.user?.id);
+        console.log('  Precisa confirmação?', result.needsEmailConfirmation);
+        
+        if (result.error) {
+          console.log('  Error object:', result.error);
+          console.log('  Error message:', result.error.message);
+          console.log('  Error type:', typeof result.error);
+        }
         
         if (result.error) {
           console.error('❌ ERRO DETALHADO NO SIGNUP:');
@@ -678,6 +725,31 @@ export default function Auth() {
                             placeholder="Seu nome completo"
                             required
                           />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="telefone-signup" className="text-sm font-medium text-gray-700">
+                            Telefone
+                          </Label>
+                          <Input
+                            id="telefone-signup"
+                            type="tel"
+                            value={formData.telefone}
+                            onChange={(e) => handleTelefoneChange(e.target.value)}
+                            className={GLASSMORPHISM.input}
+                            placeholder="(11) 99999-9999"
+                            required
+                            minLength={14}
+                            maxLength={15}
+                          />
+                          {formData.telefone && (
+                            <p className="text-xs text-gray-600">
+                              {formData.telefone.replace(/\D/g, '').length >= 10 
+                                ? '✅ Telefone válido' 
+                                : '❌ Digite um telefone completo'
+                              }
+                            </p>
+                          )}
                         </div>
 
                         <div className="space-y-2">
