@@ -25,6 +25,8 @@ export function useSupabaseAuth() {
   // Função para carregar perfil do usuário
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
+      console.log('🔍 [AUTH] Carregando perfil para user ID:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -32,12 +34,15 @@ export function useSupabaseAuth() {
         .single();
 
       if (error) {
+        console.error('❌ [AUTH] Erro ao carregar perfil:', error);
         logService.logError(error, 'useSupabaseAuth.loadUserProfile');
         return null;
       }
 
+      console.log('✅ [AUTH] Perfil carregado com sucesso:', { id: data.id, role: data.role, name: data.name });
       return data;
     } catch (error) {
+      console.error('💥 [AUTH] Erro crítico ao carregar perfil:', error);
       logService.logError(error, 'useSupabaseAuth.loadUserProfile');
       return null;
     }
@@ -214,8 +219,10 @@ export function useSupabaseAuth() {
       const cleanPhone = whatsapp.replace(/\D/g, '');
       const formattedPhone = `+55${cleanPhone}`;
 
+      console.log('🚀 [AUTH] Iniciando cadastro via WhatsApp para:', formattedPhone);
+
       // Criar conta via Supabase
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         phone: formattedPhone,
         password: generateSecurePassword(), // Password aleatório seguro (não usado para OTP)
         options: {
@@ -228,12 +235,17 @@ export function useSupabaseAuth() {
       });
 
       if (error) {
+        console.error('❌ [AUTH] Erro no signup WhatsApp:', error);
         logService.logError(error, 'useSupabaseAuth.signUpWithWhatsApp');
         throw error;
       }
 
+      console.log('✅ [AUTH] Signup WhatsApp realizado. User ID:', data.user?.id);
+      console.log('🔄 [AUTH] Trigger automático handle_new_user criará o perfil');
+
       return { error: null };
     } catch (error: any) {
+      console.error('💥 [AUTH] Erro crítico no signup WhatsApp:', error);
       logService.logError(error, 'useSupabaseAuth.signUpWithWhatsApp');
       return { error };
     }
@@ -274,6 +286,8 @@ export function useSupabaseAuth() {
   // Função para cadastro via email/senha
   const signUpWithEmail = async (email: string, password: string, userData?: { nome?: string }) => {
     try {
+      console.log('🚀 [AUTH] Iniciando cadastro via email para:', email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -287,30 +301,17 @@ export function useSupabaseAuth() {
       });
 
       if (error) {
+        console.error('❌ [AUTH] Erro no signup:', error);
         logService.logError(error, 'useSupabaseAuth.signUpWithEmail');
         throw error;
       }
 
-      // Se o usuário foi criado, criar perfil e trial
-      if (data.user) {
-        try {
-          // Criar perfil
-          await supabase.rpc('upsert_profile', {
-            p_user_id: data.user.id,
-            p_phone: '', // Email signup não tem telefone
-            p_name: userData?.nome || '',
-            p_email: email
-          });
-
-          // Criar trial subscription
-          await supabase.rpc('create_trial_subscription', {
-            p_user_id: data.user.id
-          });
-        } catch (profileError) {
-          logService.logError(profileError, 'useSupabaseAuth.signUpWithEmail.createProfile');
-          // Não falhar o signup se o perfil falhar, pode ser resolvido depois
-        }
-      }
+      console.log('✅ [AUTH] Signup realizado com sucesso. User ID:', data.user?.id);
+      console.log('📧 [AUTH] Email confirmation needed:', !data.session);
+      
+      // REMOVIDO: Chamadas RPC duplicadas
+      // O trigger handle_new_user já cria automaticamente o perfil e trial
+      // quando um novo usuário é inserido na tabela auth.users
 
       return { 
         error: null, 
@@ -318,6 +319,7 @@ export function useSupabaseAuth() {
         needsEmailConfirmation: !data.session // Se não tem session, precisa confirmar email
       };
     } catch (error: any) {
+      console.error('💥 [AUTH] Erro crítico no signup:', error);
       logService.logError(error, 'useSupabaseAuth.signUpWithEmail');
       return { error };
     }
@@ -381,35 +383,12 @@ export function useSupabaseAuth() {
       localStorage.removeItem('login_attempts');
       localStorage.removeItem('lockout_end_time');
 
-      // Se usuário foi criado, configurar perfil e trial
-      if (data.user && data.session) {
-        try {
-          // Buscar se perfil já existe
-          const existingProfile = await loadUserProfile(data.user.id);
-          
-          if (!existingProfile) {
-            // Criar perfil usando metadados do usuário
-            const userName = data.user.user_metadata?.name || '';
-            const userPhone = data.user.phone || formattedPhone;
-            
-            await supabase.rpc('upsert_profile', {
-              p_user_id: data.user.id,
-              p_phone: userPhone,
-              p_name: userName
-            });
-
-            // Criar trial subscription
-            await supabase.rpc('create_trial_subscription', {
-              p_user_id: data.user.id
-            });
-
-            return { error: null, needsOnboarding: true, user: data.user };
-          }
-        } catch (profileError) {
-          logService.logError(profileError, 'useSupabaseAuth.verifyCode.createProfile');
-          // Não falhar a verificação se o perfil falhar
-        }
-      }
+      // REMOVIDO: Criação manual de perfil e trial
+      // O trigger handle_new_user já cria automaticamente o perfil e trial
+      // quando um novo usuário é inserido na tabela auth.users
+      
+      console.log('✅ [AUTH] OTP verificado com sucesso. User ID:', data.user?.id);
+      console.log('🔄 [AUTH] Trigger automático handle_new_user criará o perfil se necessário');
 
       return { error: null, needsOnboarding: false, user: data.user };
     } catch (error: any) {
