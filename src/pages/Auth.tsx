@@ -873,6 +873,34 @@ export default function Auth() {
                   </Tabs>
                 )}
 
+                {/* Botão de teste temporário - REMOVER EM PRODUÇÃO */}
+                {import.meta.env.DEV && (
+                  <div className="space-y-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={async () => {
+                        const { testSignup } = await import('@/utils/test-signup');
+                        await testSignup();
+                      }}
+                      className="w-full border-orange-500 text-orange-500 hover:bg-orange-50"
+                    >
+                      🧪 Testar Signup (Debug)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={async () => {
+                        const { testSignupScenarios } = await import('@/utils/test-signup');
+                        await testSignupScenarios();
+                      }}
+                      className="w-full border-purple-500 text-purple-500 hover:bg-purple-50"
+                    >
+                      🔬 Testar Múltiplos Cenários
+                    </Button>
+                  </div>
+                )}
+
                 {/* Footer informativo */}
                 <div className="text-center">
                   <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground bg-blue-50/50 rounded-lg p-3">
