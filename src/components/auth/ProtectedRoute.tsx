@@ -1,13 +1,16 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredRole?: string;
+  redirectTo?: string;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, loading } = useAuth();
+export function ProtectedRoute({ children, requiredRole, redirectTo = '/dashboard' }: ProtectedRouteProps) {
+  const { isAuthenticated, loading, checkRole, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,8 +22,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         localStorage.setItem('returnUrl', returnUrl);
       }
       navigate('/auth');
+    } else if (!loading && isAuthenticated && requiredRole && !checkRole(requiredRole)) {
+      // Log da tentativa de acesso não autorizado
+      console.warn(`[SECURITY] Unauthorized access attempt to ${location.pathname} - Required: ${requiredRole}, User: ${role}`);
+      
+      toast.error(`Acesso negado. Você precisa ter permissão de ${requiredRole} para acessar esta página.`);
+      navigate(redirectTo);
     }
-  }, [isAuthenticated, loading, navigate, location]);
+  }, [isAuthenticated, loading, navigate, location, requiredRole, checkRole, role, redirectTo]);
 
   if (loading) {
     return (
@@ -46,6 +55,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated) {
     return null;
+  }
+
+  // Verificar role se especificado
+  if (requiredRole && !checkRole(requiredRole)) {
+    return null; // Navegação já foi feita no useEffect
   }
 
   return <>{children}</>;

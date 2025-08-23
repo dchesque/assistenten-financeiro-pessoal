@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Activity, 
   Palette, 
@@ -16,6 +17,13 @@ import {
 
 export default function Administrador() {
   const navigate = useNavigate();
+  const { isAdmin, role } = useAuth();
+
+  // Dupla verificação de segurança - se não for admin, não renderizar nada
+  if (!isAdmin) {
+    console.warn(`[SECURITY] Unauthorized direct access to /administrador - User role: ${role}`);
+    return null;
+  }
 
   const sistemaCards = [
     {

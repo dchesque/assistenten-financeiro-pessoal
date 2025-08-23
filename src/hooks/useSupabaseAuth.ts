@@ -462,6 +462,12 @@ export function useSupabaseAuth() {
     }
   };
 
+  // Função para verificar role específico
+  const checkRole = (requiredRole: string): boolean => {
+    if (!profile || !user) return false;
+    return profile.role === requiredRole;
+  };
+
   return {
     // Estados de autenticação
     user,
@@ -485,6 +491,9 @@ export function useSupabaseAuth() {
     // Funções de sessão
     resetSessionTimeout,
     loadUserProfile,
+
+    // Funções de autorização
+    checkRole,
 
     // Estado de bloqueio
     loginAttempts,

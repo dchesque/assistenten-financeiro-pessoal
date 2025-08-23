@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUsuariosAdmin } from '@/hooks/useUsuariosAdmin';
+import { useAuth } from '@/hooks/useAuth';
 import { UsuarioAdmin } from '@/types/usuarioAdmin';
 import { TabelaUsuarios } from '@/components/administrador/TabelaUsuarios';
 import { MetricasUsuarios } from '@/components/administrador/MetricasUsuarios';
@@ -20,6 +21,13 @@ import { Input } from '@/components/ui/input';
 
 export default function UsuariosAdmin() {
   const { usuarios, loading, metricas, atualizarUsuario } = useUsuariosAdmin();
+  const { isAdmin, role } = useAuth();
+
+  // Dupla verificação de segurança - se não for admin, não renderizar nada
+  if (!isAdmin) {
+    console.warn(`[SECURITY] Unauthorized direct access to /administrador/usuarios - User role: ${role}`);
+    return null;
+  }
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [usuarioSelecionado, setUsuarioSelecionado] = useState<UsuarioAdmin | null>(null);

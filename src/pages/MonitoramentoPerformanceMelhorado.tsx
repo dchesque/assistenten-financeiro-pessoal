@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { usePerformanceAvancadoMelhorado } from '@/hooks/usePerformanceAvancadoMelhorado';
 import { useAuditoriaConsistente } from '@/hooks/useAuditoriaConsistente';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +65,13 @@ function LoadingSkeleton() {
 
 export default function MonitoramentoPerformanceMelhorado() {
   const { toast } = useToast();
+  const { isAdmin, role } = useAuth();
+
+  // Dupla verificação de segurança - se não for admin, não renderizar nada
+  if (!isAdmin) {
+    console.warn(`[SECURITY] Unauthorized direct access to /monitoramento-performance - User role: ${role}`);
+    return null;
+  }
   
   const {
     loading: loadingPerf,

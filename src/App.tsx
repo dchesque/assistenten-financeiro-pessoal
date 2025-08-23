@@ -16,6 +16,7 @@ import AuthConfirm from '@/pages/AuthConfirm';
 import AuthResetPassword from '@/pages/AuthResetPassword';
 import NotFound from '@/pages/NotFound';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { AdminRoute } from '@/components/auth/AdminRoute';
 
 // Lazy loading das páginas restantes
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -79,9 +80,9 @@ function App() {
                 <Route path="/assinatura" element={<ProtectedRoute><Layout><Assinatura /></Layout></ProtectedRoute>} />
                 <Route path="/design-system" element={<ProtectedRoute><Layout><DesignSystemPreview /></Layout></ProtectedRoute>} />
                 
-                <Route path="/monitoramento-performance" element={<ProtectedRoute><Layout><MonitoramentoPerformance /></Layout></ProtectedRoute>} />
-                <Route path="/administrador" element={<ProtectedRoute><Layout><Administrador /></Layout></ProtectedRoute>} />
-                <Route path="/administrador/usuarios" element={<ProtectedRoute><Layout><UsuariosAdmin /></Layout></ProtectedRoute>} />
+                <Route path="/monitoramento-performance" element={<AdminRoute><Layout><MonitoramentoPerformance /></Layout></AdminRoute>} />
+                <Route path="/administrador" element={<AdminRoute><Layout><Administrador /></Layout></AdminRoute>} />
+                <Route path="/administrador/usuarios" element={<AdminRoute><Layout><UsuariosAdmin /></Layout></AdminRoute>} />
                 <Route path="/configuracoes" element={<ProtectedRoute><Layout><Configuracoes /></Layout></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
