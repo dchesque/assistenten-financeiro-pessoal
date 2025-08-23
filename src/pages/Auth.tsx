@@ -10,6 +10,7 @@ import { Eye, EyeOff, MessageCircle, Phone, Send, Sparkles, TrendingUp, Users, C
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { GRADIENTES, GLASSMORPHISM, ANIMATIONS } from '@/constants/designSystem';
+import '@/utils/debugSupabaseAuth'; // Carregar ferramentas de debug
 
 export default function Auth() {
   const {
@@ -80,24 +81,40 @@ export default function Auth() {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('=== INÍCIO DO PROCESSO DE AUTENTICAÇÃO ===');
+    console.log('Modo:', mode);
+    console.log('Email:', formData.email);
+    console.log('Nome:', formData.nome);
+    console.log('Timestamp:', new Date().toISOString());
+    
     if (!formData.email.trim() || !formData.senha.trim()) {
+      console.warn('❌ Validação falhou: Email ou senha vazios');
       toast.error('Por favor, preencha email e senha');
       return;
     }
 
     if (mode === 'signup') {
+      console.log('📝 Modo: Cadastro - Validando campos adicionais...');
+      
       if (!formData.nome.trim()) {
+        console.warn('❌ Validação falhou: Nome vazio');
         toast.error('Por favor, digite seu nome');
         return;
       }
       if (formData.senha !== formData.confirmarSenha) {
+        console.warn('❌ Validação falhou: Senhas não coincidem');
         toast.error('As senhas não coincidem');
         return;
       }
       if (passwordStrength < 50) {
+        console.warn('❌ Validação falhou: Senha fraca (força:', passwordStrength, ')');
         toast.error('Senha muito fraca. Use pelo menos 8 caracteres com maiúsculas e números');
         return;
       }
+      
+      console.log('✅ Todas as validações passaram para cadastro');
+    } else {
+      console.log('🔐 Modo: Login - Validações básicas passaram');
     }
 
     setFormLoading(true);
@@ -106,33 +123,71 @@ export default function Auth() {
       let result;
       
       if (mode === 'signup') {
+        console.log('🚀 Chamando signUpWithEmail...');
+        console.time('signUpWithEmail');
+        
         result = await signUpWithEmail(formData.email, formData.senha, {
           nome: formData.nome
         });
         
+        console.timeEnd('signUpWithEmail');
+        console.log('📤 Resposta do signUpWithEmail recebida:');
+        console.log('Result completo:', result);
+        console.log('Tem erro?', !!result.error);
+        console.log('User criado?', !!result.user);
+        console.log('Precisa confirmação?', result.needsEmailConfirmation);
+        
         if (result.error) {
+          console.error('❌ ERRO DETALHADO NO SIGNUP:');
+          console.error('Mensagem:', result.error.message);
+          console.error('Código:', result.error.code);
+          console.error('Status:', result.error.status);
+          console.error('Details completos:', result.error);
+          
+          // Log específico para diferentes tipos de erro
           if (result.error.message?.includes('already registered') || result.error.message?.includes('already been registered')) {
+            console.log('🔍 Tipo de erro: Email já cadastrado');
             toast.error('Este email já está cadastrado. Tente fazer login.');
           } else if (result.error.message?.includes('weak_password')) {
+            console.log('🔍 Tipo de erro: Senha fraca');
             toast.error('Senha muito fraca. Use pelo menos 8 caracteres com maiúsculas e números.');
+          } else if (result.error.message?.includes('invalid_credentials')) {
+            console.log('🔍 Tipo de erro: Credenciais inválidas');
+            toast.error('Dados inválidos. Verifique email e senha.');
+          } else if (result.error.message?.includes('email_not_confirmed')) {
+            console.log('🔍 Tipo de erro: Email não confirmado');
+            toast.error('Email precisa ser confirmado primeiro.');
           } else {
-            console.error('Erro no signup:', result.error);
-            toast.error('Erro ao criar conta. Tente novamente.');
+            console.log('🔍 Tipo de erro: Genérico/Desconhecido');
+            toast.error(`Erro: ${result.error.message}`);
           }
         } else {
+          console.log('✅ CADASTRO BEM-SUCEDIDO!');
+          console.log('User ID:', result.user?.id);
+          
           if (result.needsEmailConfirmation) {
+            console.log('📧 Email de confirmação necessário');
             toast.success('Conta criada! Verifique seu email para confirmar.');
             setEmailSent(formData.email);
             setStep('email-sent');
           } else {
+            console.log('🎉 Login imediato - redirecionando...');
             toast.success('Conta criada com sucesso!');
             navigate(returnUrl || '/dashboard');
           }
         }
       } else {
+        console.log('🔐 Chamando signInWithEmail...');
+        console.time('signInWithEmail');
+        
         result = await signInWithEmail(formData.email, formData.senha);
         
+        console.timeEnd('signInWithEmail');
+        console.log('📤 Resposta do signInWithEmail:', result);
+        
         if (result.error) {
+          console.error('❌ ERRO NO LOGIN:', result.error);
+          
           if (result.error.message?.includes('Invalid login credentials')) {
             toast.error('Email ou senha incorretos');
           } else if (result.error.message?.includes('Email not confirmed')) {
@@ -145,14 +200,24 @@ export default function Auth() {
             toast.error('Erro ao fazer login. Tente novamente.');
           }
         } else {
+          console.log('✅ LOGIN BEM-SUCEDIDO!');
           toast.success('Login realizado com sucesso!');
           navigate(returnUrl || '/dashboard');
         }
       }
-    } catch (error) {
-      toast.error('Erro inesperado. Tente novamente.');
+    } catch (error: any) {
+      console.error('💥 ERRO NÃO TRATADO NA FUNÇÃO handleEmailAuth:');
+      console.error('Tipo:', typeof error);
+      console.error('Nome:', error.name);
+      console.error('Mensagem:', error.message);
+      console.error('Stack:', error.stack);
+      console.error('Objeto completo:', error);
+      
+      toast.error('Erro inesperado: ' + (error.message || 'Erro desconhecido'));
     } finally {
       setFormLoading(false);
+      console.log('=== FIM DO PROCESSO DE AUTENTICAÇÃO ===');
+      console.log('---');
     }
   };
 
