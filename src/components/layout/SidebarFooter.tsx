@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { AdminOnly } from '@/components/auth/AdminOnly';
 import { SubscriptionStatus } from './SubscriptionStatus';
 import {
   Building2,
@@ -133,14 +134,16 @@ export function SidebarFooter({ expanded, mobile = false }: SidebarFooterProps) 
                 <span className="text-sm">Configurações</span>
               </button>
 
-              {/* Administrador */}
-              <button
-                onClick={() => handleMenuClick('/administrador')}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white hover:bg-white/10 transition-colors duration-200"
-              >
-                <Building2 className="w-4 h-4 text-gray-500" />
-                <span className="text-sm">Administrador</span>
-              </button>
+              {/* Administrador - Apenas para usuários admin */}
+              <AdminOnly>
+                <button
+                  onClick={() => handleMenuClick('/administrador')}
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white hover:bg-white/10 transition-colors duration-200"
+                >
+                  <Building2 className="w-4 h-4 text-orange-500" />
+                  <span className="text-sm">Administrador</span>
+                </button>
+              </AdminOnly>
 
               {/* Separador */}
               <div className="border-t border-white/10 mt-2 pt-2">
