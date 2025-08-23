@@ -1827,21 +1827,27 @@ export type Database = {
         Row: {
           total_accounts_payable: number | null
           total_accounts_receivable: number | null
+          total_banks: number | null
           total_categories: number | null
+          total_customers: number | null
           total_suppliers: number | null
           user_id: string | null
         }
         Insert: {
           total_accounts_payable?: never
           total_accounts_receivable?: never
+          total_banks?: never
           total_categories?: never
+          total_customers?: never
           total_suppliers?: never
           user_id?: string | null
         }
         Update: {
           total_accounts_payable?: never
           total_accounts_receivable?: never
+          total_banks?: never
           total_categories?: never
+          total_customers?: never
           total_suppliers?: never
           user_id?: string | null
         }
@@ -2171,6 +2177,14 @@ export type Database = {
           updated_at: string
           user_id: string
         }
+      }
+      verify_security_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_name: string
+          details: string
+          status: string
+        }[]
       }
     }
     Enums: {
