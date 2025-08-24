@@ -10,7 +10,6 @@ import { Eye, EyeOff, MessageCircle, Phone, Send, Sparkles, TrendingUp, Users, C
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { GRADIENTES, GLASSMORPHISM, ANIMATIONS } from '@/constants/designSystem';
-import '@/utils/debugSupabaseAuth'; // Carregar ferramentas de debug
 
 export default function Auth() {
   const {
@@ -871,34 +870,6 @@ export default function Auth() {
                       </div>
                     </TabsContent>
                   </Tabs>
-                )}
-
-                {/* Botão de teste temporário - REMOVER EM PRODUÇÃO */}
-                {import.meta.env.DEV && (
-                  <div className="space-y-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={async () => {
-                        const { testSignup } = await import('@/utils/test-signup');
-                        await testSignup();
-                      }}
-                      className="w-full border-orange-500 text-orange-500 hover:bg-orange-50"
-                    >
-                      🧪 Testar Signup (Debug)
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={async () => {
-                        const { testSignupScenarios } = await import('@/utils/test-signup');
-                        await testSignupScenarios();
-                      }}
-                      className="w-full border-purple-500 text-purple-500 hover:bg-purple-50"
-                    >
-                      🔬 Testar Múltiplos Cenários
-                    </Button>
-                  </div>
                 )}
 
                 {/* Footer informativo */}
