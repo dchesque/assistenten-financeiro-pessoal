@@ -1,6 +1,5 @@
 // Factory pattern para gerenciar instâncias de serviços de dados
 import { IDataService } from './interfaces/IDataService';
-import { MockDataServiceAdapter } from './adapters/MockDataServiceAdapter';
 import { SupabaseDataService } from './adapters/SupabaseDataService';
 import { FEATURES } from '@/config/features';
 
@@ -8,19 +7,7 @@ let serviceInstance: IDataService | null = null;
 
 // Função principal para criar instância do serviço
 function createDataService(): IDataService {
-  // Em produção: sempre Supabase
-  if (import.meta.env.PROD) {
-    return new SupabaseDataService();
-  }
-  
-  // Em dev: checar flag de mock
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA === 'true';
-  
-  if (useMock) {
-    console.warn('🚨 Usando MockDataService - dados não serão persistidos!');
-    return new MockDataServiceAdapter();
-  }
-  
+  // Sempre usar Supabase - mock services removidos para simplificar
   return new SupabaseDataService();
 }
 
@@ -30,7 +17,7 @@ export class DataServiceFactory {
       serviceInstance = createDataService();
       
       if (import.meta.env.DEV) {
-        console.warn(`🔧 DataService inicializado: ${FEATURES.USE_SUPABASE ? 'Supabase' : 'Mock'}`);
+        console.warn('🔧 DataService inicializado: Supabase');
       }
     }
     
@@ -44,13 +31,13 @@ export class DataServiceFactory {
   }
   
   // Método para verificar qual serviço está ativo
-  static getActiveService(): 'mock' | 'supabase' {
-    return FEATURES.USE_SUPABASE ? 'supabase' : 'mock';
+  static getActiveService(): 'supabase' {
+    return 'supabase';
   }
 
   // Método para verificar se está em modo de desenvolvimento
   static isDevelopment(): boolean {
-    return !FEATURES.USE_SUPABASE;
+    return import.meta.env.DEV;
   }
 
   // Método para logging de debug
@@ -58,8 +45,7 @@ export class DataServiceFactory {
     console.warn('🔍 Status do DataServiceFactory:', {
       activeService: DataServiceFactory.getActiveService(),
       isDevelopment: DataServiceFactory.isDevelopment(),
-      hasInstance: !!serviceInstance,
-      useSupabase: FEATURES.USE_SUPABASE
+      hasInstance: !!serviceInstance
     });
   }
 }
