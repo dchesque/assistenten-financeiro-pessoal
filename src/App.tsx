@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "sonner";
@@ -9,7 +9,7 @@ import { StartupInitializer } from '@/components/layout/StartupInitializer';
 import { SecurityGuard } from '@/components/auth/SecurityGuard';
 import { FormSecurityProvider } from '@/components/ui/FormSecurityProvider';
 
-// Páginas críticas (carregamento imediato)
+// Páginas críticas - carregamento imediato (sem lazy loading)
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import AuthConfirm from '@/pages/AuthConfirm';
@@ -18,25 +18,34 @@ import NotFound from '@/pages/NotFound';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AdminRoute } from '@/components/auth/AdminRoute';
 
-// Lazy loading das páginas restantes
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const ContasPagar = lazy(() => import('@/pages/ContasPagar'));
-const ContasReceber = lazy(() => import('@/pages/ContasReceber'));
-const Categorias = lazy(() => import('@/pages/Categorias'));
-const Banks = lazy(() => import('@/pages/Banks'));
+// Páginas frequentemente usadas - carregamento imediato
+import Dashboard from '@/pages/Dashboard';
+import ContasPagar from '@/pages/ContasPagar';
+import ContasReceber from '@/pages/ContasReceber';
 
-const NovaConta = lazy(() => import('@/pages/NovaConta'));
-const NovoRecebimento = lazy(() => import('@/pages/NovoRecebimento'));
-const Contatos = lazy(() => import('@/pages/Contatos'));
-const MeuPerfil = lazy(() => import('@/pages/MeuPerfil'));
-const Assinatura = lazy(() => import('@/pages/Assinatura'));
-const DesignSystemPreview = lazy(() => import('@/pages/DesignSystemPreview'));
+// Páginas de cadastro - lazy loading agrupado
+const CadastroPages = {
+  NovaConta: lazy(() => import('@/pages/NovaConta')),
+  NovoRecebimento: lazy(() => import('@/pages/NovoRecebimento')),
+  Contatos: lazy(() => import('@/pages/Contatos')),
+  Categorias: lazy(() => import('@/pages/Categorias')),
+};
 
-const MonitoramentoPerformance = lazy(() => import('@/pages/MonitoramentoPerformance'));
-const Administrador = lazy(() => import('@/pages/Administrador'));
-const UsuariosAdmin = lazy(() => import('@/pages/UsuariosAdmin'));
-const Configuracoes = lazy(() => import('@/pages/Configuracoes'));
-// StatusSistema removido - Supabase não mais necessário
+// Páginas de configuração/perfil - lazy loading agrupado
+const ConfigPages = {
+  MeuPerfil: lazy(() => import('@/pages/MeuPerfil')),
+  Assinatura: lazy(() => import('@/pages/Assinatura')),
+  Banks: lazy(() => import('@/pages/Banks')),
+  Configuracoes: lazy(() => import('@/pages/Configuracoes')),
+};
+
+// Páginas administrativas - lazy loading (uso esporádico)
+const AdminPages = {
+  MonitoramentoPerformance: lazy(() => import('@/pages/MonitoramentoPerformance')),
+  Administrador: lazy(() => import('@/pages/Administrador')),
+  UsuariosAdmin: lazy(() => import('@/pages/UsuariosAdmin')),
+  DesignSystemPreview: lazy(() => import('@/pages/DesignSystemPreview')),
+};
 
 // Componente de fallback para lazy loading
 const PageFallback = () => (
@@ -54,7 +63,55 @@ const queryClient = new QueryClient({
   },
 });
 
+// Preload de páginas mais prováveis quando o usuário está logado
+const preloadFrequentPages = () => {
+  // Preload ContasPagar quando entrar no Dashboard (são as páginas mais acessadas)
+  const preloadContasPagar = () => import('@/pages/ContasPagar');
+  const preloadContasReceber = () => import('@/pages/ContasReceber');
+  
+  // Executa preload após um breve delay para não interferir no carregamento inicial
+  setTimeout(() => {
+    preloadContasPagar();
+    preloadContasReceber();
+  }, 1000);
+};
+
+// Preload baseado em mouse hover nos links do menu
+const handleMenuHover = (pageName: string) => {
+  switch (pageName) {
+    case 'nova-conta':
+      import('@/pages/NovaConta');
+      break;
+    case 'novo-recebimento':
+      import('@/pages/NovoRecebimento');
+      break;
+    case 'contatos':
+      import('@/pages/Contatos');
+      break;
+    case 'categorias':
+      import('@/pages/Categorias');
+      break;
+    case 'bancos':
+      import('@/pages/Banks');
+      break;
+    case 'meu-perfil':
+      import('@/pages/MeuPerfil');
+      break;
+    case 'configuracoes':
+      import('@/pages/Configuracoes');
+      break;
+    default:
+      break;
+  }
+};
+
 function App() {
+  // Preload automático quando a aplicação inicializa
+  useEffect(() => {
+    // Executa preload após o app estar carregado
+    preloadFrequentPages();
+  }, []);
+
   return (
     <ErrorBoundary>
       <SecurityGuard>
@@ -64,26 +121,36 @@ function App() {
               <Router>
             <Suspense fallback={<PageFallback />}>
               <Routes>
+                {/* Rotas de autenticação - sem lazy loading */}
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/confirm" element={<AuthConfirm />} />
                 <Route path="/auth/reset-password" element={<AuthResetPassword />} />
+                
+                {/* Páginas principais - sem lazy loading (carregamento imediato) */}
                 <Route path="/" element={<ProtectedRoute><Layout><Index /></Layout></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
                 <Route path="/contas-pagar" element={<ProtectedRoute><Layout><ContasPagar /></Layout></ProtectedRoute>} />
                 <Route path="/contas-receber" element={<ProtectedRoute><Layout><ContasReceber /></Layout></ProtectedRoute>} />
-                <Route path="/bancos" element={<ProtectedRoute><Layout><Banks /></Layout></ProtectedRoute>} />
-                <Route path="/nova-conta" element={<ProtectedRoute><Layout><NovaConta /></Layout></ProtectedRoute>} />
-                <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><NovoRecebimento /></Layout></ProtectedRoute>} />
-                <Route path="/contatos" element={<ProtectedRoute><Layout><Contatos /></Layout></ProtectedRoute>} />
-                <Route path="/categorias" element={<ProtectedRoute><Layout><Categorias /></Layout></ProtectedRoute>} />
-                <Route path="/meu-perfil" element={<ProtectedRoute><Layout><MeuPerfil /></Layout></ProtectedRoute>} />
-                <Route path="/assinatura" element={<ProtectedRoute><Layout><Assinatura /></Layout></ProtectedRoute>} />
-                <Route path="/design-system" element={<ProtectedRoute><Layout><DesignSystemPreview /></Layout></ProtectedRoute>} />
                 
-                <Route path="/monitoramento-performance" element={<AdminRoute><Layout><MonitoramentoPerformance /></Layout></AdminRoute>} />
-                <Route path="/administrador" element={<AdminRoute><Layout><Administrador /></Layout></AdminRoute>} />
-                <Route path="/administrador/usuarios" element={<AdminRoute><Layout><UsuariosAdmin /></Layout></AdminRoute>} />
-                <Route path="/configuracoes" element={<ProtectedRoute><Layout><Configuracoes /></Layout></ProtectedRoute>} />
+                {/* Páginas de cadastro - lazy loading */}
+                <Route path="/nova-conta" element={<ProtectedRoute><Layout><CadastroPages.NovaConta /></Layout></ProtectedRoute>} />
+                <Route path="/novo-recebimento" element={<ProtectedRoute><Layout><CadastroPages.NovoRecebimento /></Layout></ProtectedRoute>} />
+                <Route path="/contatos" element={<ProtectedRoute><Layout><CadastroPages.Contatos /></Layout></ProtectedRoute>} />
+                <Route path="/categorias" element={<ProtectedRoute><Layout><CadastroPages.Categorias /></Layout></ProtectedRoute>} />
+                
+                {/* Páginas de configuração - lazy loading */}
+                <Route path="/bancos" element={<ProtectedRoute><Layout><ConfigPages.Banks /></Layout></ProtectedRoute>} />
+                <Route path="/meu-perfil" element={<ProtectedRoute><Layout><ConfigPages.MeuPerfil /></Layout></ProtectedRoute>} />
+                <Route path="/assinatura" element={<ProtectedRoute><Layout><ConfigPages.Assinatura /></Layout></ProtectedRoute>} />
+                <Route path="/configuracoes" element={<ProtectedRoute><Layout><ConfigPages.Configuracoes /></Layout></ProtectedRoute>} />
+                
+                {/* Páginas administrativas - lazy loading */}
+                <Route path="/design-system" element={<ProtectedRoute><Layout><AdminPages.DesignSystemPreview /></Layout></ProtectedRoute>} />
+                <Route path="/monitoramento-performance" element={<AdminRoute><Layout><AdminPages.MonitoramentoPerformance /></Layout></AdminRoute>} />
+                <Route path="/administrador" element={<AdminRoute><Layout><AdminPages.Administrador /></Layout></AdminRoute>} />
+                <Route path="/administrador/usuarios" element={<AdminRoute><Layout><AdminPages.UsuariosAdmin /></Layout></AdminRoute>} />
+                
+                {/* Página não encontrada */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
@@ -110,5 +177,8 @@ function App() {
     </ErrorBoundary>
   );
 }
+
+// Exporta a função de preload para uso no Layout/Menu
+export { handleMenuHover };
 
 export default App;

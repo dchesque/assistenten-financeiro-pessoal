@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/userProfile';
 import { logService } from '@/services/logService';
+import { rateLimiter } from '@/services/security/rateLimiter';
 import { toast } from 'sonner';
 import { generateSecurePassword } from '@/utils/cryptoUtils';
 import { SECURITY_CONFIG } from '@/config/security.config';
@@ -259,6 +260,17 @@ export function useSupabaseAuth() {
       return { error: 'Conta bloqueada' };
     }
 
+    // Verificar rate limiting antes de tentar login
+    if (!rateLimiter.checkLimit('login', email)) {
+      const remaining = rateLimiter.getRemainingAttempts('login', email);
+      const message = remaining === 0 
+        ? 'Muitas tentativas de login. Tente novamente em 15 minutos.'
+        : `Limite de tentativas excedido. ${remaining} tentativas restantes.`;
+      
+      toast.error(message);
+      return { error: message };
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -266,6 +278,8 @@ export function useSupabaseAuth() {
       });
 
       if (error) {
+        // Registrar tentativa falhada no rate limiter
+        rateLimiter.recordAttempt('login', email);
         incrementLoginAttempts();
         logService.logError(error, 'useSupabaseAuth.signInWithEmail');
         throw error;
@@ -275,6 +289,9 @@ export function useSupabaseAuth() {
       setLoginAttempts(0);
       localStorage.removeItem('login_attempts');
       localStorage.removeItem('lockout_end_time');
+      
+      // Resetar limite no rate limiter também
+      rateLimiter.resetLimit('login', email);
 
       return { error: null, user: data.user };
     } catch (error: any) {
@@ -285,6 +302,16 @@ export function useSupabaseAuth() {
 
   // Função para cadastro via email/senha
   const signUpWithEmail = async (email: string, password: string, phone: string, userData?: { nome?: string }) => {
+    // Verificar rate limiting para signup
+    if (!rateLimiter.checkLimit('signup', email)) {
+      const remaining = rateLimiter.getRemainingAttempts('signup', email);
+      const message = remaining === 0 
+        ? 'Muitas tentativas de cadastro. Tente novamente em 1 hora.'
+        : `Limite de tentativas de cadastro excedido. ${remaining} tentativas restantes.`;
+      
+      toast.error(message);
+      return { error: message };
+    }
     console.log('=====================================');
     console.log('INICIANDO SIGNUP');
     console.log('Email:', email);
@@ -341,6 +368,9 @@ export function useSupabaseAuth() {
       console.log('  Data.session:', data?.session);
 
       if (error) {
+        // Registrar tentativa falhada no rate limiter
+        rateLimiter.recordAttempt('signup', email);
+        
         console.error('❌ ❌ ❌ ERRO DETALHADO DO SUPABASE ❌ ❌ ❌');
         console.error('  Message:', error.message);
         console.error('  Status:', error.status);
@@ -509,15 +539,31 @@ export function useSupabaseAuth() {
 
   // Função para resetar senha via email
   const resetPassword = async (email: string) => {
+    // Verificar rate limiting para reset de senha
+    if (!rateLimiter.checkLimit('password_reset', email)) {
+      const remaining = rateLimiter.getRemainingAttempts('password_reset', email);
+      const message = remaining === 0 
+        ? 'Muitas tentativas de reset de senha. Tente novamente em 30 minutos.'
+        : `Limite de tentativas de reset excedido. ${remaining} tentativas restantes.`;
+      
+      toast.error(message);
+      return { error: message };
+    }
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`
       });
 
       if (error) {
+        // Registrar tentativa no rate limiter
+        rateLimiter.recordAttempt('password_reset', email);
         logService.logError(error, 'useSupabaseAuth.resetPassword');
         throw error;
       }
+
+      // Registrar tentativa bem-sucedida (para controlar frequência)
+      rateLimiter.recordAttempt('password_reset', email);
 
       return { error: null };
     } catch (error: any) {

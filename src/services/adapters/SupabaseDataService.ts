@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { IDataService, User, Session, DashboardSummary } from '@/services/interfaces/IDataService';
+import { cacheService } from '@/services/cache/cacheService';
 
 export class SupabaseDataService implements IDataService {
   
@@ -120,6 +121,15 @@ export class SupabaseDataService implements IDataService {
   // ============ CONTAS A PAGAR ============
   contasPagar = {
     getAll: async (filtros?: any): Promise<any[]> => {
+      // Gera chave única do cache baseada nos filtros
+      const cacheKey = `list_${JSON.stringify(filtros || {})}`;
+      
+      // Tenta recuperar do cache
+      const cached = cacheService.getPayables<any[]>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const { data, error } = await supabase
         .from('accounts_payable')
         .select('*')
@@ -127,7 +137,12 @@ export class SupabaseDataService implements IDataService {
         .order('due_date', { ascending: true });
       
       if (error) throw error;
-      return data || [];
+      
+      // Armazena no cache
+      const result = data || [];
+      cacheService.setPayables(cacheKey, result);
+      
+      return result;
     },
 
     getById: async (id: string): Promise<any> => {
@@ -231,6 +246,9 @@ export class SupabaseDataService implements IDataService {
         throw new Error(`Erro ao criar conta: ${error.message}`);
       }
       
+      // Invalida cache após criação
+      cacheService.invalidatePayables();
+      cacheService.invalidateDashboard();
       
       return result;
     },
@@ -244,6 +262,11 @@ export class SupabaseDataService implements IDataService {
         .single();
       
       if (error) throw error;
+      
+      // Invalida cache após atualização
+      cacheService.invalidatePayables();
+      cacheService.invalidateDashboard();
+      
       return result;
     },
 
@@ -254,6 +277,10 @@ export class SupabaseDataService implements IDataService {
         .eq('id', id);
       
       if (error) throw error;
+      
+      // Invalida cache após exclusão
+      cacheService.invalidatePayables();
+      cacheService.invalidateDashboard();
     },
 
     getByVencimento: async (dataInicio: string, dataFim: string): Promise<any[]> => {
@@ -298,6 +325,15 @@ export class SupabaseDataService implements IDataService {
   // ============ CONTAS A RECEBER ============
   contasReceber = {
     getAll: async (filtros?: any): Promise<any[]> => {
+      // Gera chave única do cache baseada nos filtros
+      const cacheKey = `list_${JSON.stringify(filtros || {})}`;
+      
+      // Tenta recuperar do cache
+      const cached = cacheService.getReceivables<any[]>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const { data, error } = await supabase
         .from('accounts_receivable')
         .select('*')
@@ -305,7 +341,12 @@ export class SupabaseDataService implements IDataService {
         .order('due_date', { ascending: true });
       
       if (error) throw error;
-      return data || [];
+      
+      // Armazena no cache
+      const result = data || [];
+      cacheService.setReceivables(cacheKey, result);
+      
+      return result;
     },
 
     getById: async (id: string): Promise<any | null> => {
@@ -327,6 +368,11 @@ export class SupabaseDataService implements IDataService {
         .single();
       
       if (error) throw error;
+      
+      // Invalida cache após criação
+      cacheService.invalidateReceivables();
+      cacheService.invalidateDashboard();
+      
       return result;
     },
 
@@ -339,6 +385,11 @@ export class SupabaseDataService implements IDataService {
         .single();
       
       if (error) throw error;
+      
+      // Invalida cache após atualização
+      cacheService.invalidateReceivables();
+      cacheService.invalidateDashboard();
+      
       return result;
     },
 
@@ -349,6 +400,10 @@ export class SupabaseDataService implements IDataService {
         .eq('id', id);
       
       if (error) throw error;
+      
+      // Invalida cache após exclusão
+      cacheService.invalidateReceivables();
+      cacheService.invalidateDashboard();
     },
 
     getByVencimento: async (dataInicio: string, dataFim: string): Promise<any[]> => {
@@ -509,6 +564,15 @@ export class SupabaseDataService implements IDataService {
   // ============ CATEGORIAS ============
   categorias = {
     getAll: async (filtros?: any): Promise<any[]> => {
+      // Gera chave única do cache baseada nos filtros
+      const cacheKey = `list_${JSON.stringify(filtros || {})}`;
+      
+      // Tenta recuperar do cache
+      const cached = cacheService.getCategories<any[]>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -516,7 +580,12 @@ export class SupabaseDataService implements IDataService {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Armazena no cache com TTL maior (10 minutos) para categorias
+      const result = data || [];
+      cacheService.setCategories(cacheKey, result);
+      
+      return result;
     },
 
     getById: async (id: string): Promise<any | null> => {
@@ -538,6 +607,10 @@ export class SupabaseDataService implements IDataService {
         .single();
       
       if (error) throw error;
+      
+      // Invalida cache após criação
+      cacheService.invalidateCategories();
+      
       return result;
     },
 
@@ -550,6 +623,10 @@ export class SupabaseDataService implements IDataService {
         .single();
       
       if (error) throw error;
+      
+      // Invalida cache após atualização
+      cacheService.invalidateCategories();
+      
       return result;
     },
 
@@ -560,6 +637,9 @@ export class SupabaseDataService implements IDataService {
         .eq('id', id);
       
       if (error) throw error;
+      
+      // Invalida cache após exclusão
+      cacheService.invalidateCategories();
     }
   };
 
@@ -711,27 +791,67 @@ export class SupabaseDataService implements IDataService {
   // ============ DASHBOARD ============
   dashboard = {
     getSummary: async (): Promise<DashboardSummary> => {
-      // Buscar dados básicos
-      const [accountsPayable, accountsReceivable, banks] = await Promise.all([
-        this.contasPagar.getAll(),
-        this.contasReceber.getAll(),
-        this.bancos.getAll()
-      ]);
+      // Verifica cache primeiro - dashboard tem cache de 5 minutos
+      const cached = cacheService.getDashboard<DashboardSummary>('summary');
+      if (cached) {
+        return cached;
+      }
 
-      const totalBalance = banks.reduce((sum, bank) => sum + (bank.initial_balance || 0), 0);
+      // Otimização: Usar RPC única ao invés de múltiplas queries N+1
+      // Chama função PostgreSQL otimizada que retorna todos os dados em uma consulta
+      const { data: currentUser } = await supabase.auth.getUser();
       
-      return {
-        totalBalance,
-        monthlyIncome: 0,
-        monthlyExpenses: 0,
-        totalAccountsPayable: accountsPayable.reduce((sum, acc) => sum + acc.amount, 0),
-        totalAccountsReceivable: accountsReceivable.reduce((sum, acc) => sum + acc.amount, 0),
-        overdueAccountsPayable: accountsPayable.filter(acc => acc.status === 'overdue').length,
-        overdueAccountsReceivable: accountsReceivable.filter(acc => acc.status === 'overdue').length,
-        accountsPayableCount: accountsPayable.length,
-        accountsReceivableCount: accountsReceivable.length,
-        recentActivity: []
-      };
+      if (!currentUser.user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data, error } = await supabase.rpc('get_dashboard_summary', { 
+        p_user_id: currentUser.user.id 
+      });
+
+      if (error) {
+        console.error('Erro ao buscar dashboard summary:', error);
+        throw error;
+      }
+
+      let result: DashboardSummary;
+
+      if (!data || data.length === 0) {
+        // Retorna dados vazios se não houver dados
+        result = {
+          totalBalance: 0,
+          monthlyIncome: 0,
+          monthlyExpenses: 0,
+          totalAccountsPayable: 0,
+          totalAccountsReceivable: 0,
+          overdueAccountsPayable: 0,
+          overdueAccountsReceivable: 0,
+          accountsPayableCount: 0,
+          accountsReceivableCount: 0,
+          recentActivity: []
+        };
+      } else {
+        // Mapear retorno da RPC para formato esperado pelo componente Dashboard
+        const summary = data[0]; // RPC retorna array com um objeto
+        
+        result = {
+          totalBalance: summary.saldo_total || 0,
+          monthlyIncome: summary.receitas_mes || 0,
+          monthlyExpenses: summary.despesas_mes || 0,
+          totalAccountsPayable: summary.total_a_pagar || 0,
+          totalAccountsReceivable: summary.total_a_receber || 0,
+          overdueAccountsPayable: (summary.contas_vencidas_pagar || 0) + (summary.contas_vencidas_receber || 0),
+          overdueAccountsReceivable: summary.contas_vencidas_receber || 0,
+          accountsPayableCount: summary.qtd_contas_pagar || 0,
+          accountsReceivableCount: summary.qtd_contas_receber || 0,
+          recentActivity: [] // TODO: Implementar atividade recente se necessário
+        };
+      }
+
+      // Armazena no cache
+      cacheService.setDashboard('summary', result);
+
+      return result;
     }
   };
 
