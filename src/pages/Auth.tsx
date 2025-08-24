@@ -429,7 +429,7 @@ export default function Auth() {
             {/* Call to action secundário */}
             <div className="pt-6">
               <p className="text-blue-100 text-sm">
-                ✨ Junte-se a milhares de pessoas que já transformaram suas finanças com IA
+                ✨ Milhares já usam o <b>ChatConta</b> para melhorar as finanças
               </p>
             </div>
           </div>
@@ -690,22 +690,6 @@ export default function Auth() {
                         </Button>
                       </form>
 
-                      {/* Aviso WhatsApp */}
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-gray-200" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-white px-2 text-muted-foreground">em breve</span>
-                        </div>
-                      </div>
-
-                      <div className="text-center p-3 bg-blue-50/80 rounded-lg border border-blue-200/50">
-                        <div className="flex items-center justify-center space-x-2 text-sm text-blue-700">
-                          <MessageCircle className="w-4 h-4" />
-                          <span>Login com WhatsApp em desenvolvimento!</span>
-                        </div>
-                      </div>
                     </TabsContent>
 
                     <TabsContent value="signup" className="space-y-4">
@@ -852,33 +836,10 @@ export default function Auth() {
                         </Button>
                       </form>
 
-                      {/* Aviso WhatsApp */}
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-gray-200" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-white px-2 text-muted-foreground">em breve</span>
-                        </div>
-                      </div>
-
-                      <div className="text-center p-3 bg-blue-50/80 rounded-lg border border-blue-200/50">
-                        <div className="flex items-center justify-center space-x-2 text-sm text-blue-700">
-                          <MessageCircle className="w-4 h-4" />
-                          <span>Cadastro com WhatsApp em desenvolvimento!</span>
-                        </div>
-                      </div>
                     </TabsContent>
                   </Tabs>
                 )}
 
-                {/* Footer informativo */}
-                <div className="text-center">
-                  <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground bg-blue-50/50 rounded-lg p-3">
-                    <Shield className="w-3 h-3 text-blue-600" />
-                    <span>FASE 1: Autenticação email ativa. WhatsApp em breve!</span>
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
