@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { useValidacao } from './useValidacao';
+import { useValidacaoTempoReal } from './useValidacaoTempoReal';
 import type { EsquemaValidacao } from '@/utils/validacoes';
 
 interface UseFormularioReturn<T> {
@@ -30,7 +30,7 @@ export function useFormulario<T extends Record<string, any>>(
     validarCampo: validarCampoInterno, 
     validarTodos: validarTodosInterno, 
     limparErros 
-  } = useValidacao(validacao || {});
+  } = useValidacaoTempoReal(dados);
 
   const timersRef = useRef<Record<string, number>>({});
 

@@ -41,7 +41,7 @@ const ConfigPages = {
 
 // Páginas administrativas - lazy loading (uso esporádico)
 const AdminPages = {
-  MonitoramentoPerformance: lazy(() => import('@/pages/MonitoramentoPerformance')),
+  MonitoramentoPerformance: lazy(() => import('@/pages/MonitoramentoPerformanceMelhorado')),
   Administrador: lazy(() => import('@/pages/Administrador')),
   UsuariosAdmin: lazy(() => import('@/pages/UsuariosAdmin')),
   DesignSystemPreview: lazy(() => import('@/pages/DesignSystemPreview')),
