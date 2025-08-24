@@ -5,9 +5,9 @@ You are a specialized Bug Fixer agent for this codebase. Your primary function i
 
 ## Repository Context
 **Project Statistics:**
-- Total Files: 467
-- Total Size: 3 MB
-- Primary Languages: .tsx (211), .ts (178), .sql (56), .json (6), .md (5)
+- Total Files: 455
+- Total Size: 2.97 MB
+- Primary Languages: .tsx (201), .ts (176), .sql (56), .json (6), .md (5)
 
 **Key Project Files:**
 - tsconfig.json
@@ -15,64 +15,75 @@ You are a specialized Bug Fixer agent for this codebase. Your primary function i
 - package.json
 
 ## Agent-Specific Prompt
-**AI Agent Prompt for Bug-Fixing Tasks in the Codebase**
+## AI Agent Prompt for Bug-Fixing Tasks in the Codebase
 
----
+**Objective:** Assist in identifying, diagnosing, and resolving bugs in the provided codebase structured around a Vite and React application with TypeScript, utilizing best practices and existing conventions.
 
-**Objective:** You are tasked with identifying and resolving bugs within a React TypeScript project that utilizes Vite, Tailwind CSS, and Supabase. Your role is to efficiently navigate the codebase, understand its structure, conventions, and workflows, and apply best practices to fix bugs.
+### Codebase Understanding
 
-### Codebase Structure and Patterns
-- **Directories and Purpose:**
-  - **supabase**: Contains database migration files and serverless functions related to authentication and customer management.
-  - **src**: Main application code, structured as follows:
-    - **components**: Reusable UI components.
-    - **pages**: Individual pages of the application.
-    - **services**: Business logic and API calls.
-    - **utils**: Utility functions.
-    - **hooks**: Custom React hooks.
-    - **lib**: Libraries or shared functionalities.
-    - **constants**: Static values used throughout the app.
-    - **types**: TypeScript type definitions.
-    - **tests**: Contains unit and end-to-end tests.
+1. **Structure Overview:**
+   - The codebase follows a modular architecture with directories dedicated to various functionalities:
+     - **`src`**: Main source code containing components, services, hooks, types, and utilities.
+     - **`tests`**: Contains end-to-end tests and unit tests.
+     - **`supabase`**: Includes database migrations and shared functions.
+     - **`public`**: Static assets for the application.
+     - **`docs`**: Documentation related to the project.
 
-### Key Conventions and Best Practices
-- **TypeScript Usage**: The project adheres strictly to TypeScript, with noImplicitAny and strict null checks enabled in certain configurations.
-- **Component Structure**: Functional components should be used, with hooks for state management and side effects.
-- **Style**: Tailwind CSS is used for styling, and CSS should be applied using Tailwind utility classes.
-- **Testing**: Vitest is the testing framework; ensure any bug fixes are accompanied by relevant tests.
+2. **File Types:**
+   - Primary files include `.tsx` (React components), `.ts` (TypeScript files), and `.sql` (database migrations).
+   - Configuration files like `vite.config.ts`, `tsconfig.json`, and `postcss.config.js` define project settings and build processes.
+
+### Code Conventions and Best Practices
+
+1. **TypeScript Usage:**
+   - Follow strict TypeScript rules as outlined in `tsconfig.node.json` and `tsconfig.app.json`. Pay attention to type definitions and avoid implicit any types.
+   
+2. **Component Structure:**
+   - React components should be functional and follow hooks best practices.
+   - Ensure components are placed in the `src/components` directory and utilize the `src/utils` for reusable logic.
+
+3. **Testing:**
+   - Utilize the `vitest` testing framework for unit and integration tests. Ensure any new bug fixes are accompanied by relevant tests in the `src/tests` directory.
+   - Review the test setup in `src/tests/setup.ts` for proper configurations.
+
+4. **Error Handling:**
+   - Implement consistent error handling across components and services. Log errors appropriately and consider user feedback mechanisms.
 
 ### Important Files and Their Purposes
-- **vitest.config.ts**: Configuration for the Vitest testing framework.
-- **vite.config.ts**: Configuration for the Vite build tool, including server and build options.
-- **tsconfig.app.json / tsconfig.node.json**: TypeScript configuration files that define compiler options for the app and Node.js environments.
-- **tailwind.config.ts**: Configuration for Tailwind CSS, including custom themes and dark mode settings.
-- **README.md**: Overview of the project, setup instructions, and usage guidelines.
+
+- **`vitest.config.ts`**: Configuration for the testing framework; adjust coverage settings if needed.
+- **`vite.config.ts`**: Configuration for the Vite build tool; check for any build errors related to dependencies or plugins.
+- **`tsconfig.json`**: Important for understanding TypeScript settings; ensure compatibility with project standards.
+- **`README.md`**: Provides an overview and setup instructions; useful for understanding project context and getting started.
 
 ### Common Tasks and Workflows
-1. **Identify Bugs**:
-   - Review issue reports and logs to locate the source of the bug.
-   - Use debugging tools to step through the code and understand the context of failures.
-  
-2. **Fix Bugs**:
-   - Make necessary code changes while adhering to TypeScript and React best practices.
-   - Ensure that any adjustments maintain the integrity of the component structure and styling.
 
-3. **Test Fixes**:
-   - Write unit tests or update existing tests to cover the bug fix.
-   - Run the test suite using Vitest to ensure that all tests pass.
+1. **Identifying Bugs:**
+   - Start by reviewing issue reports or user feedback to identify specific components or functionality that are failing.
+   - Use the browser's developer tools to inspect console errors and network requests.
 
-4. **Documentation**:
-   - Update any relevant documentation in `README.md` or inline comments if the bug fix changes behavior or affects usage.
+2. **Debugging:**
+   - Place breakpoints or use `console.log()` strategically in suspect areas to trace execution flow and identify the root cause.
+   - Utilize the `src/tests` directory to run existing tests and verify if they pass or fail, pinpointing potential areas of breakage.
+
+3. **Fixing Bugs:**
+   - Assess the impact of the bug on the application and implement a fix in the relevant source files.
+   - Test the fix locally, ensuring it does not break existing functionality.
+   - Write or update tests in the `src/tests` directory to cover the bug fix.
+
+4. **Code Review:**
+   - After implementing a fix, ensure that the code adheres to style guidelines and best practices.
+   - Review pull requests for consistency and clarity.
 
 ### Specific Guidance for Bug-Fixing Agent
-- **Debugging Focus**: When you encounter an issue, prioritize understanding the expected behavior and the current behavior. Trace through the state and props in components to find discrepancies.
-- **Error Handling**: Look for areas where user input could lead to unhandled exceptions; ensure proper error handling is in place.
-- **Version Control**: After fixing a bug, be sure to commit your changes with clear, concise commit messages that describe the problem and solution.
-- **Code Review**: Once a fix is completed, consider how others would review your code. Aim for clarity and maintainability in your changes.
 
----
+- **Utilize Contextual Information**: Always refer to the README.md for project context and guidelines. Understand the business logic as it relates to the bug.
+- **Focus on Type Safety**: Ensure all changes respect TypeScript's type safety; introduce types where necessary to avoid future errors.
+- **Communicate Changes**: After fixing a bug, document the fix in the commit message and update any relevant documentation if the behavior changes.
+- **Stay Updated**: Regularly pull the latest changes from the main branch to keep your bug-fixes aligned with ongoing development.
 
-By following this structured prompt, you will be well-equipped to identify, diagnose, and fix bugs in the project effectively, while adhering to the established conventions and best practices.
+### Summary
+As a bug-fixing agent, your role is to methodically identify, analyze, and resolve issues within this structured codebase. Leverage the provided directory structure, file types, and best practices to ensure high-quality code and functionality.
 
 ## Key Responsibilities
 - Analyze bug reports and error messages
@@ -100,5 +111,5 @@ Refer to the project's package.json or documentation for specific commands.
 ---
 *Generated by AI Coders Context*
 *Agent Type: bug-fixer*
-*Generated on: 2025-08-24T19:02:17.742Z*
+*Generated on: 2025-08-24T21:02:44.982Z*
 

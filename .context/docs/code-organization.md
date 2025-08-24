@@ -1,102 +1,70 @@
 # Code Organization Guide
 
-# Code Organization Guide
+# Code Organization Guide for the Assistenten Financeiro Pessoal Codebase
 
-This guide is designed to help developers navigate, understand, and extend the codebase effectively. By following the principles outlined here, you will be able to locate specific types of code, add new features, and comprehend how various components interact.
+This guide aims to provide clarity on the structure and organization of the codebase, enabling developers to navigate, extend, and maintain the application effectively.
 
 ## 1. Directory Structure Logic
 
-The directory structure is organized to promote modularity and maintainability. Each directory serves a specific purpose, allowing for better separation of concerns:
+The directory structure is designed to promote modularity and separation of concerns. Each major feature or concern has its own directory, making it easier to locate related files and maintain the code. Here’s a breakdown of the primary directories:
 
-- **Components**: This directory contains reusable UI components. By isolating components, we can manage them independently, making it easier to maintain and test.
-  
-- **Config**: Holds configuration files necessary for the application’s environment setup. This centralizes configuration management, allowing easy adjustments without diving into the code.
-
-- **Constants**: Contains constant values used throughout the application, promoting the DRY principle (Don’t Repeat Yourself) and making updates straightforward.
-
-- **Docs**: Documentation files that provide insights into the application’s functionality, setup, and usage. This is crucial for onboarding new developers.
-
-- **Hooks**: Custom hooks for managing state and side effects in React components. This encourages reusability of logic across components.
-
-- **Integrations**: Contains files related to third-party service integrations. This keeps external dependencies organized and easy to update.
-
-- **Lib**: General utility functions that can be reused across various modules. This keeps code DRY and reduces redundancy.
-
-- **Pages**: Contains top-level components that represent different views in the application. This helps in organizing the application’s routing structure.
-
-- **Root Files**: Key configuration and entry point files necessary for the application to run. This centralizes important bootstrapping logic.
-
-- **Services**: Contains files that manage interactions with external APIs. This encapsulation makes it easier to replace or modify service logic without affecting the rest of the application.
+- **Components**: Contains reusable UI components, which follow a modular approach, allowing for easy integration and reuse across different parts of the application.
+- **Config**: Holds configuration files that dictate application behavior, separating configuration from logic.
+- **Constants**: Contains constant values used throughout the application, ensuring consistency and easy management of shared values.
+- **Core**: The foundational logic of the application, including core services and utilities that are essential for the app’s functionality.
+- **Docs**: Documentation files that provide guidance on using and contributing to the project.
+- **Hooks**: Custom React hooks that encapsulate reusable logic for UI components, promoting cleaner components.
+- **Integrations**: Deals with third-party service integrations, allowing for clear separation from core app logic.
+- **Lib**: Utility libraries or modules that provide shared functionality across the app.
+- **Pages**: Defines the main views or pages of the application, organized to reflect the app’s routing structure.
+- **Repositories**: Data access layer, managing interactions with databases or APIs.
 
 ## 2. Module Boundaries
 
-Each module has clear boundaries regarding what it contains:
+Each module is defined by a specific responsibility:
 
-- **Components**: UI elements, such as buttons, forms, and layout components. Any component that does not fit within the context of pages or services should be in this directory.
-
-- **Config**: Configuration files, environment variables, and settings that dictate how the application behaves.
-
-- **Constants**: Values like action types, API endpoints, and any other fixed values that need to be shared across modules.
-
-- **Docs**: Documentation files that describe how to set up or use the application.
-
-- **Hooks**: Functions for managing state and side effects in a reusable manner.
-
-- **Integrations**: Code that sets up and handles interactions with external APIs or services.
-
-- **Lib**: Utility functions that can be used in multiple parts of the application.
-
-- **Pages**: Components that represent distinct views or routes within the application.
-
-- **Root Files**: Core configuration files, such as tsconfig.json and package.json, and the main entry point of the application.
-
-- **Services**: Logic for making API calls and handling responses.
+- **Components**: Should only contain UI elements, such as buttons, forms, and layout components. Avoid including business logic here.
+- **Config**: Store settings and configurations that can change based on different environments (e.g., development, production).
+- **Constants**: Should only contain static values that are used across multiple modules, such as action types or API endpoints.
+- **Core**: Implement core business logic and services, ensuring that other modules can leverage these functionalities without duplicating code.
+- **Hooks**: Custom hooks should encapsulate complex stateful logic, allowing for cleaner and more maintainable components.
+- **Integrations**: Manage all external service connections, ensuring that the core application logic remains agnostic to external services.
+- **Lib**: Contains utility functions that can be used throughout the application, promoting DRY (Don't Repeat Yourself) principles.
+- **Pages**: Organize the structure of the application’s routing and layout, directly mapping to user-facing views.
+- **Repositories**: Responsible for data-fetching logic, keeping it separate from the business logic in the Core module.
 
 ## 3. Naming Conventions
 
-Naming conventions are crucial for maintaining readability and consistency across the codebase:
+Consistent naming conventions enhance readability and maintainability:
 
-- **Directories and Files**: Use lowercase and kebab-case (e.g., `user-profile`, `settings-config`) to clearly convey the purpose of each file or directory.
-
-- **Components**: Use PascalCase for component names (e.g., `UserProfile.tsx`, `SettingsPanel.tsx`) to distinguish them from regular functions.
-
-- **Hooks**: Prefix custom hooks with `use` (e.g., `useFetchData.ts`, `useUserAuth.ts`) to signify their purpose and align with React's conventions.
-
-- **Constants**: Use uppercase letters with underscores for constant values (e.g., `API_URL`, `MAX_RETRIES`) to differentiate them from variables.
-
-- **Functions and Variables**: Use camelCase for regular functions and variable names (e.g., `getUserData`, `isLoggedIn`) to enhance clarity.
+- **Files and Folders**: Use camelCase for files and directories (e.g., `myComponent.tsx`, `userProfilePage.tsx`).
+- **Constants**: Use uppercase with underscores for constant values (e.g., `MAX_USER_COUNT`).
+- **Variables**: Use descriptive names that clearly indicate their purpose (e.g., `userData`, `fetchUserDetails`).
+- **Components**: Component names should always be PascalCase (e.g., `UserProfile`, `TransactionList`).
 
 ## 4. Dependency Flow
 
-Understanding module dependencies is key to navigating the codebase:
+Understanding module dependencies is crucial for maintaining a clean architecture:
 
-- The **Root Files** module serves as the backbone, depending on other modules for configuration and essential functionality.
-
-- The **Components** module depends on **Root Files** for configuration and may also utilize **Hooks** for state management.
-
-- **Services** depend on **Components** to interact with the UI, ensuring API data is presented correctly.
-
-- **Integrations** are independent but may rely on **Services** for handling API calls.
-
-- The **Hooks** module can be used by both **Components** and **Pages**, allowing shared logic to be accessed by multiple views.
+- **Components** depend on the **Root Files** for state management and data.
+- **Core**, **Repositories**, and **Supabase** are foundational and can be utilized across various modules, promoting a central source of truth.
+- Avoid circular dependencies; for instance, if **Components** rely on **Core**, ensure that **Core** does not depend back on **Components**.
+- Use dependency injection or context providers where necessary to manage shared state and services without tight coupling.
 
 ## 5. Extension Points
 
-To add new functionality or features, consider the following extension points:
+For adding new functionality, leverage the identified extension points:
 
-- **Adding New Components**: Place new UI components in the **Components** directory. Ensure they follow the established naming conventions and are reusable.
+- **Configuration**: New configuration settings should be added to the **Config** module. This helps in maintaining environment-specific configurations without touching the core business logic.
+- **Database Migrations**: When adding new database features, create migration files under the **supabase/migrations/** directory. This ensures that your database schema evolves in sync with your application.
+- **Custom Hooks**: If you find yourself repeating logic across components, consider creating a new custom hook in the **Hooks** module, promoting reusability.
+- **New Components**: For UI changes, create new components within the **Components** module, following the established naming conventions.
 
-- **Creating New Hooks**: If you need to manage new state or side effects, create a new custom hook in the **Hooks** directory, prefixed with `use`.
+### Summary
 
-- **Updating Configuration**: Modify or add configuration files in the **Config** directory as needed. This keeps your environment setup organized.
-
-- **Creating New Services**: If you need to interact with new APIs, create a service file in the **Services** directory, encapsulating API logic and ensuring it can be reused.
-
-- **Documentation**: Add or update documentation in the **Docs** directory to ensure all new features are well-documented for future reference.
-
-By following these guidelines, you can effectively navigate the codebase, understand where to find specific types of code, and contribute new features in a structured and maintainable way.
+By adhering to this structure and these principles, developers can easily navigate the codebase, add new features, and maintain the application efficiently. The modular design encourages collaboration and reduces the risk of introducing bugs while enhancing the overall quality of the code. Always refer to existing patterns in the codebase when adding new features or making changes.
 
 ---
 *Generated by AI Coders Context*
 
-*Generated on: 2025-08-24T19:01:00.075Z*
+*Generated on: 2025-08-24T21:00:45.564Z*

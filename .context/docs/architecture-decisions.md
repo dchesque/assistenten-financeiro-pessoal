@@ -4,87 +4,103 @@
 
 ## Decision 1: Modular Architecture
 
-1. **Context**: As the application grew, the need for a maintainable and scalable codebase became crucial. The initial flat structure caused difficulties in managing complexity and understanding module relationships.
+### Context
+As the project aimed to manage personal finance effectively, it required a clean separation of concerns to facilitate scalability and maintainability. The complexity of integrating various functionalities necessitated a modular approach.
 
-2. **Decision**: Implement a modular architecture, organizing the code into distinct modules such as Components, Hooks, Services, and Pages.
+### Decision
+A modular architecture was implemented, organizing the code into distinct modules such as Components, Hooks, Pages, and more.
 
-3. **Rationale**: This approach allows for better separation of concerns, making it easier to develop, test, and maintain each module independently. It facilitates collaboration among developers as each can work on different modules without causing conflicts.
+### Rationale
+This approach allows for better separation of responsibilities, making it easier for developers to navigate, understand, and modify specific parts of the application without affecting others. It also supports parallel development, where different teams can work on separate modules concurrently.
 
-4. **Consequences**: While modular architecture improves maintainability, it can lead to increased complexity in managing inter-module dependencies. Developers need to understand the boundaries and interactions between modules to avoid tight coupling.
-
----
-
-## Decision 2: TypeScript for Type Safety 
-
-1. **Context**: The need for robust type checking and improved developer experience was identified, especially in a large codebase with many contributors.
-
-2. **Decision**: Use TypeScript as the primary programming language instead of JavaScript.
-
-3. **Rationale**: TypeScript introduces static typing, which helps catch errors during development and improves code readability. It enhances tooling support, enabling better autocompletion and refactoring capabilities.
-
-4. **Consequences**: Adopting TypeScript requires an initial learning curve for developers unfamiliar with it. Additionally, the build process becomes slightly more complex due to the need for transpilation.
+### Consequences
+While this structure enhances maintainability, it may introduce complexity in module interactions. Developers need to understand the dependencies between modules, which could lead to confusion if not well-documented.
 
 ---
 
-## Decision 3: React with TypeScript (.tsx files)
+## Decision 2: TypeScript as the Primary Language
 
-1. **Context**: The need for a dynamic and component-driven user interface was critical for the application’s user experience.
+### Context
+Given the need for a type-safe environment to manage complex data structures and minimize runtime errors, choosing a strongly typed language was crucial.
 
-2. **Decision**: Utilize React as the front-end framework, complemented by TypeScript for type safety in the component structure.
+### Decision
+TypeScript was chosen as the primary programming language, with both .tsx and .ts files comprising the majority of the codebase.
 
-3. **Rationale**: React's component-based architecture promotes reusability, and its virtual DOM offers performance benefits. Coupling this with TypeScript provides type safety within components, which is crucial for large applications.
+### Rationale
+TypeScript provides static type-checking, which enhances code quality and developer productivity by catching errors at compile time. This is particularly beneficial in a collaborative environment where multiple developers work on the same codebase.
 
-4. **Consequences**: While React simplifies UI development, it can lead to over-engineering if components are not managed correctly. The learning curve for newcomers unfamiliar with both React and TypeScript may also be steep.
-
----
-
-## Decision 4: Dependency Management with npm
-
-1. **Context**: Managing third-party libraries and dependencies efficiently was vital for the project’s sustainability and consistency.
-
-2. **Decision**: Adopt npm as the package manager for managing dependencies.
-
-3. **Rationale**: npm provides a robust ecosystem for JavaScript libraries, allowing developers to easily install, update, and manage dependencies. It also simplifies the process of sharing code and collaborating with others.
-
-4. **Consequences**: Relying on npm means that the project is susceptible to dependency issues and version conflicts. Regular updates and audits are necessary to mitigate vulnerabilities and ensure compatibility.
+### Consequences
+The main trade-off is the learning curve associated with TypeScript for developers familiar only with JavaScript. Additionally, the need for type definitions can lead to more verbose code, potentially slowing down initial development.
 
 ---
 
-## Decision 5: Use of Hooks for State Management
+## Decision 3: Use of React for UI Components
 
-1. **Context**: The need for a clean and efficient way to manage state and side effects in functional components was critical to the application’s architecture.
+### Context
+The project required a responsive and dynamic user interface to effectively manage personal finance data. 
 
-2. **Decision**: Leverage React Hooks for managing component state and side effects instead of class components.
+### Decision
+React was selected as the library for building user interfaces, leveraging its component-based architecture.
 
-3. **Rationale**: Hooks allow for a more functional approach to state management, making the code less verbose and easier to follow. They enable better reuse of stateful logic through custom hooks.
+### Rationale
+React’s reusable components promote code reusability and separation of concerns. Its virtual DOM improves performance, making UI updates efficient. This aligns well with the modular architecture, allowing components to be developed and tested independently.
 
-4. **Consequences**: While Hooks provide a cleaner API, they can lead to challenges in understanding component lifecycles for developers new to React. Additionally, improper use of Hooks can lead to performance issues or bugs if not managed correctly.
-
----
-
-## Decision 6: API Integration with Supabase
-
-1. **Context**: The project required a backend solution that was easy to integrate and provided real-time capabilities.
-
-2. **Decision**: Choose Supabase as the backend service for managing the database and authentication.
-
-3. **Rationale**: Supabase offers a seamless integration with PostgreSQL, providing an instant RESTful API and real-time capabilities out of the box. This reduces the need for setting up a custom backend.
-
-4. **Consequences**: While Supabase simplifies backend development, it may introduce vendor lock-in and restrict customization compared to a fully custom backend solution. Developers must also adapt to the specific API structure and limitations of Supabase.
+### Consequences
+While React simplifies UI management, it introduces a dependency on the React ecosystem, which may complicate migration efforts in the future. Additionally, developers must be familiar with React's lifecycle methods and hooks, which can add to the initial onboarding time.
 
 ---
 
-## Decision 7: Documentation and Code Comments
+## Decision 4: Integration with Supabase
 
-1. **Context**: Ensuring that new developers can onboard quickly and understand the codebase was essential for maintaining productivity.
+### Context
+The application required a backend service for data storage and authentication to manage user finance records effectively.
 
-2. **Decision**: Emphasize thorough documentation within the code and maintain an up-to-date README.md file.
+### Decision
+Supabase was chosen as the backend service to handle database operations and user authentication.
 
-3. **Rationale**: Comprehensive documentation helps new developers understand the architecture, dependencies, and usage patterns, reducing the onboarding time and minimizing confusion.
+### Rationale
+Supabase provides a robust, open-source alternative to Firebase, offering easy integration with modern front-end frameworks. Its real-time capabilities and built-in authentication features align well with the application's requirements.
 
-4. **Consequences**: Maintaining accurate documentation requires ongoing effort and discipline. If not kept up-to-date, it can lead to misunderstandings or inconsistencies within the codebase.
+### Consequences
+While using Supabase simplifies backend management, it ties the project to a specific service, which could present challenges if the project needs to scale or if the service undergoes significant changes.
+
+---
+
+## Decision 5: Code Organization Principles
+
+### Context
+To enhance code maintainability and readability, clear organizational principles were necessary.
+
+### Decision
+Files and directories were structured based on feature and functionality, with distinct modules for components, hooks, and pages, among others.
+
+### Rationale
+Organizing code by feature rather than by type (e.g., all components in one folder) allows developers to locate related files more easily, enhancing collaboration and reducing the time spent navigating the codebase.
+
+### Consequences
+The trade-off is that new developers must familiarize themselves with the chosen structure, which may differ from more traditional organization methods. It also requires disciplined adherence to the structure to avoid clutter and confusion over time.
+
+---
+
+## Decision 6: Use of Docker for Development
+
+### Context
+To ensure a consistent development environment across different machines and setups, containerization was necessary.
+
+### Decision
+Docker was adopted to manage the development and deployment environments.
+
+### Rationale
+Docker allows for creating isolated environments that replicate production conditions, thus minimizing the "it works on my machine" issues. This is especially useful in a team setting where different developers may have varying local setups.
+
+### Consequences
+The main trade-off involves the added complexity of managing Docker configurations and the initial setup time required for new developers unfamiliar with containerization technologies. However, the long-term benefits of consistency and scalability often outweigh these initial costs.
+
+---
+
+This document outlines key architectural decisions that shape the project, providing valuable context for new developers and AI agents working with the codebase.
 
 ---
 *Generated by AI Coders Context*
 
-*Generated on: 2025-08-24T19:00:42.740Z*
+*Generated on: 2025-08-24T21:00:25.950Z*

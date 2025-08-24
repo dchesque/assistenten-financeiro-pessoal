@@ -1,116 +1,125 @@
 # Software Development Guidelines
 
-# Comprehensive Software Development Guidelines for the Assistenten Financeiro Pessoal Codebase
+# Software Development Guidelines for Assistenten Financeiro Pessoal
+
+These guidelines are designed to facilitate effective development practices within the Assistenten Financeiro Pessoal codebase. They cover technology-specific best practices, project-specific patterns, quality standards, workflow processes, and security & performance considerations.
 
 ## 1. Technology-Specific Guidelines
 
-### 1.1 TypeScript Best Practices
-- **Type Annotations**: Always use type annotations for function parameters and return types. This enhances code readability and reduces runtime errors.
-  ```typescript
-  function addNumbers(a: number, b: number): number {
-      return a + b;
-  }
-  ```
-- **Interfaces and Types**: Use interfaces for object shapes and types for function signatures and unions. Prefer interfaces for public API definitions.
-  ```typescript
-  interface User {
-      id: number;
-      name: string;
-      email: string;
-  }
-  ```
-- **Avoid Any**: Never use the `any` type. Instead, define specific types that accurately represent your data.
+### TypeScript and React (.tsx and .ts)
+- **Type Safety**: Always use TypeScript's static typing. Define interfaces and types for props and state in React components.
+  - **Example**: 
+    ```typescript
+    interface UserProps {
+        name: string;
+        age: number;
+    }
 
-### 1.2 React (TSX) Best Practices
-- **Functional Components**: Prefer functional components over class components. Utilize React hooks for state and lifecycle management.
-  ```tsx
-  const MyComponent: React.FC = () => {
-      const [count, setCount] = useState(0);
-      return <button onClick={() => setCount(count + 1)}>{count}</button>;
-  };
-  ```
-- **Prop Validation**: Use TypeScript for prop validation instead of PropTypes. Define prop types directly in your component’s signature.
+    const UserProfile: React.FC<UserProps> = ({ name, age }) => {
+        return <div>{name} is {age} years old.</div>;
+    };
+    ```
 
-### 1.3 SQL Best Practices
-- **Parameterized Queries**: Always use parameterized queries to prevent SQL injection attacks.
-  ```sql
-  SELECT * FROM users WHERE email = ?;
-  ```
-- **Indexing**: Use indexes judiciously to optimize performance for frequently queried columns.
+- **Functional Components**: Prefer using functional components with hooks over class components.
+  - **Example**:
+    ```typescript
+    const Counter: React.FC = () => {
+        const [count, setCount] = useState(0);
+        return <button onClick={() => setCount(count + 1)}>{count}</button>;
+    };
+    ```
+
+- **Hooks**: Follow the rules of hooks (only call hooks at the top level, only call hooks from React functions).
+  
+- **State Management**: Use React's Context API for managing global state instead of prop drilling.
+
+### SQL
+- **Query Optimization**: Always analyze and optimize SQL queries for performance. Use indexing appropriately.
+- **Parameterized Queries**: Always use parameterized queries to prevent SQL injection.
+  - **Example**:
+    ```sql
+    SELECT * FROM users WHERE id = ?;
+    ```
+
+### JSON
+- **Data Structures**: Use JSON to handle configurations and static data. Ensure that all JSON files are well-formed.
 
 ## 2. Project-Specific Patterns
 
-### 2.1 File Structure
-- **Component Structure**: Each component should reside in its own directory containing its `.tsx`, `.css`, and test files.
-  ```
-  /components
-      /Button
-          Button.tsx
-          Button.test.tsx
-          Button.css
-  ```
+### Directory Structure
+- Follow the existing directory structure closely:
+  - Place components in the `Components` directory.
+  - Use the `Hooks` directory for custom hooks.
+  - Keep API calls in the `Repositories` directory.
 
-### 2.2 State Management
-- Utilize React Context or Redux for global state management. Keep local component state minimal—use props to pass data down.
+### Component Design
+- **Atomic Design**: Adopt atomic design principles. Break components down into atoms, molecules, and organisms.
+- **Styling**: Use a consistent styling approach (e.g., CSS-in-JS, styled-components, or a CSS framework).
 
-### 2.3 Hooks Usage
-- Custom hooks should be prefixed with "use" and should encapsulate reusable logic.
-  ```typescript
-  function useFetch(url: string) { ... }
-  ```
+### Documentation
+- Maintain up-to-date documentation in the `Docs` directory. Document components, hooks, and utilities thoroughly.
 
 ## 3. Quality Standards
 
-### 3.1 Code Quality
-- **Linting**: Use ESLint with TypeScript support. Follow the recommended ESLint configuration.
-- **Prettier**: Use Prettier for code formatting. Ensure all code is formatted before commits using a pre-commit hook.
+### Code Quality
+- **Linting**: Use ESLint with TypeScript support to enforce coding styles. Run linting before committing.
+- **Prettier**: Use Prettier for code formatting. Ensure consistency in code style across the codebase.
 
-### 3.2 Testing
-- **Unit Tests**: Write unit tests for all components and utility functions. Aim for at least 80% code coverage.
-- **Integration Tests**: Write integration tests for components that interact with APIs or involve multiple components.
+### Testing
+- Write unit tests for all components and hooks using Jest and React Testing Library.
+  - **Example**:
+    ```typescript
+    import { render, screen } from '@testing-library/react';
+    import UserProfile from './UserProfile';
 
-### 3.3 Code Reviews
-- **Pull Requests**: All code should be submitted via pull requests. Each PR should be reviewed by at least one team member before merging.
-- **Checklist**: Use a checklist for PR reviews that includes verifying tests, linting, and code quality.
+    test('renders user name', () => {
+        render(<UserProfile name="Alice" age={30} />);
+        expect(screen.getByText(/Alice is 30 years old/i)).toBeInTheDocument();
+    });
+    ```
+
+### Code Reviews
+- Conduct thorough code reviews before merging any pull requests. Use GitHub's review features to provide feedback.
 
 ## 4. Workflow Guidelines
 
-### 4.1 Branching Strategy
-- **Feature Branches**: Create a new branch for each feature or bug fix. Use descriptive names (e.g., `feature/user-authentication`).
-- **Main Branch**: The `main` branch should always contain stable, production-ready code.
+### Version Control
+- Use Git for version control. Follow a branching strategy (e.g., Git Flow) for feature development, bug fixes, and releases.
+- Commit messages should be clear and follow the format: `type(scope): subject`.
+  - **Example**: `feat(user): add user authentication`
 
-### 4.2 Commit Messages
-- Use clear, descriptive commit messages. Follow the conventional commits format:
-  - `feat: add new authentication feature`
-  - `fix: resolve bug in user profile`
+### Continuous Integration
+- Set up CI/CD pipelines to automate testing and deployment processes. Ensure that tests pass before merging.
 
-### 4.3 Agile Practices
-- Conduct regular stand-ups and maintain a clear Kanban board for task management. Use tools like Jira or Trello for tracking.
+### Collaboration
+- Use issue tracking for tasks and bugs. Assign issues to team members and update statuses regularly.
 
 ## 5. Security & Performance
 
-### 5.1 Security Guidelines
-- **Environment Variables**: Store sensitive information such as API keys in environment variables. Use a `.env` file for local development.
-- **Dependencies**: Regularly update dependencies to mitigate vulnerabilities. Use tools like `npm audit` to check for security issues.
+### Security Practices
+- **Environment Variables**: Store sensitive data (API keys, database credentials) in environment variables.
+- **Input Validation**: Validate user inputs on both client and server sides to prevent XSS and other attacks.
 
-### 5.2 Performance Optimization
-- **Code Splitting**: Use dynamic imports for large components to reduce initial load time.
-- **Memoization**: Use `React.memo` and `useMemo` to prevent unnecessary re-renders and improve performance.
+### Performance Optimization
+- **Lazy Loading**: Implement lazy loading for images and components to improve initial load times.
+- **Minification**: Use tools like Webpack to minify JavaScript and CSS files for production builds.
+
+### Monitoring
+- Use monitoring tools (e.g., Sentry, New Relic) to track application performance and errors in production.
 
 ## Tool Recommendations
-- **ESLint**: For linting TypeScript and TSX.
+- **ESLint**: For linting JavaScript/TypeScript code.
 - **Prettier**: For code formatting.
 - **Jest**: For unit testing.
 - **React Testing Library**: For testing React components.
-- **Husky**: For managing Git hooks (e.g., pre-commit linting).
-- **npm audit**: For checking dependencies for vulnerabilities.
+- **Webpack**: For module bundling and optimizing assets.
 
 ## Quality Gates
-- **Code Coverage**: Maintain at least 80% code coverage.
-- **Linting**: Ensure all code passes ESLint checks before merging.
-- **Test Pass Rates**: All tests must pass before a PR can be merged.
+- Ensure that all code passes linting and formatting checks before merging.
+- Require that at least 80% test coverage is maintained throughout the codebase.
+- Code reviews must be completed with at least one approving review before merging.
 
-These guidelines are designed to help developers effectively contribute to the Assistenten Financeiro Pessoal codebase while maintaining high standards of code quality, security, and performance. Following these principles will foster a collaborative and efficient development environment.
+By adhering to these guidelines, developers can maintain a high standard of code quality and ensure the efficient functioning of the Assistenten Financeiro Pessoal project.
 
 ## Quick Reference
 
@@ -136,4 +145,4 @@ These guidelines should evolve with the project. Regular reviews and updates ens
 ---
 *Generated by AI Coders Context*
 
-*Generated on: 2025-08-24T19:01:50.404Z*
+*Generated on: 2025-08-24T21:02:22.158Z*

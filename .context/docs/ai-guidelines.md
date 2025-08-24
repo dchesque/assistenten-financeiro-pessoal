@@ -3,34 +3,40 @@
 # AI Agent Guidelines for Assistenten Financeiro Pessoal Codebase
 
 ## 1. Code Style Preferences
-- **When writing TypeScript (.ts/.tsx) files, always follow the Airbnb JavaScript Style Guide**, which is widely adopted in this codebase. Maintain consistent use of semicolons, single quotes for strings, and indentation of 2 spaces.
-- **Always use functional components and hooks** instead of class components for React components, as the codebase primarily utilizes functional programming patterns.
-- **Ensure consistent naming conventions**: use camelCase for variables and functions, PascalCase for component names, and UPPER_SNAKE_CASE for constants.
-- **When adding new files, always ensure they are properly named** following the `ComponentName.tsx` format for components and `hookName.ts` for hooks.
+- **When writing .tsx files**, always use JSX syntax for components and ensure proper indentation (2 spaces).
+- **For TypeScript (.ts) files**, prefer using interfaces over types for defining object shapes to maintain consistency.
+- **When naming variables and functions**, use camelCase for variables and functions, and PascalCase for component names.
+- **Always use single quotes** for strings unless interpolation is necessary.
+- **Place imports** at the top of the file, grouped in the following order: external libraries, internal modules, and styles.
+- **When writing comments**, use JSDoc format for functions and components to provide descriptive context for parameters and return values.
 
 ## 2. Decision Frameworks
-- **Prefer using existing hooks from the Hooks module over writing new ones** unless the functionality is significantly different. This promotes reusability and consistency across the codebase.
-- **When integrating new libraries or services, evaluate existing integrations in the Integrations module** first to determine if the functionality can be reused or extended. Always consider the impact on bundle size and performance.
-- **For state management, prefer using React Context API or custom hooks** over third-party libraries unless the complexity of the state management warrants it.
+- **Prefer functional components over class components** for new React components to leverage hooks and simplify code.
+- **When introducing new dependencies**, always check if an existing package can fulfill the requirement to avoid bloat. If necessary, prefer well-maintained libraries with active community support.
+- **For state management**, prefer using React's built-in hooks (useState, useReducer) over external libraries unless the complexity requires it.
+- **When handling API responses**, always validate the response schema using TypeScript interfaces to ensure type safety.
 
 ## 3. Risk Areas
-- **Pay special attention to the Components module**, as it contains the UI elements. Any changes here can affect the entire user interface; therefore, ensure thorough testing with existing components.
-- **Validate SQL queries in the Services module** carefully, as incorrect queries can lead to data integrity issues. Always double-check for SQL injection vulnerabilities.
-- **Be cautious with external API integrations** in the Services module. Ensure that error handling is robust and that there are fallback mechanisms for failures.
+- **Be cautious with state management in Hooks**: Ensure the proper use of dependencies in useEffect to prevent infinite loops or missed updates.
+- **Pay extra attention to SQL queries** in the Repositories module: Always sanitize inputs to prevent SQL injection.
+- **When modifying integrations**, thoroughly review the impact on external services to avoid breaking existing functionalities.
+- **Validate all user inputs** in forms to prevent unexpected behavior or security vulnerabilities.
 
 ## 4. Validation Steps
-- **Before suggesting changes to any component**, ensure you have run the existing test suite to confirm that the current implementation is functioning as expected. 
-- **Before changing API endpoints in the Services module, validate that the new endpoints are documented** and that the necessary changes in the consuming components are identified.
-- **When modifying styles or layout in the Components module, check the current design specifications** to ensure compliance with the intended UI/UX design guidelines.
+- **Before suggesting changes to existing components**, check if the component has associated tests and ensure they pass.
+- **When changing any configuration files (e.g., tsconfig.json, package.json)**, validate that existing scripts and modules are compatible with the new configurations.
+- **Before changing SQL queries**, run the existing queries to verify their functionality and performance.
+- **Always test changes locally** before proposing them, ensuring that all unit tests and integration tests pass.
 
 ## 5. Context Clues
-- **To understand the intent behind existing code, always read the accompanying comments and documentation** in the Docs module. This can provide valuable insights into why certain decisions were made.
-- **Look for patterns in how components are structured and how props are passed**. This can inform how to extend or modify existing components without breaking existing functionality.
-- **If you encounter complex logic, break it down and trace the flow of data** through the application. Understanding how data is being manipulated will help clarify the purpose of the implementation.
+- **To understand the intent behind existing code**, read through comments and commit messages to gather insights into the developer's reasoning.
+- **Look for patterns in existing components**: If a component is structured in a certain way, follow that structure for new components to maintain consistency.
+- **Refer to existing tests** in the Tests directory to understand the expected behavior of components and functions. This will guide modifications and ensure compatibility.
+- **When reviewing the Docs module**, check for any architectural decisions or rationale provided that may inform your understanding of the codebase structure.
 
-By adhering to these guidelines, AI agents can enhance consistency, reduce errors, and maintain the quality of the codebase within the Assistenten Financeiro Pessoal project.
+By adhering to these guidelines, AI assistants can help maintain code quality and consistency within the Assistenten Financeiro Pessoal codebase, minimizing common pitfalls and enhancing collaboration among developers.
 
 ---
 *Generated by AI Coders Context*
 
-*Generated on: 2025-08-24T19:01:17.619Z*
+*Generated on: 2025-08-24T21:01:22.700Z*

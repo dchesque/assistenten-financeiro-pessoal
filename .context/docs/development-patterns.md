@@ -1,63 +1,55 @@
 # Development Patterns
 
-# Development Patterns Guide for the Assistenten Financeiro Pessoal Codebase
+# Development Patterns Guide for Assistenten Financeiro Pessoal
 
 ## 1. Common Workflows
 
 ### Adding Features
-- **When you need to add a feature,** start by creating a new component within the **Components** module. Ensure it follows the naming conventions (e.g., `MyFeatureComponent.tsx`).
-- **Always add corresponding tests** in the **__tests__** directory (if available or create a new one) to validate the new functionality.
-- **Follow this sequence**: 
-  1. Design the component.
-  2. Implement functionality.
-  3. Write tests.
-  4. Document any new APIs or services in the **Docs** module.
+- **When you need to add a new feature, do the following:**
+  1. Identify the relevant module (e.g., `Components`, `Hooks`, `Pages`) where the feature will reside.
+  2. Create a new file using the appropriate naming conventions (e.g., `FeatureName.tsx` for a component).
+  3. Implement the feature, ensuring you follow the established coding patterns.
+  4. Write necessary tests to cover the new functionality.
+  5. Submit a pull request with a clear description of what was added.
 
 ### Fixing Bugs
-- **When you need to fix a bug,** first identify the source of the issue by checking logs and using debugging tools.
-- **Always reproduce the bug locally** before making changes.
-- **Follow this sequence**: 
-  1. Identify and isolate the problem.
-  2. Write a test to demonstrate the bug.
-  3. Fix the bug and ensure the test passes.
-  4. Refactor if necessary and ensure no new issues are introduced.
+- **When you need to fix a bug, do the following:**
+  1. Reproduce the issue to understand its scope and context.
+  2. Locate the relevant file(s) and review the code for potential causes.
+  3. Apply the fix while adhering to the coding standards and patterns.
+  4. Test the fix locally.
+  5. Document the bug and the fix in the pull request.
 
 ### Making Changes
-- **When you need to make changes,** ensure your changes are localized to the relevant components or services.
-- **Never change the interface of a public-facing API** without updating the documentation and notifying other team members.
+- **When you need to make changes to existing code, do the following:**
+  1. Review the current implementation and understand its purpose.
+  2. Determine if the change impacts any interfaces or services.
+  3. Make the required changes while respecting the existing coding conventions.
+  4. Run tests to ensure existing functionality remains unaffected.
+  5. Provide a summary of changes in your pull request.
 
 ## 2. Code Patterns
 
-### Established Patterns to Follow
+### Naming Conventions
+- **This codebase prefers naming conventions that enhance readability:**
+  - **Interfaces are prefixed with "I"**: E.g., `IUser`, `IProduct`.
+  - **Services are suffixed with "Service"**: E.g., `UserService`.
 
-- **Interface Prefix**
-  - **This codebase prefers interfaces prefixed with "I."** 
-  - **Example:** 
-    ```typescript
-    interface IUser {
-        id: string;
-        name: string;
-    }
-    ```
-
-- **Factory Pattern**
-  - **When you need to create instances of a class or object,** use factory methods.
-  - **Example:** 
+### Design Patterns
+- **When implementing new functionality, consider these established patterns:**
+  - **Factory Pattern**: Use factory methods for object creation when you need to instantiate classes. 
     ```typescript
     class UserFactory {
-        static createUser(name: string): IUser {
-            return { id: generateId(), name };
+        static createUser(data: UserData): IUser {
+            return new User(data);
         }
     }
     ```
-
-- **Observer Pattern**
-  - **Use the observer pattern for event-driven communication.** 
-  - **Example:**
+  - **Observer Pattern**: If your component needs to respond to changes in state or data, use the observer pattern.
     ```typescript
     class EventEmitter {
-        private listeners: { [key: string]: Function[] } = {};
-
+        private listeners: { [event: string]: Function[] } = {};
+        
         on(event: string, listener: Function) {
             if (!this.listeners[event]) {
                 this.listeners[event] = [];
@@ -73,54 +65,62 @@
     }
     ```
 
-- **Service Suffix**
-  - **Services should be suffixed with "Service."** 
-  - **Example:** 
-    ```typescript
-    class UserService {
-        getUser(id: string): IUser {
-            // implementation
-        }
-    }
-    ```
-
 ## 3. Testing Strategy
 
-- **When you are writing tests,** use the existing testing framework (e.g., Jest) that is already set up in the codebase.
-- **Always cover new features with unit tests** and consider integration tests for services that interact with external APIs.
-- **Follow this sequence for tests:**
-  1. Identify the component or service to be tested.
-  2. Write unit tests for each function.
-  3. Ensure edge cases are covered.
-  4. Execute tests frequently to catch regressions early.
+- **When writing tests, follow these guidelines:**
+  1. Use a dedicated testing framework (e.g., Jest).
+  2. Write unit tests for individual components and services.
+  3. Ensure all new features come with corresponding tests to validate functionality.
+  4. Run all tests before merging any code to ensure no existing functionality is broken.
+
+**Example:**
+```typescript
+describe('UserService', () => {
+    it('should create a user successfully', () => {
+        const user = UserService.createUser({ name: 'John' });
+        expect(user.name).toBe('John');
+    });
+});
+```
 
 ## 4. Error Handling
 
-- **When handling errors,** use try-catch blocks and provide meaningful error messages.
-- **Always log errors** to a centralized error tracking system (if implemented) and avoid console logging in production.
-- **Example:**
-  ```typescript
-  async function fetchData() {
-      try {
-          const response = await apiCall();
-          return response.data;
-      } catch (error) {
-          console.error("Failed to fetch data:", error);
-          throw new Error("Data fetch failed");
-      }
-  }
-  ```
+- **When handling errors, do the following:**
+  1. Use try-catch blocks in asynchronous code to catch and handle exceptions gracefully.
+  2. Log errors to a central logging service or console with meaningful messages.
+  3. Provide user-friendly error messages for UI components.
+
+**Example:**
+```typescript
+async function fetchData() {
+    try {
+        const result = await apiCall();
+        return result;
+    } catch (error) {
+        console.error('Failed to fetch data:', error);
+        throw new Error('Data fetch error. Please try again later.');
+    }
+}
+```
 
 ## 5. Performance Considerations
 
-- **Always optimize rendering performance** by using React.memo or PureComponent for components that do not frequently change.
-- **When you are fetching data,** consider using lazy loading or pagination to reduce the initial load time.
-- **Never block the main thread** with heavy computations; offload them to web workers if necessary.
-- **Regularly profile the application** using development tools to identify and address performance bottlenecks.
+- **When optimizing for performance, keep the following in mind:**
+  1. Avoid unnecessary re-renders in React components by using `React.memo` or `useMemo`.
+  2. Use lazy loading for components or routes that are not immediately needed.
+  3. Minimize API calls by caching results where appropriate.
+  4. Always profile your code using performance tools to identify bottlenecks.
+  
+**Example:**
+```typescript
+const UserProfile = React.memo(({ userId }) => {
+    // Component logic
+});
+```
 
-By following this guide and adhering to the established patterns, both developers and AI agents can contribute effectively to the Assistenten Financeiro Pessoal codebase while maintaining code quality and performance.
+By adhering to this guide, developers and AI agents will effectively navigate and contribute to the `assistenten-financeiro-pessoal` codebase, ensuring a consistent and high-quality development process.
 
 ---
 *Generated by AI Coders Context*
 
-*Generated on: 2025-08-24T19:01:11.153Z*
+*Generated on: 2025-08-24T21:01:06.526Z*

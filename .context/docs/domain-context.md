@@ -3,53 +3,50 @@
 # Domain Context Guide for Assistenten Financeiro Pessoal
 
 ## 1. Problem Domain
-The software is designed to address the growing need for personal finance management among individuals, particularly in an increasingly complex financial landscape. It provides users with tools to manage their finances effectively, including budgeting, expense tracking, savings goals, and investment management. By offering insights and guidance, the software empowers users to make informed financial decisions, ultimately leading to improved financial health and literacy.
+The Assistenten Financeiro Pessoal software addresses the real-world problem of personal finance management. It enables users to track their income and expenses, set budgets, and achieve financial goals. The software aims to simplify financial planning and provide users with insights into their spending habits, helping them make informed financial decisions. In a world where financial literacy is crucial, this tool empowers users to take control of their finances, ultimately leading to better financial health and stability.
 
 ## 2. User Personas
-- **Individuals Seeking Financial Control**: Users who want to manage their personal finances better. They might be looking to track their spending, create budgets, and set financial goals. This persona values user-friendly interfaces and insightful analytics.
-  
-- **Young Professionals**: Typically aged 25-35, this group is beginning to earn and spend independently. They leverage the software to understand their financial situation better, save for future goals (like buying a home), and learn about investments.
-  
-- **Families**: Parents looking to manage household finances, teach children about money, and plan for future expenses like education and holidays. They require features that support multiple users or accounts.
+### a. Individual Users
+- **Description**: Everyday individuals seeking to manage their personal finances effectively.
+- **Needs**: Tools to track expenses, set budgets, and receive financial advice.
+- **Usage**: They utilize the software to log daily expenses, categorize transactions, and visualize their financial status through dashboards and reports.
 
-- **Financial Advisors**: Professionals who may use the software to assist their clients in managing finances. They look for robust reporting features, integration capabilities, and compliance with financial regulations.
+### b. Financial Advisors
+- **Description**: Professionals who guide clients in managing their finances.
+- **Needs**: Access to client financial data and insights to provide tailored advice.
+- **Usage**: They use the software to review clients' financial situations and suggest improvements or investment opportunities based on the data.
+
+### c. Small Business Owners
+- **Description**: Entrepreneurs who need to manage both personal and business finances.
+- **Needs**: A comprehensive view of cash flow and expense tracking for both personal and business accounts.
+- **Usage**: They leverage the software to maintain separate financial records, manage budgets, and assess the financial health of their businesses.
 
 ## 3. Business Rules
-- **Data Privacy**: User data must be securely handled and comply with regulations such as GDPR. Users should have control over their data and know how it’s used.
-  
-- **Financial Insights Accuracy**: The software must provide accurate and reliable financial insights based on user input. This includes ensuring that calculations for budgets, savings goals, and projections are correct.
-  
-- **User Experience**: The software should prioritize usability, ensuring that users can navigate and utilize features without requiring extensive financial knowledge.
-  
-- **Integration with Financial Institutions**: Users should be able to connect their bank accounts and financial institutions securely to pull in data for more accurate tracking and analysis.
-
-- **Educational Content**: Providing users with accessible educational resources about personal finance to enhance their understanding and decision-making.
+- **Data Privacy**: All user data must be kept confidential and secure, adhering to relevant privacy regulations (e.g., GDPR).
+- **User Authentication**: Users must authenticate their identities to access personal financial data.
+- **Budgeting Guidelines**: Users should be guided to set budgets based on a percentage of their income, with recommendations for savings.
+- **Transaction Categorization**: Expenses must be categorized accurately to provide meaningful insights into spending patterns.
+- **Real-Time Updates**: Financial data should be updated in real-time to reflect the most current information for users.
 
 ## 4. Domain Terminology
-- **Budgeting**: The process of creating a plan to manage income and expenses over a specific period.
-  
-- **Expense Tracking**: The method of recording and categorizing spending to monitor financial habits.
-  
-- **Savings Goals**: Targets set by users to save a specific amount of money within a defined timeframe for particular purposes (e.g., vacations, emergencies).
-  
-- **Investment Management**: The process of managing an individual's investment portfolio, including stocks, bonds, and other assets, to achieve financial goals.
-  
-- **Financial Literacy**: The ability to understand and use various financial skills, including personal financial management and investing.
+- **Budget**: A financial plan that outlines expected income and expenses over a specific period.
+- **Expense Tracking**: The process of recording and categorizing expenditures to monitor financial health.
+- **Cash Flow**: The total amount of money being transferred into and out of a business or personal account.
+- **Financial Goals**: Specific objectives that individuals set for their financial future, such as saving for a house or retirement.
+- **Insights**: Analytical summaries derived from financial data that help users understand their spending habits and make informed decisions.
 
 ## 5. Success Criteria
-- **User Engagement**: Metrics such as daily active users (DAU) and monthly active users (MAU) can indicate how regularly users interact with the software.
-  
-- **User Satisfaction**: Feedback through surveys and Net Promoter Score (NPS) can measure how users feel about the features and usability of the software.
-  
-- **Financial Goal Achievement Rate**: The percentage of users who meet their savings or budgeting goals using the software can indicate its effectiveness.
-  
-- **Data Integration Success**: The number of successful connections made between the software and users’ financial institutions, indicating the reliability of the integration features.
-  
-- **Retention Rate**: The percentage of users who continue to use the software over time, reflecting its value and utility in their financial management.
+- **User Engagement**: High levels of active users engaging with the software regularly (measured through user logins and feature usage).
+- **User Satisfaction**: Positive feedback from users regarding their experience and the value they derive from the software (measured through surveys and ratings).
+- **Financial Improvement**: Users reporting improved financial health, such as reduced debt, increased savings, or better budgeting (measured through user testimonials and case studies).
+- **Adoption Rate**: Growth in the number of new users adopting the software over time, indicating market acceptance and demand.
+- **Feature Utilization**: High utilization rates of key features, such as budgeting tools and expense tracking, indicating that users find these functions valuable.
 
-By understanding this domain context, team members will be better equipped to recognize the purpose of existing features, evaluate new feature proposals, and engage with stakeholders in meaningful discussions about the software’s evolution.
+---
+
+By understanding this Domain Context, team members will be better equipped to appreciate the rationale behind existing features, make informed decisions about new developments, and communicate effectively with users and stakeholders about the software's capabilities and benefits.
 
 ---
 *Generated by AI Coders Context*
 
-*Generated on: 2025-08-24T19:01:38.513Z*
+*Generated on: 2025-08-24T21:02:05.324Z*
