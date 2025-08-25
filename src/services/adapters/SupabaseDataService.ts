@@ -121,28 +121,63 @@ export class SupabaseDataService implements IDataService {
   // ============ CONTAS A PAGAR ============
   contasPagar = {
     getAll: async (filtros?: any): Promise<any[]> => {
-      // Gera chave única do cache baseada nos filtros
-      const cacheKey = `list_${JSON.stringify(filtros || {})}`;
-      
-      // Tenta recuperar do cache
-      const cached = cacheService.getPayables<any[]>(cacheKey);
-      if (cached) {
-        return cached;
-      }
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user?.id) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('accounts_payable')
-        .select('*')
-        .is('deleted_at', null)
-        .order('due_date', { ascending: true });
-      
-      if (error) throw error;
-      
-      // Armazena no cache
-      const result = data || [];
-      cacheService.setPayables(cacheKey, result);
-      
-      return result;
+        let query = supabase
+          .from('accounts_payable')
+          .select(`
+            *,
+            contact:contacts(id, name, document, type),
+            category:categories(id, name, color, icon),
+            bank_account:bank_accounts(
+              id, agency, account_number,
+              bank:banks(id, name)
+            )
+          `)
+          .eq('deleted_at', null)
+          .eq('user_id', user.user.id);
+
+        // Aplicar filtros
+        if (filtros?.status && filtros.status !== 'todos') {
+          query = query.eq('status', filtros.status);
+        }
+
+        if (filtros?.busca?.trim()) {
+          query = query.ilike('description', `%${filtros.busca}%`);
+        }
+
+        if (filtros?.contact_id && filtros.contact_id !== 'todos') {
+          query = query.eq('contact_id', filtros.contact_id);
+        }
+
+        if (filtros?.data_inicio) {
+          query = query.gte('due_date', filtros.data_inicio);
+        }
+
+        if (filtros?.data_fim) {
+          query = query.lte('due_date', filtros.data_fim);
+        }
+
+        query = query.order('due_date', { ascending: false });
+
+        const { data, error } = await query;
+        if (error) throw new Error(`Erro ao buscar contas: ${error.message}`);
+
+        return (data || []).map(conta => ({
+          ...conta,
+          credor_nome: conta.contact?.name || 'Sem credor',
+          fornecedor_nome: conta.contact?.name || 'Sem credor', // manter para compatibilidade
+          categoria_nome: conta.category?.name || 'Sem categoria',
+          banco_nome: conta.bank_account?.bank?.name,
+          amount: parseFloat(conta.amount) || 0
+        }));
+
+      } catch (error) {
+        console.error('Erro no getAll:', error);
+        throw error;
+      }
     },
 
     getById: async (id: string): Promise<any> => {
@@ -156,131 +191,146 @@ export class SupabaseDataService implements IDataService {
       return data;
     },
 
-    create: async (data: any): Promise<any> => {
-      
-      // Validar campos obrigatórios
-      if (!data.descricao || !data.valor_original || !data.data_vencimento) {
-        throw new Error('Campos obrigatórios não preenchidos: descrição, valor e data de vencimento');
+    create: async (data: any) => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user?.id) throw new Error('Usuário não autenticado');
+
+        const insertData = {
+          user_id: user.user.id,
+          description: data.descricao || data.description,
+          amount: parseFloat(data.valor_original || data.amount || data.valor_final),
+          due_date: data.data_vencimento || data.due_date,
+          status: data.status || 'pending',
+          contact_id: data.credor_id || data.fornecedor_id || data.contact_id || null,
+          category_id: data.plano_conta_id || data.category_id || null,
+          bank_account_id: data.banco_id || data.bank_account_id || null,
+          notes: data.observacoes || data.notes || null,
+          reference_document: data.documento_referencia || data.reference_document || null,
+          issue_date: data.data_emissao || data.issue_date || null,
+          original_amount: parseFloat(data.valor_original || data.original_amount || data.amount),
+          final_amount: parseFloat(data.valor_final || data.final_amount || data.amount),
+          dda_enabled: data.dda || data.dda_enabled || false
+        };
+
+        const { data: result, error } = await supabase
+          .from('accounts_payable')
+          .insert(insertData)
+          .select(`
+            *,
+            contact:contacts(id, name, document, type),
+            category:categories(id, name, color, icon),
+            bank_account:bank_accounts(
+              id, agency, account_number,
+              bank:banks(id, name)
+            )
+          `)
+          .single();
+
+        if (error) throw new Error(`Erro ao criar conta: ${error.message}`);
+
+        return {
+          ...result,
+          credor_nome: result.contact?.name || 'Sem credor',
+          fornecedor_nome: result.contact?.name || 'Sem credor', // compatibilidade
+          categoria_nome: result.category?.name || 'Sem categoria',
+          banco_nome: result.bank_account?.bank?.name,
+          amount: parseFloat(result.amount) || 0
+        };
+
+      } catch (error) {
+        console.error('Erro no create:', error);
+        throw error;
       }
-      
-      if (!data.fornecedor_id || !data.plano_conta_id) {
-        throw new Error('Credor e categoria são obrigatórios');
-      }
+    },
 
-      // Verificar se o contact_id existe
-      if (data.fornecedor_id) {
-        const { data: contact, error: contactError } = await supabase
-          .from('contacts')
-          .select('id')
-          .eq('id', data.fornecedor_id)
-          .eq('user_id', data.user_id)
-          .maybeSingle();
-        
-        if (contactError) {
-          console.error('Erro ao verificar credor:', contactError);
-          throw new Error('Erro ao verificar credor');
-        }
-        
-        if (!contact) {
-          throw new Error('Credor não encontrado ou não pertence ao usuário');
-        }
-      }
+    update: async (id: string, data: any) => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user?.id) throw new Error('Usuário não autenticado');
 
-      // Verificar se a categoria existe (aceitar categorias do usuário e categorias do sistema)
-      if (data.plano_conta_id) {
-        const { data: category, error: categoryError } = await supabase
-          .from('categories')
-          .select('id, user_id, is_system')
-          .eq('id', data.plano_conta_id)
-          .or(`user_id.eq.${data.user_id},and(user_id.is.null,is_system.eq.true)`)
-          .maybeSingle();
-        
-        if (categoryError) {
-          console.error('Erro ao verificar categoria:', categoryError);
-          throw new Error('Erro ao verificar categoria');
-        }
-        
-        if (!category) {
-          throw new Error('Categoria não encontrada ou não pertence ao usuário');
-        }
-      }
+        const updateData = {
+          description: data.descricao || data.description,
+          amount: data.valor_original !== undefined ? parseFloat(data.valor_original) : (data.amount !== undefined ? parseFloat(data.amount) : undefined),
+          due_date: data.data_vencimento || data.due_date,
+          status: data.status,
+          contact_id: data.credor_id || data.fornecedor_id || data.contact_id,
+          category_id: data.plano_conta_id || data.category_id,
+          bank_account_id: data.banco_id || data.bank_account_id,
+          notes: data.observacoes || data.notes,
+          reference_document: data.documento_referencia || data.reference_document,
+          issue_date: data.data_emissao || data.issue_date,
+          original_amount: data.valor_original !== undefined ? parseFloat(data.valor_original) : (data.original_amount !== undefined ? parseFloat(data.original_amount) : undefined),
+          final_amount: data.valor_final !== undefined ? parseFloat(data.valor_final) : (data.final_amount !== undefined ? parseFloat(data.final_amount) : undefined),
+          paid_amount: data.valor_pago !== undefined ? parseFloat(data.valor_pago) : (data.paid_amount !== undefined ? parseFloat(data.paid_amount) : undefined),
+          paid_at: data.data_pagamento || data.paid_at,
+          dda_enabled: data.dda !== undefined ? data.dda : data.dda_enabled,
+          updated_at: new Date().toISOString()
+        };
 
-      // Mapear campos do ContaPagar para accounts_payable (usando contact_id em vez de supplier_id)
-      const mappedData = {
-        description: data.descricao,
-        amount: data.valor_original || data.valor_final,
-        due_date: data.data_vencimento,
-        status: data.status === 'pendente' ? 'pending' : 
-                data.status === 'pago' ? 'paid' : 
-                data.status === 'vencido' ? 'overdue' : 'pending',
-        notes: data.observacoes,
-        contact_id: data.fornecedor_id, // Usar contact_id em vez de supplier_id
-        category_id: data.plano_conta_id,
-        bank_account_id: data.banco_id,
-        paid_at: data.data_pagamento,
-        user_id: data.user_id,
-        issue_date: data.data_emissao,
-        reference_document: data.documento_referencia,
-        original_amount: data.valor_original,
-        final_amount: data.valor_final || data.valor_original,
-        paid_amount: data.valor_pago,
-        dda_enabled: data.dda || false
-      };
-
-      
-
-      const { data: result, error } = await supabase
-        .from('accounts_payable')
-        .insert([mappedData])
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('❌ Erro ao inserir conta:', error);
-        console.error('❌ Detalhes do erro:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
+        // Remove campos undefined para não sobrescrever com null
+        Object.keys(updateData).forEach(key => {
+          if (updateData[key] === undefined) {
+            delete updateData[key];
+          }
         });
-        throw new Error(`Erro ao criar conta: ${error.message}`);
+
+        const { data: result, error } = await supabase
+          .from('accounts_payable')
+          .update(updateData)
+          .eq('id', id)
+          .eq('user_id', user.user.id)
+          .select(`
+            *,
+            contact:contacts(id, name, document, type),
+            category:categories(id, name, color, icon),
+            bank_account:bank_accounts(
+              id, agency, account_number,
+              bank:banks(id, name)
+            )
+          `)
+          .single();
+
+        if (error) throw new Error(`Erro ao atualizar conta: ${error.message}`);
+
+        return {
+          ...result,
+          credor_nome: result.contact?.name || 'Sem credor',
+          fornecedor_nome: result.contact?.name || 'Sem credor', // compatibilidade
+          categoria_nome: result.category?.name || 'Sem categoria',
+          banco_nome: result.bank_account?.bank?.name,
+          amount: parseFloat(result.amount) || 0
+        };
+
+      } catch (error) {
+        console.error('Erro no update:', error);
+        throw error;
       }
-      
-      // Invalida cache após criação
-      cacheService.invalidatePayables();
-      cacheService.invalidateDashboard();
-      
-      return result;
     },
 
-    update: async (id: string, data: any): Promise<any> => {
-      const { data: result, error } = await supabase
-        .from('accounts_payable')
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Invalida cache após atualização
-      cacheService.invalidatePayables();
-      cacheService.invalidateDashboard();
-      
-      return result;
-    },
+    delete: async (id: string) => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user?.id) throw new Error('Usuário não autenticado');
 
-    delete: async (id: string): Promise<void> => {
-      const { error } = await supabase
-        .from('accounts_payable')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      // Invalida cache após exclusão
-      cacheService.invalidatePayables();
-      cacheService.invalidateDashboard();
+        // Soft delete - marca como deletado ao invés de remover
+        const { error } = await supabase
+          .from('accounts_payable')
+          .update({ 
+            deleted_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .eq('user_id', user.user.id);
+
+        if (error) throw new Error(`Erro ao excluir conta: ${error.message}`);
+
+        return { success: true };
+
+      } catch (error) {
+        console.error('Erro no delete:', error);
+        throw error;
+      }
     },
 
     getByVencimento: async (dataInicio: string, dataFim: string): Promise<any[]> => {
