@@ -8,7 +8,7 @@ import { FornecedorCompat } from '@/hooks/useFornecedoresAlias';
 import { Category } from '@/types/category';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
-import { useBancos } from '@/hooks/useBancos';
+import { useBanks } from '@/hooks/useBanks';
 import { useContasPagar } from '@/hooks/useContasPagar';
 import { useContatos } from '@/hooks/useContatos';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,7 +41,7 @@ import { toast } from '@/hooks/use-toast';
 export default function NovaConta() {
   const navigate = useNavigate();
   const { criarConta, loading } = useContasPagar();
-  const { bancos } = useBancos();
+  const { banks: bancos } = useBanks();
   const { contatos } = useContatos();
   const { user } = useAuth();
   const { isSaving, setLoading } = useLoadingStates();

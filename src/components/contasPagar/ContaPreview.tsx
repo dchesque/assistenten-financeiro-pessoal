@@ -8,7 +8,7 @@ import { Calendar, DollarSign, Building2, FolderTree, CreditCard, AlertTriangle 
 import { FormaPagamento, TIPOS_PAGAMENTO_LABELS, TIPOS_PAGAMENTO_ICONS } from '@/types/formaPagamento';
 import { useFornecedores } from '@/hooks/useFornecedores';
 import { usePlanoContas } from '@/hooks/usePlanoContas';
-import { useBancosSupabase } from '@/hooks/useBancosReal';
+import { useBanks } from '@/hooks/useBanks';
 import { formatarMoedaExibicao } from '@/utils/masks';
 
 interface ContaPreviewProps {
@@ -23,7 +23,7 @@ export function ContaPreview({ conta, formaPagamento, credorSelecionado, contaSe
   // Buscar dados relacionados via hooks
   const { fornecedores } = useFornecedores();
   const { planoContas } = usePlanoContas();
-  const { bancos } = useBancosSupabase();
+  const { banks: bancos } = useBanks();
   
   // Dados recebidos para preview da conta
   

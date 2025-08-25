@@ -5,7 +5,7 @@ import { Banco } from '@/types/banco';
 import { formatarMoeda, formatarData } from '@/utils/formatters';
 import { aplicarMascaraMoeda, converterMoedaParaNumero, numeroParaMascaraMoeda } from '@/utils/masks';
 import { SectionHeader, FieldDisplay, LoadingSpinner } from './ModalComponents';
-import { useBancosSupabase } from '@/hooks/useBancosReal';
+import { useBanks } from '@/hooks/useBanks';
 import { TipoPagamento, TIPOS_PAGAMENTO_LABELS } from '@/types/formaPagamento';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -19,7 +19,7 @@ interface BaixarContaModalProps {
 
 export default function BaixarContaModal({ isOpen, onClose, conta, onConfirm }: BaixarContaModalProps) {
   const { isMobile } = useResponsive();
-  const { bancos } = useBancosSupabase();
+  const { banks: bancos } = useBanks();
   
   const [formData, setFormData] = useState({
     data_pagamento: new Date().toISOString().split('T')[0],

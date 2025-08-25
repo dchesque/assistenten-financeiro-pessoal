@@ -7,7 +7,7 @@ import { AccountReceivable, ReceivableStatus } from '@/types/accounts';
 import { Pagador } from '@/hooks/usePagadores';
 import { Banco } from '@/types/banco';
 import { FormaPagamento } from '@/types/formaPagamento';
-import { useBancosSupabase } from '@/hooks/useBancosReal';
+import { useBanks } from '@/hooks/useBanks';
 import { useContasReceber } from '@/hooks/useContasReceber';
 import { usePagadores } from '@/hooks/usePagadores';
 import { useCategories } from '@/hooks/useCategories';
@@ -33,7 +33,7 @@ import { useFormatacao } from '@/hooks/useFormatacao';
 export default function NovoRecebimento() {
   const navigate = useNavigate();
   const { criarConta, loading: contaLoading } = useContasReceber();
-  const { bancos } = useBancosSupabase();
+  const { banks: bancos } = useBanks();
   const { pagadores } = usePagadores();
   const { categories, loading: categoriesLoading } = useCategories();
   const { isSaving, setLoading } = useLoadingStates();

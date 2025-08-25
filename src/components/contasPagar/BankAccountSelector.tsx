@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Building2, CreditCard } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useBancos } from '@/hooks/useBancos';
+import { useBanks } from '@/hooks/useBanks';
 import { useBankAccounts } from '@/hooks/useBankAccounts';
 
 interface BankAccountSelectorProps {
@@ -18,7 +18,7 @@ export function BankAccountSelector({
   className = "",
   disabled = false
 }: BankAccountSelectorProps) {
-  const { bancos } = useBancos();
+  const { banks: bancos } = useBanks();
   const { accounts: bankAccounts } = useBankAccounts(value?.banco_id);
   
   // Filtrar contas do banco selecionado
