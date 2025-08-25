@@ -4,8 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/utils/currency';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatarData } from '@/utils/formatters';
 
 export interface ContaListItem {
   id: string;
@@ -92,7 +91,17 @@ export function ContasPagarList({ contas, loading, onEdit, onDelete, onView, onP
   };
 
   const isOverdue = (dueDate: string, status: string) => {
-    return status === 'pending' && new Date(dueDate) < new Date();
+    if (status !== 'pending') return false;
+    
+    // Comparar apenas as datas sem considerar horário
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    // Criar data de vencimento sem problemas de timezone
+    const [ano, mes, dia] = dueDate.split('T')[0].split('-');
+    const vencimento = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+    
+    return vencimento < hoje;
   };
 
   const getStatusIcon = (status: string, dueDate: string) => {
@@ -141,12 +150,19 @@ export function ContasPagarList({ contas, loading, onEdit, onDelete, onView, onP
                           ? 'text-red-700 font-medium' 
                           : 'text-gray-600'
                       }`}>
-                        {format(new Date(conta.due_date), 'dd/MM/yyyy', { locale: ptBR })}
+                        {formatarData(conta.due_date)}
                       </span>
                     </div>
                     {isOverdue(conta.due_date, conta.status) && (
                       <div className="text-xs text-red-600 mt-1">
-                        {Math.ceil((new Date().getTime() - new Date(conta.due_date).getTime()) / (1000 * 60 * 60 * 24))} dias
+                        {(() => {
+                          const hoje = new Date();
+                          hoje.setHours(0, 0, 0, 0);
+                          const [ano, mes, dia] = conta.due_date.split('T')[0].split('-');
+                          const vencimento = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+                          const diffTime = hoje.getTime() - vencimento.getTime();
+                          return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        })()} dias
                       </div>
                     )}
                   </TableCell>

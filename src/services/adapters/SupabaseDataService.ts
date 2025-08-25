@@ -136,7 +136,7 @@ export class SupabaseDataService implements IDataService {
               bank:banks(id, name)
             )
           `)
-          .eq('deleted_at', null)
+          .is('deleted_at', null)
           .eq('user_id', user.user.id);
 
         // Aplicar filtros
@@ -180,15 +180,52 @@ export class SupabaseDataService implements IDataService {
       }
     },
 
-    getById: async (id: string): Promise<any> => {
-      const { data, error } = await supabase
-        .from('accounts_payable')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      return data;
+    getById: async (id: string) => {
+      console.log('🔍 DEBUG getById - CHAMADO com ID:', id);
+      try {
+        console.log('🔍 DEBUG getById - INICIANDO...');
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user?.id) throw new Error('Usuário não autenticado');
+
+        const { data, error } = await supabase
+          .from('accounts_payable')
+          .select(`
+            *,
+            contact:contacts!contact_id(id, name, document, type),
+            category:categories!category_id(id, name, color, icon),
+            bank_account:bank_accounts!bank_account_id(
+              id, agency, account_number,
+              bank:banks!bank_id(id, name)
+            )
+          `)
+          .eq('id', id)
+          .eq('user_id', user.user.id)
+          .is('deleted_at', null)
+          .single();
+
+        console.log('🔍 DEBUG getById - QUERY executada, data:', data);
+        console.log('🔍 DEBUG getById - ERROR da query:', error);
+
+        if (error) throw new Error(`Erro ao buscar conta: ${error.message}`);
+
+        console.log('🔍 DEBUG getById - Raw data:', data);
+        console.log('🔍 DEBUG getById - Contact:', data.contact);
+        console.log('🔍 DEBUG getById - Category:', data.category);
+        console.log('🔍 DEBUG getById - Bank Account:', data.bank_account);
+
+        return {
+          ...data,
+          credor_nome: data.contact?.name || 'Sem credor',
+          fornecedor_nome: data.contact?.name || 'Sem credor',
+          categoria_nome: data.category?.name || 'Sem categoria',
+          banco_nome: data.bank_account?.bank?.name,
+          amount: parseFloat(data.amount) || 0
+        };
+
+      } catch (error) {
+        console.error('Erro no getById:', error);
+        throw error;
+      }
     },
 
     create: async (data: any) => {
@@ -196,12 +233,34 @@ export class SupabaseDataService implements IDataService {
         const { data: user } = await supabase.auth.getUser();
         if (!user.user?.id) throw new Error('Usuário não autenticado');
 
+        // Mapeamento de status português -> inglês
+        const statusMap = {
+          'pendente': 'pending',
+          'pago': 'paid',
+          'vencido': 'overdue',
+          'cancelado': 'cancelled'
+        };
+
         const insertData = {
           user_id: user.user.id,
           description: data.descricao || data.description,
           amount: parseFloat(data.valor_original || data.amount || data.valor_final),
-          due_date: data.data_vencimento || data.due_date,
-          status: data.status || 'pending',
+          due_date: (() => {
+            const dateStr = data.data_vencimento || data.due_date;
+            if (!dateStr) return null;
+            
+            // Se já está no formato YYYY-MM-DD, manter
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
+            
+            // Se está no formato DD/MM/YYYY, converter para YYYY-MM-DD
+            if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+              const [day, month, year] = dateStr.split('/');
+              return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+            
+            return dateStr;
+          })(),
+          status: statusMap[data.status] || data.status || 'pending',
           contact_id: data.credor_id || data.fornecedor_id || data.contact_id || null,
           category_id: data.plano_conta_id || data.category_id || null,
           bank_account_id: data.banco_id || data.bank_account_id || null,
@@ -249,11 +308,33 @@ export class SupabaseDataService implements IDataService {
         const { data: user } = await supabase.auth.getUser();
         if (!user.user?.id) throw new Error('Usuário não autenticado');
 
+        // Mapeamento de status português -> inglês
+        const statusMap = {
+          'pendente': 'pending',
+          'pago': 'paid',
+          'vencido': 'overdue',
+          'cancelado': 'cancelled'
+        };
+
         const updateData = {
           description: data.descricao || data.description,
           amount: data.valor_original !== undefined ? parseFloat(data.valor_original) : (data.amount !== undefined ? parseFloat(data.amount) : undefined),
-          due_date: data.data_vencimento || data.due_date,
-          status: data.status,
+          due_date: (() => {
+            const dateStr = data.data_vencimento || data.due_date;
+            if (!dateStr) return undefined;
+            
+            // Se já está no formato YYYY-MM-DD, manter
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
+            
+            // Se está no formato DD/MM/YYYY, converter para YYYY-MM-DD
+            if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+              const [day, month, year] = dateStr.split('/');
+              return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+            
+            return dateStr;
+          })(),
+          status: data.status ? (statusMap[data.status] || data.status) : undefined,
           contact_id: data.credor_id || data.fornecedor_id || data.contact_id,
           category_id: data.plano_conta_id || data.category_id,
           bank_account_id: data.banco_id || data.bank_account_id,

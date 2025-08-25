@@ -15,7 +15,20 @@ export const formatarDataBrasilia = (
   if (!data) return '-';
   
   try {
-    const dataObj = typeof data === 'string' ? parseISO(data) : data;
+    let dataObj: Date;
+    
+    if (typeof data === 'string') {
+      // Se a string está no formato YYYY-MM-DD (sem horário), tratar como data local
+      if (data.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [ano, mes, dia] = data.split('-');
+        dataObj = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), 12, 0, 0);
+      } else {
+        dataObj = parseISO(data);
+      }
+    } else {
+      dataObj = data;
+    }
+    
     return formatInTimeZone(dataObj, TIMEZONE_BRASILIA, pattern, { locale: ptBR });
   } catch (error) {
     console.error('Erro ao formatar data:', error);
@@ -37,7 +50,20 @@ export const formatarDataHoraBrasilia = (
  * Converter data UTC para timezone de Brasília
  */
 export const converterParaBrasilia = (data: string | Date): Date => {
-  const dataObj = typeof data === 'string' ? parseISO(data) : data;
+  let dataObj: Date;
+  
+  if (typeof data === 'string') {
+    // Se a string está no formato YYYY-MM-DD (sem horário), tratar como data local
+    if (data.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [ano, mes, dia] = data.split('-');
+      dataObj = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), 12, 0, 0);
+    } else {
+      dataObj = parseISO(data);
+    }
+  } else {
+    dataObj = data;
+  }
+  
   return toZonedTime(dataObj, TIMEZONE_BRASILIA);
 };
 
