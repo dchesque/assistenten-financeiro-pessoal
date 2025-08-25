@@ -215,11 +215,46 @@ export class SupabaseDataService implements IDataService {
 
         return {
           ...data,
+          // Campos esperados pelo modal de edição
+          fornecedor: data.contact ? {
+            id: data.contact.id,
+            name: data.contact.name,
+            nome: data.contact.name,
+            document: data.contact.document,
+            type: data.contact.type
+          } : null,
+          plano_conta: data.category ? {
+            id: data.category.id,
+            name: data.category.name,
+            nome: data.category.name,
+            color: data.category.color,
+            icon: data.category.icon
+          } : null,
+          banco: data.bank_account ? {
+            id: data.bank_account.id,
+            name: data.bank_account.bank?.name,
+            nome: data.bank_account.bank?.name,
+            agency: data.bank_account.agency,
+            account_number: data.bank_account.account_number
+          } : null,
+          // Campos de compatibilidade
           credor_nome: data.contact?.name || 'Sem credor',
           fornecedor_nome: data.contact?.name || 'Sem credor',
           categoria_nome: data.category?.name || 'Sem categoria',
           banco_nome: data.bank_account?.bank?.name,
-          amount: parseFloat(data.amount) || 0
+          amount: parseFloat(data.amount) || 0,
+          // Mapeamento de campos para compatibilidade com o frontend
+          descricao: data.description,
+          valor_original: data.original_amount || data.amount,
+          valor_final: data.final_amount || data.amount,
+          data_vencimento: data.due_date,
+          data_emissao: data.issue_date,
+          observacoes: data.notes,
+          documento_referencia: data.reference_document,
+          status: data.status,
+          fornecedor_id: data.contact_id,
+          plano_conta_id: data.category_id,
+          banco_id: data.bank_account_id
         };
 
       } catch (error) {

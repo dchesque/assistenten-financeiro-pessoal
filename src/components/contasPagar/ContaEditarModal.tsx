@@ -1,18 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { X, Edit, User, FileText, DollarSign, Calendar, Save } from 'lucide-react';
 import { ContaPagar } from '@/types/contaPagar';
-import { Fornecedor } from '@/types/fornecedor';
-import { PlanoContas } from '@/types/planoContas';
 import { formatarMoeda } from '@/utils/formatters';
-import { FornecedorSelector } from './FornecedorSelector';
-import { PlanoContasSelector } from './PlanoContasSelector';
+import { CredorSelector } from './CredorSelector';
+import { CategoriaSelector } from './CategoriaSelector';
 import LoadingSpinner from '@/components/ui/LoadingSkeleton';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
+import type { Category } from '@/types/category';
+
+type Contact = Database['public']['Tables']['contacts']['Row'];
 
 interface ContaEditarModalProps {
   conta: (ContaPagar & {
-    fornecedor?: Fornecedor;
-    plano_conta?: PlanoContas;
+    fornecedor?: Contact;
+    plano_conta?: Category;
+    contact?: Contact;
+    category?: Category;
+    description?: string;
+    reference_document?: string;
+    due_date?: string;
+    original_amount?: number;
+    final_amount?: number;
+    notes?: string;
   }) | null;
   isOpen: boolean;
   onClose: () => void;
@@ -23,8 +33,8 @@ interface DadosEdicao {
   descricao: string;
   documento_referencia?: string;
   data_vencimento: string;
-  fornecedor?: Fornecedor;
-  plano_conta?: PlanoContas;
+  credor?: Contact;
+  categoria?: Category;
   valor_original: number;
   percentual_juros?: number;
   valor_juros?: number;
@@ -48,20 +58,38 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
   // Inicializar dados quando a conta for carregada
   useEffect(() => {
     if (conta && isOpen) {
+      console.log('Conta carregada:', conta);
+      
+      // Mapear credor corretamente
+      const credor = conta.fornecedor || conta.contact || null;
+      console.log('Credor mapeado:', credor);
+      
+      // Mapear categoria corretamente  
+      const categoria = conta.plano_conta || conta.category || null;
+      console.log('Categoria mapeada:', categoria);
+      
       setDadosEdicao({
-        descricao: conta.descricao || '',
-        documento_referencia: conta.documento_referencia || '',
-        data_vencimento: conta.data_vencimento || '',
-        fornecedor: conta.fornecedor,
-        plano_conta: conta.plano_conta,
-        valor_original: conta.valor_original || 0,
+        descricao: conta.descricao || conta.description || '',
+        documento_referencia: conta.documento_referencia || conta.reference_document || '',
+        data_vencimento: conta.data_vencimento || conta.due_date || '',
+        credor: credor,
+        categoria: categoria,
+        valor_original: conta.valor_original || conta.original_amount || conta.amount || 0,
         percentual_juros: conta.percentual_juros || 0,
         valor_juros: conta.valor_juros || 0,
         percentual_desconto: conta.percentual_desconto || 0,
         valor_desconto: conta.valor_desconto || 0,
-        valor_final: conta.valor_final || 0,
-        observacoes: conta.observacoes || ''
+        valor_final: conta.valor_final || conta.final_amount || conta.amount || 0,
+        observacoes: conta.observacoes || conta.notes || ''
       });
+      
+      console.log('Dados de edição setados:', {
+        credor: credor,
+        categoria: categoria,
+        descricao: conta.descricao || conta.description,
+        valor_original: conta.valor_original || conta.original_amount || conta.amount
+      });
+      
       setErro('');
       setErrosValidacao({});
     }
@@ -90,6 +118,8 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
     const { ValidationService } = await import('@/services/ValidationService');
     const novoErro = ValidationService.validarContaPagar({ 
       [campo]: valor,
+      fornecedor_id: dadosEdicao.credor?.id,
+      plano_conta_id: dadosEdicao.categoria?.id,
       ...dadosEdicao // Contexto completo
     });
     setErrosValidacao(prev => ({
@@ -119,9 +149,14 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
       // Preparar dados para salvar
       const dadosParaSalvar = {
         ...dadosEdicao,
-        fornecedor_id: dadosEdicao.fornecedor?.id,
-        plano_conta_id: dadosEdicao.plano_conta?.id
+        contact_id: dadosEdicao.credor?.id,
+        fornecedor_id: dadosEdicao.credor?.id,
+        credor_id: dadosEdicao.credor?.id,
+        category_id: dadosEdicao.categoria?.id,
+        plano_conta_id: dadosEdicao.categoria?.id
       };
+      
+      console.log('Dados para salvar:', dadosParaSalvar);
 
       await onSalvar(dadosParaSalvar);
       toast.success('Conta editada com sucesso!');
@@ -264,11 +299,11 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                       <label className="text-xs font-medium text-gray-700 mb-1 block">
                         Credor *
                       </label>
-                      <FornecedorSelector
-                        value={dadosEdicao.fornecedor}
-                        onSelect={(fornecedor) => {
-                          setDadosEdicao((prev) => ({ ...prev, fornecedor }));
-                          validarCampo('fornecedor_id', fornecedor?.id);
+                      <CredorSelector
+                        value={dadosEdicao.credor}
+                        onSelect={(credor) => {
+                          setDadosEdicao((prev) => ({ ...prev, credor }));
+                          validarCampo('fornecedor_id', credor?.id);
                         }}
                         placeholder="Selecionar credor..."
                         className="w-full"
@@ -292,11 +327,11 @@ export default function ContaEditarModal({ conta, isOpen, onClose, onSalvar }: C
                       <label className="text-xs font-medium text-gray-700 mb-1 block">
                         Categoria/Plano de Contas *
                       </label>
-                      <PlanoContasSelector
-                        value={dadosEdicao.plano_conta}
-                        onSelect={(conta) => {
-                          setDadosEdicao((prev) => ({ ...prev, plano_conta: conta }));
-                          validarCampo('plano_conta_id', conta?.id);
+                      <CategoriaSelector
+                        value={dadosEdicao.categoria}
+                        onSelect={(categoria) => {
+                          setDadosEdicao((prev) => ({ ...prev, categoria }));
+                          validarCampo('plano_conta_id', categoria?.id);
                         }}
                         placeholder="Selecionar categoria..."
                         className="w-full"

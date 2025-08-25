@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, FolderTree, Plus } from 'lucide-react';
-import { PlanoContas } from '@/types/planoContas';
-import { usePlanoContas } from '@/hooks/usePlanoContas';
+import { useCategories } from '@/hooks/useCategories';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,10 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import * as LucideIcons from 'lucide-react';
 import { CadastroRapidoCategoriaModal } from './CadastroRapidoCategoriaModal';
+import type { Category } from '@/types/category';
 
 interface PlanoContasSelectorProps {
-  value?: PlanoContas | null;
-  onSelect: (conta: PlanoContas) => void;
+  value?: Category | null;
+  onSelect: (conta: Category) => void;
   placeholder?: string;
   className?: string;
 }
@@ -25,63 +25,45 @@ export function PlanoContasSelector({
 }: PlanoContasSelectorProps) {
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState('');
-  const [contasAnaliticas, setContasAnaliticas] = useState<PlanoContas[]>([]);
+  const [categorias, setCategorias] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [cadastroModalOpen, setCadastroModalOpen] = useState(false);
   
-  const { buscarContasAnaliticas } = usePlanoContas();
+  const { categories, loading: categoriesLoading, loadCategories } = useCategories();
   const buscaDebounced = useDebounce(busca, 300);
 
-  // Carregar contas analíticas do Supabase
-  const carregarContas = async () => {
-    if (!open) return;
-    
-    setLoading(true);
-    try {
-      const contas = await buscarContasAnaliticas(buscaDebounced || undefined);
-      setContasAnaliticas(contas);
-    } catch (error) {
-      console.error('Erro ao carregar contas:', error);
-      setContasAnaliticas([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Filtrar apenas categorias de despesa
   useEffect(() => {
-    if (open) {
-      carregarContas();
-    }
-  }, [open, buscaDebounced]);
+    const categoriasExpense = categories.filter(cat => 
+      cat.type === 'expense' && 
+      cat.active !== false &&
+      (buscaDebounced === '' || cat.name.toLowerCase().includes(buscaDebounced.toLowerCase()))
+    );
+    setCategorias(categoriasExpense);
+  }, [categories, buscaDebounced]);
 
-  const handleSelect = (conta: PlanoContas) => {
+  // Carregar categorias quando o componente monta
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const handleSelect = (conta: Category) => {
     onSelect(conta);
     setOpen(false);
     setBusca('');
   };
 
-  const handleCategoriaCriada = (novaCategoria: PlanoContas) => {
+  const handleCategoriaCriada = (novaCategoria: Category) => {
     onSelect(novaCategoria);
     setOpen(false);
     setBusca('');
     // Recarregar lista
-    carregarContas();
+    loadCategories();
   };
 
   const getIcon = (iconName: string) => {
     const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<any>;
     return IconComponent ? <IconComponent className="h-4 w-4" /> : <FolderTree className="h-4 w-4" />;
-  };
-
-  const getTipoDreColor = (tipo: string) => {
-    const colors = {
-      'receita': 'bg-green-100/80 text-green-700',
-      'custo': 'bg-blue-100/80 text-blue-700',
-      'despesa_administrativa': 'bg-purple-100/80 text-purple-700',
-      'despesa_comercial': 'bg-pink-100/80 text-pink-700',
-      'despesa_financeira': 'bg-orange-100/80 text-orange-700'
-    };
-    return colors[tipo as keyof typeof colors] || 'bg-gray-100/80 text-gray-700';
   };
 
   return (
@@ -95,11 +77,10 @@ export function PlanoContasSelector({
         >
           {value ? (
             <div className="flex items-center space-x-2">
-              <div style={{ color: value.cor }}>
-                {getIcon(value.icone)}
+              <div style={{ color: value.color }}>
+                {getIcon(value.icon || 'FolderTree')}
               </div>
-              <span className="truncate font-mono text-sm">{value.codigo}</span>
-              <span className="truncate">{value.nome}</span>
+              <span className="truncate">{value.name}</span>
             </div>
           ) : (
             <span className="text-muted-foreground">{placeholder}</span>
@@ -131,45 +112,31 @@ export function PlanoContasSelector({
 
           {/* Lista de contas */}
           <div className="max-h-96 overflow-y-auto space-y-2">
-            {loading ? (
+            {categoriesLoading ? (
               <div className="p-6 text-center text-gray-500">
-                Carregando contas...
+                Carregando categorias...
               </div>
-            ) : contasAnaliticas.length > 0 ? (
-              contasAnaliticas.map((conta) => (
+            ) : categorias.length > 0 ? (
+              categorias.map((categoria) => (
                 <div
-                  key={conta.id}
+                  key={categoria.id}
                   className="p-3 rounded-lg border border-gray-200/50 hover:bg-gray-50/80 cursor-pointer transition-all duration-200"
-                  onClick={() => handleSelect(conta)}
+                  onClick={() => handleSelect(categoria)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 flex-1">
-                      <div style={{ color: conta.cor }}>
-                        {getIcon(conta.icone)}
+                      <div style={{ color: categoria.color }}>
+                        {getIcon(categoria.icon || 'FolderTree')}
                       </div>
                       
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-mono text-sm font-medium text-gray-900">
-                            {conta.codigo}
-                          </span>
-                          <Badge variant="outline" className={getTipoDreColor(conta.tipo_dre)}>
-                            Nível {conta.nivel}
-                          </Badge>
-                        </div>
-                        <div className="font-medium text-gray-900">{conta.nome}</div>
-                        {(conta as any).observacoes && (
-                          <div className="text-sm text-gray-500">{(conta as any).observacoes}</div>
+                        <div className="font-medium text-gray-900">{categoria.name}</div>
+                        {categoria.description && (
+                          <div className="text-sm text-gray-500">{categoria.description}</div>
                         )}
-                      </div>
-                    </div>
-                    
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-gray-900">
-                        R$ {conta.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {conta.total_contas} lançamentos
+                        <Badge variant="outline" className="text-xs">
+                          {categoria.type === 'expense' ? 'Despesa' : 'Receita'}
+                        </Badge>
                       </div>
                     </div>
                   </div>

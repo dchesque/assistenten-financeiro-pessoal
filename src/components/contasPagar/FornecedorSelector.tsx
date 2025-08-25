@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Search, Building2, User, Plus } from 'lucide-react';
-import { Fornecedor } from '@/types/fornecedor';
 import { useContatos } from '@/hooks/useContatos';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
@@ -8,10 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { CadastroRapidoFornecedorModal } from './CadastroRapidoFornecedorModal';
+import type { Database } from '@/integrations/supabase/types';
+
+type Contact = Database['public']['Tables']['contacts']['Row'];
 
 interface FornecedorSelectorProps {
-  value?: any | null;
-  onSelect: (fornecedor: any) => void;
+  value?: Contact | null;
+  onSelect: (fornecedor: Contact) => void;
   placeholder?: string;
   className?: string;
 }
@@ -41,13 +43,13 @@ export function FornecedorSelector({
     )
   ).slice(0, 15);
 
-  const handleSelect = (fornecedor: any) => {
+  const handleSelect = (fornecedor: Contact) => {
     onSelect(fornecedor);
     setOpen(false);
     setBusca('');
   };
 
-  const handleFornecedorCriado = (fornecedor: any) => {
+  const handleFornecedorCriado = (fornecedor: Contact) => {
     onSelect(fornecedor);
     setOpen(false);
   };
